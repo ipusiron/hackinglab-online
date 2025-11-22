@@ -5,6 +5,7 @@ on:
     paths:
       - 'repos.txt'
       - 'data/categories.json'
+      - 'scripts/update_tools.py'
       - '.github/workflows/update-tools.yml'
   workflow_dispatch:
 
@@ -15,8 +16,32 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Show basic info (placeholder)
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
         run: |
-          echo "Update tools.json workflow is wired correctly."
-          echo "まだ tools.json 自動生成ロジックは未実装です。"
+          python -m pip install --upgrade pip
+          pip install pyyaml
+
+      - name: Generate tools.json
+        run: |
+          python scripts/update_tools.py
+
+      - name: Commit and push if changed
+        run: |
+          if git diff --quiet data/tools.json; then
+            echo "No changes in data/tools.json"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/tools.json
+          git commit -m "Update tools.json from repos.txt"
+          git push origin HEAD:main
