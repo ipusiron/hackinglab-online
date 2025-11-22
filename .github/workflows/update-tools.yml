@@ -1,0 +1,22 @@
+name: Update tools.json
+
+on:
+  push:
+    paths:
+      - 'repos.txt'
+      - 'data/categories.json'
+      - '.github/workflows/update-tools.yml'
+  workflow_dispatch:
+
+jobs:
+  update-tools:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Show basic info (placeholder)
+        run: |
+          echo "Update tools.json workflow is wired correctly."
+          echo "まだ tools.json 自動生成ロジックは未実装です。"
