@@ -9,6 +9,9 @@ on:
       - '.github/workflows/update-tools.yml'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   update-tools:
     runs-on: ubuntu-latest
