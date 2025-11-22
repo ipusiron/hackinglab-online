@@ -1,5 +1,38 @@
 {
   "schema_version": 1,
-  "generated_at": "2025-11-22T19:27:17Z",
-  "tools": []
+  "generated_at": "2025-11-22T19:36:13Z",
+  "tools": [
+    {
+      "id": "day101",
+      "slug": "color-hack-box",
+      "title": "Color Hack Box",
+      "subtitle_ja": "色の三要素を体感する学習ツール",
+      "subtitle_en": "Interactive tool to learn hue, saturation & lightness",
+      "description_ja": "HSL操作を通じて色相・明度・彩度を直感的に理解できるウェブツール。リアルタイムに視覚フィードバックとカラーコード変換を提供します。",
+      "description_en": "An interactive web tool that lets you explore hue, saturation and lightness (HSL) through real-time visual feedback and color code conversion.",
+      "category_ja": [
+        "Webデザイン",
+        "色彩理論"
+      ],
+      "category_en": [
+        "Web",
+        "Color Theory"
+      ],
+      "category_ids": [],
+      "difficulty": 1,
+      "tags": [
+        "color",
+        "hsl",
+        "rgb",
+        "hex",
+        "color-theory",
+        "web",
+        "javascript",
+        "educational"
+      ],
+      "repo_url": "https://github.com/ipusiron/color-hack-box",
+      "demo_url": "https://ipusiron.github.io/color-hack-box/",
+      "hub": true
+    }
+  ]
 }
