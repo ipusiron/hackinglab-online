@@ -400,13 +400,63 @@ body {
 }
 
 #overall-chart-container {
-  margin-top: 0.5rem;
-  padding: 0.4rem 0.5rem;
-  font-size: 0.8rem;
-  color: #6b7280;
-  background-color: #f9fafb;
-  border-radius: 0.5rem;
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
 }
+
+/* 円グラフ本体 */
+.pie-chart {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: conic-gradient(#d1d5db 0% 100%); /* デフォルト（JSで上書き） */
+  position: relative;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.1);
+}
+
+/* 中央の穴（ドーナツ風） */
+.pie-chart::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60px;
+  height: 60px;
+  background-color: #ffffff;
+  border-radius: 50%;
+}
+
+/* 凡例 */
+.pie-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem 1rem;
+  font-size: 0.75rem;
+  color: #374151;
+}
+
+.pie-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.pie-legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.pie-legend-color.color-n0 { background-color: #d1d5db; }
+.pie-legend-color.color-n1 { background-color: #3b82f6; }
+.pie-legend-color.color-n2 { background-color: #f59e0b; }
+.pie-legend-color.color-n3 { background-color: #10b981; }
 
 #share-on-x {
   padding: 0.35rem 0.8rem;

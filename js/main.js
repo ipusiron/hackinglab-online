@@ -510,13 +510,72 @@ function renderDashboard() {
 
   const chartContainer = document.getElementById("overall-chart-container");
   if (chartContainer) {
-    chartContainer.textContent =
-      currentLang === "ja"
-        ? "※グラフ表示は今後実装予定です。"
-        : "Charts will be implemented later.";
+    renderPieChart(chartContainer, n0, n1, n2, n3, total);
   }
 
   renderCategoryProgress();
+}
+
+// ---- 円グラフ描画 ----
+
+function renderPieChart(container, n0, n1, n2, n3, total) {
+  container.innerHTML = "";
+
+  // 円グラフ本体
+  const pie = document.createElement("div");
+  pie.className = "pie-chart";
+
+  if (total > 0) {
+    // パーセンテージを計算
+    const p0 = (n0 / total) * 100;
+    const p1 = (n1 / total) * 100;
+    const p2 = (n2 / total) * 100;
+    const p3 = (n3 / total) * 100;
+
+    // 累積パーセンテージでconic-gradientを生成
+    // 色: n0=グレー, n1=青, n2=オレンジ, n3=緑
+    const end0 = p0;
+    const end1 = end0 + p1;
+    const end2 = end1 + p2;
+    const end3 = end2 + p3;
+
+    pie.style.background = `conic-gradient(
+      #d1d5db 0% ${end0}%,
+      #3b82f6 ${end0}% ${end1}%,
+      #f59e0b ${end1}% ${end2}%,
+      #10b981 ${end2}% ${end3}%
+    )`;
+  }
+
+  container.appendChild(pie);
+
+  // 凡例
+  const legend = document.createElement("div");
+  legend.className = "pie-legend";
+
+  const labels = currentLang === "ja"
+    ? ["未着手", "学習中", "一周完了", "定着済み"]
+    : ["Not started", "In progress", "First pass", "Mastered"];
+
+  const counts = [n0, n1, n2, n3];
+  const classes = ["color-n0", "color-n1", "color-n2", "color-n3"];
+
+  labels.forEach((label, i) => {
+    const item = document.createElement("div");
+    item.className = "pie-legend-item";
+
+    const colorBox = document.createElement("span");
+    colorBox.className = `pie-legend-color ${classes[i]}`;
+
+    const text = document.createElement("span");
+    text.textContent = `${label}: ${counts[i]}`;
+
+    item.appendChild(colorBox);
+    item.appendChild(text);
+    legend.appendChild(item);
+  });
+
+  container.appendChild(legend);
 }
 
 // ---- カテゴリ別進捗 ----
