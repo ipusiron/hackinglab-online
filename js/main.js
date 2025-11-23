@@ -85,6 +85,7 @@ function setupStaticUI() {
   updateLanguageUI();
 }
 
+
 // ---- データ読み込み ----
 
 async function loadData() {
@@ -560,3 +561,29 @@ function handleResetAllProgress() {
   renderToolList();
   renderDashboard();
 }
+
+///////////////////////////////////////////////////////////////////////////
+// ---- ヘルプモーダル ----
+///////////////////////////////////////////////////////////////////////////
+
+document.addEventListener("DOMContentLoaded", () => {
+  const helpModal = document.getElementById("help-modal");
+  const helpButton = document.getElementById("help-button");
+  const helpClose = document.getElementById("help-close");
+
+  // 念のため初期は必ず隠す
+  helpModal.hidden = true;
+
+  helpButton?.addEventListener("click", () => {
+    helpModal.hidden = false;
+  });
+
+  helpClose?.addEventListener("click", () => {
+    helpModal.hidden = true;
+  });
+
+  // 背景クリックで閉じたい場合
+  helpModal?.addEventListener("click", (e) => {
+    if (e.target === helpModal) helpModal.hidden = true;
+  });
+});

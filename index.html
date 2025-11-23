@@ -1,164 +1,324 @@
 <!DOCTYPE html>
 <html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <title>ハッキング・ラボ・オンライン | Hacking Lab Online</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <title>ハッキング・ラボ・オンライン | Hacking Lab Online</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- 後でCSSを追加する想定 -->
-  <link rel="stylesheet" href="./css/style.css">
-</head>
-<body>
-  <!-- ヘッダー：サイト名＋言語切替 -->
-  <header id="site-header">
-    <div class="header-inner">
-      <div class="site-title">
-        <span id="site-title-ja">ハッキング・ラボ・オンライン</span>
-        <span id="site-title-en" style="display: none;">Hacking Lab Online</span>
-      </div>
-      <div class="header-controls">
-        <!-- 言語切替：JSで active 状態制御 -->
-        <button type="button" id="lang-ja" data-lang="ja">JA</button>
-        <button type="button" id="lang-en" data-lang="en">EN</button>
-      </div>
-    </div>
-  </header>
-
-  <!-- タブナビゲーション -->
-  <nav id="tab-nav">
-    <button type="button"
-            class="tab-button"
-            data-tab-target="tab-tools"
-            aria-selected="true">
-      <span class="label-ja">ツール一覧</span>
-      <span class="label-en" style="display: none;">Tools</span>
-    </button>
-    <button type="button"
-            class="tab-button"
-            data-tab-target="tab-dashboard"
-            aria-selected="false">
-      <span class="label-ja">学習ダッシュボード</span>
-      <span class="label-en" style="display: none;">Dashboard</span>
-    </button>
-  </nav>
-
-  <main id="main-content">
-    <!-- タブ1：ツール一覧＋進捗更新 -->
-    <section id="tab-tools" class="tab-panel" aria-labelledby="tab-tools-label">
-      <!-- フィルタバー -->
-      <div id="tool-filters">
-        <!-- カテゴリフィルタ -->
-        <div class="filter-group">
-          <label for="filter-category">
-            <span class="label-ja">カテゴリ</span>
-            <span class="label-en" style="display: none;">Category</span>
-          </label>
-          <select id="filter-category">
-            <!-- JSで "すべて / All" + categories.json から選択肢を生成 -->
-          </select>
+    <link rel="stylesheet" href="./css/style.css" />
+  </head>
+  <body>
+    <!-- ヘッダー：サイト名＋サブタイトル＋言語切替＋ヘルプ -->
+    <header id="site-header">
+      <div class="header-inner">
+        <div class="site-title-block">
+          <div class="site-title">
+            <span id="site-title-ja">ハッキング・ラボ・オンライン</span>
+            <span id="site-title-en" style="display: none"
+              >Hacking Lab Online</span
+            >
+          </div>
+          <div class="site-subtitle">
+            <span class="label-ja">
+              「生成AIで作るセキュリティツール」プロジェクトで生まれた教育ツールを基盤とした独学プラットフォーム
+            </span>
+            <span class="label-en" style="display: none">
+              A self-learning platform built on security education tools created
+              in the “100 Security Tools with Generative AI” project
+            </span>
+          </div>
         </div>
 
-        <!-- 進捗フィルタ -->
-        <div class="filter-group">
-          <label for="filter-progress">
-            <span class="label-ja">進捗</span>
-            <span class="label-en" style="display: none;">Progress</span>
-          </label>
-          <select id="filter-progress">
-            <!-- JSで「すべて / 未着手 / 学習中 / 一周完了 / 定着済み」を生成 -->
-          </select>
-        </div>
-
-        <!-- 検索ボックス -->
-        <div class="filter-group filter-search">
-          <label for="filter-search-input" class="visually-hidden">
-            <span class="label-ja">検索</span>
-            <span class="label-en" style="display: none;">Search</span>
-          </label>
-          <input
-            type="search"
-            id="filter-search-input"
-            placeholder="タイトル・説明・タグで検索">
+        <div class="header-controls">
+          <button type="button" id="lang-ja" data-lang="ja">JA</button>
+          <button type="button" id="lang-en" data-lang="en">EN</button>
+          <button type="button" id="help-button" class="help-button">?</button>
         </div>
       </div>
+    </header>
 
-      <!-- ツール一覧（カードをJSで挿入） -->
-      <div id="tool-list">
-        <!-- ここに JS でツールカードを追加 -->
-      </div>
-    </section>
+    <!-- タブナビゲーション -->
+    <nav id="tab-nav">
+      <button
+        type="button"
+        class="tab-button"
+        data-tab-target="tab-tools"
+        aria-selected="true"
+      >
+        <span class="label-ja">ツール一覧</span>
+        <span class="label-en" style="display: none">Tools</span>
+      </button>
+      <button
+        type="button"
+        class="tab-button"
+        data-tab-target="tab-dashboard"
+        aria-selected="false"
+      >
+        <span class="label-ja">学習ダッシュボード</span>
+        <span class="label-en" style="display: none">Dashboard</span>
+      </button>
+    </nav>
 
-    <!-- タブ2：学習ダッシュボード（フィルタなし） -->
-    <section id="tab-dashboard" class="tab-panel" aria-labelledby="tab-dashboard-label" hidden>
-      <!-- 全体サマリ -->
-      <section id="dashboard-overall">
-        <h2>
-          <span class="label-ja">全体サマリ</span>
-          <span class="label-en" style="display: none;">Overall summary</span>
-        </h2>
+    <main id="main-content">
+      <!-- タブ1：ツール一覧 -->
+      <section
+        id="tab-tools"
+        class="tab-panel"
+        aria-labelledby="tab-tools-label"
+      >
+        <!-- フィルタバー -->
+        <div id="tool-filters">
+          <!-- カテゴリフィルタ -->
+          <div class="filter-group">
+            <label for="filter-category">
+              <span class="label-ja">カテゴリ</span>
+              <span class="label-en" style="display: none">Category</span>
+            </label>
+            <select id="filter-category">
+              <!-- JSで "すべて / All" + categories.json から選択肢を生成 -->
+            </select>
+          </div>
 
-        <!-- 数値サマリ -->
-        <div id="overall-stats">
-          <p id="overall-total"></p>
-          <ul>
-            <li id="overall-n0"></li>
-            <li id="overall-n1"></li>
-            <li id="overall-n2"></li>
-            <li id="overall-n3"></li>
-          </ul>
+          <!-- 進捗フィルタ -->
+          <div class="filter-group">
+            <label for="filter-progress">
+              <span class="label-ja">進捗</span>
+              <span class="label-en" style="display: none">Progress</span>
+            </label>
+            <select id="filter-progress">
+              <!-- JSで「すべて / 未着手 / 学習中 / 一周完了 / 定着済み」を生成 -->
+            </select>
+          </div>
+
+          <!-- 検索ボックス -->
+          <div class="filter-group filter-search">
+            <label for="filter-search-input" class="visually-hidden">
+              <span class="label-ja">検索</span>
+              <span class="label-en" style="display: none">Search</span>
+            </label>
+            <input
+              type="search"
+              id="filter-search-input"
+              placeholder="タイトル・説明・タグで検索"
+            />
+          </div>
         </div>
 
-        <!-- 全体グラフ（円グラフなどを描画するコンテナ） -->
-        <div id="overall-chart-container">
-          <!-- JSでグラフ描画用の要素を追加 -->
+        <!-- ツール一覧（カードをJSで挿入） -->
+        <div id="tool-list">
+          <!-- JSでツールカードを追加 -->
         </div>
+      </section>
 
-        <!-- X共有ボタン -->
-        <div id="share-controls">
-          <button type="button" id="share-on-x">
-            <span class="label-ja">Xで進捗をシェア</span>
-            <span class="label-en" style="display: none;">Share progress on X</span>
+      <!-- タブ2：学習ダッシュボード -->
+      <section
+        id="tab-dashboard"
+        class="tab-panel"
+        aria-labelledby="tab-dashboard-label"
+        hidden
+      >
+        <!-- 全体サマリ -->
+        <section id="dashboard-overall">
+          <h2>
+            <span class="label-ja">全体サマリ</span>
+            <span class="label-en" style="display: none">Overall summary</span>
+          </h2>
+
+          <!-- 数値サマリ -->
+          <div id="overall-stats">
+            <p id="overall-total"></p>
+            <ul>
+              <li id="overall-n0"></li>
+              <li id="overall-n1"></li>
+              <li id="overall-n2"></li>
+              <li id="overall-n3"></li>
+            </ul>
+          </div>
+
+          <!-- グラフ領域（後で実装） -->
+          <div id="overall-chart-container">
+            <!-- JSでグラフ表示を追加予定 -->
+          </div>
+
+          <!-- X共有ボタン -->
+          <div id="share-controls">
+            <button type="button" id="share-on-x">
+              <span class="label-ja">Xで進捗をシェア</span>
+              <span class="label-en" style="display: none"
+                >Share progress on X</span
+              >
+            </button>
+          </div>
+        </section>
+
+        <!-- カテゴリ別進捗 -->
+        <section id="dashboard-categories">
+          <h2>
+            <span class="label-ja">カテゴリ別進捗</span>
+            <span class="label-en" style="display: none"
+              >Progress by category</span
+            >
+          </h2>
+
+          <div id="category-progress-list">
+            <!-- JSでカテゴリ別パネルを追加予定 -->
+          </div>
+        </section>
+
+        <!-- 全体リセット -->
+        <section id="dashboard-reset">
+          <button type="button" id="reset-all-progress">
+            <span class="label-ja">すべて未着手にリセット</span>
+            <span class="label-en" style="display: none"
+              >Reset all to "Not started"</span
+            >
           </button>
+        </section>
+      </section>
+    </main>
+
+    <!-- フッター -->
+    <footer id="site-footer">
+      <div class="footer-inner">
+        <div id="data-updated">
+          <span class="label-ja">データ更新:</span>
+          <span class="label-en" style="display: none">Last data update:</span>
+          <span id="last-updated-value">-</span>
         </div>
-      </section>
 
-      <!-- カテゴリ別進捗 -->
-      <section id="dashboard-categories">
-        <h2>
-          <span class="label-ja">カテゴリ別進捗</span>
-          <span class="label-en" style="display: none;">Progress by category</span>
-        </h2>
-
-        <div id="category-progress-list">
-          <!-- ここに JS でカテゴリごとの小パネルを追加 -->
+        <div>
+          <a
+            href="https://github.com/ipusiron/hackinglab-online"
+            target="_blank"
+          >
+            GitHub リポジトリ
+          </a>
         </div>
-      </section>
 
-      <!-- 全体リセット -->
-      <section id="dashboard-reset">
-        <button type="button" id="reset-all-progress">
-          <span class="label-ja">すべて未着手にリセット</span>
-          <span class="label-en" style="display: none;">Reset all to "Not started"</span>
-        </button>
-      </section>
-    </section>
-  </main>
-
-  <!-- フッター：データ更新日時など -->
-  <footer id="site-footer">
-    <div class="footer-inner">
-      <div id="data-updated">
-        <span class="label-ja">データ更新:</span>
-        <span class="label-en" style="display: none;">Last data update:</span>
-        <span id="last-updated-value">-</span>
+        <div id="copyright">
+          © <span id="current-year"></span> Hacking Lab Online
+        </div>
       </div>
-      <div id="copyright">
-        &copy; <span id="current-year"></span> Hacking Lab Online
+    </footer>
+
+    <!-- ヘルプモーダル -->
+    <div id="help-modal" class="modal" hidden>
+      <div class="modal-content">
+        <button id="help-close" class="modal-close">×</button>
+
+        <h2 class="label-ja">ヘルプ</h2>
+        <h2 class="label-en" style="display: none">Help</h2>
+
+        <div class="label-ja">
+          <p>
+            このサイトは「生成AIで作るセキュリティツール」プロジェクトで開発された教育向けツールを集約した、独学支援プラットフォームです。
+          </p>
+
+          <h3>サイトの使い方</h3>
+          <ul>
+            <li>
+              ツール一覧：カテゴリー・進捗・検索から学習するツールを探せます。
+            </li>
+            <li>学習ダッシュボード：学習進度を可視化し、Xで共有できます。</li>
+            <li>進捗はブラウザごとに localStorage に保存されます。</li>
+          </ul>
+
+          <h3>管理人について（IPUSIRON）</h3>
+          <p>
+            IPUSIRON（イプシロン）は、セキュリティや暗号技術を専門とする技術書著者・教育者です。
+            1979年に福島県相馬市で生まれ、現在も地元に在住しています。
+            20年以上にわたり技術書を執筆し、商業誌・同人誌を含めて30冊以上の書籍を刊行してきました。
+          </p>
+
+          <p>代表的な著書には以下があります。</p>
+          <ul>
+            <li>『暗号技術のすべて』</li>
+            <li>『ハッキング・ラボのつくりかた 完全版』</li>
+            <li>『ホワイトハッカーの教科書』</li>
+            <li>『ハッカーの学校 鍵開けの教科書』</li>
+          </ul>
+
+          <p>
+            また、暗号分野の翻訳・監修も手がけています。<br />
+            ブログ：<a href="https://akademeia.info/" target="_blank"
+              >Security Akademeia</a
+            ><br />
+            英語書籍：<a
+              href="https://ipusiron.github.io/book_Caesar_concise_en/"
+              target="_blank"
+            >
+              『Caesar Cipher Breaking – A Concise Edition』
+            </a>
+          </p>
+        </div>
+
+        <div class="label-en" style="display: none">
+          <p>
+            This site is a self-learning platform built on educational tools
+            created in the project "100 Security Tools Developed with Generative
+            AI".
+          </p>
+
+          <h3>How to use this site</h3>
+          <ul>
+            <li>
+              Tools tab: browse tools by category, progress status, and search.
+            </li>
+            <li>
+              Dashboard tab: track your learning progress and share snapshots on
+              X.
+            </li>
+            <li>Your progress is stored per browser using localStorage.</li>
+          </ul>
+
+          <h3>About the Administrator (IPUSIRON)</h3>
+          <p>
+            IPUSIRON is a prolific Japanese technical author and educator
+            specializing in security and cryptography. Born in 1979 in Soma
+            City, Fukushima, Japan, he continues to reside in his hometown. With
+            over 20 years of experience in technical writing, he has published
+            more than 30 books on cryptography, hacking, and cybersecurity—both
+            commercially and independently.
+          </p>
+
+          <p>Notable titles include:</p>
+          <ul>
+            <li>
+              <i>The Complete Guide to Cryptography</i> (暗号技術のすべて)
+            </li>
+            <li>
+              <i>How to Build a Hacking Lab – Complete Edition</i>
+              (ハッキング・ラボのつくりかた 完全版)
+            </li>
+            <li>
+              <i>The Textbook of White-Hat Hackers</i>
+              (ホワイトハッカーの教科書)
+            </li>
+            <li>
+              <i>The Hacker’s School: A Handbook of Lockpicking</i>
+              (ハッカーの学校 鍵開けの教科書)
+            </li>
+          </ul>
+
+          <p>
+            He is also an experienced translator and editorial supervisor of
+            cryptographic literature.<br />
+            Blog:
+            <a href="https://akademeia.info/" target="_blank"
+              >Security Akademeia</a
+            ><br />
+            English Book:
+            <a
+              href="https://ipusiron.github.io/book_Caesar_concise_en/"
+              target="_blank"
+            >
+              Caesar Cipher Breaking – A Concise Edition
+            </a>
+          </p>
+        </div>
       </div>
     </div>
-  </footer>
 
-  <!-- メインスクリプト（後で実装） -->
-  <script src="./js/main.js"></script>
-</body>
+    <script src="./js/main.js"></script>
+  </body>
 </html>
