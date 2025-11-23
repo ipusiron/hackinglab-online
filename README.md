@@ -136,42 +136,40 @@
 
 CIが`tools.json`を自動コミットするため、手動pushとbot pushが衝突しやすい構造になっています。
 
-そのため、push前には必ず以下を実行してください：
+そのため、push前には必ず以下の手順でgitコマンドを実行してください。
 
 ```bash
-git pull --rebase origin main
-git push origin main
+$ git pull --rebase origin main
+$ git push origin main
 ```
 
 これにより次の問題を防げます。
 
-* non-fast-forward エラー
-* bot の自動コミットとの競合
-* push の失敗
+* non-fast-forwardエラー
+* botの自動コミットとの競合
+* pushの失敗
 
 ---
 
 ## 🧪 ローカル動作確認
 
-GitHub Pages と同様の挙動をローカルで確認するには：
+GitHub Pagesと同様の挙動をローカルで確認するには、以下のように簡易Webサーバーを立ち上げます。
 
-```
-python3 -m http.server
-```
-
-または：
-
-```
-npx serve
+```bash
+$ python3 -m http.server
+or
+$ npx http-server -p 8080
+or 
+$ npx serve
 ```
 
 ---
 
 ## 🚀 今後の改善予定
 
-* category alias の完全サポート
+* category aliasの完全サポート
 * カードUIのさらなる改善
-* Dark Mode 対応
+* Dark Mode対応
 
 ---
 
@@ -200,4 +198,3 @@ npx serve
 ## 🔗 GitHub リポジトリ
 
 [https://github.com/ipusiron/hackinglab-online/](https://github.com/ipusiron/hackinglab-online/)
-
