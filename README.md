@@ -49,6 +49,8 @@
 
 ### ▶ tools.json（GitHub Actions により自動生成）
 
+`data/tools.json`の中身の例：
+
 ```json
 {
   "schema_version": 1,
@@ -77,7 +79,7 @@
 
 ### ▶ categories.json（手動管理）
 
-data/categories.json の中身の例：
+`data/categories.json`の中身の例：
 
 ```json
 [
@@ -109,12 +111,12 @@ data/categories.json の中身の例：
 ## 🔄 自動更新フロー（GitHub Actions）
 
 このリポジトリは **セルフアップデート方式** を採用しています。
-`repos.txt` にツールの GitHub URL を 1 行追加して push すると、
-自動的に `tools.json` が再生成され、GitHub Pages が更新されます。
+
+`repos.txt`にツールのGitHub URLを1行追加してpushすると、自動的に`tools.json`が再生成され、GitHub Pagesが更新されます。
 
 ### フロー全体
 
-1. `repos.txt` に URL を追加
+1. `repos.txt` にURLを追加
 2. `git push`
 3. GitHub Actions（`update-tools.yml`）が起動
 4. 各ツールリポジトリの README 内の YAML マターを抽出
