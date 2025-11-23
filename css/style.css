@@ -296,14 +296,39 @@ body {
 .tool-progress-button {
   padding: 0.3rem 0.7rem;
   border-radius: 999px;
-  border: 1px solid #d1d5db;
-  background-color: #f9fafb;
+  border: 1px solid transparent;
   font-size: 0.8rem;
   cursor: pointer;
+  transition: filter 0.15s;
 }
 
 .tool-progress-button:hover {
-  background-color: #e5e7eb;
+  filter: brightness(0.95);
+}
+
+/* 進捗状態別の色分け */
+.tool-progress-button.progress-0 {
+  background-color: #f3f4f6;
+  border-color: #d1d5db;
+  color: #6b7280;
+}
+
+.tool-progress-button.progress-1 {
+  background-color: #dbeafe;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}
+
+.tool-progress-button.progress-2 {
+  background-color: #fef3c7;
+  border-color: #fcd34d;
+  color: #92400e;
+}
+
+.tool-progress-button.progress-3 {
+  background-color: #d1fae5;
+  border-color: #6ee7b7;
+  color: #065f46;
 }
 
 /* --------------------------------

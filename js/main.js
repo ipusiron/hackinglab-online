@@ -428,6 +428,10 @@ function updateProgressButton(btn, slug) {
   const label = PROGRESS_LABELS[currentLang][level];
   btn.textContent =
     currentLang === "ja" ? `進捗: ${label}` : `Progress: ${label}`;
+
+  // 進捗状態の色分けクラスを更新
+  btn.classList.remove("progress-0", "progress-1", "progress-2", "progress-3");
+  btn.classList.add(`progress-${level}`);
 }
 
 // ---- ダッシュボード描画 ----
