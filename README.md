@@ -7,7 +7,10 @@
 
 ブラウザーで直接お試しいただけます。
 
-👉 **[https://ipusiron.github.io/hackinglab-online/](https://ipusiron.github.io/hackinglab-online/)**
+- GitHubPagesに直接アクセス
+  - 👉 **[https://ipusiron.github.io/hackinglab-online/](https://ipusiron.github.io/hackinglab-online/)**
+- ドメインによるアクセス
+  - 👉 **[https://hackinglab.online](https://hackinglab.online)**
 
 ---
 
