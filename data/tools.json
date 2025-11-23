@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2025-11-22T19:36:13Z",
+  "generated_at": "2025-11-23T01:30:30Z",
   "tools": [
     {
       "id": "day101",
@@ -15,10 +15,13 @@
         "色彩理論"
       ],
       "category_en": [
-        "Web",
+        "Web Design",
         "Color Theory"
       ],
-      "category_ids": [],
+      "category_ids": [
+        "color-theory",
+        "web-design"
+      ],
       "difficulty": 1,
       "tags": [
         "color",
@@ -32,6 +35,42 @@
       ],
       "repo_url": "https://github.com/ipusiron/color-hack-box",
       "demo_url": "https://ipusiron.github.io/color-hack-box/",
+      "hub": true
+    },
+    {
+      "id": "day102",
+      "slug": "qrcrashtest",
+      "title": "QRCrashTest",
+      "subtitle_ja": "QRコード耐性テストツール",
+      "subtitle_en": "QR code crash-test visualization tool",
+      "description_ja": "影・汚れ・欠損などのダメージに対するQRコードの読み取り耐性を体験できる実験ツール。構造レイヤーと致命ゾーンの可視化により、誤り訂正と当たりどころの違いを直感的に学べる。",
+      "description_en": "Interactive crash-test lab for QR codes — simulate shadows, occlusion, dirt, and damage to visualize how QR structure and error correction affect scan survivability.",
+      "category_ja": [
+        "QRコード",
+        "耐タンパー",
+        "符号理論"
+      ],
+      "category_en": [
+        "QR code",
+        "Anti-Tamper",
+        "Coding theory"
+      ],
+      "category_ids": [
+        "coding-theory",
+        "qr-code"
+      ],
+      "difficulty": 3,
+      "tags": [
+        "qr",
+        "qr-code",
+        "visualization",
+        "image",
+        "error-correction",
+        "education",
+        "javascript"
+      ],
+      "repo_url": "https://github.com/ipusiron/qrcrashtest",
+      "demo_url": "https://ipusiron.github.io/qrcrashtest/",
       "hub": true
     }
   ]
