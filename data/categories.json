@@ -1,1 +1,39 @@
-[]
+[
+  {
+    "id": "classic-crypto",
+    "ja": "古典暗号",
+    "en": "Classical cryptography",
+    "aliases_ja": ["古典的暗号", "クラシカル暗号"],
+    "aliases_en": ["Classical Cryptography", "Classical Cipher", "classic crypto"]
+  },
+
+  { "id": "color-theory", "ja": "色彩理論", "en": "Color Theory" },
+  { "id": "web-design", "ja": "Webデザイン", "en": "Web Design" },
+  { "id": "visualization", "ja": "可視化", "en": "Visualization" },
+  { "id": "qr-code", "ja": "QRコード", "en": "QR Code" },
+  { "id": "coding-theory", "ja": "符号理論", "en": "Coding Theory" },
+
+  { "id": "web-security", "ja": "Webセキュリティ", "en": "Web Security" },
+  { "id": "authentication", "ja": "認証", "en": "Authentication" },
+  { "id": "password-analysis", "ja": "パスワード解析", "en": "Password Analysis" },
+  { "id": "network", "ja": "ネットワーク", "en": "Networking" },
+  { "id": "hardening", "ja": "ハードニング", "en": "System Hardening" },
+  { "id": "forensics", "ja": "フォレンジック", "en": "Digital Forensics" },
+  { "id": "social-engineering", "ja": "ソーシャルエンジニアリング", "en": "Social Engineering" },
+  { "id": "communication-tech", "ja": "通信技術", "en": "Communication Technologies" },
+  { "id": "physical-security", "ja": "物理的セキュリティ", "en": "Physical Security" },
+  { "id": "prepper", "ja": "プレッパー", "en": "Prepping / Survival" },
+  { "id": "lockpicking", "ja": "鍵開け", "en": "Lockpicking" },
+  { "id": "computer-science", "ja": "コンピューターサイエンス", "en": "Computer Science" },
+  { "id": "attack-detection", "ja": "攻撃検知", "en": "Attack Detection" },
+  { "id": "deep-learning", "ja": "ディープラーニング", "en": "Deep Learning" },
+  { "id": "security-management", "ja": "セキュリティマネジメント", "en": "Security Management" },
+  { "id": "cyber-ninjutsu", "ja": "サイバー忍術", "en": "Cyber Ninjutsu" },
+  { "id": "mobile-hacking", "ja": "モバイルハッキング", "en": "Mobile Hacking" },
+  { "id": "information-theory", "ja": "情報理論", "en": "Information Theory" },
+  { "id": "hacker-culture", "ja": "ハッカー文化", "en": "Hacker Culture" },
+  { "id": "disaster-prevention", "ja": "防災", "en": "Disaster Preparedness" },
+
+  { "id": "lab-experiment", "ja": "実験ツール", "en": "Lab Experiments" },
+  { "id": "misc", "ja": "その他", "en": "Miscellaneous" }
+]
