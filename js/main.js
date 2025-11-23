@@ -17,6 +17,7 @@ const PROGRESS_LABELS = {
 
 document.addEventListener("DOMContentLoaded", () => {
   setupStaticUI();
+  setupHelpModal();
   loadData();
 });
 
@@ -36,12 +37,14 @@ function setupStaticUI() {
   langJaBtn?.addEventListener("click", () => {
     currentLang = "ja";
     updateLanguageUI();
+    setupFilterOptions(); // ラベルが変わるのでフィルタも再生成
     renderAll();
   });
 
   langEnBtn?.addEventListener("click", () => {
     currentLang = "en";
     updateLanguageUI();
+    setupFilterOptions();
     renderAll();
   });
 
@@ -85,6 +88,33 @@ function setupStaticUI() {
   updateLanguageUI();
 }
 
+// ---- ヘルプモーダル ----
+
+function setupHelpModal() {
+  const helpModal = document.getElementById("help-modal");
+  const helpButton = document.getElementById("help-button");
+  const helpClose = document.getElementById("help-close");
+
+  if (!helpModal) return;
+
+  // 念のため初期状態で隠しておく
+  helpModal.hidden = true;
+
+  helpButton?.addEventListener("click", () => {
+    helpModal.hidden = false;
+  });
+
+  helpClose?.addEventListener("click", () => {
+    helpModal.hidden = true;
+  });
+
+  // オーバーレイ部分クリックで閉じる
+  helpModal.addEventListener("click", (e) => {
+    if (e.target === helpModal) {
+      helpModal.hidden = true;
+    }
+  });
+}
 
 // ---- データ読み込み ----
 
@@ -145,7 +175,7 @@ function updateLanguageUI() {
     titleEn.style.display = isJa ? "none" : "";
   }
 
-  // 言語ボタンの状態
+  // 言語ボタン
   const langJaBtn = document.getElementById("lang-ja");
   const langEnBtn = document.getElementById("lang-en");
   if (langJaBtn && langEnBtn) {
@@ -191,13 +221,11 @@ function setupFilterOptions() {
   if (categorySelect) {
     categorySelect.innerHTML = "";
 
-    // 「すべて」オプション
     const optAll = document.createElement("option");
     optAll.value = "";
     optAll.textContent = currentLang === "ja" ? "すべて" : "All";
     categorySelect.appendChild(optAll);
 
-    // categories.json から
     categories.forEach((cat) => {
       const opt = document.createElement("option");
       opt.value = cat.id;
@@ -217,7 +245,7 @@ function setupFilterOptions() {
     const labels = PROGRESS_LABELS[currentLang];
     labels.forEach((label, level) => {
       const opt = document.createElement("option");
-      opt.value = String(level); // "0"〜"3"
+      opt.value = String(level);
       opt.textContent = label;
       progressSelect.appendChild(opt);
     });
@@ -233,7 +261,7 @@ function renderToolList() {
   listEl.innerHTML = "";
 
   const filtered = tools
-    .filter((t) => t.hub !== false) // hub が false なら除外
+    .filter((t) => t.hub !== false)
     .filter((t) => filterByCategory(t))
     .filter((t) => filterByProgress(t))
     .filter((t) => filterBySearch(t));
@@ -316,7 +344,6 @@ function createToolCard(tool) {
   const meta = document.createElement("div");
   meta.className = "tool-meta";
 
-  // 難易度
   const diffSpan = document.createElement("span");
   diffSpan.className = "tool-difficulty";
   const stars = "★".repeat(tool.difficulty || 1);
@@ -326,7 +353,6 @@ function createToolCard(tool) {
     diffSpan.textContent = `Level: ${stars}`;
   }
 
-  // カテゴリ（表示は categories.json を使っても、tool.category_ja/en でもOK）
   const catSpan = document.createElement("span");
   catSpan.className = "tool-categories";
   const labels = getCategoryLabels(tool);
@@ -335,7 +361,6 @@ function createToolCard(tool) {
   meta.appendChild(diffSpan);
   meta.appendChild(catSpan);
 
-  // ボタンエリア
   const footer = document.createElement("div");
   footer.className = "tool-footer";
 
@@ -359,10 +384,10 @@ function createToolCard(tool) {
   updateProgressButton(progressBtn, tool.slug);
 
   progressBtn.addEventListener("click", () => {
-    const level = (getProgress(tool.slug) + 1) % 4; // 0→1→2→3→0
+    const level = (getProgress(tool.slug) + 1) % 4;
     setProgress(tool.slug, level);
     updateProgressButton(progressBtn, tool.slug);
-    renderDashboard(); // ダッシュボード再計算
+    renderDashboard();
   });
 
   footer.appendChild(demoBtn);
@@ -483,7 +508,6 @@ function renderDashboard() {
       currentLang === "ja" ? `定着済み: ${n3}` : `Mastered: ${n3}`;
   }
 
-  // 今のところグラフは未実装なのでダミー文言だけ入れておく
   const chartContainer = document.getElementById("overall-chart-container");
   if (chartContainer) {
     chartContainer.textContent =
@@ -492,14 +516,92 @@ function renderDashboard() {
         : "Charts will be implemented later.";
   }
 
-  // カテゴリ別の枠も今はダミー
-  const catList = document.getElementById("category-progress-list");
-  if (catList) {
-    catList.textContent =
+  renderCategoryProgress();
+}
+
+// ---- カテゴリ別進捗 ----
+
+function buildCategoryStats() {
+  const stats = [];
+
+  categories.forEach((cat) => {
+    const id = cat.id;
+    let n0 = 0,
+      n1 = 0,
+      n2 = 0,
+      n3 = 0;
+
+    tools
+      .filter((t) => t.hub !== false)
+      .filter((t) => (t.category_ids || []).includes(id))
+      .forEach((tool) => {
+        const lvl = getProgress(tool.slug);
+        if (lvl === 0) n0++;
+        else if (lvl === 1) n1++;
+        else if (lvl === 2) n2++;
+        else if (lvl === 3) n3++;
+      });
+
+    const total = n0 + n1 + n2 + n3;
+    if (total === 0) return; // このカテゴリに属するツールがない場合はスキップ
+
+    stats.push({
+      id,
+      labelJa: cat.ja,
+      labelEn: cat.en,
+      n0,
+      n1,
+      n2,
+      n3,
+      total
+    });
+  });
+
+  return stats;
+}
+
+function renderCategoryProgress() {
+  const container = document.getElementById("category-progress-list");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  const stats = buildCategoryStats();
+
+  if (stats.length === 0) {
+    const p = document.createElement("p");
+    p.textContent =
       currentLang === "ja"
-        ? "カテゴリ別の進捗可視化は今後実装予定です。"
-        : "Per-category progress visualization will be implemented later.";
+        ? "カテゴリ別の進捗はまだありません。"
+        : "No category-level progress data yet.";
+    container.appendChild(p);
+    return;
   }
+
+  stats.forEach((cat) => {
+    const item = document.createElement("div");
+    item.className = "category-progress-item";
+
+    const title = document.createElement("div");
+    title.className = "category-progress-title";
+    title.textContent =
+      currentLang === "ja" ? cat.labelJa : cat.labelEn;
+
+    const detail = document.createElement("div");
+    detail.className = "category-progress-detail";
+
+    if (currentLang === "ja") {
+      detail.textContent =
+        `未着手${cat.n0} / 学習中${cat.n1} / 一周完了${cat.n2} / 定着済み${cat.n3} （全${cat.total}）`;
+    } else {
+      detail.textContent =
+        `Not started ${cat.n0} / In progress ${cat.n1} / First pass ${cat.n2} / Mastered ${cat.n3} (total ${cat.total})`;
+    }
+
+    item.appendChild(title);
+    item.appendChild(detail);
+    container.appendChild(item);
+  });
 }
 
 // ---- X共有 ----
@@ -565,29 +667,3 @@ function handleResetAllProgress() {
   renderToolList();
   renderDashboard();
 }
-
-///////////////////////////////////////////////////////////////////////////
-// ---- ヘルプモーダル ----
-///////////////////////////////////////////////////////////////////////////
-
-document.addEventListener("DOMContentLoaded", () => {
-  const helpModal = document.getElementById("help-modal");
-  const helpButton = document.getElementById("help-button");
-  const helpClose = document.getElementById("help-close");
-
-  // 念のため初期は必ず隠す
-  helpModal.hidden = true;
-
-  helpButton?.addEventListener("click", () => {
-    helpModal.hidden = false;
-  });
-
-  helpClose?.addEventListener("click", () => {
-    helpModal.hidden = true;
-  });
-
-  // 背景クリックで閉じたい場合
-  helpModal?.addEventListener("click", (e) => {
-    if (e.target === helpModal) helpModal.hidden = true;
-  });
-});
