@@ -369,7 +369,7 @@ function createToolCard(tool) {
   demoBtn.target = "_blank";
   demoBtn.rel = "noopener";
   demoBtn.className = "tool-button";
-  demoBtn.textContent = currentLang === "ja" ? "デモを開く" : "Open demo";
+  demoBtn.textContent = currentLang === "ja" ? "デモ" : "Demo";
 
   const repoBtn = document.createElement("a");
   repoBtn.href = tool.repo_url || "#";

@@ -643,6 +643,17 @@ body {
     flex-wrap: nowrap;
   }
 
+  /* PC幅でのボタンコンパクト化 */
+  .tool-footer .tool-button {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.75rem;
+  }
+
+  .tool-progress-button {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.75rem;
+  }
+
   /* カテゴリ別進捗：PC幅では2列 */
   #category-progress-list {
     grid-template-columns: repeat(2, 1fr);
