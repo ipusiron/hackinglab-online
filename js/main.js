@@ -582,11 +582,38 @@ function renderCategoryProgress() {
     const item = document.createElement("div");
     item.className = "category-progress-item";
 
+    // カテゴリ名
     const title = document.createElement("div");
     title.className = "category-progress-title";
-    title.textContent =
-      currentLang === "ja" ? cat.labelJa : cat.labelEn;
+    title.textContent = currentLang === "ja" ? cat.labelJa : cat.labelEn;
 
+    // 進捗バー
+    const bar = document.createElement("div");
+    bar.className = "category-progress-bar";
+
+    // 各セグメント（flex で比率表示）
+    const segN0 = document.createElement("div");
+    segN0.className = "bar-n0";
+    segN0.style.flex = cat.n0;
+
+    const segN1 = document.createElement("div");
+    segN1.className = "bar-n1";
+    segN1.style.flex = cat.n1;
+
+    const segN2 = document.createElement("div");
+    segN2.className = "bar-n2";
+    segN2.style.flex = cat.n2;
+
+    const segN3 = document.createElement("div");
+    segN3.className = "bar-n3";
+    segN3.style.flex = cat.n3;
+
+    bar.appendChild(segN0);
+    bar.appendChild(segN1);
+    bar.appendChild(segN2);
+    bar.appendChild(segN3);
+
+    // 数値テキスト
     const detail = document.createElement("div");
     detail.className = "category-progress-detail";
 
@@ -599,6 +626,7 @@ function renderCategoryProgress() {
     }
 
     item.appendChild(title);
+    item.appendChild(bar);
     item.appendChild(detail);
     container.appendChild(item);
   });

@@ -192,66 +192,65 @@ body {
 #tool-list {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1rem; /* 変更: カード間の余白を広げた */
+  gap: 1rem;
 }
 
 /* --- カード本体 --- */
 .tool-card {
   background-color: #ffffff;
-  border-radius: 0.875rem; /* 変更: 少し丸みを増やした */
+  border-radius: 0.875rem;
   border: 1px solid #e5e7eb;
-  padding: 1rem 1.1rem; /* 変更: 内側余白を広げた */
+  padding: 1rem 1.1rem;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
   display: flex;
   flex-direction: column;
-  gap: 0.6rem; /* 変更: 要素間のギャップを広げた */
-  transition: box-shadow 0.18s ease, transform 0.18s ease; /* 追加: hover用トランジション */
+  gap: 0.6rem;
+  transition: box-shadow 0.18s ease, transform 0.18s ease;
 }
 
 .tool-card:hover {
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1); /* 追加: hover時のシャドウ */
-  transform: translateY(-2px); /* 追加: hover時の浮き上がり */
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
+  transform: translateY(-2px);
 }
 
 /* --- ヘッダー部（Day + タイトル）--- */
 .tool-card-header {
   display: flex;
-  align-items: center; /* 変更: baseline → center で縦中央揃え */
+  align-items: center;
   gap: 0.6rem;
-  flex-wrap: wrap; /* 追加: スマホで折り返し対応 */
+  flex-wrap: wrap;
 }
 
 .tool-day {
-  flex-shrink: 0; /* 追加: 縮まないように */
-  font-size: 0.7rem; /* 変更: 少し小さく */
-  font-weight: 700; /* 変更: より太く */
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  font-weight: 700;
   color: #4b5563;
-  padding: 0.2rem 0.5rem; /* 変更: パディング調整 */
+  padding: 0.2rem 0.5rem;
   border-radius: 999px;
   background-color: #e5e7eb;
-  letter-spacing: 0.02em; /* 追加: 字間を少し */
+  letter-spacing: 0.02em;
 }
 
 .tool-title {
-  font-size: 1.1rem; /* 変更: 少し大きく */
-  font-weight: 700; /* 変更: より太く */
+  font-size: 1.1rem;
+  font-weight: 700;
   color: #111827;
-  line-height: 1.3; /* 追加: 行高を設定 */
+  line-height: 1.3;
 }
 
 /* --- サブタイトル --- */
 .tool-subtitle {
   font-size: 0.85rem;
   color: #4b5563;
-  line-height: 1.5; /* 追加: 読みやすい行高 */
+  line-height: 1.5;
 }
 
 /* --- 説明文（line-clamp対応）--- */
 .tool-description {
   font-size: 0.85rem;
   color: #374151;
-  line-height: 1.6; /* 変更: 読みやすい行高 */
-  /* line-clamp で最大3行に制限 */
+  line-height: 1.6;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
@@ -264,97 +263,97 @@ body {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-top: 0.2rem; /* 追加: 上に少し余白 */
+  margin-top: 0.2rem;
 }
 
 .tool-difficulty {
-  display: inline-flex; /* 変更: インラインフレックス */
+  display: inline-flex;
   align-items: center;
-  padding: 0.2rem 0.6rem; /* 変更: パディング増 */
+  padding: 0.2rem 0.6rem;
   border-radius: 999px;
   background-color: #eff6ff;
-  border: 1px solid #bfdbfe; /* 追加: ボーダーで強調 */
+  border: 1px solid #bfdbfe;
   color: #1d4ed8;
-  font-size: 0.75rem; /* 変更: 少し小さく */
-  font-weight: 600; /* 追加: 太字に */
+  font-size: 0.75rem;
+  font-weight: 600;
 }
 
 .tool-categories {
-  display: inline-flex; /* 変更: インラインフレックス */
+  display: inline-flex;
   align-items: center;
-  padding: 0.2rem 0.6rem; /* 変更: パディング増 */
+  padding: 0.2rem 0.6rem;
   border-radius: 999px;
   background-color: #f3f4f6;
-  border: 1px solid #e5e7eb; /* 追加: ボーダー */
+  border: 1px solid #e5e7eb;
   color: #374151;
-  font-size: 0.75rem; /* 変更: 少し小さく */
-  font-weight: 500; /* 追加: 中太字 */
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 
 /* --- フッター（ボタン群）--- */
 .tool-footer {
-  margin-top: auto; /* 変更: カード下部に押し付け */
-  padding-top: 0.6rem; /* 追加: 上に余白 */
-  border-top: 1px solid #f3f4f6; /* 追加: 区切り線 */
+  margin-top: auto;
+  padding-top: 0.6rem;
+  border-top: 1px solid #f3f4f6;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem; /* 変更: ギャップ増 */
+  gap: 0.5rem;
   align-items: center;
 }
 
 /* ボタングループ（デモ + GitHub）*/
 .tool-footer .tool-button {
-  padding: 0.4rem 0.85rem; /* 変更: パディング増 */
+  padding: 0.4rem 0.85rem;
   border-radius: 0.5rem;
   font-size: 0.8rem;
-  font-weight: 500; /* 追加: 中太字 */
+  font-weight: 500;
   border: 1px solid #2563eb;
   background-color: #2563eb;
   color: #fff;
   text-decoration: none;
   cursor: pointer;
-  transition: background-color 0.15s ease, transform 0.1s ease; /* 追加: トランジション */
+  transition: background-color 0.15s ease, transform 0.1s ease;
 }
 
 .tool-footer .tool-button:hover {
-  background-color: #1d4ed8; /* 変更: hover時に濃く */
-  transform: translateY(-1px); /* 追加: 微妙な浮き */
+  background-color: #1d4ed8;
+  transform: translateY(-1px);
 }
 
 .tool-footer .tool-button:active {
-  transform: translateY(0); /* 追加: クリック時に戻る */
+  transform: translateY(0);
 }
 
 .tool-footer .tool-button.secondary {
   background-color: #fff;
-  border-color: #d1d5db; /* 変更: 少し薄いボーダー */
+  border-color: #d1d5db;
   color: #374151;
 }
 
 .tool-footer .tool-button.secondary:hover {
   background-color: #f9fafb;
-  border-color: #9ca3af; /* 追加: hover時にボーダー濃く */
+  border-color: #9ca3af;
 }
 
 /* 進捗ボタン */
 .tool-progress-button {
-  margin-left: auto; /* 追加: 右端に配置 */
-  padding: 0.4rem 0.85rem; /* 変更: パディング増 */
+  margin-left: auto;
+  padding: 0.4rem 0.85rem;
   border-radius: 999px;
   border: 1px solid transparent;
   font-size: 0.8rem;
-  font-weight: 500; /* 追加: 中太字 */
+  font-weight: 500;
   cursor: pointer;
-  transition: filter 0.15s ease, transform 0.1s ease; /* 変更: トランジション追加 */
+  transition: filter 0.15s ease, transform 0.1s ease;
 }
 
 .tool-progress-button:hover {
   filter: brightness(0.95);
-  transform: translateY(-1px); /* 追加: 微妙な浮き */
+  transform: translateY(-1px);
 }
 
 .tool-progress-button:active {
-  transform: translateY(0); /* 追加: クリック時に戻る */
+  transform: translateY(0);
 }
 
 /* 進捗状態別の色分け */
@@ -437,6 +436,67 @@ body {
   background-color: #fef2f2;
 }
 
+/* ================================
+ * カテゴリ別進捗（進捗バー付きカード）
+ * ================================ */
+
+#category-progress-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+/* カテゴリカード */
+.category-progress-item {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.625rem;
+  padding: 0.75rem 1rem;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+
+/* カテゴリ名 */
+.category-progress-title {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+/* 進捗バー（コンテナ） */
+.category-progress-bar {
+  display: flex;
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background-color: #e5e7eb;
+  margin-bottom: 0.5rem;
+}
+
+/* バー各セグメント */
+.category-progress-bar .bar-n0 {
+  background-color: #d1d5db; /* グレー: 未着手 */
+}
+
+.category-progress-bar .bar-n1 {
+  background-color: #3b82f6; /* 青: 学習中 */
+}
+
+.category-progress-bar .bar-n2 {
+  background-color: #f59e0b; /* オレンジ: 一周完了 */
+}
+
+.category-progress-bar .bar-n3 {
+  background-color: #10b981; /* 緑: 定着済み */
+}
+
+/* 数値テキスト */
+.category-progress-detail {
+  font-size: 0.75rem;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
 /* --------------------------------
  * フッター
  * -------------------------------- */
@@ -515,21 +575,27 @@ body {
 
   /* ツールカードのグリッド：PC幅では2〜3列 */
   #tool-list {
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* 変更: 最小幅を少し広げた */
-    gap: 1.25rem; /* 変更: PC幅ではギャップを広げる */
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem;
   }
 
   /* PC幅でのカード調整 */
   .tool-card {
-    padding: 1.1rem 1.25rem; /* 変更: PC幅では少し広く */
+    padding: 1.1rem 1.25rem;
   }
 
   .tool-title {
-    font-size: 1.15rem; /* 変更: PC幅では少し大きく */
+    font-size: 1.15rem;
   }
 
   /* PC幅でのフッターボタン配置 */
   .tool-footer {
-    flex-wrap: nowrap; /* 変更: PC幅では折り返さない */
+    flex-wrap: nowrap;
+  }
+
+  /* カテゴリ別進捗：PC幅では2列 */
+  #category-progress-list {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
   }
 }
