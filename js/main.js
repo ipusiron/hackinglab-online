@@ -37,7 +37,7 @@ function setupStaticUI() {
   langJaBtn?.addEventListener("click", () => {
     currentLang = "ja";
     updateLanguageUI();
-    setupFilterOptions(); // ラベルが変わるのでフィルタも再生成
+    setupFilterOptions(); // ラベルが変わるのでフィルターも再生成
     renderAll();
   });
 
@@ -57,7 +57,7 @@ function setupStaticUI() {
     });
   });
 
-  // フィルタ
+  // フィルター
   const categorySelect = document.getElementById("filter-category");
   const progressSelect = document.getElementById("filter-progress");
   const searchInput = document.getElementById("filter-search-input");
@@ -212,7 +212,7 @@ function switchTab(targetId) {
   });
 }
 
-// ---- フィルタの選択肢セットアップ ----
+// ---- フィルターの選択肢セットアップ ----
 
 function setupFilterOptions() {
   const categorySelect = document.getElementById("filter-category");
