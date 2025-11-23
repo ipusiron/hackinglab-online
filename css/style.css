@@ -185,125 +185,176 @@ body {
   background-color: #f9fafb;
 }
 
-/* --------------------------------
- * ツールカード
- * -------------------------------- */
+/* ================================
+ * ツールカード（デザイン強化版）
+ * ================================ */
 
 #tool-list {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 0.75rem;
+  gap: 1rem; /* 変更: カード間の余白を広げた */
 }
 
+/* --- カード本体 --- */
 .tool-card {
   background-color: #ffffff;
-  border-radius: 0.75rem;
+  border-radius: 0.875rem; /* 変更: 少し丸みを増やした */
   border: 1px solid #e5e7eb;
-  padding: 0.75rem 0.9rem;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+  padding: 1rem 1.1rem; /* 変更: 内側余白を広げた */
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.6rem; /* 変更: 要素間のギャップを広げた */
+  transition: box-shadow 0.18s ease, transform 0.18s ease; /* 追加: hover用トランジション */
 }
 
+.tool-card:hover {
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1); /* 追加: hover時のシャドウ */
+  transform: translateY(-2px); /* 追加: hover時の浮き上がり */
+}
+
+/* --- ヘッダー部（Day + タイトル）--- */
 .tool-card-header {
   display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
+  align-items: center; /* 変更: baseline → center で縦中央揃え */
+  gap: 0.6rem;
+  flex-wrap: wrap; /* 追加: スマホで折り返し対応 */
 }
 
 .tool-day {
-  font-size: 0.75rem;
-  font-weight: 600;
+  flex-shrink: 0; /* 追加: 縮まないように */
+  font-size: 0.7rem; /* 変更: 少し小さく */
+  font-weight: 700; /* 変更: より太く */
   color: #4b5563;
-  padding: 0.1rem 0.35rem;
+  padding: 0.2rem 0.5rem; /* 変更: パディング調整 */
   border-radius: 999px;
   background-color: #e5e7eb;
+  letter-spacing: 0.02em; /* 追加: 字間を少し */
 }
 
 .tool-title {
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 1.1rem; /* 変更: 少し大きく */
+  font-weight: 700; /* 変更: より太く */
   color: #111827;
+  line-height: 1.3; /* 追加: 行高を設定 */
 }
 
+/* --- サブタイトル --- */
 .tool-subtitle {
   font-size: 0.85rem;
   color: #4b5563;
+  line-height: 1.5; /* 追加: 読みやすい行高 */
 }
 
+/* --- 説明文（line-clamp対応）--- */
 .tool-description {
   font-size: 0.85rem;
   color: #374151;
+  line-height: 1.6; /* 変更: 読みやすい行高 */
+  /* line-clamp で最大3行に制限 */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
+/* --- メタ情報（難易度・カテゴリ）--- */
 .tool-meta {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  font-size: 0.8rem;
-  color: #4b5563;
+  margin-top: 0.2rem; /* 追加: 上に少し余白 */
 }
 
 .tool-difficulty {
-  padding: 0.05rem 0.4rem;
+  display: inline-flex; /* 変更: インラインフレックス */
+  align-items: center;
+  padding: 0.2rem 0.6rem; /* 変更: パディング増 */
   border-radius: 999px;
   background-color: #eff6ff;
+  border: 1px solid #bfdbfe; /* 追加: ボーダーで強調 */
   color: #1d4ed8;
+  font-size: 0.75rem; /* 変更: 少し小さく */
+  font-weight: 600; /* 追加: 太字に */
 }
 
 .tool-categories {
-  padding: 0.05rem 0.4rem;
+  display: inline-flex; /* 変更: インラインフレックス */
+  align-items: center;
+  padding: 0.2rem 0.6rem; /* 変更: パディング増 */
   border-radius: 999px;
   background-color: #f3f4f6;
+  border: 1px solid #e5e7eb; /* 追加: ボーダー */
   color: #374151;
+  font-size: 0.75rem; /* 変更: 少し小さく */
+  font-weight: 500; /* 追加: 中太字 */
 }
 
+/* --- フッター（ボタン群）--- */
 .tool-footer {
-  margin-top: 0.35rem;
+  margin-top: auto; /* 変更: カード下部に押し付け */
+  padding-top: 0.6rem; /* 追加: 上に余白 */
+  border-top: 1px solid #f3f4f6; /* 追加: 区切り線 */
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
-  justify-content: space-between;
+  gap: 0.5rem; /* 変更: ギャップ増 */
   align-items: center;
 }
 
-.tool-button {
-  padding: 0.3rem 0.7rem;
+/* ボタングループ（デモ + GitHub）*/
+.tool-footer .tool-button {
+  padding: 0.4rem 0.85rem; /* 変更: パディング増 */
   border-radius: 0.5rem;
   font-size: 0.8rem;
+  font-weight: 500; /* 追加: 中太字 */
   border: 1px solid #2563eb;
   background-color: #2563eb;
   color: #fff;
   text-decoration: none;
   cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease; /* 追加: トランジション */
 }
 
-.tool-button.secondary {
+.tool-footer .tool-button:hover {
+  background-color: #1d4ed8; /* 変更: hover時に濃く */
+  transform: translateY(-1px); /* 追加: 微妙な浮き */
+}
+
+.tool-footer .tool-button:active {
+  transform: translateY(0); /* 追加: クリック時に戻る */
+}
+
+.tool-footer .tool-button.secondary {
   background-color: #fff;
-  border-color: #6b7280;
+  border-color: #d1d5db; /* 変更: 少し薄いボーダー */
   color: #374151;
 }
 
-.tool-button.secondary:hover {
-  background-color: #f3f4f6;
+.tool-footer .tool-button.secondary:hover {
+  background-color: #f9fafb;
+  border-color: #9ca3af; /* 追加: hover時にボーダー濃く */
 }
 
-.tool-button:hover {
-  filter: brightness(0.96);
-}
-
+/* 進捗ボタン */
 .tool-progress-button {
-  padding: 0.3rem 0.7rem;
+  margin-left: auto; /* 追加: 右端に配置 */
+  padding: 0.4rem 0.85rem; /* 変更: パディング増 */
   border-radius: 999px;
   border: 1px solid transparent;
   font-size: 0.8rem;
+  font-weight: 500; /* 追加: 中太字 */
   cursor: pointer;
-  transition: filter 0.15s;
+  transition: filter 0.15s ease, transform 0.1s ease; /* 変更: トランジション追加 */
 }
 
 .tool-progress-button:hover {
   filter: brightness(0.95);
+  transform: translateY(-1px); /* 追加: 微妙な浮き */
+}
+
+.tool-progress-button:active {
+  transform: translateY(0); /* 追加: クリック時に戻る */
 }
 
 /* 進捗状態別の色分け */
@@ -331,9 +382,9 @@ body {
   color: #065f46;
 }
 
-/* --------------------------------
+/* ================================
  * ダッシュボード
- * -------------------------------- */
+ * ================================ */
 
 #tab-dashboard section {
   background-color: #ffffff;
@@ -452,9 +503,9 @@ body {
   cursor: pointer;
 }
 
-/* --------------------------------
- * PC向け調整
- * -------------------------------- */
+/* ================================
+ * PC向け調整（768px以上）
+ * ================================ */
 
 @media (min-width: 768px) {
   #tool-filters {
@@ -462,7 +513,23 @@ body {
     align-items: end;
   }
 
+  /* ツールカードのグリッド：PC幅では2〜3列 */
   #tool-list {
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* 変更: 最小幅を少し広げた */
+    gap: 1.25rem; /* 変更: PC幅ではギャップを広げる */
+  }
+
+  /* PC幅でのカード調整 */
+  .tool-card {
+    padding: 1.1rem 1.25rem; /* 変更: PC幅では少し広く */
+  }
+
+  .tool-title {
+    font-size: 1.15rem; /* 変更: PC幅では少し大きく */
+  }
+
+  /* PC幅でのフッターボタン配置 */
+  .tool-footer {
+    flex-wrap: nowrap; /* 変更: PC幅では折り返さない */
   }
 }
