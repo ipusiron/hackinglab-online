@@ -132,14 +132,13 @@
 
 ---
 
-## ⚠ push 前に「必ず rebase」を実行
+## ⚠ push 前に「必ず rebase」を実行すること
 
-CI が tools.json を自動コミットするため、
-手動 push と bot push が衝突しやすい構造になっています。
+CIが`tools.json`を自動コミットするため、手動pushとbot pushが衝突しやすい構造になっています。
 
-そのため、push 前には必ず以下を実行してください：
+そのため、push前には必ず以下を実行してください：
 
-```
+```bash
 git pull --rebase origin main
 git push origin main
 ```
