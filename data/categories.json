@@ -14,6 +14,21 @@
     "aliases_en": ["Mordern Cryptography", "Mordern Cipher", "mordern crypto"]
   },
 
+  {
+    "id": "classic-crypto",
+    "ja": "換字式暗号",
+    "en": "Substitution cipher",
+    "aliases_ja": ["換字暗号", "置換暗号"],
+    "aliases_en": ["Substitution Cipher"]
+  },
+  {
+    "id": "clamodernsic-crypto",
+    "ja": "転置式暗号",
+    "en": "Transposition cipher",
+    "aliases_ja": ["転置暗号"],
+    "aliases_en": ["Transposition Cipher"]
+  },
+
   { "id": "color-theory", "ja": "色彩理論", "en": "Color Theory" },
   { "id": "web-design", "ja": "Webデザイン", "en": "Web Design" },
   { "id": "visualization", "ja": "可視化", "en": "Visualization" },
