@@ -15,14 +15,14 @@
   },
 
   {
-    "id": "classic-crypto",
+    "id": "substitution-cipher",
     "ja": "換字式暗号",
     "en": "Substitution cipher",
     "aliases_ja": ["換字暗号", "置換暗号"],
     "aliases_en": ["Substitution Cipher"]
   },
   {
-    "id": "clamodernsic-crypto",
+    "id": "transposition-cipher",
     "ja": "転置式暗号",
     "en": "Transposition cipher",
     "aliases_ja": ["転置暗号"],
