@@ -6,6 +6,13 @@
     "aliases_ja": ["古典的暗号", "クラシカル暗号"],
     "aliases_en": ["Classical Cryptography", "Classical Cipher", "classic crypto"]
   },
+  {
+    "id": "clamodernsic-crypto",
+    "ja": "現代暗号",
+    "en": "Mordern cryptography",
+    "aliases_ja": ["現代的暗号"],
+    "aliases_en": ["Mordern Cryptography", "Mordern Cipher", "mordern crypto"]
+  },
 
   { "id": "color-theory", "ja": "色彩理論", "en": "Color Theory" },
   { "id": "web-design", "ja": "Webデザイン", "en": "Web Design" },
