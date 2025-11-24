@@ -34,6 +34,25 @@
 
 ---
 
+## 🔄 自動更新フロー（GitHub Actions）
+
+このリポジトリは **セルフアップデート方式** を採用しています。
+
+`repos.txt`にツールのGitHub URLを1行追加してpushすると、自動的に`tools.json`が再生成され、GitHub Pagesが更新されます。
+
+### フロー全体
+
+1. `repos.txt` にURLを追加
+2. `git push`
+3. GitHub Actions（`update-tools.yml`）が起動
+4. 各ツールリポジトリのREADME内のYAMLマターを抽出
+5. `categories.json`と照合して`category_ids`を付与
+6. `data/tools.json`を自動生成
+7. GitHub Actions Botが`tools.json`を自動コミット
+8. GitHub Pagesが再ビルドされサイトに反映
+
+---
+
 ## 📂 リポジトリー構成
 
 ```text
@@ -88,6 +107,8 @@
 }
 ```
 
+---
+
 ### ▶ categories.json（手動管理）
 
 `data/categories.json`の中身の例：
@@ -109,32 +130,51 @@
 ]
 ```
 
----
+`categories.json`の各フィールドは以下の意味を持ちます。
 
-### 📝 categories.json 各フィールドの意味
-
-* **id**：内部識別子（集計・フィルター動作に使用するキー）
-* **ja / en**：UIに表示されるカテゴリ名
-* **aliases_***：表記ゆれを吸収するための候補（現在は仕様上は未使用だが、例としてclassic-cryptoにだけ残している）
+- **id**：内部識別子（集計・フィルター動作に使用するキー）
+- **ja / en**：UIに表示されるカテゴリー名
+- **aliases_**：表記ゆれを吸収するための候補（現在は仕様上は未使用だが、例としてclassic-cryptoにだけ残している）
 
 ---
 
-## 🔄 自動更新フロー（GitHub Actions）
+### 📝 README冒頭のYAMLマター
 
-このリポジトリは **セルフアップデート方式** を採用しています。
+各DayXXXのREADME冒頭のYAMLマターは以下の書式で記載します。
 
-`repos.txt`にツールのGitHub URLを1行追加してpushすると、自動的に`tools.json`が再生成され、GitHub Pagesが更新されます。
+```
+<!--
+---
+id: dayXXX
+slug: your-tool-slug
 
-### フロー全体
+title: "Tool Name"
 
-1. `repos.txt` にURLを追加
-2. `git push`
-3. GitHub Actions（`update-tools.yml`）が起動
-4. 各ツールリポジトリの README 内の YAML マターを抽出
-5. `categories.json` と照合して `category_ids` を付与
-6. `data/tools.json` を自動生成
-7. GitHub Actions Bot が tools.json を自動コミット
-8. GitHub Pages が再ビルドされサイトに反映
+subtitle_ja: "日本語の副題"
+subtitle_en: "English subtitle"
+
+description_ja: "日本語の概要文"
+description_en: "English description"
+
+category_ja:
+  - 日本語カテゴリ
+category_en:
+  - English category
+
+difficulty: 1
+
+tags:
+  - tag1
+  - tag2
+  - tag3
+
+repo_url: "https://github.com/ipusiron/[slug]"
+demo_url: "https://ipusiron.github.io/[slug]/"
+
+hub: true
+---
+!-->
+```
 
 ---
 
