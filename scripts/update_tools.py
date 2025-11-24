@@ -118,18 +118,26 @@ def parse_repo_url(url: str) -> Optional[Dict[str, str]]:
     return None
 
 
-def fetch_readme(owner: str, repo: str, branch: str = "main") -> Optional[str]:
-    raw_url = f"https://raw.githubusercontent.com/{owner}/{repo}/{branch}/README.md"
-    try:
-        with urlopen(raw_url) as resp:
-            charset = resp.headers.get_content_charset() or "utf-8"
-            return resp.read().decode(charset, errors="replace")
-    except HTTPError as e:
-        log(f"[WARN] README取得失敗 HTTPError: {raw_url} ({e.code})")
-    except URLError as e:
-        log(f"[WARN] README取得失敗 URLError: {raw_url} ({e})")
-    except Exception as e:
-        log(f"[WARN] README取得中に予期しないエラー: {raw_url} ({e})")
+def fetch_readme(owner: str, repo: str, branches: List[str] = None) -> Optional[str]:
+    if branches is None:
+        branches = ["main", "master"]
+
+    for branch in branches:
+        raw_url = f"https://raw.githubusercontent.com/{owner}/{repo}/{branch}/README.md"
+        try:
+            with urlopen(raw_url) as resp:
+                charset = resp.headers.get_content_charset() or "utf-8"
+                return resp.read().decode(charset, errors="replace")
+        except HTTPError:
+            continue  # 次のブランチを試す
+        except URLError as e:
+            log(f"[WARN] README取得失敗 URLError: {raw_url} ({e})")
+            return None
+        except Exception as e:
+            log(f"[WARN] README取得中に予期しないエラー: {raw_url} ({e})")
+            return None
+
+    log(f"[WARN] README取得失敗: {owner}/{repo} (どのブランチにも見つかりません)")
     return None
 
 
