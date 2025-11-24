@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2025-11-24T05:24:24Z",
+  "generated_at": "2025-11-24T05:34:48Z",
   "tools": [
     {
       "id": "day001",
@@ -45,7 +45,8 @@
         "Hash Function"
       ],
       "category_ids": [
-        "clamodernsic-crypto"
+        "clamodernsic-crypto",
+        "hash-function"
       ],
       "difficulty": 1,
       "tags": [
@@ -131,6 +132,41 @@
       "hub": true
     },
     {
+      "id": "day006",
+      "slug": "hacking-scene-simulator",
+      "title": "Hacking Scene Simulator",
+      "subtitle_ja": "映画・取材用ハッキング画面シミュレーター",
+      "subtitle_en": "Realistic Hacking Screen Simulator for Filming",
+      "description_ja": "映画やTV番組のハッキングシーン撮影・取材に使用できる、6種類のリアルなハッキング操作風画面をシミュレートするWebアプリケーション",
+      "description_en": "A web application simulating 6 types of realistic hacking screens for filming, journalism, and educational purposes",
+      "category_ja": [
+        "ハッカー文化",
+        "シミュレーター",
+        "教育・デモ"
+      ],
+      "category_en": [
+        "Hacker Culture",
+        "Simulator",
+        "Education & Demo"
+      ],
+      "category_ids": [
+        "hacker-culture"
+      ],
+      "difficulty": 1,
+      "tags": [
+        "terminal",
+        "matrix",
+        "nmap",
+        "wireshark",
+        "metasploit",
+        "fullscreen",
+        "animation"
+      ],
+      "repo_url": "https://github.com/ipusiron/hacking-scene-simulator",
+      "demo_url": "https://ipusiron.github.io/hacking-scene-simulator/",
+      "hub": true
+    },
+    {
       "id": "day085",
       "slug": "camoforge",
       "title": "CamoForge",
@@ -213,6 +249,7 @@
         "Coding theory"
       ],
       "category_ids": [
+        "anti-tamper",
         "coding-theory",
         "qr-code"
       ],

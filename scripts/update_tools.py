@@ -83,6 +83,13 @@ def load_categories() -> Dict[str, Dict[str, str]]:
             ja_to_id[ja] = cid
         if cid and en:
             en_to_id[en] = cid
+        # aliases も登録
+        for alias in cat.get("aliases_ja", []):
+            if cid and alias:
+                ja_to_id[alias] = cid
+        for alias in cat.get("aliases_en", []):
+            if cid and alias:
+                en_to_id[alias] = cid
 
     return {"ja_to_id": ja_to_id, "en_to_id": en_to_id}
 
