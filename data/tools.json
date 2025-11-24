@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2025-11-24T03:46:04Z",
+  "generated_at": "2025-11-24T04:48:51Z",
   "tools": [
     {
       "id": "day001",
@@ -57,6 +57,73 @@
       ],
       "repo_url": "https://github.com/ipusiron/hash-detector",
       "demo_url": "https://ipusiron.github.io/hash-detector/",
+      "hub": true
+    },
+    {
+      "id": "day004",
+      "slug": "japanese-caesar-cipher",
+      "title": "Japanese Caesar Cipher",
+      "subtitle_ja": "ひらがな専用シーザー暗号ツール",
+      "subtitle_en": "Caesar Cipher Tool for Japanese Hiragana",
+      "description_ja": "日本語のひらがな文字を対象としたシーザー暗号の暗号化・復号ツール。あいうえお順、いろは順、任意の文字順序に対応。",
+      "description_en": "A web-based Caesar cipher encryption/decryption tool for Japanese hiragana characters. Supports aiueo order, iroha order, and custom character sequences.",
+      "category_ja": [
+        "古典暗号",
+        "換字式暗号"
+      ],
+      "category_en": [
+        "Classical Cryptography",
+        "Substitution Cipher"
+      ],
+      "category_ids": [
+        "classic-crypto"
+      ],
+      "difficulty": 1,
+      "tags": [
+        "caesar-cipher",
+        "shift-cipher",
+        "hiragana",
+        "cryptography",
+        "japanese",
+        "classical-cipher",
+        "web-tool",
+        "education"
+      ],
+      "repo_url": "https://github.com/ipusiron/japanese-caesar-cipher",
+      "demo_url": "https://ipusiron.github.io/japanese-caesar-cipher/",
+      "hub": true
+    },
+    {
+      "id": "day005",
+      "slug": "rot13-encoder",
+      "title": "ROT13 Encoder",
+      "subtitle_ja": "インタラクティブな置換表で学ぶROT13暗号",
+      "subtitle_en": "Learn ROT13 cipher with interactive substitution tables",
+      "description_ja": "ROT13（13文字シフト暗号）の動作原理を視覚的に学習できる教育用暗号ツール。リアルタイム変換とインタラクティブな置換表で古典暗号を体験できます。",
+      "description_en": "An educational cryptography tool for visually learning how ROT13 (13-character shift cipher) works. Experience classical cryptography with real-time conversion and interactive substitution tables.",
+      "category_ja": [
+        "古典暗号",
+        "換字式暗号"
+      ],
+      "category_en": [
+        "Classical Cryptography",
+        "Substitution Cipher"
+      ],
+      "category_ids": [
+        "classic-crypto"
+      ],
+      "difficulty": 1,
+      "tags": [
+        "rot13",
+        "caesar-cipher",
+        "shift-cipher",
+        "cryptography",
+        "encoder",
+        "decoder",
+        "substitution-cipher"
+      ],
+      "repo_url": "https://github.com/ipusiron/rot13-encoder",
+      "demo_url": "https://ipusiron.github.io/rot13-encoder/",
       "hub": true
     },
     {
