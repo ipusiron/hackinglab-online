@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2025-11-24T04:48:51Z",
+  "generated_at": "2025-11-24T05:24:24Z",
   "tools": [
     {
       "id": "day001",
@@ -37,10 +37,12 @@
       "description_ja": "入力されたハッシュ値がどのアルゴリズム（MD5, SHA-1, SHA-256など）で生成されたものかを推測するクライアントサイドツール",
       "description_en": "A client-side tool that identifies which hash algorithm (MD5, SHA-1, SHA-256, etc.) was likely used to generate an input string",
       "category_ja": [
-        "現代暗号"
+        "現代暗号",
+        "ハッシュ関数"
       ],
       "category_en": [
-        "Mordern cryptography"
+        "Mordern Cryptography",
+        "Hash Function"
       ],
       "category_ids": [
         "clamodernsic-crypto"
@@ -76,7 +78,8 @@
         "Substitution Cipher"
       ],
       "category_ids": [
-        "classic-crypto"
+        "classic-crypto",
+        "substitution-cipher"
       ],
       "difficulty": 1,
       "tags": [
@@ -110,7 +113,8 @@
         "Substitution Cipher"
       ],
       "category_ids": [
-        "classic-crypto"
+        "classic-crypto",
+        "substitution-cipher"
       ],
       "difficulty": 1,
       "tags": [
