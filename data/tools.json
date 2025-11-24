@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2025-11-24T05:34:48Z",
+  "generated_at": "2025-11-24T05:55:38Z",
   "tools": [
     {
       "id": "day001",
@@ -164,6 +164,36 @@
       ],
       "repo_url": "https://github.com/ipusiron/hacking-scene-simulator",
       "demo_url": "https://ipusiron.github.io/hacking-scene-simulator/",
+      "hub": true
+    },
+    {
+      "id": "day007",
+      "slug": "image-exif-checker",
+      "title": "画像Exifチェッカー",
+      "subtitle_ja": "画像に潜む個人情報を可視化・削除",
+      "subtitle_en": "Visualize and remove hidden metadata from images",
+      "description_ja": "JPEG/PNG画像に含まれるExifメタ情報を確認・削除できるWebツール。位置情報や撮影日時などを可視化し、ボタン1つで除去できます。",
+      "description_en": "A web tool to check and remove Exif metadata from JPEG/PNG images. Visualizes location data, timestamps, and more, with one-click removal.",
+      "category_ja": [
+        "フォレンジック"
+      ],
+      "category_en": [
+        "Forensics"
+      ],
+      "category_ids": [
+        "forensics"
+      ],
+      "difficulty": 1,
+      "tags": [
+        "exif",
+        "metadata",
+        "privacy",
+        "image",
+        "security",
+        "metadata analysis"
+      ],
+      "repo_url": "https://github.com/ipusiron/image-exif-checker",
+      "demo_url": "https://ipusiron.github.io/image-exif-checker/",
       "hub": true
     },
     {
