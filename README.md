@@ -244,7 +244,7 @@ $ git rebase --continue
 6. 安全なpush
 
 ```bash
-git push origin main
+$ git push origin main
 ``` 
 
 これでnon-fast-forwardエラーやBotの更新との競合を防止できます。
