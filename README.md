@@ -178,7 +178,6 @@ hub: true
 
 ---
 
-
 ## GitHub Actions共存環境での安全なpush手順
 
 GitHub Actionsがmainに対して自動で`tools.json`などを更新・コミットする構造のために、「ローカルからの手動push」と「Botのpush」が衝突しやすくなっています。
