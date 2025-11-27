@@ -178,22 +178,82 @@ hub: true
 
 ---
 
-## ⚠ push 前に「必ず rebase」を実行すること
 
-CIが`tools.json`を自動コミットするため、手動pushとbot pushが衝突しやすい構造になっています。
+## GitHub Actions共存環境での安全なpush手順
 
-そのため、push前には必ず以下の手順でgitコマンドを実行してください。
+GitHub Actionsがmainに対して自動で`tools.json`などを更新・コミットする構造のために、「ローカルからの手動push」と「Botのpush」が衝突しやすくなっています。
+そのため、push前には必ずrebase（＝最新履歴の取り込み）を行ってください。
+
+### ⚠ push前に必ずrebaseを実行すること
+
+手順は以下のとおりです。
+
+1. 作業開始前（任意）
+
+最初に `main` を最新にしておくと安心です。
 
 ```bash
+$ git switch main
+$ git fetch origin
 $ git pull --rebase origin main
-$ git push origin main
 ```
+
+※必須ではありません。
+push直前に行う最終同期が本番です。
+
+2. ローカルで編集する
+
+HTML / CSS / JS / READMEなどを自由に編集します。
+この段階はGitHub Actionsが動いていても問題ありません。
+
+3. 編集内容をステージングする（git add）
+
+```bash
+$ git add .
+```
+
+必要に応じてファイル単位でもOKです。
+
+```bash
+$ git add README.md
+```
+
+4. ローカルにコミットする（git commit）
+
+```bash
+$ git commit -m "Update: ○○ の修正"
+```
+
+この時点ではローカルmainにのみコミットが存在しています。
+この状態は安全です。
+
+5. push直前の必須儀式（最重要）
+
+GitHub Actionsが裏でmainに更新を入れている可能性があるため、pushの直前に必ず最新を取り込みます。
+
+```bash
+$ git fetch origin
+$ git pull --rebase origin main
+```
+
+#### 📌 これで防げる問題
 
 これにより次の問題を防げます。
 
 * non-fast-forwardエラー
-* botの自動コミットとの競合
-* pushの失敗
+* GitHub Actionsが生成した自動コミットとの競合
+* pushの失敗・履歴の分岐
+* mainの破壊（force pushを回避できる）
+
+
+#### 🧭 なぜ rebase が必要なのか
+
+GitHub Actionsは、あなたのpushに関係なくmainに新しいコミットを追加します。
+
+その間にあなたがローカルで作業してpushしようとすると、ローカルmainとorigin/mainの履歴がズレてpushが拒否されることがあります。
+
+対応策である`git pull --rebase origin main`コマンドを実行すれば、origin/mainの最新履歴を取り込み、あなたのローカルコミットをその後ろに綺麗に並べ直します。
+これにより、mainの歴史を壊さず安全にpushできる状態に整えるという効果があります。
 
 ---
 
