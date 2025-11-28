@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2025-11-24T06:20:31Z",
+  "generated_at": "2025-11-28T00:31:11Z",
   "tools": [
     {
       "id": "day001",
@@ -229,6 +229,419 @@
       ],
       "repo_url": "https://github.com/ipusiron/image-exif-checker",
       "demo_url": "https://ipusiron.github.io/image-exif-checker/",
+      "hub": true
+    },
+    {
+      "id": "day008",
+      "slug": "caesar-cipher-breaker",
+      "title": "Caesar Cipher Breaker",
+      "subtitle_ja": "シーザー暗号総当たり解読ツール",
+      "subtitle_en": "Caesar Cipher Brute-force Decryption Tool",
+      "description_ja": "全25通りのシフトで暗号文を復号化し、英単語マッチング数でランキング表示するWebベース解析ツール",
+      "description_en": "Web-based analysis tool that decrypts ciphertext with all 25 possible shifts and ranks results by English word matches",
+      "category_ja": [
+        "暗号解析",
+        "古典暗号"
+      ],
+      "category_en": [
+        "Cryptanalysis",
+        "Classical Cryptography"
+      ],
+      "category_ids": [
+        "classic-crypto",
+        "cryptanalysis"
+      ],
+      "difficulty": 1,
+      "tags": [
+        "caesar-cipher",
+        "cryptanalysis",
+        "brute-force",
+        "substitution-cipher"
+      ],
+      "repo_url": "https://github.com/ipusiron/caesar-cipher-breaker",
+      "demo_url": "https://ipusiron.github.io/caesar-cipher-breaker/",
+      "hub": true
+    },
+    {
+      "id": "day009",
+      "slug": "frequency-analyzer",
+      "title": "Frequency Analyzer",
+      "subtitle_ja": "頻度分析ツール",
+      "subtitle_en": "Frequency Analysis Tool for Classical Cipher Decryption",
+      "description_ja": "英文ベースの暗号文を対象とした頻度分析＆解読ツール。シーザー暗号や単一換字式暗号の解読に役立ちます。",
+      "description_en": "A frequency analysis and decryption tool for English-based ciphertext. Useful for breaking Caesar ciphers and monoalphabetic substitution ciphers.",
+      "category_ja": [
+        "暗号解析",
+        "古典暗号"
+      ],
+      "category_en": [
+        "Cryptanalysis",
+        "Classical Cryptography"
+      ],
+      "category_ids": [
+        "classic-crypto",
+        "cryptanalysis"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "frequency-analysis",
+        "cryptanalysis"
+      ],
+      "repo_url": "https://github.com/ipusiron/frequency-analyzer",
+      "demo_url": "https://ipusiron.github.io/frequency-analyzer/",
+      "hub": true
+    },
+    {
+      "id": "day010",
+      "slug": "scytale-cipher-visualizer",
+      "title": "Scytale Cipher Visualizer",
+      "subtitle_ja": "スキュタレー暗号ビジュアライザー",
+      "subtitle_en": "Ancient Spartan Transposition Cipher Simulator",
+      "description_ja": "古代スパルタの軍事暗号「スキュタレー暗号」をWebブラウザで体験できる教育ツール。マトリクス表示とアニメーションで転置暗号の仕組みを視覚的に学べます。",
+      "description_en": "An educational tool to experience the ancient Spartan military cipher 'Scytale Cipher' in your web browser. Learn the mechanics of transposition ciphers visually through matrix display and animations.",
+      "category_ja": [
+        "古典暗号",
+        "転地式暗号"
+      ],
+      "category_en": [
+        "Classical Cryptography",
+        "Transposition Cipher"
+      ],
+      "category_ids": [
+        "classic-crypto",
+        "transposition-cipher"
+      ],
+      "difficulty": 1,
+      "tags": [
+        "visualization",
+        "educational"
+      ],
+      "repo_url": "https://github.com/ipusiron/scytale-cipher-visualizer",
+      "demo_url": "https://ipusiron.github.io/scytale-cipher-visualizer/",
+      "hub": true
+    },
+    {
+      "id": "day011",
+      "slug": "osm-infra-viewer",
+      "title": "OSM Infrastructure Viewer",
+      "subtitle_ja": "OSMインフラ可視化ツール",
+      "subtitle_en": "OpenStreetMap Infrastructure Visualization Tool",
+      "description_ja": "OSM（OpenStreetMap）に登録されたCCTVカメラ、携帯基地局、ATMなど20種類以上のインフラオブジェクトを地図上に可視化するWebアプリケーション",
+      "description_en": "A web application that visualizes 20+ infrastructure objects registered in OpenStreetMap, including CCTV cameras, cell towers, ATMs, and more on an interactive map",
+      "category_ja": [
+        "OSINT",
+        "地理情報"
+      ],
+      "category_en": [
+        "OSINT",
+        "Geospatial"
+      ],
+      "category_ids": [],
+      "difficulty": 1,
+      "tags": [
+        "OpenStreetMap",
+        "Leaflet",
+        "OSINT",
+        "GIS",
+        "Geolocation",
+        "Infrastructure"
+      ],
+      "repo_url": "https://github.com/ipusiron/osm-infra-viewer",
+      "demo_url": "https://ipusiron.github.io/osm-infra-viewer/",
+      "hub": true
+    },
+    {
+      "id": "day012",
+      "slug": "uesugi-cipher",
+      "title": "Usesugi Cipher Tool",
+      "subtitle_ja": "字変四十八方式の上杉暗号を体験",
+      "subtitle_en": "Experience the Uesugi Cipher with Jihen 48 Method",
+      "description_ja": "戦国時代に宇佐美定行が記したとされる「字変四十八」方式に基づく換字式暗号を、いろは順の7×7マトリクスで再現するWebツールです。暗号化・復号の双方向変換、使用文字のハイライト表示に対応。",
+      "description_en": "A web tool that recreates the substitution cipher based on the 'Jihen 48' method attributed to Usami Sadayuki of the Sengoku period, using a 7x7 iroha-ordered matrix. Supports bidirectional encryption/decryption with character highlighting.",
+      "category_ja": [
+        "古典暗号",
+        "換字式暗号"
+      ],
+      "category_en": [
+        "Classical Cryptography",
+        "Substitution Cipher"
+      ],
+      "category_ids": [
+        "classic-crypto",
+        "substitution-cipher"
+      ],
+      "difficulty": 1,
+      "tags": [
+        "上杉暗号",
+        "換字式暗号",
+        "いろは順",
+        "日本史",
+        "古典暗号"
+      ],
+      "repo_url": "https://github.com/ipusiron/uesugi-cipher",
+      "demo_url": "https://ipusiron.github.io/uesugi-cipher/",
+      "hub": true
+    },
+    {
+      "id": "day013",
+      "slug": "whereshot",
+      "title": "WhereShot",
+      "subtitle_ja": "撮影時刻・場所解析ツール",
+      "subtitle_en": "Capture Time & Place Analyzer",
+      "description_ja": "画像・動画から「いつ・どこで撮られたか？」を推定・検証するためのOSINT支援ツール。Exifメタデータの抽出、太陽位置計算、地図上での方角可視化、気象データや衛星画像との連携など、撮影情報を多角的に分析できます。",
+      "description_en": "An OSINT tool for estimating and verifying when and where photos/videos were taken. Features include EXIF metadata extraction, solar position calculation, directional visualization on maps, and integration with weather data and satellite imagery.",
+      "category_ja": [
+        "OSINT",
+        "フォレンジック"
+      ],
+      "category_en": [
+        "OSINT",
+        "Forensics"
+      ],
+      "category_ids": [
+        "forensics"
+      ],
+      "difficulty": 3,
+      "tags": [
+        "EXIF",
+        "OSINT",
+        "geolocation",
+        "metadata",
+        "privacy",
+        "forensics",
+        "sun-position",
+        "leaflet",
+        "Metadata Analysis",
+        "Image Forensics"
+      ],
+      "repo_url": "https://github.com/ipusiron/whereshot",
+      "demo_url": "https://ipusiron.github.io/whereshot/",
+      "hub": true
+    },
+    {
+      "id": "day014",
+      "slug": "shinobi_iroha_cipher",
+      "title": "Shinobi Iroha Cipher",
+      "subtitle_ja": "『万川集海』に登場する忍者の暗号「忍びいろは暗号」を再現",
+      "subtitle_en": "Recreating the Ninja Cipher from 'Bansenshukai'",
+      "description_ja": "江戸時代の忍術書『万川集海』に記載された「忍びいろは暗号」を再現したWebツール。ひらがなを漢字の偏と旁の組み合わせで暗号化・復号できます。",
+      "description_en": "A web tool recreating the 'Shinobi Iroha Cipher' from the Edo period ninja manual 'Bansenshukai'. Encrypts and decrypts hiragana using combinations of kanji radicals.",
+      "category_ja": [
+        "古典暗号",
+        "換字式暗号"
+      ],
+      "category_en": [
+        "Classical Cryptography",
+        "Substitution Cipher"
+      ],
+      "category_ids": [
+        "classic-crypto",
+        "substitution-cipher"
+      ],
+      "difficulty": 1,
+      "tags": [
+        "cipher",
+        "ninja",
+        "japanese-history",
+        "education"
+      ],
+      "repo_url": "https://github.com/ipusiron/shinobi_iroha_cipher",
+      "demo_url": "https://ipusiron.github.io/shinobi_iroha_cipher/",
+      "hub": true
+    },
+    {
+      "id": "day015",
+      "slug": "doh-watcher",
+      "title": "DoH Watcher",
+      "subtitle_ja": "DNS over HTTPS効果観察ツール",
+      "subtitle_en": "DNS over HTTPS Effect Observation Tool",
+      "description_ja": "通常のDNSとDoH（Google/Cloudflare）の応答時間を比較・可視化し、DoHの効果を体験的に学べる教育ツール",
+      "description_en": "An educational tool to compare and visualize response times between traditional DNS and DoH (Google/Cloudflare), enabling hands-on learning of DoH benefits",
+      "category_ja": [
+        "ネットワーク"
+      ],
+      "category_en": [
+        "Network"
+      ],
+      "category_ids": [
+        "network"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "DNS",
+        "DoH",
+        "HTTPS",
+        "Google Colab",
+        "Privacy"
+      ],
+      "repo_url": "https://github.com/ipusiron/doh-watcher",
+      "demo_url": "https://colab.research.google.com/github/ipusiron/doh-watcher/blob/main/doh_watcher.ipynb",
+      "hub": true
+    },
+    {
+      "id": "day016",
+      "slug": "ioc-hunter",
+      "title": "IOC Hunter",
+      "subtitle_ja": "ログから侵害の痕跡を自動検出・可視化",
+      "subtitle_en": "Automatically detect and visualize Indicators of Compromise from logs",
+      "description_ja": "ログファイルやテキストデータからIOC（侵害の痕跡）を自動抽出し、12種類のIOCタイプを色分けハイライト表示するWebツール。関連性分析、タイムライン解析、詳細統計機能を搭載し、本格的な脅威分析が可能。ブラウザ完結でプライバシーに配慮。",
+      "description_en": "A web tool that automatically extracts IOCs (Indicators of Compromise) from log files and text data, highlighting 12 types of IOCs with color coding. Features include relationship analysis, timeline analysis, and detailed statistics for comprehensive threat analysis. All processing is done client-side for privacy.",
+      "category_ja": [
+        "脅威インテリジェンス",
+        "ログ解析",
+        "フォレンジック"
+      ],
+      "category_en": [
+        "Threat Intelligence",
+        "Log Analysis",
+        "Forensics"
+      ],
+      "category_ids": [
+        "forensics"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "IOC",
+        "ログ解析",
+        "フォレンジック",
+        "脅威ハンティング",
+        "CTF"
+      ],
+      "repo_url": "https://github.com/ipusiron/ioc-hunter",
+      "demo_url": "https://ipusiron.github.io/ioc-hunter/",
+      "hub": true
+    },
+    {
+      "id": "day017",
+      "slug": "vigenere-cipher-tool",
+      "title": "Vigenere Cipher Tool",
+      "subtitle_ja": "古典暗号を学ぶインタラクティブツール",
+      "subtitle_en": "Interactive tool for learning classical cryptography",
+      "description_ja": "ヴィジュネル暗号の暗号化・復号、タブラレクタ研究、シーザー暗号・ワンタイムパッドの実験ができる包括的な古典暗号学習ツール",
+      "description_en": "A comprehensive classical cryptography learning tool for Vigenère cipher encryption/decryption, tabula recta research, and experiments with Caesar cipher and one-time pad",
+      "category_ja": [
+        "古典暗号",
+        "換字式暗号"
+      ],
+      "category_en": [
+        "Classical Cryptography",
+        "Substitution Cipher"
+      ],
+      "category_ids": [
+        "classic-crypto",
+        "substitution-cipher"
+      ],
+      "difficulty": 3,
+      "tags": [
+        "vigenere-cipher",
+        "classical-cryptography",
+        "polyalphabetic-substitution-cipher",
+        "tabula-recta",
+        "caesar-cipher",
+        "one-time-pad"
+      ],
+      "repo_url": "https://github.com/ipusiron/vigenere-cipher-tool",
+      "demo_url": "https://ipusiron.github.io/vigenere-cipher-tool/",
+      "hub": true
+    },
+    {
+      "id": "day018",
+      "slug": "cipherclimb",
+      "title": "Cipher Climb",
+      "subtitle_ja": "ヒルクライミング解読ツール",
+      "subtitle_en": "Hill Climbing Decryption Tool",
+      "description_ja": "換字式暗号をヒルクライミング法で解読するWebアプリ。暗号解読の過程を視覚化し、焼きなまし法との違いを体験できる教育ツール",
+      "description_en": "A web app that decrypts substitution ciphers using hill climbing algorithm. Educational tool to visualize the decryption process and experience differences with simulated annealing",
+      "category_ja": [
+        "古典暗号",
+        "暗号解読",
+        "換字式暗号"
+      ],
+      "category_en": [
+        "Classical Cryptography",
+        "Cryptanalysis",
+        "Substitution Cipher"
+      ],
+      "category_ids": [
+        "classic-crypto",
+        "cryptanalysis",
+        "substitution-cipher"
+      ],
+      "difficulty": 4,
+      "tags": [
+        "cipher",
+        "cryptography",
+        "hill-climbing",
+        "substitution-cipher",
+        "educational",
+        "security",
+        "decryption",
+        "simulated-annealing"
+      ],
+      "repo_url": "https://github.com/ipusiron/cipherclimb",
+      "demo_url": "https://ipusiron.github.io/cipherclimb/",
+      "hub": true
+    },
+    {
+      "id": "day019",
+      "slug": "passcloud",
+      "title": "PassCloud",
+      "subtitle_ja": "パスワードのワードクラウド可視化ツール",
+      "subtitle_en": "Password Word Cloud Visualization Tool",
+      "description_ja": "流出パスワードや辞書ファイルをワードクラウド、統計情報、ヒートマップで可視化・分析するWebツール",
+      "description_en": "A web tool for visualizing and analyzing leaked passwords and dictionary files using word clouds, statistics, and heatmaps",
+      "category_ja": [
+        "パスワード分析",
+        "認証"
+      ],
+      "category_en": [
+        "Password Analysis",
+        "Authentication"
+      ],
+      "category_ids": [
+        "authentication",
+        "password-analysis"
+      ],
+      "difficulty": 1,
+      "tags": [
+        "wordcloud",
+        "password",
+        "visualization",
+        "statistics",
+        "heatmap",
+        "client-side"
+      ],
+      "repo_url": "https://github.com/ipusiron/passcloud",
+      "demo_url": "https://ipusiron.github.io/passcloud/",
+      "hub": true
+    },
+    {
+      "id": "day020",
+      "slug": "dork-watcher",
+      "title": "Dork Watcher",
+      "subtitle_ja": "Google Hacking支援ツール",
+      "subtitle_en": "Google Hacking Assistant Tool",
+      "description_ja": "Google Dorkを使って自サイトに潜在的な情報漏洩がないか確認するためのツール",
+      "description_en": "A tool to check your site for potential information leaks using Google Dorks",
+      "category_ja": [
+        "OSINT",
+        "Googleハッキング"
+      ],
+      "category_en": [
+        "OSINT",
+        "Google Hacking"
+      ],
+      "category_ids": [],
+      "difficulty": 1,
+      "tags": [
+        "google-dork",
+        "osint",
+        "information-leak",
+        "security-audit",
+        "web-security"
+      ],
+      "repo_url": "https://github.com/ipusiron/dork-watcher",
+      "demo_url": "https://ipusiron.github.io/dork-watcher/",
       "hub": true
     },
     {
