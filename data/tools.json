@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2025-11-28T00:31:11Z",
+  "generated_at": "2025-12-06T16:46:25Z",
   "tools": [
     {
       "id": "day001",
@@ -645,12 +645,2047 @@
       "hub": true
     },
     {
+      "id": "day021",
+      "slug": "image-diff-sec",
+      "title": "ImageDiffSec",
+      "subtitle_ja": "2画像のピクセル差分検出ツール",
+      "subtitle_en": "Pixel-level Image Difference Detection Tool",
+      "description_ja": "2枚の画像をピクセル単位で比較し、視覚的な違いを可視化するセキュリティツール。QRコードの改ざん検出や証拠画像の検証などに活用可能。",
+      "description_en": "A security tool that compares two images at the pixel level and visualizes differences. Useful for detecting QR code tampering and verifying evidence images.",
+      "category_ja": [
+        "画像解析",
+        "フォレンジック"
+      ],
+      "category_en": [
+        "Image Analysis",
+        "Forensics"
+      ],
+      "category_ids": [
+        "forensics"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "image-comparison",
+        "pixel-diff",
+        "qr-code",
+        "tampering-detection",
+        "canvas-api"
+      ],
+      "repo_url": "https://github.com/ipusiron/image-diff-sec",
+      "demo_url": "https://ipusiron.github.io/image-diff-sec/",
+      "hub": true
+    },
+    {
+      "id": "day022",
+      "slug": "dancingmen-cipherlab",
+      "title": "DancingMen CipherLab",
+      "subtitle_ja": "ドイルの踊る人形暗号ツール",
+      "subtitle_en": "Sherlock Holmes Dancing Men Cipher Tool",
+      "description_ja": "シャーロック・ホームズの短編「踊る人形」に登場する古典暗号を再現・体験できるWebツール。平文の暗号化、復号支援、置換表の参照が可能。",
+      "description_en": "A web tool to experience the classical substitution cipher from Arthur Conan Doyle's Sherlock Holmes story 'The Dancing Men'. Supports encryption, decryption assistance, and substitution table reference.",
+      "category_ja": [
+        "古典暗号",
+        "換字式暗号"
+      ],
+      "category_en": [
+        "Classical Cryptography",
+        "Substitution Cipher"
+      ],
+      "category_ids": [
+        "classic-crypto",
+        "substitution-cipher"
+      ],
+      "difficulty": 1,
+      "tags": [
+        "sherlock-holmes",
+        "dancing-men",
+        "cryptography",
+        "visualization"
+      ],
+      "repo_url": "https://github.com/ipusiron/dancingmen-cipherlab",
+      "demo_url": "https://ipusiron.github.io/dancingmen-cipherlab/",
+      "hub": true
+    },
+    {
+      "id": "day023",
+      "slug": "weirdstring-inspector",
+      "title": "WeirdString Inspector",
+      "subtitle_ja": "Unicode異常文字検出ツール",
+      "subtitle_en": "Unicode Anomaly Character Detector",
+      "description_ja": "Unicode文字列に潜む異常な文字（ゼロ幅スペース、そっくり文字、制御記号など）を検出・ハイライトするWebツール。フィッシングやCTFで使われる見えない文字を可視化します。",
+      "description_en": "A web tool that detects and highlights suspicious Unicode characters (zero-width spaces, look-alike characters, control codes, etc.) hidden in text strings. Visualizes invisible characters used in phishing and CTF challenges.",
+      "category_ja": [
+        "フォレンジック",
+        "Webセキュリティ",
+        "文字列解析"
+      ],
+      "category_en": [
+        "Forensics",
+        "Web Security",
+        "String Analysis"
+      ],
+      "category_ids": [
+        "forensics",
+        "web-security"
+      ],
+      "difficulty": 4,
+      "tags": [
+        "unicode",
+        "homoglyph",
+        "zero-width",
+        "zalgo",
+        "bidi",
+        "ctf",
+        "forensics",
+        "phishing-detection"
+      ],
+      "repo_url": "https://github.com/ipusiron/weirdstring-inspector",
+      "demo_url": "https://ipusiron.github.io/weirdstring-inspector/",
+      "hub": true
+    },
+    {
+      "id": "day024",
+      "slug": "grille-cipherlab",
+      "title": "Grille CipherLab",
+      "subtitle_ja": "回転グリル暗号の可視化ツール",
+      "subtitle_en": "Rotating Grille Cipher Visualization Tool",
+      "description_ja": "回転グリル暗号（Rotating Grille Cipher）の暗号化・復号プロセスをステップバイステップで視覚化する教育ツール。3×3マトリクスから6×6グリルを生成し、4回転で文字を配置する仕組みを直感的に理解できます。",
+      "description_en": "An educational tool that visualizes the encryption and decryption process of the Rotating Grille Cipher step by step. Generate a 6×6 grille from a 3×3 matrix and intuitively understand how characters are placed through 4 rotations.",
+      "category_ja": [
+        "古典暗号",
+        "転置式暗号"
+      ],
+      "category_en": [
+        "Classical Cryptography",
+        "Transposition Cipher"
+      ],
+      "category_ids": [
+        "classic-crypto",
+        "transposition-cipher"
+      ],
+      "difficulty": 3,
+      "tags": [
+        "rotating-grille-cipher",
+        "visualization",
+        "cryptography-education"
+      ],
+      "repo_url": "https://github.com/ipusiron/grille-cipherlab",
+      "demo_url": "https://ipusiron.github.io/grille-cipherlab/",
+      "hub": true
+    },
+    {
+      "id": "day025",
+      "slug": "morse-tree-visualizer",
+      "title": "MorseTree Visualizer",
+      "subtitle_ja": "モールス信号を視覚化する学習ツール",
+      "subtitle_en": "Interactive Morse Code Learning Tool with Binary Tree Visualization",
+      "description_ja": "モールス信号をバイナリツリー構造で視覚化し、エンコード・デコード・学習モードを通じて直感的に学べるインタラクティブなWebツール",
+      "description_en": "An interactive web tool that visualizes Morse code as a binary tree structure, enabling intuitive learning through encoding, decoding, and study modes",
+      "category_ja": [
+        "モールス信号",
+        "符号化"
+      ],
+      "category_en": [
+        "Morse Code",
+        "Encoding"
+      ],
+      "category_ids": [],
+      "difficulty": 2,
+      "tags": [
+        "binary-tree",
+        "visualization",
+        "education",
+        "encoder",
+        "decoder"
+      ],
+      "repo_url": "https://github.com/ipusiron/morse-tree-visualizer",
+      "demo_url": "https://ipusiron.github.io/morse-tree-visualizer/",
+      "hub": true
+    },
+    {
+      "id": "day026",
+      "slug": "cdn-trainer",
+      "title": "CDN Trainer",
+      "subtitle_ja": "セキュアなCDN構成を学べる体験型ツール",
+      "subtitle_en": "Interactive tool for learning secure CDN configurations",
+      "description_ja": "CDN・WAF・オリジンサーバ構成の良し悪しを、構成を自分で選びながら体験的に学べるセキュリティ教育用Webツール。攻撃の流れとブロック状況をSVGアニメーションで視覚化。",
+      "description_en": "A security education web tool for learning CDN, WAF, and origin server configurations through hands-on experience. Visualizes attack flow and blocking with SVG animations.",
+      "category_ja": [
+        "ネットワーク"
+      ],
+      "category_en": [
+        "Network"
+      ],
+      "category_ids": [
+        "network"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "CDN",
+        "WAF",
+        "DDoS",
+        "IP制限",
+        "多層防御",
+        "セキュリティ可視化"
+      ],
+      "repo_url": "https://github.com/ipusiron/cdn-trainer",
+      "demo_url": "https://ipusiron.github.io/cdn-trainer/",
+      "hub": true
+    },
+    {
+      "id": "day027",
+      "slug": "playfair-cipherlab",
+      "title": "Playfair CipherLab",
+      "subtitle_ja": "ビジュアルで学ぶプレイフェア暗号ツール",
+      "subtitle_en": "Visual Learning Tool for Playfair Cipher",
+      "description_ja": "プレイフェア暗号の暗号化・復号過程をステップバイステップのアニメーションで視覚的に学べる教育ツール。段階的なチャレンジシステムとヒント機能で、古典暗号の仕組みを楽しく理解できます。",
+      "description_en": "An educational tool to visually learn the Playfair cipher encryption and decryption process through step-by-step animations. Features a progressive challenge system with hints to help understand classical cryptography concepts.",
+      "category_ja": [
+        "古典暗号",
+        "換字式暗号"
+      ],
+      "category_en": [
+        "Classical Cryptography",
+        "Substitution Cipher"
+      ],
+      "category_ids": [
+        "classic-crypto",
+        "substitution-cipher"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "visualization",
+        "education",
+        "ctf"
+      ],
+      "repo_url": "https://github.com/ipusiron/playfair-cipherlab",
+      "demo_url": "https://ipusiron.github.io/playfair-cipherlab/",
+      "hub": true
+    },
+    {
+      "id": "day028",
+      "slug": "repeatseq-analyzer",
+      "title": "RepeatSeq Analyzer",
+      "subtitle_ja": "反復文字列の特定ツール",
+      "subtitle_en": "Repeated Sequence Detection Tool",
+      "description_ja": "暗号文中に繰り返し出現する文字列を検出し、カシスキー法による鍵長推定を支援する暗号解析ツール",
+      "description_en": "Cryptanalysis tool that detects repeated sequences in ciphertext and assists key length estimation using the Kasiski examination method",
+      "category_ja": [
+        "暗号解読",
+        "古典暗号"
+      ],
+      "category_en": [
+        "Cryptanalysis",
+        "Classical Cryptography"
+      ],
+      "category_ids": [
+        "classic-crypto",
+        "cryptanalysis"
+      ],
+      "difficulty": 4,
+      "tags": [
+        "kasiski",
+        "vigenere",
+        "cryptanalysis",
+        "pattern-detection",
+        "key-length"
+      ],
+      "repo_url": "https://github.com/ipusiron/repeatseq-analyzer",
+      "demo_url": "https://ipusiron.github.io/repeatseq-analyzer/",
+      "hub": true
+    },
+    {
+      "id": "day029",
+      "slug": "otp-animation",
+      "title": "OTP Animation",
+      "subtitle_ja": "OTP（One-Time Pad）のアニメーションツール",
+      "subtitle_en": "One-Time Pad Encryption Animation Tool",
+      "description_ja": "ワンタイムパッド暗号の仕組みをビット単位のXOR演算アニメーションで視覚的に学習できる教育ツール。鍵の使い捨てを炎エフェクトで表現し、XORゲートシミュレーターや鍵再利用の脆弱性実証など対話的な実験機能も搭載。",
+      "description_en": "An educational tool for visually learning One-Time Pad encryption through bit-level XOR animation. Features burn effects for key consumption, XOR gate simulator, and interactive experiments demonstrating key reuse vulnerabilities.",
+      "category_ja": [
+        "古典暗号",
+        "現代暗号"
+      ],
+      "category_en": [
+        "Crassical Cryptography",
+        "Modern Cryptograhpy"
+      ],
+      "category_ids": [
+        "clamodernsic-crypto",
+        "classic-crypto"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "OTP",
+        "One-Time Pad",
+        "XOR",
+        "古典暗号",
+        "アニメーション",
+        "ビット演算"
+      ],
+      "repo_url": "https://github.com/ipusiron/otp-animation",
+      "demo_url": "https://ipusiron.github.io/otp-animation/",
+      "hub": true
+    },
+    {
+      "id": "day030",
+      "slug": "modular-text-divider",
+      "title": "Modular Text Divider",
+      "subtitle_ja": "テキスト列分割ツール",
+      "subtitle_en": "Periodic Column Divider for Cryptanalysis",
+      "description_ja": "テキストを指定した分割数にしたがって周期的に分割するツール。多表式暗号（ヴィジュネル暗号など）の解読で不可欠な列分割処理を効率化し、頻度分析ツールとの連携で段階的な解読を支援する。",
+      "description_en": "A tool that periodically divides text into columns based on a specified divisor. Streamlines the column division process essential for breaking polyalphabetic ciphers (such as Vigenère cipher), enabling step-by-step cryptanalysis through integration with frequency analysis tools.",
+      "category_ja": [
+        "暗号解析",
+        "テキスト処理"
+      ],
+      "category_en": [
+        "Cryptanalysis",
+        "Text Processing"
+      ],
+      "category_ids": [
+        "cryptanalysis"
+      ],
+      "difficulty": 1,
+      "tags": [
+        "vigenere",
+        "cryptanalysis",
+        "frequency-analysis",
+        "polyalphabetic-cipher",
+        "text-division",
+        "modular-arithmetic"
+      ],
+      "repo_url": "https://github.com/ipusiron/modular-text-divider",
+      "demo_url": "https://ipusiron.github.io/modular-text-divider/",
+      "hub": true
+    },
+    {
+      "id": "day031",
+      "slug": "git-secrets-playground",
+      "title": "Git Secrets Playground",
+      "subtitle_ja": "Git情報漏洩シミュレーター",
+      "subtitle_en": "Git Information Leak Simulator",
+      "description_ja": ".gitディレクトリーが外部に公開された際の情報漏洩リスクを疑似体験できる教育用シミュレーター。構造ビューアー、オブジェクト復元、リーク検査、構造比較、CTFヒントの5つのモードを搭載。",
+      "description_en": "An educational simulator that demonstrates the security risks when .git directories are exposed. Features 5 modes: Structure Viewer, Object Recovery, Leak Inspector, Structure Compare, and CTF Hints.",
+      "category_ja": [
+        "フォレンジック",
+        "情報漏洩対策"
+      ],
+      "category_en": [
+        "Forensics",
+        "Information Leak Prevention"
+      ],
+      "category_ids": [
+        "forensics"
+      ],
+      "difficulty": 3,
+      "tags": [
+        "git",
+        "security",
+        "education",
+        "simulation",
+        "ctf"
+      ],
+      "repo_url": "https://github.com/ipusiron/git-secrets-playground",
+      "demo_url": "https://ipusiron.github.io/git-secrets-playground/",
+      "hub": true
+    },
+    {
+      "id": "day032",
+      "slug": "pigpen-cipherlab",
+      "title": "Pigpen CipherLab",
+      "subtitle_ja": "ピッグペン暗号ビジュアル学習ツール",
+      "subtitle_en": "Visual Learning Tool for Pigpen Cipher",
+      "description_ja": "ピッグペン暗号を「見て・触って・学べる」Webツール。3つのタブ（暗号化・復号・座学）で直感的に理解を深められます。3種類のグリフセット対応。",
+      "description_en": "Visual tool to encrypt, decrypt, and learn the Pigpen cipher. Explore 3 glyph sets interactively through encryption, decryption, and study tabs.",
+      "category_ja": [
+        "古典暗号",
+        "換字式暗号"
+      ],
+      "category_en": [
+        "Classical Cryptography",
+        "Substitution Cipher"
+      ],
+      "category_ids": [
+        "classic-crypto",
+        "substitution-cipher"
+      ],
+      "difficulty": 1,
+      "tags": [
+        "pigpen-cipher",
+        "classical-cipher",
+        "cryptography",
+        "visualization",
+        "education",
+        "freemason-cipher"
+      ],
+      "repo_url": "https://github.com/ipusiron/pigpen-cipherlab",
+      "demo_url": "https://ipusiron.github.io/pigpen-cipherlab/",
+      "hub": true
+    },
+    {
+      "id": "day033",
+      "slug": "clipthreat-studio",
+      "title": "ClipThreat Studio",
+      "subtitle_ja": "クリップボード悪用攻撃の体験ツール",
+      "subtitle_en": "Clipboard Exploitation Attack Demonstration Tool",
+      "description_ja": "JavaScriptによるクリップボードAPIの悪用手法を再現し、クリック1つで体験できる「クリップボード悪用攻撃の可視化＆体験ツール」です。読み取り・書き込み・paste監視・ClickFix誘導・Unicode文字細工など、心理操作と技術的悪用を組み合わせた脅威を複数タブ構成で体験できます。",
+      "description_en": "An interactive security education tool that demonstrates clipboard API exploitation techniques through a web interface. Experience various clipboard threats including read/write operations, paste monitoring, ClickFix attacks, and Unicode manipulation in a safe, controlled environment.",
+      "category_ja": [
+        "Webセキュリティ",
+        "ソーシャルエンジニアリング"
+      ],
+      "category_en": [
+        "Web Security",
+        "Social Engineering"
+      ],
+      "category_ids": [
+        "social-engineering",
+        "web-security"
+      ],
+      "difficulty": 3,
+      "tags": [
+        "clipboard",
+        "javascript",
+        "security",
+        "clickfix",
+        "unicode",
+        "phishing",
+        "web-security"
+      ],
+      "repo_url": "https://github.com/ipusiron/clipthreat-studio",
+      "demo_url": "https://ipusiron.github.io/clipthreat-studio/",
+      "hub": true
+    },
+    {
+      "id": "day034",
+      "slug": "railfence-cipherlab",
+      "title": "RailFence CipherLab",
+      "subtitle_ja": "レールフェンス暗号学習ツール",
+      "subtitle_en": "Rail Fence Cipher Learning Tool",
+      "description_ja": "レールフェンス暗号を視覚的に学べる包括的なWebツール。暗号化・復号・座学・実験室の4タブ構成で、古典暗号の理解から実践的な解読演習まで幅広くサポートします。",
+      "description_en": "A comprehensive web tool for visually learning the Rail Fence cipher. Features 4 tabs (Encrypt, Decrypt, Study, Lab) supporting everything from understanding classical cryptography to practical decryption exercises.",
+      "category_ja": [
+        "古典暗号",
+        "転置式暗号"
+      ],
+      "category_en": [
+        "Classical Cryptography",
+        "Transposition Cipher"
+      ],
+      "category_ids": [
+        "classic-crypto",
+        "transposition-cipher"
+      ],
+      "difficulty": 1,
+      "tags": [
+        "rail-fence-cipher",
+        "visualization",
+        "ctf",
+        "education"
+      ],
+      "repo_url": "https://github.com/ipusiron/railfence-cipherlab",
+      "demo_url": "https://ipusiron.github.io/railfence-cipherlab/",
+      "hub": true
+    },
+    {
+      "id": "day035",
+      "slug": "anti-mailspoofing-school",
+      "title": "Anti-MailSpoofing School",
+      "subtitle_ja": "メールなりすまし対策学習ツール",
+      "subtitle_en": "Email Spoofing Defense Learning Tool",
+      "description_ja": "SPF/DKIM/DMARCの仕組みを視覚的・体験的に学べる教育用Webアプリ。学習モード、シミュレーションモード、チャレンジモードの3つのモードで段階的に理解を深められます。",
+      "description_en": "An educational web app for learning SPF/DKIM/DMARC email authentication mechanisms through visual explanations, interactive simulations, and progressive challenges.",
+      "category_ja": [
+        "メールセキュリティ"
+      ],
+      "category_en": [
+        "Email Security"
+      ],
+      "category_ids": [],
+      "difficulty": 2,
+      "tags": [
+        "SPF",
+        "DKIM",
+        "DMARC",
+        "email-authentication",
+        "phishing-prevention",
+        "security-education"
+      ],
+      "repo_url": "https://github.com/ipusiron/anti-mailspoofing-school",
+      "demo_url": "https://ipusiron.github.io/anti-mailspoofing-school/",
+      "hub": true
+    },
+    {
+      "id": "day037",
+      "slug": "quick-rot47",
+      "title": "QuickROT47",
+      "subtitle_ja": "ROT47変換ツール",
+      "subtitle_en": "ROT47 Encoder/Decoder",
+      "description_ja": "ASCII可視文字（33〜126）を対象に47文字分ずらして変換する軽量暗号方式「ROT47」を即座に体験できるシンプルなWebツール",
+      "description_en": "A simple web tool for instantly encoding and decoding text using ROT47 cipher, which shifts ASCII printable characters (33-126) by 47 positions",
+      "category_ja": [
+        "現代暗号",
+        "エンコード/デコード"
+      ],
+      "category_en": [
+        "Modern Cryptography",
+        "Encoding/Decoding"
+      ],
+      "category_ids": [
+        "clamodernsic-crypto"
+      ],
+      "difficulty": 1,
+      "tags": [
+        "ROT47",
+        "cipher",
+        "encoding",
+        "decoding",
+        "ASCII",
+        "CTF"
+      ],
+      "repo_url": "https://github.com/ipusiron/quick-rot47",
+      "demo_url": "https://ipusiron.github.io/quick-rot47/",
+      "hub": true
+    },
+    {
+      "id": "day038",
+      "slug": "localstorage-playground",
+      "title": "LocalStorage Playground",
+      "subtitle_ja": "Webストレージの危険性体験ツール",
+      "subtitle_en": "Interactive Web Storage Security Learning Tool",
+      "description_ja": "localStorage/sessionStorageのセキュリティリスクを実践的に学習できる教育ツール。XSS攻撃のシミュレーション、防御手法の比較、ストレージ操作の体験が可能。",
+      "description_en": "An educational tool for hands-on learning about localStorage/sessionStorage security risks. Features XSS attack simulations, defense technique comparisons, and interactive storage operations.",
+      "category_ja": [
+        "Webセキュリティ"
+      ],
+      "category_en": [
+        "Web Security"
+      ],
+      "category_ids": [
+        "web-security"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "XSS",
+        "localStorage",
+        "sessionStorage",
+        "Web Storage API",
+        "CSP",
+        "HttpOnly Cookie",
+        "JavaScript"
+      ],
+      "repo_url": "https://github.com/ipusiron/localstorage-playground",
+      "demo_url": "https://ipusiron.github.io/localstorage-playground/",
+      "hub": true
+    },
+    {
+      "id": "day039",
+      "slug": "urlpurifier",
+      "title": "URLPurifier",
+      "subtitle_ja": "URL浄化ツール",
+      "subtitle_en": "URL Cleaning Tool",
+      "description_ja": "URLに含まれるトラッキングパラメーターやアフィリエイトタグを除去し、純粋でクリーンなリンクを生成するクライアントサイドWebツール。Amazon専用最短化モード搭載。",
+      "description_en": "A client-side web tool that removes tracking parameters and affiliate tags from URLs to generate clean, privacy-friendly links. Features Amazon URL shortening mode.",
+      "category_ja": [
+        "プライバシー",
+        "Webセキュリティ"
+      ],
+      "category_en": [
+        "Privacy",
+        "Web Security"
+      ],
+      "category_ids": [
+        "web-security"
+      ],
+      "difficulty": 1,
+      "tags": [
+        "URL",
+        "tracking",
+        "privacy",
+        "affiliate",
+        "Amazon",
+        "client-side"
+      ],
+      "repo_url": "https://github.com/ipusiron/urlpurifier",
+      "demo_url": "https://ipusiron.github.io/urlpurifier/",
+      "hub": true
+    },
+    {
+      "id": "day040",
+      "slug": "magic-sign-inspector",
+      "title": "MagicSign Inspector",
+      "subtitle_ja": "ファイルシグネチャ（マジックナンバー）可視化・検証ツール",
+      "subtitle_en": "File Signature (Magic Number) Visualization and Verification Tool",
+      "description_ja": "ファイルのマジックナンバー（シグネチャ）を可視化・編集・検証できる軽量フォレンジック補助ツール。244種類のシグネチャ対応、HEXビュー、ハッシュ計算、foremost.conf出力など。",
+      "description_en": "A lightweight forensic assistance tool for visualizing, editing, and verifying file magic numbers (signatures). Supports 244 signatures, HEX view, hash calculation, and foremost.conf export.",
+      "category_ja": [
+        "フォレンジック",
+        "バイナリ解析"
+      ],
+      "category_en": [
+        "Forensics",
+        "Binary Analysis"
+      ],
+      "category_ids": [
+        "forensics"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "magic-number",
+        "file-signature",
+        "hex-viewer",
+        "forensics",
+        "file-carving",
+        "ctf"
+      ],
+      "repo_url": "https://github.com/ipusiron/magic-sign-inspector",
+      "demo_url": "https://ipusiron.github.io/magic-sign-inspector/",
+      "hub": true
+    },
+    {
+      "id": "day041",
+      "slug": "mic-gain-logger",
+      "title": "Mic Gain Logger",
+      "subtitle_ja": "マイク音量ロガー",
+      "subtitle_en": "Microphone Gain Logger",
+      "description_ja": "録音せずにマイク入力の音量（dBFS）をリアルタイムで可視化・記録するWebツール。調査員・探偵などが現場で音響環境を監視するために設計。",
+      "description_en": "A web-based tool that visualizes and logs microphone input levels (dBFS) in real-time without recording audio. Designed for investigators and security professionals to monitor acoustic environments in the field.",
+      "category_ja": [
+        "物理セキュリティ",
+        "音響監視"
+      ],
+      "category_en": [
+        "Physical Security",
+        "Acoustic Surveillance"
+      ],
+      "category_ids": [
+        "physical-security"
+      ],
+      "difficulty": 1,
+      "tags": [
+        "web-audio-api",
+        "microphone",
+        "dbfs",
+        "real-time",
+        "csv-export",
+        "privacy"
+      ],
+      "repo_url": "https://github.com/ipusiron/mic-gain-logger",
+      "demo_url": "https://ipusiron.github.io/mic-gain-logger/",
+      "hub": true
+    },
+    {
+      "id": "day042",
+      "slug": "classic-js-obfuscator",
+      "title": "Classic JS Obfuscator",
+      "subtitle_ja": "古典暗号JavaScript難読化ツール",
+      "subtitle_en": "Classical Cipher JavaScript Obfuscation Tool",
+      "description_ja": "シーザー暗号を使用してJavaScriptコードを難読化し、自己復号・自己実行可能なスニペットを生成するWebツール",
+      "description_en": "A web tool that obfuscates JavaScript code using Caesar cipher and generates self-decrypting, self-executing snippets",
+      "category_ja": [
+        "難読化",
+        "古典暗号"
+      ],
+      "category_en": [
+        "Obfuscation",
+        "Classical Cryptography"
+      ],
+      "category_ids": [
+        "classic-crypto"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "javascript",
+        "caesar-cipher",
+        "obfuscation",
+        "web-tool"
+      ],
+      "repo_url": "https://github.com/ipusiron/classic-js-obfuscator",
+      "demo_url": "https://ipusiron.github.io/classic-js-obfuscator/",
+      "hub": true
+    },
+    {
+      "id": "day043",
+      "slug": "columnar-cipherlab",
+      "title": "Columnar CipherLab",
+      "subtitle_ja": "縦列転置式暗号ツール",
+      "subtitle_en": "Columnar Transposition Cipher Tool",
+      "description_ja": "縦列転置式暗号（Columnar Transposition Cipher）の暗号化・復号化を体験できるWebベースの教育ツール。マトリクス可視化とインタラクティブなUI で暗号アルゴリズムを直感的に学習。",
+      "description_en": "A web-based educational tool for learning columnar transposition cipher encryption and decryption. Features matrix visualization and interactive UI for intuitive understanding of cipher algorithms.",
+      "category_ja": [
+        "古典暗号",
+        "転置式暗号"
+      ],
+      "category_en": [
+        "Classical Cryptography",
+        "Transposition Cipher"
+      ],
+      "category_ids": [
+        "classic-crypto",
+        "transposition-cipher"
+      ],
+      "difficulty": 1,
+      "tags": [
+        "columnar-transposition",
+        "classical-cipher",
+        "transposition-cipher",
+        "cryptography",
+        "visualization",
+        "education"
+      ],
+      "repo_url": "https://github.com/ipusiron/columnar-cipherlab",
+      "demo_url": "https://ipusiron.github.io/columnar-cipherlab/",
+      "hub": true
+    },
+    {
+      "id": "day044",
+      "slug": "cipher-clairvoyance",
+      "title": "Cipher Clairvoyance",
+      "subtitle_ja": "暗号化方式推定ツール",
+      "subtitle_en": "Classical Cipher Identification Tool",
+      "description_ja": "暗号文から用いられた古典暗号を推定・特定する教育用Webツール。シーザー暗号、アフィン暗号、ヴィジュネル暗号、プレイフェア暗号、転置式暗号、ADFGX暗号に対応し、統計分析と可視化で暗号方式を判定します。",
+      "description_en": "An educational web tool that identifies classical ciphers from ciphertext. Supports Caesar, Affine, Vigenère, Playfair, Transposition, and ADFGX ciphers using statistical analysis and visualization.",
+      "category_ja": [
+        "古典暗号",
+        "暗号解析"
+      ],
+      "category_en": [
+        "Classical Cryptography",
+        "Cryptanalysis"
+      ],
+      "category_ids": [
+        "classic-crypto",
+        "cryptanalysis"
+      ],
+      "difficulty": 4,
+      "tags": [
+        "classical-cipher",
+        "cryptanalysis",
+        "statistics",
+        "visualization",
+        "CTF",
+        "educational"
+      ],
+      "repo_url": "https://github.com/ipusiron/cipher-clairvoyance",
+      "demo_url": "https://ipusiron.github.io/cipher-clairvoyance/",
+      "hub": true
+    },
+    {
+      "id": "day045",
+      "slug": "anagram-hunter",
+      "title": "Anagram Hunter",
+      "subtitle_ja": "高速アナグラム探索ツール",
+      "subtitle_en": "Fast Anagram Search Tool",
+      "description_ja": "辞書照合と署名インデックスを用いて、入力文字列から単語・2語のアナグラムを高速に探索するWebツール",
+      "description_en": "A web tool that rapidly finds single-word and two-word anagrams from input strings using dictionary lookup and signature indexing",
+      "category_ja": [
+        "暗号解読",
+        "文字列解析"
+      ],
+      "category_en": [
+        "Cryptanalysis",
+        "String Analysis"
+      ],
+      "category_ids": [
+        "cryptanalysis"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "anagram",
+        "dictionary",
+        "beam-search",
+        "signature-index",
+        "frequency-vector"
+      ],
+      "repo_url": "https://github.com/ipusiron/anagram-hunter",
+      "demo_url": "https://ipusiron.github.io/anagram-hunter/",
+      "hub": true
+    },
+    {
+      "id": "day046",
+      "slug": "alphaloom",
+      "title": "AlphaLoom",
+      "subtitle_ja": "文字組み合わせ＆生成文字列分析ツール",
+      "subtitle_en": "Alphabet Combination & Key Candidate Analyzer",
+      "description_ja": "各列の候補文字からその組み合わせ文字列を生成し、ビームサーチで信頼度順にランキング。辞書照合による絞り込みでヴィジュネル暗号の鍵特定を支援。",
+      "description_en": "Generates key candidates from column-wise character inputs using beam search, ranks them by confidence, and refines results with dictionary matching for Vigenère cipher key identification.",
+      "category_ja": [
+        "古典暗号",
+        "暗号解読"
+      ],
+      "category_en": [
+        "Classic Cryptography",
+        "Cryptanalysis"
+      ],
+      "category_ids": [
+        "classic-crypto",
+        "cryptanalysis"
+      ],
+      "difficulty": 1,
+      "tags": [
+        "vigenere",
+        "cryptography",
+        "keysearch",
+        "dictionary",
+        "beam-search",
+        "ctf"
+      ],
+      "repo_url": "https://github.com/ipusiron/alphaloom",
+      "demo_url": "https://ipusiron.github.io/alphaloom/",
+      "hub": true
+    },
+    {
+      "id": "day047",
+      "slug": "ic-learning-visualizer",
+      "title": "IC Learning Visualizer",
+      "subtitle_ja": "一致指数をビジュアル理解するツール",
+      "subtitle_en": "Visual learning tool for Index of Coincidence",
+      "description_ja": "頻度ヒストグラムとモンテカルロ実験を通じて、一致指数（IC）を直感的に理解するための教育ツール",
+      "description_en": "An educational tool to intuitively understand the Index of Coincidence (IC) through histograms and probability experiments",
+      "category_ja": [
+        "古典暗号",
+        "暗号解析"
+      ],
+      "category_en": [
+        "Classical Cryptography",
+        "Cryptanalysis"
+      ],
+      "category_ids": [
+        "classic-crypto",
+        "cryptanalysis"
+      ],
+      "difficulty": 3,
+      "tags": [
+        "cryptography",
+        "index-of-coincidence",
+        "vigenere",
+        "friedman-test",
+        "monte-carlo",
+        "visualization",
+        "statistics",
+        "education"
+      ],
+      "repo_url": "https://github.com/ipusiron/ic-learning-visualizer",
+      "demo_url": "https://ipusiron.github.io/ic-learning-visualizer/",
+      "hub": true
+    },
+    {
+      "id": "day048",
+      "slug": "token-entropy-estimator",
+      "title": "Token Entropy Estimator",
+      "subtitle_ja": "エントロピー測定によるトークン強度チェッカー",
+      "subtitle_en": "Token Strength Checker via Entropy Measurement",
+      "description_ja": "パスワード・APIキー・トークンの強度を瞬時に評価し、総当たり攻撃への耐性を可視化するセキュリティツール",
+      "description_en": "A security tool that instantly evaluates password/API key/token strength and visualizes resistance to brute-force attacks",
+      "category_ja": [
+        "認証",
+        "パスワード解読",
+        "セキュリティ分析"
+      ],
+      "category_en": [
+        "Authentication",
+        "Password Cracking",
+        "Security Analysis"
+      ],
+      "category_ids": [
+        "authentication"
+      ],
+      "difficulty": 4,
+      "tags": [
+        "entropy",
+        "token",
+        "password",
+        "brute-force",
+        "security",
+        "education"
+      ],
+      "repo_url": "https://github.com/ipusiron/token-entropy-estimator",
+      "demo_url": "https://ipusiron.github.io/token-entropy-estimator/",
+      "hub": true
+    },
+    {
+      "id": "day049",
+      "slug": "affine-cipherlab",
+      "title": "Affine CipherLab",
+      "subtitle_ja": "アフィン暗号学習ツール",
+      "subtitle_en": "Affine Cipher Learning Tool",
+      "description_ja": "古典暗号「アフィン暗号」の暗号化・復号・総当たり解読を体験できる教育ツール。写像表の可視化により直感的な理解をサポート。",
+      "description_en": "An educational tool for experiencing affine cipher encryption, decryption, and brute-force cracking. Supports intuitive understanding through mapping table visualization.",
+      "category_ja": [
+        "古典暗号"
+      ],
+      "category_en": [
+        "Classic Cryptography"
+      ],
+      "category_ids": [
+        "classic-crypto"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "affine-cipher",
+        "cryptography",
+        "encryption",
+        "decryption",
+        "brute-force",
+        "education",
+        "visualization"
+      ],
+      "repo_url": "https://github.com/ipusiron/affine-cipherlab",
+      "demo_url": "https://ipusiron.github.io/affine-cipherlab/",
+      "hub": true
+    },
+    {
+      "id": "day050",
+      "slug": "dialsafe-simulator",
+      "title": "DialSafe Simulator",
+      "subtitle_ja": "金庫ダイヤルシミュレーター",
+      "subtitle_en": "Safe Dial Lock Simulator",
+      "description_ja": "4枚座の固定ダイヤル錠の正規開錠手順と内部構造をブラウザ上でインタラクティブに可視化する教育ツール",
+      "description_en": "An interactive educational tool to visualize the legitimate unlocking procedure and internal mechanics of 4-disk fixed-conversion dial locks",
+      "category_ja": [
+        "物理セキュリティ",
+        "鍵開け"
+      ],
+      "category_en": [
+        "Physical Security",
+        "Lock Picking"
+      ],
+      "category_ids": [
+        "lockpicking",
+        "physical-security"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "dial-lock",
+        "safe",
+        "locksport",
+        "physical-security",
+        "education",
+        "visualization",
+        "interactive"
+      ],
+      "repo_url": "https://github.com/ipusiron/dialsafe-simulator",
+      "demo_url": "https://ipusiron.github.io/dialsafe-simulator/",
+      "hub": true
+    },
+    {
+      "id": "day051",
+      "slug": "involution-studio",
+      "title": "Involution Studio",
+      "subtitle_ja": "インボリューション総合体験ハブツール",
+      "subtitle_en": "Comprehensive Involution Experience Hub",
+      "description_ja": "「2回適用で元に戻る」インボリューション変換を、換字式・転置式・ビット反転式の軽量デモで直感的に理解し、専用ツールへ誘導するハブ",
+      "description_en": "A lightweight hub for exploring involution transforms (f(f(x)) = x) through visual mini-demos covering substitution, transposition, and bitwise operations",
+      "category_ja": [
+        "古典暗号",
+        "現代暗号"
+      ],
+      "category_en": [
+        "Classical Cryptography",
+        "Modern Cryptography"
+      ],
+      "category_ids": [
+        "clamodernsic-crypto",
+        "classic-crypto"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "involution",
+        "cryptography",
+        "education",
+        "visualization",
+        "atbash",
+        "rot13",
+        "feistel"
+      ],
+      "repo_url": "https://github.com/ipusiron/involution-studio",
+      "demo_url": "https://ipusiron.github.io/involution-studio/",
+      "hub": true
+    },
+    {
+      "id": "day052",
+      "slug": "basexx-visualizer",
+      "title": "BaseXX Visualizer",
+      "subtitle_ja": "Base32/58/64/91比較ツール",
+      "subtitle_en": "Base32/58/64/91 Encoding Comparison Tool",
+      "description_ja": "Base64を基準にBase32・Base58・Base91の違いを体験的に学べる教育用ビジュアライザー。誤読デモやエンコード効率の比較機能を搭載。",
+      "description_en": "Educational visualizer to compare Base32, Base58, Base64, and Base91 encodings. Features human error demos and encoding efficiency comparisons.",
+      "category_ja": [
+        "エンコーディング",
+        "表現変換"
+      ],
+      "category_en": [
+        "Encoding",
+        "Representation Conversion"
+      ],
+      "category_ids": [],
+      "difficulty": 3,
+      "tags": [
+        "base32",
+        "base58",
+        "base64",
+        "base91",
+        "encoding",
+        "visualization",
+        "TOTP"
+      ],
+      "repo_url": "https://github.com/ipusiron/basexx-visualizer",
+      "demo_url": "https://ipusiron.github.io/basexx-visualizer/",
+      "hub": true
+    },
+    {
+      "id": "day053",
+      "slug": "jwt-inspector",
+      "title": "JWT Inspector",
+      "subtitle_ja": "JWT（JSON Web Token）可視化・検証ツール",
+      "subtitle_en": "JWT Decoder, Verifier & Security Linter",
+      "description_ja": "ブラウザー上でJWTをデコード・検証し、alg=none攻撃や期限切れなどのセキュリティリスクを自動検出するツール",
+      "description_en": "Decode and verify JWTs (HS256/RS256) in-browser, with security lint hints for alg=none attacks, expiration issues, and more",
+      "category_ja": [
+        "Webセキュリティ",
+        "認可"
+      ],
+      "category_en": [
+        "Web Security",
+        "Authorization"
+      ],
+      "category_ids": [
+        "web-security"
+      ],
+      "difficulty": 3,
+      "tags": [
+        "jwt",
+        "websecurity",
+        "crypto",
+        "education",
+        "authentication",
+        "web-crypto-api"
+      ],
+      "repo_url": "https://github.com/ipusiron/jwt-inspector",
+      "demo_url": "https://ipusiron.github.io/jwt-inspector/",
+      "hub": true
+    },
+    {
+      "id": "day054",
+      "slug": "canary-file-generator",
+      "title": "Canary File Generator",
+      "subtitle_ja": "教育用カナリア／ハニーファイル生成ツール",
+      "subtitle_en": "Educational Canary/Honey File Generator",
+      "description_ja": "カナリアファイル、ハニーファイル、ハニートークンの概念を学べる教育用ツール。攻撃者を誘引するためのダミーファイルを生成し、アクセス検知の流れを擬似体験できます。",
+      "description_en": "Educational tool for learning about canary files, honey files, and honey tokens. Generate decoy files to lure attackers and simulate access detection workflows.",
+      "category_ja": [
+        "欺瞞技術",
+        "侵入検知",
+        "ハニーポット"
+      ],
+      "category_en": [
+        "Deception Technology",
+        "Intrusion Detection",
+        "Honeypot"
+      ],
+      "category_ids": [],
+      "difficulty": 4,
+      "tags": [
+        "canary",
+        "honeyfile",
+        "honeytoken",
+        "deception",
+        "intrusion-detection",
+        "security-awareness"
+      ],
+      "repo_url": "https://github.com/ipusiron/canary-file-generator",
+      "demo_url": "https://ipusiron.github.io/canary-file-generator/",
+      "hub": true
+    },
+    {
+      "id": "day055",
+      "slug": "bacon-cipherlab",
+      "title": "Bacon CipherLab",
+      "subtitle_ja": "ベーコン暗号の体験ツール",
+      "subtitle_en": "Interactive Bacon's Cipher Learning Tool",
+      "description_ja": "ベーコン暗号（Bacon's Cipher）をテーマにした学習・体験用のWebツール。平文⇔暗号文の変換だけでなく、カバーテキストへの埋め込み・抽出を通してステガノグラフィーの思想を理解できます。ゼロ幅文字を用いた高度なステガノグラフィーにも対応。",
+      "description_en": "Educational web tool for learning Bacon's Cipher. Supports encoding/decoding between plaintext and ciphertext, plus steganographic embedding/extraction into cover text. Features advanced steganography using zero-width characters.",
+      "category_ja": [
+        "古典暗号",
+        "ステガノグラフィー"
+      ],
+      "category_en": [
+        "Classical Cryptography",
+        "Steganography"
+      ],
+      "category_ids": [
+        "classic-crypto"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "bacon-cipher",
+        "classical-cryptography",
+        "steganography",
+        "cryptanalysis",
+        "education",
+        "web-tool",
+        "ctf"
+      ],
+      "repo_url": "https://github.com/ipusiron/bacon-cipherlab",
+      "demo_url": "https://ipusiron.github.io/bacon-cipherlab/",
+      "hub": true
+    },
+    {
+      "id": "day056",
+      "slug": "hashviz",
+      "title": "HashViz",
+      "subtitle_ja": "教育用ハッシュ関数ビジュアライザー",
+      "subtitle_en": "Educational Hash Function Visualizer",
+      "description_ja": "ビット単位の可視化、アバランシェ効果のデモ、衝突例を体験できる教育用ハッシュ関数探索ツール。2D/3D表示に対応し、MD5・SHA-1・SHA-256・SHA-512をサポート。",
+      "description_en": "Educational hash function explorer with bit-level visualization, avalanche effect demo, and collision samples. Supports 2D/3D display and MD5, SHA-1, SHA-256, SHA-512 algorithms.",
+      "category_ja": [
+        "現代暗号",
+        "ハッシュ関数"
+      ],
+      "category_en": [
+        "Modern Cryptography",
+        "Hash Function"
+      ],
+      "category_ids": [
+        "clamodernsic-crypto",
+        "hash-function"
+      ],
+      "difficulty": 3,
+      "tags": [
+        "hash",
+        "visualization",
+        "collision",
+        "avalanche",
+        "cryptography",
+        "education",
+        "3D",
+        "MD5",
+        "SHA-1",
+        "SHA-256"
+      ],
+      "repo_url": "https://github.com/ipusiron/hashviz",
+      "demo_url": "https://ipusiron.github.io/hashviz/",
+      "hub": true
+    },
+    {
+      "id": "day057",
+      "slug": "perceptron-otp-visualizer",
+      "title": "Perceptron OTP Visualizer",
+      "subtitle_ja": "パーセプトロンOTP可視化ツール",
+      "subtitle_en": "Perceptron-based OTP Encryption Visualizer",
+      "description_ja": "NANDゲートの普遍性、パーセプトロンによる論理ゲート実装、多層XOR、OTP暗号をインタラクティブに可視化する教育ツール",
+      "description_en": "Educational tool visualizing NAND gate universality, perceptron implementations, multi-layer XOR, and OTP encryption through interactive demonstrations",
+      "category_ja": [
+        "機械学習",
+        "現代暗号"
+      ],
+      "category_en": [
+        "Machine Learning",
+        "Modern Cryptography"
+      ],
+      "category_ids": [
+        "clamodernsic-crypto"
+      ],
+      "difficulty": 3,
+      "tags": [
+        "nand",
+        "perceptron",
+        "xor",
+        "otp",
+        "cryptography",
+        "neural-networks",
+        "visualization",
+        "education"
+      ],
+      "repo_url": "https://github.com/ipusiron/perceptron-otp-visualizer",
+      "demo_url": "https://ipusiron.github.io/perceptron-otp-visualizer/",
+      "hub": true
+    },
+    {
+      "id": "day058",
+      "slug": "invisible-clicks",
+      "title": "Invisible Clicks",
+      "subtitle_ja": "クリックジャッキング攻撃体験ツール",
+      "subtitle_en": "Clickjacking Attack Experience Tool",
+      "description_ja": "ブラウザーだけでクリックジャッキングを安全に体験できる教育用デモツール。透明オーバーレイやiframeの上乗せを模擬し、意図しない危険操作が発火する仕組みと対策を学べます。",
+      "description_en": "An educational demo tool to safely experience clickjacking in the browser. Simulates transparent overlays and iframe embedding to learn how unintended dangerous operations are triggered and how to defend against them.",
+      "category_ja": [
+        "Webセキュリティ"
+      ],
+      "category_en": [
+        "Web Security"
+      ],
+      "category_ids": [
+        "web-security"
+      ],
+      "difficulty": 3,
+      "tags": [
+        "clickjacking",
+        "web-security",
+        "education",
+        "typescript",
+        "vite"
+      ],
+      "repo_url": "https://github.com/ipusiron/invisible-clicks",
+      "demo_url": "https://ipusiron.github.io/invisible-clicks/",
+      "hub": true
+    },
+    {
+      "id": "day059",
+      "slug": "asset-inventory-helper",
+      "title": "Asset Inventory Helper",
+      "subtitle_ja": "ソフトウェア資産の棚卸し支援ツール",
+      "subtitle_en": "Software Asset Inventory Support Tool",
+      "description_ja": "ソフトウェア資産の一覧を整形・可視化し、CSV/JSON形式でエクスポートできるWebツール。CIS Controls v8のControl 1・2に対応した資産管理の第一歩を体験できます。",
+      "description_en": "A web-based tool to organize and visualize software assets, with CSV/JSON export support. Designed to align with CIS Controls v8 (Control 1 and 2), helping users experience the first step of asset management in security frameworks.",
+      "category_ja": [
+        "セキュリティ管理",
+        "資産管理"
+      ],
+      "category_en": [
+        "Security Management",
+        "Asset Management"
+      ],
+      "category_ids": [
+        "security-management"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "asset",
+        "inventory",
+        "software",
+        "cis-controls",
+        "security"
+      ],
+      "repo_url": "https://github.com/ipusiron/asset-inventory-helper",
+      "demo_url": "https://ipusiron.github.io/asset-inventory-helper/",
+      "hub": true
+    },
+    {
+      "id": "day060",
+      "slug": "reverse-bruteforce-demo",
+      "title": "Reverse Brute-force Demo",
+      "subtitle_ja": "リバースブルートフォース攻撃デモツール",
+      "subtitle_en": "Password Spraying Attack Visualization Tool",
+      "description_ja": "アカウント単位ロックアウトを導入している環境で、従来のブルートフォース攻撃とリバースブルートフォース攻撃（パスワードスプレー）の違いを直感的に理解できる教育用デモツール",
+      "description_en": "Educational demo tool to visualize how reverse brute-force (password spraying) can bypass account lockout policies compared to traditional brute-force attacks",
+      "category_ja": [
+        "パスワード解析",
+        "認証"
+      ],
+      "category_en": [
+        "Password Cracking",
+        "Authentication"
+      ],
+      "category_ids": [
+        "authentication",
+        "password-analysis"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "bruteforce",
+        "reverse-bruteforce",
+        "password-spray",
+        "lockout",
+        "authentication",
+        "visualization",
+        "education"
+      ],
+      "repo_url": "https://github.com/ipusiron/reverse-bruteforce-demo",
+      "demo_url": "https://ipusiron.github.io/reverse-bruteforce-demo/",
+      "hub": true
+    },
+    {
+      "id": "day061",
+      "slug": "seal-tamper-lab",
+      "title": "Seal Tamper Lab",
+      "subtitle_ja": "封印シールのセキュリティ教育ツール",
+      "subtitle_en": "Educational Tool for Tamper-Evident Seal Security",
+      "description_ja": "封印シールの脆弱性と検知技術をインタラクティブに学ぶ教育ツール。改ざん手法と検査方法のシミュレーションを通じて、物理セキュリティのリテラシーを養います。",
+      "description_en": "An interactive educational tool for learning tamper-evident seal vulnerabilities and detection techniques. Build physical security literacy through simulation of tampering methods and inspection procedures.",
+      "category_ja": [
+        "物理セキュリティ"
+      ],
+      "category_en": [
+        "Physical Security"
+      ],
+      "category_ids": [
+        "physical-security"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "seal",
+        "tamper-evident",
+        "physical-security",
+        "education",
+        "simulation"
+      ],
+      "repo_url": "https://github.com/ipusiron/seal-tamper-lab",
+      "demo_url": "https://ipusiron.github.io/seal-tamper-lab/",
+      "hub": true
+    },
+    {
+      "id": "day062",
+      "slug": "port-scan-visualizer",
+      "title": "Port Scan Visualizer",
+      "subtitle_ja": "ポートスキャン手法可視化ツール",
+      "subtitle_en": "Port Scanning Technique Visualizer",
+      "description_ja": "代表的なポートスキャン手法（TCP Connect / TCP SYN / FIN / NULL / Xmas / UDP）を、送受パケットの時系列とTCPフラグの違いにフォーカスして学べる教育用可視化ツール",
+      "description_en": "Educational visualization tool for learning major port scanning techniques with time-series packet flow and TCP flag animations",
+      "category_ja": [
+        "ネットワーク"
+      ],
+      "category_en": [
+        "Network"
+      ],
+      "category_ids": [
+        "network"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "port-scan",
+        "tcp",
+        "udp",
+        "nmap",
+        "visualization",
+        "education",
+        "ids"
+      ],
+      "repo_url": "https://github.com/ipusiron/port-scan-visualizer",
+      "demo_url": "https://ipusiron.github.io/port-scan-visualizer/",
+      "hub": true
+    },
+    {
+      "id": "day063",
+      "slug": "keypress-pattern-analyzer",
+      "title": "KeyPress Pattern Analyzer",
+      "subtitle_ja": "キーストローク解析ツール",
+      "subtitle_en": "Keystroke Dynamics Analyzer",
+      "description_ja": "タイピングの癖（キー押下のタイミングパターン）を解析し、キーストローク生体認証の原理を体験できるWebアプリです。",
+      "description_en": "Interactive web app to explore keystroke dynamics and typing patterns, aimed at security education and research.",
+      "category_ja": [
+        "人的セキュリティ",
+        "物理的セキュリティ",
+        "認証"
+      ],
+      "category_en": [
+        "Human Security",
+        "Physical Security",
+        "Authentication"
+      ],
+      "category_ids": [
+        "authentication",
+        "physical-security"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "keystroke",
+        "biometrics",
+        "typing",
+        "visualization",
+        "security-education",
+        "behavioral-authentication"
+      ],
+      "repo_url": "https://github.com/ipusiron/keypress-pattern-analyzer",
+      "demo_url": "https://ipusiron.github.io/keypress-pattern-analyzer/",
+      "hub": true
+    },
+    {
+      "id": "day064",
+      "slug": "patternlock-security-trainer",
+      "title": "PatternLock Security Trainer",
+      "subtitle_ja": "パターンロック強度測定ツール",
+      "subtitle_en": "Android Pattern Lock Security Analyzer",
+      "description_ja": "Android式の3×3パターンロックの強度を分析し、特徴量抽出・スコアリング・突破時間推定を可視化する教育ツール",
+      "description_en": "Analyze Android-style 3×3 pattern lock security with feature extraction, scoring, and estimated crack time visualization",
+      "category_ja": [
+        "モバイルセキュリティ",
+        "認証"
+      ],
+      "category_en": [
+        "Mobile Security",
+        "Authentication"
+      ],
+      "category_ids": [
+        "authentication"
+      ],
+      "difficulty": 4,
+      "tags": [
+        "pattern-lock",
+        "authentication",
+        "security",
+        "education",
+        "visualization",
+        "android",
+        "canvas",
+        "heuristic-scoring"
+      ],
+      "repo_url": "https://github.com/ipusiron/patternlock-security-trainer",
+      "demo_url": "https://ipusiron.github.io/patternlock-security-trainer/",
+      "hub": true
+    },
+    {
+      "id": "day065",
+      "slug": "idor-clinic",
+      "title": "IDOR Clinic",
+      "subtitle_ja": "IDOR体験ツール",
+      "subtitle_en": "Interactive IDOR Learning Simulator",
+      "description_ja": "Webアプリの水平方向の権限昇格脆弱性IDOR（Insecure Direct Object Reference）を体験できる、クライアントサイド完結のインタラクティブ・シミュレーター。脆弱挙動（VULN）と対策挙動（SECURE）をワンタッチで切り替え、認証と認可の違い、所有者チェックや非推測IDの重要性を視覚的に学べます。",
+      "description_en": "Interactive, client-side simulator to learn IDOR (Insecure Direct Object Reference). Practice URL/Path/Body/Header tampering and compare VULN vs SECURE modes. No data stored or sent.",
+      "category_ja": [
+        "Webセキュリティ"
+      ],
+      "category_en": [
+        "Web Security"
+      ],
+      "category_ids": [
+        "web-security"
+      ],
+      "difficulty": 3,
+      "tags": [
+        "idor",
+        "access-control",
+        "authorization",
+        "insecure-direct-object-reference",
+        "education",
+        "simulator",
+        "web-security",
+        "visualization"
+      ],
+      "repo_url": "https://github.com/ipusiron/idor-clinic",
+      "demo_url": "https://ipusiron.github.io/idor-clinic/",
+      "hub": true
+    },
+    {
+      "id": "day066",
+      "slug": "GrayNinja",
+      "title": "GrayNinja",
+      "subtitle_ja": "グレイコードのエンコーダー・ディスク可視化ツール",
+      "subtitle_en": "Gray Code Encoder Disc Visualization Tool",
+      "description_ja": "グレイコード（反射バイナリコード）を直感的に理解するためのインタラクティブ学習ツール。Binary/Gray変換、エンコーダー・ディスク可視化、ハミング距離計算などを提供。",
+      "description_en": "Interactive learning tool for understanding Gray (Reflected Binary) code through Binary/Gray conversion, encoder disc visualization, and Hamming distance calculation.",
+      "category_ja": [
+        "データ表現"
+      ],
+      "category_en": [
+        "Data Representation"
+      ],
+      "category_ids": [],
+      "difficulty": 2,
+      "tags": [
+        "gray-code",
+        "binary",
+        "encoder",
+        "visualization",
+        "hamming-distance",
+        "side-channel"
+      ],
+      "repo_url": "https://github.com/ipusiron/GrayNinja",
+      "demo_url": "https://ipusiron.github.io/GrayNinja/",
+      "hub": true
+    },
+    {
+      "id": "day067",
+      "slug": "polybius-cipherlab",
+      "title": "Polybius CipherLab",
+      "subtitle_ja": "ポリュビオス暗号ツール",
+      "subtitle_en": "Polybius Cipher Visualization Tool",
+      "description_ja": "古代ギリシャの歴史的暗号「ポリュビオス暗号」を学べるWebアプリ。文字を数字ペアに変換するチェッカー盤を使い、暗号化・復号の仕組みを可視化します。",
+      "description_en": "Visualize and practice the Polybius cipher using the historic checkerboard system. Convert letters to number pairs and learn ancient Greek cryptography.",
+      "category_ja": [
+        "古典暗号",
+        "換字式暗号"
+      ],
+      "category_en": [
+        "Classical Cryptography",
+        "Subsutitution Cipher"
+      ],
+      "category_ids": [
+        "classic-crypto",
+        "substitution-cipher"
+      ],
+      "difficulty": 1,
+      "tags": [
+        "polybius",
+        "cipher",
+        "classical",
+        "cryptography",
+        "checkerboard",
+        "education",
+        "visualization"
+      ],
+      "repo_url": "https://github.com/ipusiron/polybius-cipherlab",
+      "demo_url": "https://ipusiron.github.io/polybius-cipherlab/",
+      "hub": true
+    },
+    {
+      "id": "day068",
+      "slug": "path-escape",
+      "title": "PathEscape",
+      "subtitle_ja": "ディレクトリートラバーサル体験ツール",
+      "subtitle_en": "Directory Traversal Training Tool",
+      "description_ja": "わざと脆弱なファイル閲覧機能をシミュレートし、../を使ったディレクトリートラバーサル攻撃を体験できる教育用Webアプリ。段階的なチャレンジとヒントで初心者でも学習可能。",
+      "description_en": "Hands-on directory traversal training app. Learn ../ path attacks and defenses through staged challenges, all client-side.",
+      "category_ja": [
+        "Webセキュリティ"
+      ],
+      "category_en": [
+        "Web Security"
+      ],
+      "category_ids": [
+        "web-security"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "directory-traversal",
+        "path-traversal",
+        "web-security",
+        "training",
+        "ctf",
+        "javascript",
+        "client-side"
+      ],
+      "repo_url": "https://github.com/ipusiron/path-escape",
+      "demo_url": "https://ipusiron.github.io/path-escape/",
+      "hub": true
+    },
+    {
+      "id": "day069",
+      "slug": "trevanion-cipherlab",
+      "title": "Trevanion CipherLab",
+      "subtitle_ja": "トレヴァニオン暗号の可視化・学習ツール",
+      "subtitle_en": "Visual learning tool for Trevanion Cipher",
+      "description_ja": "トレヴァニオン暗号（Null暗号の一種）を可視化・学習するためのWebアプリ。復号（可視化）、暗号化支援（制約チェック）、自動生成（英語・日本語対応）、完全一致探索機能を提供。",
+      "description_en": "A visual, educational web app for the Trevanion Cipher (a classic Null cipher). Features decryption visualization, encryption assistance with constraint checking, auto-generation for English/Japanese, and perfect match search.",
+      "category_ja": [
+        "古典暗号",
+        "ステガノグラフィー"
+      ],
+      "category_en": [
+        "Classical Cryptography",
+        "Steganography"
+      ],
+      "category_ids": [
+        "classic-crypto"
+      ],
+      "difficulty": 1,
+      "tags": [
+        "trevanion",
+        "null-cipher",
+        "steganography",
+        "classical",
+        "visualization",
+        "education"
+      ],
+      "repo_url": "https://github.com/ipusiron/trevanion-cipherlab",
+      "demo_url": "https://ipusiron.github.io/trevanion-cipherlab/",
+      "hub": true
+    },
+    {
+      "id": "day070",
+      "slug": "visual-cryptography-cipherlab",
+      "title": "VisualCryptography CipherLab",
+      "subtitle_ja": "視覚暗号の仕組みを2枚のシェアで学べる体験ツール",
+      "subtitle_en": "A hands-on web tool to learn Visual Cryptography with 2-sheet overlays",
+      "description_ja": "画像を2枚のノイズ状シェアに分割し、重ね合わせると秘密が浮かび上がる視覚暗号（VSSS）を体験できる教育用Webツール",
+      "description_en": "An educational web tool to experience Visual Secret Sharing Scheme (VSSS), splitting images into two noise-like shares that reveal secrets when overlaid",
+      "category_ja": [
+        "視覚暗号"
+      ],
+      "category_en": [
+        "Visual Cryptography"
+      ],
+      "category_ids": [],
+      "difficulty": 3,
+      "tags": [
+        "visual-cryptography",
+        "vsss",
+        "secret-sharing",
+        "education",
+        "canvas-api"
+      ],
+      "repo_url": "https://github.com/ipusiron/visual-cryptography-cipherlab",
+      "demo_url": "https://ipusiron.github.io/visual-cryptography-cipherlab/",
+      "hub": true
+    },
+    {
+      "id": "day071",
+      "slug": "strip-cipherlab",
+      "title": "Strip CipherLab",
+      "subtitle_ja": "ストリップ暗号の構造と考え方を直感的に学ぶ教育ツール",
+      "subtitle_en": "Interactive educational tool for understanding strip cipher structure",
+      "description_ja": "ストリップ生成、フレーム設定、暗号化、復号という一連の手順を通じて、ストリップ暗号の構造と考え方を直感的に理解できるWebツールです。",
+      "description_en": "A web tool to grasp the strip cipher's structure through interactive visualization: generate strips, configure frame ordering, then encrypt and decrypt step-by-step.",
+      "category_ja": [
+        "古典暗号",
+        "換字式暗号"
+      ],
+      "category_en": [
+        "Classical Cryptography",
+        "Substitution Cipher"
+      ],
+      "category_ids": [
+        "classic-crypto",
+        "substitution-cipher"
+      ],
+      "difficulty": 1,
+      "tags": [
+        "strip-cipher",
+        "classical-crypto",
+        "education",
+        "visualization",
+        "javascript"
+      ],
+      "repo_url": "https://github.com/ipusiron/strip-cipherlab",
+      "demo_url": "https://ipusiron.github.io/strip-cipherlab/",
+      "hub": true
+    },
+    {
+      "id": "day072",
+      "slug": "zigzag-cipherlab",
+      "title": "Zigzag CipherLab",
+      "subtitle_ja": "ジグザグ暗号ツール",
+      "subtitle_en": "Zigzag Cipher Visualization Tool",
+      "description_ja": "文字を点と線に変換して暗号文を生成する幾何学サイファのインタラクティブ学習ツール。鍵となるアルファベット配列に沿って平文を折れ線に変換し、視覚的な暗号化・復号プロセスを体験できます。",
+      "description_en": "An interactive educational tool for the Zigzag Cipher, a geometrical cipher where plaintext letters are plotted as points along an alphabet key and connected into a zigzag polyline. Without the key, the figure looks like meaningless lines.",
+      "category_ja": [
+        "古典暗号"
+      ],
+      "category_en": [
+        "Classical Cryptography"
+      ],
+      "category_ids": [
+        "classic-crypto"
+      ],
+      "difficulty": 1,
+      "tags": [
+        "zigzag-cipher",
+        "geometrical-cipher",
+        "classical-crypto",
+        "visualization",
+        "education",
+        "javascript",
+        "svg"
+      ],
+      "repo_url": "https://github.com/ipusiron/zigzag-cipherlab",
+      "demo_url": "https://ipusiron.github.io/zigzag-cipherlab/",
+      "hub": true
+    },
+    {
+      "id": "day073",
+      "slug": "infoquantity-academy",
+      "title": "InfoQuantity Academy",
+      "subtitle_ja": "情報量の基礎学習ツール",
+      "subtitle_en": "Interactive Information Theory Learning Tool",
+      "description_ja": "コンピューターサイエンスや数学に不慣れでも、情報量 I(a)=-log₂P(a) の直感と定義・性質を対話的に学べる入門ツール。対数クイズ、驚き度体感スライダー、計算例、加算性、エントロピーまで段階的に学習。",
+      "description_en": "A beginner-friendly interactive web tool to grasp information quantity with definitions, worked examples, additivity, properties, and entropy. Learn Shannon's information theory through quizzes, intuition sliders, and interactive calculators.",
+      "category_ja": [
+        "情報理論"
+      ],
+      "category_en": [
+        "Information Theory"
+      ],
+      "category_ids": [
+        "information-theory"
+      ],
+      "difficulty": 3,
+      "tags": [
+        "information-theory",
+        "information-quantity",
+        "shannon",
+        "entropy",
+        "education",
+        "visualization",
+        "javascript"
+      ],
+      "repo_url": "https://github.com/ipusiron/infoquantity-academy",
+      "demo_url": "https://ipusiron.github.io/infoquantity-academy/",
+      "hub": true
+    },
+    {
+      "id": "day074",
+      "slug": "qr-risk-radar",
+      "title": "QR Risk Radar",
+      "subtitle_ja": "QRコードリスク分析ツール",
+      "subtitle_en": "QR Code Risk Analysis Tool",
+      "description_ja": "QRコードやURLに潜むフィッシングリスクを検出するクライアントサイドセキュリティツール。カメラや画像からQRコードを読み取り、20種類以上のヒューリスティックルールで危険なパターンを分析します。すべての処理はブラウザー内で完結し、データがサーバーへ送信されることはありません。",
+      "description_en": "A client-side security tool that detects phishing risks in QR codes and URLs. Decodes QR codes from camera or images and analyzes dangerous patterns using 20+ heuristic rules. All processing occurs offline in the browser with no server communication.",
+      "category_ja": [
+        "QRコード",
+        "フィッシング対策"
+      ],
+      "category_en": [
+        "QR Code",
+        "Anti-Phishing"
+      ],
+      "category_ids": [
+        "qr-code"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "security",
+        "qr-code",
+        "phishing",
+        "quishing",
+        "risk-analysis",
+        "javascript",
+        "client-side",
+        "education"
+      ],
+      "repo_url": "https://github.com/ipusiron/qr-risk-radar",
+      "demo_url": "https://ipusiron.github.io/qr-risk-radar/",
+      "hub": true
+    },
+    {
+      "id": "day075",
+      "slug": "captcha-art-generator",
+      "title": "CAPTCHA Art Generator",
+      "subtitle_ja": "CAPTCHAアート生成ツール",
+      "subtitle_en": "CAPTCHA Art Generator",
+      "description_ja": "入力文字列をCAPTCHA風に歪ませ、ノイズを加えた「アート的な画像」に変換する教育ツール。人間可読性と機械可読性のトレードオフを体験できる。",
+      "description_en": "An educational tool that transforms input text into CAPTCHA-style distorted images with noise. Experience the trade-off between human readability and bot resistance.",
+      "category_ja": [
+        "Webセキュリティ",
+        "セキュリティ・アート"
+      ],
+      "category_en": [
+        "Web Security",
+        "Security Art"
+      ],
+      "category_ids": [
+        "web-security"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "captcha",
+        "visualization",
+        "education",
+        "javascript",
+        "canvas",
+        "ocr"
+      ],
+      "repo_url": "https://github.com/ipusiron/captcha-art-generator",
+      "demo_url": "https://ipusiron.github.io/captcha-art-generator/",
+      "hub": true
+    },
+    {
+      "id": "day076",
+      "slug": "crypto-emoji-translator",
+      "title": "Crypto Emoji Translator",
+      "subtitle_ja": "古典暗号や符号化を絵文字で可視化する教育ツール",
+      "subtitle_en": "Educational tool to visualize classical ciphers with emojis",
+      "description_ja": "シーザー暗号やヴィジュネル暗号、モールス符号、バイナリ/16進数をカラフルな絵文字列に変換。見た目は派手でも暗号の本質（頻度分布や可逆性）は変わらないことを体験的に理解できる教育向けWebツール。",
+      "description_en": "Convert Caesar cipher, Vigenère cipher, Morse code, and binary/hex encodings into colorful emoji sequences. An educational web tool demonstrating that visual complexity doesn't improve cryptographic strength - frequency distributions and reversibility remain unchanged.",
+      "category_ja": [
+        "古典暗号",
+        "換字式暗号",
+        "符号化"
+      ],
+      "category_en": [
+        "Classical Cryptography",
+        "Subsutition Cipher",
+        "Encoding"
+      ],
+      "category_ids": [
+        "classic-crypto",
+        "substitution-cipher"
+      ],
+      "difficulty": 1,
+      "tags": [
+        "emoji",
+        "cipher",
+        "caesar",
+        "vigenere",
+        "morse",
+        "binary",
+        "hex",
+        "education",
+        "client-side"
+      ],
+      "repo_url": "https://github.com/ipusiron/crypto-emoji-translator",
+      "demo_url": "https://ipusiron.github.io/crypto-emoji-translator/",
+      "hub": true
+    },
+    {
+      "id": "day077",
+      "slug": "browser-fingerprint-mirror",
+      "title": "Browser Fingerprint Mirror",
+      "subtitle_ja": "ブラウザ指紋ミラー",
+      "subtitle_en": "Visualize your browser's fingerprint like a digital mirror",
+      "description_ja": "ブラウザーが公開する環境情報（UA、解像度、言語、タイムゾーン、Canvas/WebGL/Audio指紋など）を可視化し、ユニーク度スコアを算出する教育用ツール",
+      "description_en": "An educational web tool that visualizes browser fingerprinting information (UA, resolution, language, timezone, Canvas/WebGL/Audio fingerprints, etc.) and calculates a uniqueness score",
+      "category_ja": [
+        "プライバシー",
+        "Webセキュリティ",
+        "ブラウザ指紋"
+      ],
+      "category_en": [
+        "Privacy",
+        "Web Security",
+        "Browser Fingerprinting"
+      ],
+      "category_ids": [
+        "web-security"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "browser",
+        "fingerprinting",
+        "privacy",
+        "security",
+        "education",
+        "visualization",
+        "javascript",
+        "canvas",
+        "webgl",
+        "audio"
+      ],
+      "repo_url": "https://github.com/ipusiron/browser-fingerprint-mirror",
+      "demo_url": "https://ipusiron.github.io/browser-fingerprint-mirror/",
+      "hub": true
+    },
+    {
+      "id": "day078",
+      "slug": "beaufort-cipherlab",
+      "title": "Beaufort CipherLab",
+      "subtitle_ja": "ビューフォート暗号ツール",
+      "subtitle_en": "Beaufort Cipher Learning Tool",
+      "description_ja": "純正ビューフォート暗号を学習・体験できるインタラクティブツール。鍵生成、暗号化、復号を可視化し、ヴィジュネル暗号との違いを理解できます。",
+      "description_en": "Interactive web tool to learn and visualize the pure Beaufort cipher: key generation, encryption/decryption, and comparison with Vigenère.",
+      "category_ja": [
+        "古典暗号",
+        "換字式暗号"
+      ],
+      "category_en": [
+        "Classical Cryptography",
+        "Substitution Cipher"
+      ],
+      "category_ids": [
+        "classic-crypto",
+        "substitution-cipher"
+      ],
+      "difficulty": 4,
+      "tags": [
+        "beaufort",
+        "vigenere",
+        "cipher",
+        "classical-crypto",
+        "polyalphabetic",
+        "education",
+        "visualization",
+        "javascript"
+      ],
+      "repo_url": "https://github.com/ipusiron/beaufort-cipherlab",
+      "demo_url": "https://ipusiron.github.io/beaufort-cipherlab/",
+      "hub": true
+    },
+    {
+      "id": "day079",
+      "slug": "leetforge",
+      "title": "LeetForge",
+      "subtitle_ja": "リートコンバーター",
+      "subtitle_en": "Leet Speak Converter",
+      "description_ja": "通常のテキストを1337（リート表記）に変換する教育用ツール。文字ごとに複数の置換候補を割り当て、ランダム／循環で出力を生成できます。",
+      "description_en": "Interactive tool to convert plain text into 1337 (leet) speak with customizable mappings. Supports multiple replacement candidates per character with random or round-robin selection.",
+      "category_ja": [
+        "テキスト変換",
+        "符号化"
+      ],
+      "category_en": [
+        "Text Conversion",
+        "Encording"
+      ],
+      "category_ids": [],
+      "difficulty": 1,
+      "tags": [
+        "leet",
+        "converter",
+        "obfuscation",
+        "education",
+        "javascript"
+      ],
+      "repo_url": "https://github.com/ipusiron/leetforge",
+      "demo_url": "https://ipusiron.github.io/leetforge/",
+      "hub": true
+    },
+    {
+      "id": "day080",
+      "slug": "porta-cipherlab",
+      "title": "Porta CipherLab",
+      "subtitle_ja": "ポルタ連字暗号ツール",
+      "subtitle_en": "Interactive Digraphic Cipher Tool",
+      "description_ja": "Giovanni Battista della Portaが考案した連字暗号（digraphic cipher）を体験できる教育用ツール。20×20/26×26マトリクスを使用し、平文2文字を3桁コードに変換する暗号化・復号を実装。",
+      "description_en": "Educational tool to learn Porta's digraphic cipher. Encrypt and decrypt using 20×20 or 26×26 substitution matrices with unique 3-digit codes for each character pair.",
+      "category_ja": [
+        "古典暗号",
+        "換字式暗号"
+      ],
+      "category_en": [
+        "Classical Cryptography",
+        "Substitution Cipher"
+      ],
+      "category_ids": [
+        "classic-crypto",
+        "substitution-cipher"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "porta-cipher",
+        "digraphic-cipher",
+        "classical-crypto",
+        "substitution-matrix",
+        "education",
+        "visualization",
+        "javascript"
+      ],
+      "repo_url": "https://github.com/ipusiron/porta-cipherlab",
+      "demo_url": "https://ipusiron.github.io/porta-cipherlab/",
+      "hub": true
+    },
+    {
+      "id": "day081",
+      "slug": "emotion-based-scam-detector",
+      "title": "Emotion-Based Scam Detector",
+      "subtitle_ja": "メッセージの感情トリガー検出ツール",
+      "subtitle_en": "Emotional trigger detector for phishing and scam messages",
+      "description_ja": "メールやチャットに含まれる「緊急性」「恐怖」「欲望」などの感情を刺激するキーワードを検出し、フィッシングや詐欺メッセージを識別するブラウザベースのツール",
+      "description_en": "Browser-based tool that detects emotion-driven triggers (urgency, fear, greed) in messages to help users identify potential phishing or scam attempts",
+      "category_ja": [
+        "詐欺検出",
+        "ソーシャルエンジニアリング",
+        "フィッシング詐欺"
+      ],
+      "category_en": [
+        "Scam Detection",
+        "Social Engineering",
+        "phishing"
+      ],
+      "category_ids": [
+        "social-engineering"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "scam",
+        "phishing",
+        "social-engineering",
+        "education",
+        "javascript",
+        "client-side"
+      ],
+      "repo_url": "https://github.com/ipusiron/emotion-based-scam-detector",
+      "demo_url": "https://ipusiron.github.io/emotion-based-scam-detector/",
+      "hub": true
+    },
+    {
+      "id": "day082",
+      "slug": "global-cultural-scam-atlas",
+      "title": "Global Cultural Scam Atlas (GCSA)",
+      "subtitle_ja": "文化文脈に基づく攻撃事例のデータベース",
+      "subtitle_en": "An educational database of scams exploiting cultural contexts",
+      "description_ja": "各国・地域で観測される文化・慣習の文脈を悪用したソーシャルエンジニアリングを、教育目的で整理するオープンなデータベース",
+      "description_en": "An educational, citation-driven database of social engineering attacks that exploit cultural contexts across countries",
+      "category_ja": [
+        "ソーシャルエンジニアリング",
+        "データベース"
+      ],
+      "category_en": [
+        "Social Engineering",
+        "Database"
+      ],
+      "category_ids": [
+        "social-engineering"
+      ],
+      "difficulty": 4,
+      "tags": [
+        "atlas",
+        "database",
+        "social-engineering",
+        "education",
+        "javascript",
+        "json",
+        "i18n"
+      ],
+      "repo_url": "https://github.com/ipusiron/global-cultural-scam-atlas",
+      "demo_url": "https://ipusiron.github.io/global-cultural-scam-atlas/",
+      "hub": true
+    },
+    {
+      "id": "day083",
+      "slug": "intrusion-path-mapper",
+      "title": "Intrusion Path Mapper",
+      "subtitle_ja": "侵入経路マッピングツール",
+      "subtitle_en": "Attack Path Visualization & Simulation Tool",
+      "description_ja": "建物やネットワークの簡易マップを入力し、ブラウザー上で攻撃者の侵入経路をシミュレーション・可視化する教育用ツール。Yen's K-shortest pathsアルゴリズムで複数の侵入ルート候補を発見し、成功確率とリスク指標を自動計算。",
+      "description_en": "Educational tool to simulate and visualize intrusion paths in simplified facility or network maps. Uses Yen's K-shortest paths algorithm to find multiple attack routes with success probability and risk metrics. Built with D3.js, runs entirely client-side.",
+      "category_ja": [
+        "物理的セキュリティ",
+        "攻撃経路分析",
+        "セキュリティ可視化"
+      ],
+      "category_en": [
+        "Physical Security",
+        "Attack Path Analysis",
+        "Security Visualization"
+      ],
+      "category_ids": [
+        "physical-security"
+      ],
+      "difficulty": 3,
+      "tags": [
+        "attack-path",
+        "visualization",
+        "d3",
+        "graph-algorithm",
+        "risk-assessment",
+        "red-team",
+        "education"
+      ],
+      "repo_url": "https://github.com/ipusiron/intrusion-path-mapper",
+      "demo_url": "https://ipusiron.github.io/intrusion-path-mapper/",
+      "hub": true
+    },
+    {
+      "id": "day084",
+      "slug": "mirror-cipherlab",
+      "title": "Mirror CipherLab",
+      "subtitle_ja": "ミラー系暗号化・難読化ツール",
+      "subtitle_en": "Mirror Cipher Visualization Tool",
+      "description_ja": "文字順の反転（逆転値暗号）と字形の鏡像レンダリング（CSS変形）を同時に体験できる教育用ツール。古典暗号の基礎と人間認知の錯覚を学べます。",
+      "description_en": "Learn and visualize mirror ciphers through text reversal (transposition cipher) and mirrored glyph rendering (CSS transform). An educational tool for classical cryptography concepts.",
+      "category_ja": [
+        "古典暗号",
+        "転置式暗号"
+      ],
+      "category_en": [
+        "Classical Cryptography",
+        "Transposition Cipher"
+      ],
+      "category_ids": [
+        "classic-crypto",
+        "transposition-cipher"
+      ],
+      "difficulty": 1,
+      "tags": [
+        "mirror-cipher",
+        "reversal",
+        "transposition",
+        "visualization",
+        "obfuscation",
+        "unicode",
+        "client-side"
+      ],
+      "repo_url": "https://github.com/ipusiron/mirror-cipherlab",
+      "demo_url": "https://ipusiron.github.io/mirror-cipherlab/",
+      "hub": true
+    },
+    {
       "id": "day085",
       "slug": "camoforge",
       "title": "CamoForge",
       "subtitle_ja": "迷彩パターン生成ツール",
       "subtitle_en": "A camouflage pattern generator",
-      "description_ja": "漆黒・ケーブル群・ハードウェア・オフィス背景など、多様な環境下での迷彩パターンを生成・比較できるWebツール。自然界と人工物の“馴染み方”を体感し、カモフラージュの原理を学ぶ。",
+      "description_ja": "漆黒・ケーブル群・ハードウェア・オフィス背景など、多様な環境下での迷彩パターンを生成・比較できるWebツール。自然界と人工物の馴染み方を体感し、カモフラージュの原理を学ぶ。",
       "description_en": "A web-based camouflage pattern generator that visualizes how colors and textures blend across environments—black matte, cables, hardware panels, and office backgrounds—to study the principles of camouflage and visual integration.",
       "category_ja": [
         "サイバー忍術"
@@ -671,6 +2706,536 @@
       ],
       "repo_url": "https://github.com/ipusiron/camoforge",
       "demo_url": "https://ipusiron.github.io/camoforge/",
+      "hub": true
+    },
+    {
+      "id": "day086",
+      "slug": "epigraph-chronogrammer",
+      "title": "Epigraph Chronogrammer",
+      "subtitle_ja": "クロノグラム解析・生成ツール",
+      "subtitle_en": "Chronogram Analyzer & Generator",
+      "description_ja": "碑文や文献に埋め込まれたクロノグラム（ローマ数字による年代表記法）を解析・生成できる教育ツール。ローマ数字の抽出、隠された年号の算出、クロノグラム文の自動生成機能を搭載。",
+      "description_en": "Educational tool for analyzing and generating chronograms—texts where Roman numerals encode hidden years. Extract Roman numerals, compute embedded dates, and generate chronogram sentences.",
+      "category_ja": [
+        "古典暗号",
+        "ステガノグラフィー"
+      ],
+      "category_en": [
+        "Classical Cryptography",
+        "Steganography"
+      ],
+      "category_ids": [
+        "classic-crypto"
+      ],
+      "difficulty": 1,
+      "tags": [
+        "chronogram",
+        "roman-numerals",
+        "steganography",
+        "classical-crypto",
+        "education",
+        "visualization",
+        "javascript"
+      ],
+      "repo_url": "https://github.com/ipusiron/epigraph-chronogrammer",
+      "demo_url": "https://ipusiron.github.io/epigraph-chronogrammer/",
+      "hub": true
+    },
+    {
+      "id": "day087",
+      "slug": "physical-key-ledger",
+      "title": "Physical Key Ledger",
+      "subtitle_ja": "物理鍵管理台帳",
+      "subtitle_en": "Physical Key Management Ledger",
+      "description_ja": "物理鍵・ICカード・カードキーの貸出・回収を可視化し、紛失リスクを低減するWebアプリ。監査ログ・QRコード連携・アノマリー検知機能を搭載。",
+      "description_en": "Web app to visualize physical key, IC card, and card key loans/returns, reducing loss risk. Features audit logs, QR code integration, and anomaly detection.",
+      "category_ja": [
+        "物理的セキュリティ",
+        "錠前"
+      ],
+      "category_en": [
+        "Physical Security",
+        "Lock"
+      ],
+      "category_ids": [
+        "physical-security"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "physical-security",
+        "key-management",
+        "audit-log",
+        "qr-code",
+        "anomaly-detection",
+        "indexeddb",
+        "vanilla-javascript"
+      ],
+      "repo_url": "https://github.com/ipusiron/physical-key-ledger",
+      "demo_url": "https://ipusiron.github.io/physical-key-ledger/",
+      "hub": true
+    },
+    {
+      "id": "day088",
+      "slug": "pin-threat-simulator",
+      "title": "PIN Threat Simulator",
+      "subtitle_ja": "PIN認証攻撃シミュレーター",
+      "subtitle_en": "PIN Authentication Attack Simulator",
+      "description_ja": "暗証番号（PIN）認証に対する攻撃手法（指紋解析、熱解析、音響解析、盗撮解析）をシミュレーションし、防御策の有効性を理解するための教育用ツール",
+      "description_en": "An educational tool that simulates attack techniques against PIN authentication (fingerprint residue, thermal analysis, acoustic inference, shoulder surfing) and demonstrates why defense strategies are effective",
+      "category_ja": [
+        "認証",
+        "PIN解析"
+      ],
+      "category_en": [
+        "Authentication",
+        "PIN Cracking"
+      ],
+      "category_ids": [
+        "authentication"
+      ],
+      "difficulty": 5,
+      "tags": [
+        "pin",
+        "authentication",
+        "simulator",
+        "fingerprint",
+        "thermal-analysis",
+        "acoustic-analysis",
+        "shoulder-surfing",
+        "security-education",
+        "javascript",
+        "canvas"
+      ],
+      "repo_url": "https://github.com/ipusiron/pin-threat-simulator",
+      "demo_url": "https://ipusiron.github.io/pin-threat-simulator/",
+      "hub": true
+    },
+    {
+      "id": "day089",
+      "slug": "keywalk-analyzer",
+      "title": "KeyWalk Analyzer",
+      "subtitle_ja": "キーボード依存パスワード分析ツール",
+      "subtitle_en": "Keyboard-Dependent Password Analysis Tool",
+      "description_ja": "パスワードをキーボード座標上に可視化し、隣接キー歩きや直線移動などのパターンを検出。複数パスワードから入力の癖やプロファイルも抽出できる教育用セキュリティツール。",
+      "description_en": "Visualize password paths on keyboard layouts, detect walking patterns and linear movements. Extract typing habits and profiles from multiple passwords for security education.",
+      "category_ja": [
+        "パスワード分析",
+        "パスワード解析"
+      ],
+      "category_en": [
+        "Password Analysis",
+        "Password Cracking"
+      ],
+      "category_ids": [
+        "password-analysis"
+      ],
+      "difficulty": 3,
+      "tags": [
+        "password",
+        "keyboard-walking",
+        "visualization",
+        "canvas",
+        "security",
+        "profiling",
+        "javascript"
+      ],
+      "repo_url": "https://github.com/ipusiron/keywalk-analyzer",
+      "demo_url": "https://ipusiron.github.io/keywalk-analyzer/",
+      "hub": true
+    },
+    {
+      "id": "day090",
+      "slug": "fontorigin-analyzer",
+      "title": "FontOrigin Analyzer",
+      "subtitle_ja": "文書出所解析ツール",
+      "subtitle_en": "Document Origin Forensic Analyzer",
+      "description_ja": "文書内のフォント・行間・余白などの版面情報を分析し、文書の出所や改ざんを推定するフォレンジックツール",
+      "description_en": "A web-based forensic tool that analyzes document fonts and layout patterns to infer their origin and detect tampering",
+      "category_ja": [
+        "フォレンジック",
+        "OSINT"
+      ],
+      "category_en": [
+        "Forensics",
+        "OSINT"
+      ],
+      "category_ids": [
+        "forensics"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "font",
+        "forensic",
+        "document",
+        "osint",
+        "ocr",
+        "pdf",
+        "layout-analysis"
+      ],
+      "repo_url": "https://github.com/ipusiron/fontorigin-analyzer",
+      "demo_url": "https://ipusiron.github.io/fontorigin-analyzer/",
+      "hub": true
+    },
+    {
+      "id": "day091",
+      "slug": "reverse-logo-hunt",
+      "title": "Reverse Logo Hunt",
+      "subtitle_ja": "ロゴを逆引きして企業マップ化するOSINTツール",
+      "subtitle_en": "OSINT tool for reverse logo lookup and corporate relationship mapping",
+      "description_ja": "画像内のロゴを検出し、Wikidata/Wikimedia Commonsと照合して企業を特定。本社・拠点を地図上にプロット、親会社・子会社の関係図を自動生成するクライアントサイド完結型OSINTツール。",
+      "description_en": "Detect logos in images and identify companies using Wikidata/Wikimedia Commons. Visualize HQ locations on maps and auto-generate corporate relationship graphs. Fully client-side OSINT tool with no image uploads.",
+      "category_ja": [
+        "OSINT",
+        "フォレンジック"
+      ],
+      "category_en": [
+        "OSINT",
+        "Forensics"
+      ],
+      "category_ids": [
+        "forensics"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "osint",
+        "forensics",
+        "logo-detection",
+        "wikidata",
+        "leaflet",
+        "cytoscape",
+        "ocr",
+        "javascript"
+      ],
+      "repo_url": "https://github.com/ipusiron/reverse-logo-hunt",
+      "demo_url": "https://ipusiron.github.io/reverse-logo-hunt/",
+      "hub": true
+    },
+    {
+      "id": "day092",
+      "slug": "browser-permission-radar",
+      "title": "Browser Permission Radar",
+      "subtitle_ja": "ブラウザー権限可視化ツール",
+      "subtitle_en": "Browser Permission Visualization Tool",
+      "description_ja": "ブラウザーの主要権限（位置情報・カメラ・マイク・通知・クリップボードなど）をカテゴリ別レーダーチャート＋スコア表示で可視化し、安全な権限テストを体験できる教育ツール",
+      "description_en": "Category-wise radar charts to visualize browser permission states with safe, on-page permission tests and score-linked details",
+      "category_ja": [
+        "ブラウザーセキュリティ",
+        "プライバシー",
+        "Webセキュリティ"
+      ],
+      "category_en": [
+        "Browser Security",
+        "Privacy",
+        "Web Security"
+      ],
+      "category_ids": [
+        "web-security"
+      ],
+      "difficulty": 3,
+      "tags": [
+        "security",
+        "privacy",
+        "permissions",
+        "browser",
+        "education",
+        "javascript",
+        "radar-chart",
+        "visualization"
+      ],
+      "repo_url": "https://github.com/ipusiron/browser-permission-radar",
+      "demo_url": "https://ipusiron.github.io/browser-permission-radar/",
+      "hub": true
+    },
+    {
+      "id": "day093",
+      "slug": "hill-cipherlab",
+      "title": "Hill CipherLab",
+      "subtitle_ja": "ヒル暗号ツール",
+      "subtitle_en": "Hill Cipher Educational Tool",
+      "description_ja": "行列演算（2×2/3×3）を用いた古典暗号「ヒル暗号」の暗号化・復号ツール。mod 26での逆行列計算、鍵の可逆性検証、処理ログの可視化機能を搭載。",
+      "description_en": "Linear algebra–based classical cipher (Hill cipher) with 2×2 / 3×3 keys. Encrypt/Decrypt in mod 26, visualize matrix inverse and key validation.",
+      "category_ja": [
+        "古典暗号"
+      ],
+      "category_en": [
+        "Classical Cryptography"
+      ],
+      "category_ids": [
+        "classic-crypto"
+      ],
+      "difficulty": 4,
+      "tags": [
+        "cryptography",
+        "classical",
+        "hill-cipher",
+        "matrix",
+        "linear-algebra",
+        "mod26",
+        "education",
+        "javascript"
+      ],
+      "repo_url": "https://github.com/ipusiron/hill-cipherlab",
+      "demo_url": "https://ipusiron.github.io/hill-cipherlab/",
+      "hub": true
+    },
+    {
+      "id": "day094",
+      "slug": "toyspn-builder",
+      "title": "ToySPN Builder",
+      "subtitle_ja": "SPN体験ミニツール",
+      "subtitle_en": "Interactive SPN Block Cipher Learning Tool",
+      "description_ja": "S-Box・P層・鍵加算からなるSPN（Substitution-Permutation Network）構造を自分で設計・実行し、暗号化ステップの可視化やアバランシェ効果テストで現代ブロック暗号の基礎を体感できる教育用Webツール",
+      "description_en": "An educational web tool to design and run a minimal SPN (Substitution-Permutation Network) block cipher with step-by-step encryption visualization and avalanche effect testing",
+      "category_ja": [
+        "現代暗号",
+        "ブロック暗号"
+      ],
+      "category_en": [
+        "Modern Cryptography",
+        "Block Cipher"
+      ],
+      "category_ids": [
+        "clamodernsic-crypto"
+      ],
+      "difficulty": 4,
+      "tags": [
+        "SPN",
+        "block-cipher",
+        "S-box",
+        "permutation",
+        "avalanche-effect",
+        "cryptography",
+        "education",
+        "javascript"
+      ],
+      "repo_url": "https://github.com/ipusiron/toyspn-builder",
+      "demo_url": "https://ipusiron.github.io/toyspn-builder/",
+      "hub": true
+    },
+    {
+      "id": "day095",
+      "slug": "permutation-cipherlab",
+      "title": "Permutation CipherLab",
+      "subtitle_ja": "転置式暗号ツール",
+      "subtitle_en": "Permutation Cipher Visualization Tool",
+      "description_ja": "任意の転置パターンで文字列を並び替える転置式暗号をビジュアルで理解するためのツール。ランダム生成・手動入力・ドラッグ＆ドロップで鍵を作成し、ブロック単位の暗号化・復号を体験できます。",
+      "description_en": "Interactive tool for exploring permutation ciphers — define, edit, and visualize custom transposition patterns. Generate keys randomly, manually, or via drag-and-drop, and experience block-wise encryption and decryption.",
+      "category_ja": [
+        "古典暗号",
+        "転置式暗号",
+        "現代暗号",
+        "ブロック暗号"
+      ],
+      "category_en": [
+        "Classical Cryptography",
+        "Transposition Cipher",
+        "Modern Cryptography",
+        "Block Cipher"
+      ],
+      "category_ids": [
+        "clamodernsic-crypto",
+        "classic-crypto",
+        "transposition-cipher"
+      ],
+      "difficulty": 4,
+      "tags": [
+        "cipher",
+        "permutation",
+        "transposition",
+        "block-cipher",
+        "visualization",
+        "education",
+        "javascript"
+      ],
+      "repo_url": "https://github.com/ipusiron/permutation-cipherlab",
+      "demo_url": "https://ipusiron.github.io/permutation-cipherlab/",
+      "hub": true
+    },
+    {
+      "id": "day096",
+      "slug": "rollingstock-planner",
+      "title": "RollingStock Planner",
+      "subtitle_ja": "防災備蓄管理ツール",
+      "subtitle_en": "Disaster Preparedness Stock Management Tool",
+      "description_ja": "ローリングストック方式に完全特化した防災備蓄管理ツール。家族構成（人間+ペット）から必要量を自動計算し、4段階の期限アラートで食品ロスを防止。AI防災アドバイザーによる総合分析、13セクションの防災教育コンテンツを搭載。3日〜半年の備蓄計画に対応し、完全ブラウザー完結型でプライバシーを保護。",
+      "description_en": "A disaster preparedness tool specialized in rolling stock method. Auto-calculates water/calorie needs based on family composition (humans + pets), with 4-stage expiration alerts to minimize food waste. Features AI disaster advisor for comprehensive analysis and 13-section educational content. Supports 3-day to 6-month stockpiling, 100% browser-based for privacy protection.",
+      "category_ja": [
+        "サバイバル",
+        "防災",
+        "プレッパー"
+      ],
+      "category_en": [
+        "Survival",
+        "Disaster Preparedness",
+        "Prepper"
+      ],
+      "category_ids": [
+        "disaster-prevention",
+        "prepper"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "disaster-preparedness",
+        "survival",
+        "stock-management",
+        "rolling-stock",
+        "ai-advisor",
+        "javascript",
+        "education",
+        "prepper",
+        "dark-mode",
+        "security",
+        "xss-protection",
+        "localstorage",
+        "chart-js"
+      ],
+      "repo_url": "https://github.com/ipusiron/rollingstock-planner",
+      "demo_url": "https://ipusiron.github.io/rollingstock-planner/",
+      "hub": true
+    },
+    {
+      "id": "day097",
+      "slug": "classical-cipher-structure-trainer",
+      "title": "Classical Cipher Structure Trainer",
+      "subtitle_ja": "古典暗号の構造理解の教育ツール",
+      "subtitle_en": "Educational Tool for Understanding Classical Cipher Structures",
+      "description_ja": "古典暗号の2大構造「換字（Substitution）」と「転置（Transposition）」を、マッピングとシャッフルという直感的な概念でインタラクティブに学べる教育ツール。SVG曲線による対応関係の可視化、ドラッグ＆ドロップによる並べ替え体験、10問のクイズで理解を確認。",
+      "description_en": "An interactive educational tool that teaches the two fundamental structures of classical cryptography—Substitution (mapping) and Transposition (shuffle)—through intuitive visualizations. Features SVG curve mapping, drag-and-drop shuffle experience, and a 10-question quiz.",
+      "category_ja": [
+        "古典暗号",
+        "換字式暗号",
+        "転置式暗号"
+      ],
+      "category_en": [
+        "Classical Cryptography",
+        "Substitution Cipher",
+        "Transposition Cipher"
+      ],
+      "category_ids": [
+        "classic-crypto",
+        "substitution-cipher",
+        "transposition-cipher"
+      ],
+      "difficulty": 3,
+      "tags": [
+        "classical-cipher",
+        "substitution",
+        "transposition",
+        "education",
+        "visualization",
+        "interactive",
+        "quiz",
+        "javascript"
+      ],
+      "repo_url": "https://github.com/ipusiron/classical-cipher-structure-trainer",
+      "demo_url": "https://ipusiron.github.io/classical-cipher-structure-trainer/",
+      "hub": true
+    },
+    {
+      "id": "day098",
+      "slug": "ops-loadout",
+      "title": "OpsLoadout",
+      "subtitle_ja": "緊急脱出キットのチェックリストツール",
+      "subtitle_en": "Operations Packing Checklist Tool",
+      "description_ja": "任務に特化した装備構成（Loadout）を計画・編集・監査・エクスポートするためのツール。軍民両用フラグ、危険物フラグ、出典リンク、国別の法的注意を管理可能。SERE訓練、大使館脱出、災害対策、ペンテスター装備など18種類のプリセットを収録。",
+      "description_en": "Interactive tool for designing, auditing, and exporting mission-focused pack and kit loadouts. Define, edit, and visualize custom equipment configurations with dual-use/hazard flags, source citations, and country-specific legality notes. Includes 18 presets for SERE, embassy evacuation, disaster preparedness, pentester gear, and more.",
+      "category_ja": [
+        "物理的セキュリティ",
+        "サイバー忍術",
+        "スパイ",
+        "プレッパー"
+      ],
+      "category_en": [
+        "Physical Security",
+        "Cyber Ninjutsu",
+        "Spy",
+        "Prepper"
+      ],
+      "category_ids": [
+        "cyber-ninjutsu",
+        "physical-security",
+        "prepper"
+      ],
+      "difficulty": 3,
+      "tags": [
+        "ops",
+        "loadout",
+        "kit-management",
+        "inventory",
+        "tactical",
+        "fieldcraft",
+        "packlist",
+        "javascript",
+        "sere",
+        "edc",
+        "disaster-preparedness"
+      ],
+      "repo_url": "https://github.com/ipusiron/ops-loadout",
+      "demo_url": "https://ipusiron.github.io/ops-loadout/",
+      "hub": true
+    },
+    {
+      "id": "day099",
+      "slug": "book-code-builder",
+      "title": "Book Code Builder",
+      "subtitle_ja": "書籍暗号支援ツール",
+      "subtitle_en": "Historical Book Code Simulator",
+      "description_ja": "歴史的な書籍暗号（Book Code）を体験できる教育用ツール。任意のテキストをコードブックとして、平文をpage:line:word座標に暗号化・復号できます。",
+      "description_en": "Educational tool for exploring historical book codes. Encode plaintext into page:line:word coordinates using any text as a codebook, and decode cipher text back to plaintext.",
+      "category_ja": [
+        "古典暗号",
+        "コード"
+      ],
+      "category_en": [
+        "Classical Cryptography",
+        "Code Cipher"
+      ],
+      "category_ids": [
+        "classic-crypto"
+      ],
+      "difficulty": 3,
+      "tags": [
+        "book-code",
+        "cipher",
+        "cryptography",
+        "historical",
+        "education",
+        "javascript"
+      ],
+      "repo_url": "https://github.com/ipusiron/book-code-builder",
+      "demo_url": "https://ipusiron.github.io/book-code-builder/",
+      "hub": true
+    },
+    {
+      "id": "day100",
+      "slug": "cors-playground",
+      "title": "CORS Playground",
+      "subtitle_ja": "SOP・CORS・プリフライトの学習ツール",
+      "subtitle_en": "Interactive learning tool for SOP, CORS, and Preflight requests",
+      "description_ja": "同一オリジンポリシー（SOP）、CORS、プリフライトリクエストの仕組みを「理論」「可視化」「実験」の3軸で学べるインタラクティブ学習ツール",
+      "description_en": "Interactive playground to understand Same-Origin Policy, CORS, and preflight requests through visual simulation and live fetch experiments",
+      "category_ja": [
+        "Webセキュリティ"
+      ],
+      "category_en": [
+        "Web Security"
+      ],
+      "category_ids": [
+        "web-security"
+      ],
+      "difficulty": 3,
+      "tags": [
+        "cors",
+        "sop",
+        "same-origin-policy",
+        "preflight",
+        "web-security",
+        "javascript",
+        "education",
+        "ctf"
+      ],
+      "repo_url": "https://github.com/ipusiron/cors-playground",
+      "demo_url": "https://ipusiron.github.io/cors-playground/",
       "hub": true
     },
     {
@@ -743,6 +3308,37 @@
       ],
       "repo_url": "https://github.com/ipusiron/qrcrashtest",
       "demo_url": "https://ipusiron.github.io/qrcrashtest/",
+      "hub": true
+    },
+    {
+      "id": "day103",
+      "slug": "acrostic-cipherlab",
+      "title": "Acrostic CipherLab",
+      "subtitle_ja": "アクロスティック解読ツール",
+      "subtitle_en": "Laboratory for Acrostic & Positional Extraction",
+      "description_ja": "行頭文字や任意位置を抽出して隠れメッセージを可視化するアクロスティック解読ツール。",
+      "description_en": "An educational tool for extracting acrostics and positional characters to reveal hidden messages.",
+      "category_ja": [
+        "古典暗号",
+        "テキスト解析"
+      ],
+      "category_en": [
+        "Classical Cryptography",
+        "Text Analysis"
+      ],
+      "category_ids": [
+        "classic-crypto"
+      ],
+      "difficulty": 1,
+      "tags": [
+        "acrostic",
+        "cipher",
+        "text-processing",
+        "javascript",
+        "hidden-message"
+      ],
+      "repo_url": "https://github.com/ipusiron/acrostic-cipherlab",
+      "demo_url": "https://ipusiron.github.io/acrostic-cipherlab/",
       "hub": true
     }
   ]
