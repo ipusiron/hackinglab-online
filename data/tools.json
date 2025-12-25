@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2025-12-06T16:46:25Z",
+  "generated_at": "2025-12-25T01:03:37Z",
   "tools": [
     {
       "id": "day001",
@@ -268,8 +268,8 @@
       "title": "Frequency Analyzer",
       "subtitle_ja": "頻度分析ツール",
       "subtitle_en": "Frequency Analysis Tool for Classical Cipher Decryption",
-      "description_ja": "英文ベースの暗号文を対象とした頻度分析＆解読ツール。シーザー暗号や単一換字式暗号の解読に役立ちます。",
-      "description_en": "A frequency analysis and decryption tool for English-based ciphertext. Useful for breaking Caesar ciphers and monoalphabetic substitution ciphers.",
+      "description_ja": "英文ベースの暗号文を対象とした頻度分析＆解読ツール。単一換字式暗号の解読に役立ちます。",
+      "description_en": "A frequency analysis and decryption tool for English-based ciphertext. Useful for breaking monoalphabetic substitution ciphers.",
       "category_ja": [
         "暗号解析",
         "古典暗号"
@@ -282,10 +282,11 @@
         "classic-crypto",
         "cryptanalysis"
       ],
-      "difficulty": 2,
+      "difficulty": 3,
       "tags": [
         "frequency-analysis",
-        "cryptanalysis"
+        "cryptanalysis",
+        "monoalphabetic-substitution-ciphers"
       ],
       "repo_url": "https://github.com/ipusiron/frequency-analyzer",
       "demo_url": "https://ipusiron.github.io/frequency-analyzer/",
@@ -3339,6 +3340,35 @@
       ],
       "repo_url": "https://github.com/ipusiron/acrostic-cipherlab",
       "demo_url": "https://ipusiron.github.io/acrostic-cipherlab/",
+      "hub": true
+    },
+    {
+      "id": "day104",
+      "slug": "stegogrid-explorer",
+      "title": "StegoGrid Explorer",
+      "subtitle_ja": "縦・横・斜め・逆方向から隠し単語を探索するグリッド解析ツール",
+      "subtitle_en": "Explore hidden words in text grids from all directions",
+      "description_ja": "複数行テキストを文字グリッドとして扱い、縦・横・斜め・逆方向の全8方向から英単語を探索・可視化するステガノグラフィー解析支援ツール。",
+      "description_en": "A grid-based word exploration tool that scans text in all eight directions to uncover hidden words, designed for steganography and cipher analysis.",
+      "category_ja": [
+        "ワードパズル",
+        "ステガノグラフィー"
+      ],
+      "category_en": [
+        "Word Puzzle",
+        "steganography"
+      ],
+      "category_ids": [],
+      "difficulty": 1,
+      "tags": [
+        "steganography",
+        "word-search",
+        "cipher",
+        "grid",
+        "visualization"
+      ],
+      "repo_url": "https://github.com/ipusiron/stegogrid-explorer",
+      "demo_url": "https://ipusiron.github.io/stegogrid-explorer/",
       "hub": true
     }
   ]
