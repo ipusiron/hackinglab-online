@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2025-12-25T01:03:37Z",
+  "generated_at": "2026-01-24T03:39:22Z",
   "tools": [
     {
       "id": "day001",
@@ -3138,8 +3138,8 @@
       "title": "OpsLoadout",
       "subtitle_ja": "緊急脱出キットのチェックリストツール",
       "subtitle_en": "Operations Packing Checklist Tool",
-      "description_ja": "任務に特化した装備構成（Loadout）を計画・編集・監査・エクスポートするためのツール。軍民両用フラグ、危険物フラグ、出典リンク、国別の法的注意を管理可能。SERE訓練、大使館脱出、災害対策、ペンテスター装備など18種類のプリセットを収録。",
-      "description_en": "Interactive tool for designing, auditing, and exporting mission-focused pack and kit loadouts. Define, edit, and visualize custom equipment configurations with dual-use/hazard flags, source citations, and country-specific legality notes. Includes 18 presets for SERE, embassy evacuation, disaster preparedness, pentester gear, and more.",
+      "description_ja": "任務に特化した装備構成（Loadout）を計画・編集・監査・エクスポートするためのツール。軍民両用フラグ、危険物フラグ、出典リンク、国別の法的注意を管理可能。SERE訓練、大使館脱出、災害対策、ペンテスター装備、サイバー忍者など21種類のプリセットを収録。",
+      "description_en": "Interactive tool for designing, auditing, and exporting mission-focused pack and kit loadouts. Define, edit, and visualize custom equipment configurations with dual-use/hazard flags, source citations, and country-specific legality notes. Includes 21 presets for SERE, embassy evacuation, disaster preparedness, pentester gear, cyber ninja, and more.",
       "category_ja": [
         "物理的セキュリティ",
         "サイバー忍術",
@@ -3369,6 +3369,229 @@
       ],
       "repo_url": "https://github.com/ipusiron/stegogrid-explorer",
       "demo_url": "https://ipusiron.github.io/stegogrid-explorer/",
+      "hub": true
+    },
+    {
+      "id": "day105",
+      "slug": "substitution-mapping-mixer",
+      "title": "Substitution Mapping Mixer",
+      "subtitle_ja": "換字式暗号の手動解析ワークベンチ",
+      "subtitle_en": "Manual substitution-cipher mapping workbench",
+      "description_ja": "換字式暗号の置換表を手動で解析するためのWebツール。確定マッピングと候補マッピングを管理し、複数の仮説をブランチとして比較できます。",
+      "description_en": "A web tool for manually analyzing substitution cipher mapping tables. Manage fixed and candidate mappings, and compare multiple hypotheses as branches.",
+      "category_ja": [
+        "暗号解析",
+        "換字式暗号"
+      ],
+      "category_en": [
+        "Cryptanalysis",
+        "Substitution Cipher"
+      ],
+      "category_ids": [
+        "cryptanalysis",
+        "substitution-cipher"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "substitution-cipher",
+        "monoalphabetic-substitution-cipher",
+        "cryptanalysis",
+        "manual-analysis",
+        "branching",
+        "ctf-support"
+      ],
+      "repo_url": "https://github.com/ipusiron/substitution-mapping-mixer",
+      "demo_url": "https://ipusiron.github.io/substitution-mapping-mixer/",
+      "hub": true
+    },
+    {
+      "id": "day106",
+      "slug": "substitution-cipher-analysis-workbench",
+      "title": "Substitution Cipher Analysis Workbench",
+      "subtitle_ja": "手動による換字式暗号解析支援ツール",
+      "subtitle_en": "A manual analysis workbench for solving substitution ciphers",
+      "description_ja": "換字式暗号を手動で解読するための統合分析ワークベンチ。統計、一致指数、N-gram、パターン分析など多角的なアプローチをサポート。",
+      "description_en": "An integrated analysis workbench for manually decrypting substitution ciphers. Supports multi-faceted approaches including statistics, index of coincidence, N-grams, and pattern analysis.",
+      "category_ja": [
+        "暗号解読",
+        "古典暗号"
+      ],
+      "category_en": [
+        "Cryptanalysis",
+        "Classical Cipher"
+      ],
+      "category_ids": [
+        "classic-crypto",
+        "cryptanalysis"
+      ],
+      "difficulty": 4,
+      "tags": [
+        "substitution-cipher",
+        "cryptanalysis",
+        "frequency-analysis",
+        "index-of-coincidence",
+        "n-gram",
+        "kasiski-test"
+      ],
+      "repo_url": "https://github.com/ipusiron/substitution-cipher-analysis-workbench",
+      "demo_url": "https://ipusiron.github.io/substitution-cipher-analysis-workbench/",
+      "hub": true
+    },
+    {
+      "id": "day107",
+      "slug": "alphabet-shift-spectrum",
+      "title": "Alphabet Shift Spectrum",
+      "subtitle_ja": "26シフト頻度可視化ツール",
+      "subtitle_en": "26-Shift Frequency Visualization Tool",
+      "description_ja": "Caesar暗号・単一換字暗号の解析を支援するツール。26シフトすべての文字頻度を可視化し、低頻度文字（J,K,Q,X,Z）の統計的フィルタリングで候補を絞り込む。",
+      "description_en": "A tool to assist in analyzing Caesar cipher and monoalphabetic shift ciphers. Visualizes letter frequency for all 26 shifts and narrows candidates through statistical filtering of low-frequency letters (J, K, Q, X, Z).",
+      "category_ja": [
+        "暗号解析",
+        "古典暗号"
+      ],
+      "category_en": [
+        "Cryptanalysis",
+        "Classical Cryptography"
+      ],
+      "category_ids": [
+        "classic-crypto",
+        "cryptanalysis"
+      ],
+      "difficulty": 3,
+      "tags": [
+        "Caesar cipher",
+        "frequency analysis",
+        "cryptanalysis",
+        "vanilla JavaScript",
+        "responsive design"
+      ],
+      "repo_url": "https://github.com/ipusiron/alphabet-shift-spectrum",
+      "demo_url": "https://ipusiron.github.io/alphabet-shift-spectrum/",
+      "hub": true
+    },
+    {
+      "id": "day108",
+      "slug": "cypher-enigma-simulator",
+      "title": "Cypher Enigma Simulator",
+      "subtitle_ja": "暗号解読ゲーム「Cypher」用の簡易エニグマシミュレーター",
+      "subtitle_en": "Simplified Enigma simulator for the Cypher puzzle game",
+      "description_ja": "Cypher系パズルで使用されるエニグマ風暗号機を再現・検証するための教育・解析特化型シミュレーター",
+      "description_en": "An educational Enigma-style cipher machine simulator for solving Cypher puzzles",
+      "category_ja": [
+        "古典暗号",
+        "機械式暗号",
+        "シミュレーター"
+      ],
+      "category_en": [
+        "Classical Cryptography",
+        "Mechanised Cryptography",
+        "Simulator"
+      ],
+      "category_ids": [
+        "classic-crypto"
+      ],
+      "difficulty": 4,
+      "tags": [
+        "enigma",
+        "cipher",
+        "puzzle",
+        "cryptography",
+        "vanilla-js",
+        "simulator"
+      ],
+      "repo_url": "https://github.com/ipusiron/cypher-enigma-simulator",
+      "demo_url": "https://ipusiron.github.io/cypher-enigma-simulator/",
+      "hub": true
+    },
+    {
+      "id": "day109",
+      "slug": "gematria-cipherlab",
+      "title": "Gematria CipherLab",
+      "subtitle_ja": "ゲマトリア計算トレースツール",
+      "subtitle_en": "Gematria Calculation Trace Tool",
+      "description_ja": "複数のゲマトリア方式に対応し、トークン化から合計計算までの過程を可視化する教育・分析向けWebツール",
+      "description_en": "Educational web tool supporting multiple gematria schemes with step-by-step calculation visualization",
+      "category_ja": [
+        "古典暗号",
+        "数秘術"
+      ],
+      "category_en": [
+        "Classical Cryptography",
+        "Numerology"
+      ],
+      "category_ids": [
+        "classic-crypto"
+      ],
+      "difficulty": 1,
+      "tags": [
+        "gematria",
+        "agrippa-cipher",
+        "numerology",
+        "cryptography",
+        "static-web"
+      ],
+      "repo_url": "https://github.com/ipusiron/gematria-cipherlab",
+      "demo_url": "https://ipusiron.github.io/gematria-cipherlab/",
+      "hub": true
+    },
+    {
+      "id": "day110",
+      "slug": "semantic-candidate-ranker",
+      "title": "Semantic Candidate Ranker",
+      "subtitle_ja": "平文候補ランキングツール",
+      "subtitle_en": "Plaintext Candidate Ranking Tool",
+      "description_ja": "平文候補を意味的な自然さに基づいて順位付けするブラウザーベースの分析ツール",
+      "description_en": "Browser-based tool that ranks plaintext candidates by semantic naturalness",
+      "category_ja": [
+        "暗号解析",
+        "自然言語処理"
+      ],
+      "category_en": [
+        "Cryptanalysis",
+        "NLP"
+      ],
+      "category_ids": [
+        "cryptanalysis"
+      ],
+      "difficulty": 4,
+      "tags": [
+        "embedding",
+        "transformers",
+        "semantic-similarity",
+        "cipher",
+        "offline"
+      ],
+      "repo_url": "https://github.com/ipusiron/semantic-candidate-ranker",
+      "demo_url": "https://ipusiron.github.io/semantic-candidate-ranker/",
+      "hub": true
+    },
+    {
+      "id": "day111",
+      "slug": "softmax-confidence-meter",
+      "title": "Softmax Confidence Meter",
+      "subtitle_ja": "ソフトマックス自信度メーター",
+      "subtitle_en": "Probability Distribution Sharpness Meter",
+      "description_ja": "softmaxによって得られた確率分布から「この結果を信じてよいか」を測定・可視化する教育・判断支援ツール",
+      "description_en": "An educational and decision-support tool that measures and visualizes whether you can trust the results from softmax probability distributions",
+      "category_ja": [
+        "判断支援",
+        "分析・評価補助"
+      ],
+      "category_en": [
+        "Decision Support",
+        "Analysis Aid"
+      ],
+      "category_ids": [],
+      "difficulty": 1,
+      "tags": [
+        "softmax",
+        "entropy",
+        "confidence",
+        "probability",
+        "visualization"
+      ],
+      "repo_url": "https://github.com/ipusiron/softmax-confidence-meter",
+      "demo_url": "https://ipusiron.github.io/softmax-confidence-meter/",
       "hub": true
     }
   ]
