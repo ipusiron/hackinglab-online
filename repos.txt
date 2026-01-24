@@ -107,3 +107,10 @@ https://github.com/ipusiron/qrcrashtest
 https://github.com/ipusiron/acrostic-cipherlab
 https://github.com/ipusiron/stegogrid-explorer
 https://github.com/ipusiron/substitution-mapping-mixer
+https://github.com/ipusiron/substitution-cipher-analysis-workbench
+https://github.com/ipusiron/alphabet-shift-spectrum
+https://github.com/ipusiron/cypher-enigma-simulator
+https://github.com/ipusiron/gematria-cipherlab
+https://github.com/ipusiron/semantic-candidate-ranker
+
+https://github.com/ipusiron/softmax-confidence-meter
