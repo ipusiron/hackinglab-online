@@ -1,0 +1,10 @@
+{
+  "name": "hackinglab-online",
+  "private": true,
+  "scripts": {
+    "test": "node --test test/books.test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
