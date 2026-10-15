@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-10-15T04:39:25Z",
+  "generated_at": "2026-10-15T15:38:40Z",
   "tools": [
     {
       "id": "day001",
@@ -3661,6 +3661,37 @@
       "hub": true
     },
     {
+      "id": "day112",
+      "slug": "async-rpc-failure-simulator",
+      "title": "Async RPC Failure Simulator",
+      "subtitle_ja": "非同期RPCにおける設計誤りの再現シミュレーター",
+      "subtitle_en": "Failure Mode Simulator for Asynchronous RPC Designs",
+      "description_ja": "非同期RPCにおけるタイムアウト・遅延レスポンス（orphan）・ID取り違えといった設計上の失敗モードを再現・観測する教育用シミュレーター。",
+      "description_en": "An educational simulator that reproduces and observes failure modes in asynchronous RPC designs, including timeouts, orphan responses, and request/response mismatches.",
+      "category_ja": [
+        "設計ミス可視化",
+        "非同期セキュリティ"
+      ],
+      "category_en": [
+        "Design Failure Visualization",
+        "Asynchronous Security"
+      ],
+      "category_ids": [],
+      "difficulty": 4,
+      "tags": [
+        "async",
+        "rpc",
+        "mcp",
+        "timeout",
+        "orphan-response",
+        "demultiplex",
+        "security-design"
+      ],
+      "repo_url": "https://github.com/ipusiron/async-rpc-failure-simulator",
+      "demo_url": "https://ipusiron.github.io/async-rpc-failure-simulator/",
+      "hub": true
+    },
+    {
       "id": "day113",
       "slug": "hid-beam",
       "title": "HIDBeam",
@@ -3694,6 +3725,70 @@
       ],
       "repo_url": "https://github.com/ipusiron/hid-beam",
       "demo_url": "",
+      "hub": true
+    },
+    {
+      "id": "day114",
+      "slug": "hex-dump-trainer",
+      "title": "Hex Dump Trainer",
+      "subtitle_ja": "16進ダンプを自分で読む演習",
+      "subtitle_en": "Learn to Read Hex Dumps",
+      "description_ja": "16進ダンプの演習と自由入力で、バイト位置からパケットのフィールドを読む学習ツール",
+      "description_en": "A hex-dump learning tool with guided exercises and local inspection of pasted bytes",
+      "category_ja": [
+        "ネットワーク"
+      ],
+      "category_en": [
+        "Networking"
+      ],
+      "category_ids": [
+        "network"
+      ],
+      "difficulty": 1,
+      "tags": [
+        "hex-dump",
+        "ethernet",
+        "ipv4",
+        "networking",
+        "education"
+      ],
+      "repo_url": "https://github.com/ipusiron/hex-dump-trainer",
+      "demo_url": "https://ipusiron.github.io/hex-dump-trainer/",
+      "hub": false
+    },
+    {
+      "id": "day115",
+      "slug": "postmirror",
+      "title": "PostMirror",
+      "subtitle_ja": "郵便物のバーコードから住所の何が読めるかを確かめる",
+      "subtitle_en": "See What the Barcode on Your Mail Reveals",
+      "description_ja": "郵便物のカスタマバーコードのバーを1本ずつ入力して解読し、郵便番号と住所表示番号の内訳と、一部を隠したときに読める文字を確かめる自己点検ツール",
+      "description_en": "A self-check tool that decodes a Japan Post customer barcode entered bar by bar, showing each character of the postal code and address number and what stays readable when parts are hidden",
+      "category_ja": [
+        "プライバシー",
+        "符号理論"
+      ],
+      "category_en": [
+        "Privacy",
+        "Coding Theory"
+      ],
+      "category_ids": [
+        "coding-theory"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "customer-barcode",
+        "japan-post",
+        "barcode",
+        "postal-code",
+        "privacy",
+        "check-digit",
+        "osint",
+        "education",
+        "client-side"
+      ],
+      "repo_url": "https://github.com/ipusiron/postmirror",
+      "demo_url": "https://ipusiron.github.io/postmirror/",
       "hub": true
     }
   ]
