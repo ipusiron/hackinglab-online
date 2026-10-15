@@ -778,12 +778,18 @@ function createToolCard(tool, book) {
   const footer = document.createElement("div");
   footer.className = "tool-footer";
 
-  const demoBtn = document.createElement("a");
-  demoBtn.href = tool.demo_url || "#";
-  demoBtn.target = "_blank";
-  demoBtn.rel = "noopener";
-  demoBtn.className = "tool-button";
-  demoBtn.textContent = currentLang === "ja" ? "デモ" : "Demo";
+  // デモ URL があるツールだけ「デモ」ボタンを出す。
+  // ハードウェア／バックエンド系など、ブラウザーで動かないツールは demo_url が空で、
+  // その場合はボタンを出さず GitHub への導線だけにする（404 のデモボタンを避ける）。
+  let demoBtn = null;
+  if (tool.demo_url) {
+    demoBtn = document.createElement("a");
+    demoBtn.href = tool.demo_url;
+    demoBtn.target = "_blank";
+    demoBtn.rel = "noopener";
+    demoBtn.className = "tool-button";
+    demoBtn.textContent = currentLang === "ja" ? "デモ" : "Demo";
+  }
 
   const repoBtn = document.createElement("a");
   repoBtn.href = tool.repo_url || "#";
@@ -806,7 +812,7 @@ function createToolCard(tool, book) {
     renderDashboard();
   });
 
-  footer.appendChild(demoBtn);
+  if (demoBtn) footer.appendChild(demoBtn);
   footer.appendChild(repoBtn);
   footer.appendChild(progressBtn);
 
