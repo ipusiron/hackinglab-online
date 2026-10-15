@@ -1067,7 +1067,8 @@
         "day088",
         "day091",
         "day098",
-        "day108"
+        "day108",
+        "day113"
       ],
       "chapters": [
         {
@@ -1094,6 +1095,11 @@
           "key": "tools-nightvision",
           "label_ja": "道具の章　暗視を実現する忍具",
           "label_en": "Tools: Night vision"
+        },
+        {
+          "key": "tools-devices",
+          "label_ja": "道具の章　魅力的なハッキング・デバイスたち",
+          "label_en": "Tools: Fascinating hacking devices"
         },
         {
           "key": "arts-intel",
@@ -1255,6 +1261,16 @@
         "day108": [
           {
             "ch": "arts-counterintel",
+            "pages": []
+          }
+        ],
+        "day113": [
+          {
+            "ch": "tools-secrets",
+            "pages": []
+          },
+          {
+            "ch": "tools-devices",
             "pages": []
           }
         ]
