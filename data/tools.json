@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-10-15T00:32:04Z",
+  "generated_at": "2026-10-15T04:39:25Z",
   "tools": [
     {
       "id": "day001",
@@ -3658,6 +3658,42 @@
       ],
       "repo_url": "https://github.com/ipusiron/softmax-confidence-meter",
       "demo_url": "https://ipusiron.github.io/softmax-confidence-meter/",
+      "hub": true
+    },
+    {
+      "id": "day113",
+      "slug": "hid-beam",
+      "title": "HIDBeam",
+      "subtitle_ja": "Wi-Fi HIDキーボードブリッジ",
+      "subtitle_en": "Wi-Fi Controlled HID Keyboard Bridge",
+      "description_ja": "Raspberry Pi Zero W を Wi-Fi 経由で操作できる USB HID キーボードに変える自作ブリッジ。既定は武装解除で、トークン認証・プレビュー確認・権限分離で運用する",
+      "description_en": "Turns a Raspberry Pi Zero W into a Wi-Fi controllable USB HID keyboard for operator-controlled input to an air-gapped machine; disarmed by default, with token auth, preview confirmation and privilege separation",
+      "category_ja": [
+        "エアギャップ",
+        "物理セキュリティ",
+        "HID"
+      ],
+      "category_en": [
+        "Air Gap",
+        "Physical Security",
+        "HID"
+      ],
+      "category_ids": [
+        "physical-security"
+      ],
+      "difficulty": 3,
+      "tags": [
+        "air-gap",
+        "hid",
+        "usb-gadget",
+        "raspberry-pi",
+        "wifi",
+        "ducky-script",
+        "keystroke-injection",
+        "defensive-security"
+      ],
+      "repo_url": "https://github.com/ipusiron/hid-beam",
+      "demo_url": "",
       "hub": true
     }
   ]
