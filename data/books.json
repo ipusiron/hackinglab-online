@@ -1034,6 +1034,233 @@
       }
     },
     {
+      "slug": "cyber-ninja",
+      "kind": "book",
+      "title_ja": "サイバー忍者入門 ハッカーのための現代版・忍術秘伝",
+      "title_en": "Introduction to Cyber Ninja: Modern Ninjutsu Secrets for Hackers",
+      "label_ja": "サイバー忍者入門",
+      "label_en": "Cyber Ninja Primer",
+      "url": "https://akademeia.info/?page_id=44656",
+      "url_label_ja": "紹介ページを開く",
+      "url_label_en": "Open book page",
+      "relation": "related",
+      "note_ja": "本書にツールは登場しません。各節の話題を手を動かして試せるツールを著者が選び、節を添えています。",
+      "note_en": "This book does not mention any of these tools. The author picked tools for trying out each section's topic; the section is shown on each card.",
+      "pages_note_ja": "ページ番号は紙版（翔泳社、2025年4月）のものです。",
+      "pages_note_en": "Page numbers refer to the print edition (Shoeisha, April 2025).",
+      "ids": [
+        "day007",
+        "day011",
+        "day012",
+        "day013",
+        "day014",
+        "day016",
+        "day020",
+        "day025",
+        "day033",
+        "day036",
+        "day041",
+        "day050",
+        "day055",
+        "day082",
+        "day085",
+        "day088",
+        "day091",
+        "day098",
+        "day108"
+      ],
+      "chapters": [
+        {
+          "key": "tools-secrets",
+          "label_ja": "道具の章　忍び道具の秘法",
+          "label_en": "Tools: Secrets of ninja tools"
+        },
+        {
+          "key": "tools-locks",
+          "label_ja": "道具の章　開器と壊器",
+          "label_en": "Tools: Lock opening and breaking"
+        },
+        {
+          "key": "tools-eavesdrop",
+          "label_ja": "道具の章　盗み聞きを実現する忍具",
+          "label_en": "Tools: Eavesdropping devices"
+        },
+        {
+          "key": "tools-peep",
+          "label_ja": "道具の章　盗み見を実現する忍具",
+          "label_en": "Tools: Peeping devices"
+        },
+        {
+          "key": "tools-nightvision",
+          "label_ja": "道具の章　暗視を実現する忍具",
+          "label_en": "Tools: Night vision"
+        },
+        {
+          "key": "arts-intel",
+          "label_ja": "術の章　情報収集術",
+          "label_en": "Arts: Intelligence gathering"
+        },
+        {
+          "key": "arts-garb",
+          "label_ja": "術の章　忍び装束",
+          "label_en": "Arts: Ninja garb"
+        },
+        {
+          "key": "arts-counterintel",
+          "label_ja": "術の章　防諜術",
+          "label_en": "Arts: Counterintelligence"
+        },
+        {
+          "key": "arts-plot",
+          "label_ja": "術の章　謀略による情報操作",
+          "label_en": "Arts: Manipulation by deception"
+        },
+        {
+          "key": "arts-passage",
+          "label_ja": "術の章　通路の習い",
+          "label_en": "Arts: Passing messages"
+        },
+        {
+          "key": "arts-codes",
+          "label_ja": "術の章　隠匿術と忍びの暗号",
+          "label_en": "Arts: Hiding and ninja ciphers"
+        },
+        {
+          "key": "world-team",
+          "label_ja": "現世の章　組織化やチーム活動",
+          "label_en": "Present day: Organizations and teams"
+        }
+      ],
+      "refs": {
+        "day007": [
+          {
+            "ch": "arts-intel",
+            "pages": []
+          }
+        ],
+        "day011": [
+          {
+            "ch": "tools-peep",
+            "pages": []
+          },
+          {
+            "ch": "arts-intel",
+            "pages": []
+          }
+        ],
+        "day012": [
+          {
+            "ch": "arts-codes",
+            "pages": []
+          }
+        ],
+        "day013": [
+          {
+            "ch": "arts-intel",
+            "pages": []
+          }
+        ],
+        "day014": [
+          {
+            "ch": "arts-codes",
+            "pages": []
+          }
+        ],
+        "day016": [
+          {
+            "ch": "arts-intel",
+            "pages": []
+          }
+        ],
+        "day020": [
+          {
+            "ch": "arts-intel",
+            "pages": []
+          }
+        ],
+        "day025": [
+          {
+            "ch": "arts-passage",
+            "pages": []
+          }
+        ],
+        "day033": [
+          {
+            "ch": "world-team",
+            "pages": []
+          }
+        ],
+        "day036": [
+          {
+            "ch": "arts-codes",
+            "pages": []
+          }
+        ],
+        "day041": [
+          {
+            "ch": "tools-eavesdrop",
+            "pages": []
+          }
+        ],
+        "day050": [
+          {
+            "ch": "tools-locks",
+            "pages": []
+          }
+        ],
+        "day055": [
+          {
+            "ch": "arts-codes",
+            "pages": []
+          }
+        ],
+        "day082": [
+          {
+            "ch": "arts-plot",
+            "pages": []
+          }
+        ],
+        "day085": [
+          {
+            "ch": "tools-peep",
+            "pages": []
+          },
+          {
+            "ch": "arts-garb",
+            "pages": []
+          }
+        ],
+        "day088": [
+          {
+            "ch": "tools-nightvision",
+            "pages": []
+          }
+        ],
+        "day091": [
+          {
+            "ch": "arts-intel",
+            "pages": []
+          }
+        ],
+        "day098": [
+          {
+            "ch": "tools-secrets",
+            "pages": []
+          },
+          {
+            "ch": "arts-garb",
+            "pages": []
+          }
+        ],
+        "day108": [
+          {
+            "ch": "arts-counterintel",
+            "pages": []
+          }
+        ]
+      }
+    },
+    {
       "slug": "security-tools-100",
       "kind": "series",
       "title_ja": "「生成AIで作るセキュリティツール100」プロジェクト",
