@@ -37,9 +37,12 @@ hub: true
 
 ### Key Files
 - `data/categories.json`: Category definitions with id, ja, en fields
+- `data/books.json`: Book/series filter definitions (manual). Tools are referenced by `id` (`dayNNN`), not slug
 - `data/tools.json`: Auto-generated tool registry (do not edit manually)
 - `repos.txt`: Master list of tool repositories
 - `js/main.js`: All UI logic including filtering, progress tracking (localStorage), language switching, and X sharing
+- `js/books.js`: Pure functions for the book/series filter (DOM-free); tested by `test/books.test.js`
+- `test/books.test.js` + `package.json`: `node --test`, no dependencies
 
 ## Commands
 
@@ -55,6 +58,11 @@ Open `index.html` directly in browser or use any static server:
 python -m http.server 8000
 ```
 
+### Run tests (no dependencies, Node 20+)
+```bash
+npm test
+```
+
 ## CI/CD
 
 GitHub Actions workflow (`.github/workflows/update-tools.yml`) automatically regenerates `data/tools.json` when:
@@ -62,6 +70,8 @@ GitHub Actions workflow (`.github/workflows/update-tools.yml`) automatically reg
 - `data/categories.json` is modified
 - `scripts/update_tools.py` is modified
 - Manually triggered via workflow_dispatch
+
+`.github/workflows/test.yml` runs `npm test` on push to `main`, on pull requests, and after the tools.json regeneration (`workflow_run`). A red run means `data/books.json` needs fixing.
 
 ## Progress System
 
@@ -77,3 +87,10 @@ User progress is stored in browser localStorage with keys `progress_{slug}` cont
 2. Ensure target repo has proper YAML frontmatter in README.md
 3. Add any new categories to `data/categories.json` if needed
 4. Push changes - CI will regenerate tools.json
+
+## Adding a Book
+
+1. Add an entry to `data/books.json` (see README「books.json（手動管理）」for fields)
+2. Reference tools by `id` (`dayNNN`); every `id` must already exist in `tools.json`
+3. If the book maps tools to chapters, add `chapters` and `refs`
+4. Run `npm test`, then open a PR (data-only change; `tools.json` is not touched)

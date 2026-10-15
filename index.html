@@ -72,8 +72,23 @@
         class="tab-panel"
         aria-labelledby="tab-tools-label"
       >
+        <!-- 選択中の書籍・シリーズのバナー（JSで中身を挿入） -->
+        <section id="book-banner" aria-labelledby="book-banner-title" hidden></section>
+        <p id="book-status" class="visually-hidden" role="status"></p>
+
         <!-- フィルターバー -->
         <div id="tool-filters">
+          <!-- 書籍・シリーズフィルター -->
+          <div class="filter-group" id="filter-book-group" hidden>
+            <label for="filter-book">
+              <span class="label-ja">書籍・シリーズ</span>
+              <span class="label-en" style="display: none">Books &amp; series</span>
+            </label>
+            <select id="filter-book">
+              <!-- JSで "すべて / All" + books.json から選択肢を生成 -->
+            </select>
+          </div>
+
           <!-- カテゴリフィルター -->
           <div class="filter-group">
             <label for="filter-category">
@@ -172,6 +187,20 @@
           </div>
         </section>
 
+        <!-- 書籍・シリーズ別進捗 -->
+        <section id="dashboard-books" hidden>
+          <h2>
+            <span class="label-ja">書籍・シリーズ別進捗</span>
+            <span class="label-en" style="display: none"
+              >Progress by book &amp; series</span
+            >
+          </h2>
+
+          <div id="book-progress-list">
+            <!-- JSで書籍・シリーズ別パネルを追加 -->
+          </div>
+        </section>
+
         <!-- 全体リセット -->
         <section id="dashboard-reset">
           <button type="button" id="reset-all-progress">
@@ -226,6 +255,9 @@
             <li>
               ツール一覧：カテゴリー・進捗・検索から学習するツールを探せます。
             </li>
+            <li>
+              書籍・シリーズ：本やシリーズに関係するツールだけに絞り込めます。本のサポートページからのリンク（?book=）で自動的に絞り込まれます。Day番号でも検索できます。
+            </li>
             <li>学習ダッシュボード：学習進度を可視化し、Xで共有できます。</li>
             <li>進捗はブラウザーごとに localStorage に保存されます。</li>
           </ul>
@@ -270,6 +302,11 @@
           <ul>
             <li>
               Tools tab: browse tools by category, progress status, and search.
+            </li>
+            <li>
+              Books &amp; series: narrow the list to tools related to a book or
+              series. Links from a book's support page (?book=) apply the filter
+              automatically. You can also search by Day number.
             </li>
             <li>
               Dashboard tab: track your learning progress and share snapshots on
@@ -326,6 +363,7 @@
       </div>
     </div>
 
+    <script src="./js/books.js"></script>
     <script src="./js/main.js"></script>
   </body>
 </html>

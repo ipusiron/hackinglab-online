@@ -12,6 +12,12 @@ html {
   scroll-behavior: smooth;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 body {
   margin: 0;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -178,11 +184,161 @@ body {
   padding: 0.35rem 0.5rem;
   border-radius: 0.4rem;
   border: 1px solid #d1d5db;
-  font-size: 0.9rem;
+  font-size: 1rem; /* iOS Safari の自動ズーム回避のため 16px 以上 */
+  min-height: 44px; /* タップ領域 */
 }
 
 .filter-search input[type="search"] {
   background-color: #f9fafb;
+}
+
+/* hidden 指定を display より優先させる（display:grid/flex に負けないように） */
+#book-banner[hidden],
+#dashboard-books[hidden],
+.filter-group[hidden] {
+  display: none !important;
+}
+
+/* ================================
+ * 選択中の書籍・シリーズのバナー
+ * ================================ */
+
+#book-banner {
+  margin-bottom: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  background-color: #faf5ff;
+  border: 1px solid #e9d5ff;
+  border-radius: 0.75rem;
+}
+
+.book-banner-badge {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background-color: #ede9fe;
+  border: 1px solid #c4b5fd;
+  color: #5b21b6;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.book-banner-title {
+  margin: 0.3rem 0 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.book-banner-title:focus-visible,
+.book-group-heading:focus-visible {
+  outline: 2px solid #6d28d9;
+  outline-offset: 2px;
+}
+
+.book-banner-subtitle {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.book-banner-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.75rem;
+  margin-top: 0.4rem;
+  font-size: 0.8rem;
+  color: #4b5563;
+}
+
+.book-banner-count {
+  font-weight: 600;
+}
+
+.book-banner-link {
+  color: #6d28d9;
+}
+
+.book-banner-clear {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0.3rem 0.7rem;
+  border-radius: 0.5rem;
+  border: 1px solid #c4b5fd;
+  background-color: #ffffff;
+  color: #5b21b6;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.book-banner-clear:hover {
+  background-color: #f5f3ff;
+}
+
+.book-banner-note {
+  margin: 0.4rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: #4b5563;
+}
+
+.book-jump {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.book-jump > summary {
+  min-height: 44px;
+  padding: 0.6rem 0;
+  color: #5b21b6;
+  cursor: pointer;
+}
+
+.book-jump-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-right: 0.75rem;
+  color: #6d28d9;
+}
+
+/* 章の見出し（グループ） */
+.book-group-heading {
+  grid-column: 1 / -1;
+  margin: 0.5rem 0 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #111827;
+  scroll-margin-top: calc(var(--header-h, 64px) + 0.5rem);
+}
+
+/* ダッシュボードの書籍行の種別の札 */
+.book-progress-kind {
+  display: inline-block;
+  margin-right: 0.4rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  background-color: #ede9fe;
+  border: 1px solid #c4b5fd;
+  color: #5b21b6;
+  font-size: 0.65rem;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+/* カードに出す掲載箇所のチップ */
+.tool-book-ref {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: 0.5rem;
+  background-color: #f5f3ff;
+  border: 1px solid #c4b5fd;
+  color: #5b21b6;
+  font-size: 0.75rem;
+  font-weight: 600;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 /* ================================
@@ -490,7 +646,8 @@ body {
  * カテゴリ別進捗（進捗バー付きカード）
  * ================================ */
 
-#category-progress-list {
+#category-progress-list,
+#book-progress-list {
   display: grid;
   grid-template-columns: 1fr;
   gap: 0.75rem;
@@ -619,8 +776,13 @@ body {
 
 @media (min-width: 768px) {
   #tool-filters {
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr) minmax(0, 1.4fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: end;
+  }
+
+  /* books.json が無いときは従来の3列（書籍フィルターの枠を作らない） */
+  #tool-filters.no-books {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr) minmax(0, 1.4fr);
   }
 
   /* ツールカードのグリッド：PC幅では2〜3列 */
@@ -654,9 +816,25 @@ body {
     font-size: 0.75rem;
   }
 
-  /* カテゴリ別進捗：PC幅では2列 */
-  #category-progress-list {
+  /* カテゴリ別・書籍別進捗：PC幅では2列 */
+  #category-progress-list,
+  #book-progress-list {
     grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
+  }
+}
+
+/* ================================
+ * 広い画面（1024px以上）：フィルターを4列に
+ * ================================ */
+
+@media (min-width: 1024px) {
+  #tool-filters {
+    grid-template-columns:
+      minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.3fr);
+  }
+
+  #tool-filters.no-books {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr) minmax(0, 1.4fr);
   }
 }

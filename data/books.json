@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "books": [
+    {
+      "slug": "security-tools-100",
+      "kind": "series",
+      "title_ja": "「生成AIで作るセキュリティツール100」プロジェクト",
+      "title_en": "\"100 Security Tools with Generative AI\" project",
+      "label_ja": "ツール100（プロジェクト）",
+      "label_en": "Security Tools 100",
+      "url": "https://akademeia.info/?page_id=42163",
+      "url_label_ja": "プロジェクトページを開く",
+      "url_label_en": "Open project page",
+      "id_range": ["day001", "day100"]
+    },
+    {
+      "slug": "security-tools-200",
+      "kind": "series",
+      "title_ja": "「生成AIで作るセキュリティツール200」プロジェクト",
+      "title_en": "\"200 Security Tools with Generative AI\" project",
+      "label_ja": "ツール200（プロジェクト）",
+      "label_en": "Security Tools 200",
+      "url": "https://akademeia.info/?page_id=44607",
+      "url_label_ja": "プロジェクトページを開く",
+      "url_label_en": "Open project page",
+      "id_range": ["day101", "day200"]
+    }
+  ]
+}

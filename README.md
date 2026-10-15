@@ -17,8 +17,9 @@
 ## 📖 基本機能
 
 - 🔍 ツールをカテゴリ・進捗・キーワードで検索  
+- 📖 書籍・シリーズで絞り込み（本のサポートページからの `?book=` リンクで自動的に絞り込み）  
 - 📚 学習状況をlocalStorageを使って記録  
-- 📊 ダッシュボードで全体進捗＋カテゴリ別進捗を可視化  
+- 📊 ダッシュボードで全体進捗＋カテゴリ別・書籍別進捗を可視化  
 - 🔗 X（旧Twitter）で進捗をワンクリック共有  
 - 🌐 多言語対応（日本語 / 英語）
 
@@ -61,16 +62,22 @@
 ├ css/
 │   └ style.css             # 全体スタイル（モバイルファースト）
 ├ js/
-│   └ main.js               # フロントロジック（一覧・進捗管理・ダッシュボード）
+│   ├ main.js               # フロントロジック（一覧・進捗管理・ダッシュボード）
+│   └ books.js              # 書籍フィルターの純関数（DOM非依存・テスト対象）
 ├ data/
 │   ├ categories.json       # カテゴリマスター（手動管理）
+│   ├ books.json            # 書籍・シリーズ定義（手動管理）
 │   └ tools.json            # 自動生成ファイル（手動編集禁止）
 ├ repos.txt                 # ツールリポジトリ一覧（1行1URL）
+├ package.json              # テスト設定（依存なし・node --test）
+├ test/
+│   └ books.test.js         # books.json とデータ検証のテスト
 ├ scripts/
 │   └ update_tools.py       # README からメタ情報を抽出して tools.json を生成
 └ .github/
     └ workflows/
-        └ update-tools.yml  # GitHub Actions（CI）
+        ├ update-tools.yml  # tools.json の自動再生成（CI）
+        └ test.yml          # books.json とテストの検証（CI）
 ```
 
 ---
@@ -135,6 +142,73 @@
 - **id**：内部識別子（集計・フィルター動作に使用するキー）
 - **ja / en**：UIに表示されるカテゴリー名
 - **aliases_**：表記ゆれを吸収するための候補（現在は仕様上は未使用だが、例としてclassic-cryptoにだけ残している）
+
+---
+
+### ▶ books.json（手動管理）
+
+書籍・シリーズのフィルターの定義です。ツールは `id`（`dayNNN`）で指すので、`tools.json` の `slug` の表記には依存しません。UTF-8・BOMなしで保存します（`tools.json` には触りません）。
+
+`data/books.json`の最小例：
+
+```json
+{
+  "schema_version": 1,
+  "books": [
+    {
+      "slug": "security-tools-100",
+      "kind": "series",
+      "title_ja": "「生成AIで作るセキュリティツール100」プロジェクト",
+      "title_en": "\"100 Security Tools with Generative AI\" project",
+      "label_ja": "ツール100（プロジェクト）",
+      "label_en": "Security Tools 100",
+      "url": "https://akademeia.info/?page_id=42163",
+      "id_range": ["day001", "day100"]
+    }
+  ]
+}
+```
+
+主なフィールドは以下の意味を持ちます（必須は `slug`・`kind`・`title_ja`・`title_en`・`label_ja`・`label_en`・`url`、および `ids` か `id_range` の少なくとも一方）。
+
+- **slug**：`?book=` の値。英小文字・数字・ハイフンのみ、40文字以内、全体で一意
+- **kind**：`book`（書籍）か `series`（プロジェクト）。プルダウンのグループに使う
+- **title_ja / title_en**：正式題名（バナーの見出し）。英語の正式題名がない本は説明的な英題を入れる
+- **label_ja / label_en**：プルダウンに出す短い名（表示幅14以下）
+- **url**：読者の入口（紹介・サポート・プロジェクトページ）。`https://` で始める
+- **ids**：明示の対象ツール（`dayNNN` の配列、昇順。全件が `tools.json` にあること）
+- **id_range**：対象の範囲（両端を含む）。`["day101","day200"]` のように書くと、以降 `repos.txt` に足した新ツールが自動で入る
+- **relation**：`introduced`（既定）／`related`（本にツールが登場しない関連ツール。`note_ja`・`note_en` が必須）
+- **chapters / refs / common_ref**：ツールが本のどこ（章・付録の節）に出るかを示す。`refs` は `{ "dayNNN": [{ "ch": "ch08", "pages": ["123"] }] }` の形。`pages` は任意で、空なら表示しない
+- **dashboard**：`false` にすると書籍別進捗の行を出さない（プルダウンと `?book=` では選べる）
+
+章ごとにツールを示す本（`book`）の例：
+
+```json
+{
+  "slug": "example-book",
+  "kind": "book",
+  "title_ja": "書名",
+  "title_en": "Book title",
+  "label_ja": "書名",
+  "label_en": "Book title",
+  "url": "https://akademeia.info/?page_id=00000",
+  "relation": "introduced",
+  "ids": ["day017", "day047"],
+  "chapters": [
+    { "key": "ch02", "label_ja": "第2章", "label_en": "Ch. 2" },
+    { "key": "ch08", "label_ja": "第8章", "label_en": "Ch. 8" }
+  ],
+  "refs": {
+    "day017": [{ "ch": "ch02" }, { "ch": "ch08" }],
+    "day047": [{ "ch": "ch08", "pages": ["123"] }]
+  }
+}
+```
+
+本を1件足す手順＝①対象の `dayNNN` を調べる ②`ids`（または `id_range`）と、章があれば `chapters`・`refs` を書く ③`npm test` で検証 ④PR。`npm test` が `data/books.json` の構文・`ids` の存在・`refs` の整合などを失敗で止めるので、CI のログだけで直せます。
+
+なお共有 URL（Xシェアのボタン）には書籍の絞り込みは含まれません。
 
 ---
 
@@ -280,6 +354,12 @@ or
 $ npx http-server -p 8080
 or 
 $ npx serve
+```
+
+`books.json` とデータ検証のテストは、依存のインストールなしで実行できます（Node 20以上）。
+
+```bash
+$ npm test
 ```
 
 ---
