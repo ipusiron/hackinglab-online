@@ -63,6 +63,10 @@
   { "id": "information-theory", "ja": "情報理論", "en": "Information Theory" },
   { "id": "hacker-culture", "ja": "ハッカー文化", "en": "Hacker Culture" },
   { "id": "disaster-prevention", "ja": "防災", "en": "Disaster Preparedness" },
+  { "id": "privacy", "ja": "プライバシー", "en": "Privacy" },
+  { "id": "design-failure-visualization", "ja": "設計ミス可視化", "en": "Design Failure Visualization" },
+  { "id": "async-security", "ja": "非同期セキュリティ", "en": "Asynchronous Security" },
+  { "id": "air-gap", "ja": "エアギャップ", "en": "Air Gap" },
 
   { "id": "lab-experiment", "ja": "実験ツール", "en": "Lab Experiments" },
   { "id": "misc", "ja": "その他", "en": "Miscellaneous" }
