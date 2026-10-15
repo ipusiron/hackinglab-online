@@ -114,3 +114,4 @@ https://github.com/ipusiron/gematria-cipherlab
 https://github.com/ipusiron/semantic-candidate-ranker
 
 https://github.com/ipusiron/softmax-confidence-meter
+https://github.com/ipusiron/hid-beam
