@@ -227,7 +227,12 @@ body {
   font-size: 1rem;
   font-weight: 700;
   color: #111827;
-  outline: none;
+}
+
+.book-banner-title:focus-visible,
+.book-group-heading:focus-visible {
+  outline: 2px solid #6d28d9;
+  outline-offset: 2px;
 }
 
 .book-banner-subtitle {
@@ -305,6 +310,20 @@ body {
   font-weight: 700;
   color: #111827;
   scroll-margin-top: calc(var(--header-h, 64px) + 0.5rem);
+}
+
+/* ダッシュボードの書籍行の種別の札 */
+.book-progress-kind {
+  display: inline-block;
+  margin-right: 0.4rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  background-color: #ede9fe;
+  border: 1px solid #c4b5fd;
+  color: #5b21b6;
+  font-size: 0.65rem;
+  font-weight: 700;
+  vertical-align: middle;
 }
 
 /* カードに出す掲載箇所のチップ */

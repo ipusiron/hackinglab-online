@@ -166,19 +166,27 @@ async function loadData() {
     if (!HB) console.warn("books.js not loaded; book filter disabled");
     applyBooksAvailability();
 
-    // ?book= の解決（存在しない slug は無視。表記違いは正規形へ直す）
+    // ?book= の解決（存在しない slug は無視。表記違いのときだけ正規形へ直す）
     if (HB && books.length) {
       const slug = HB.resolveBookParam(window.location.search, books);
       if (slug) {
         filters.book = slug;
+        let rawBook = null;
         try {
-          window.history.replaceState(
-            null,
-            "",
-            HB.buildUrlWithBook(window.location.href, slug)
-          );
+          rawBook = new URLSearchParams(window.location.search).get("book");
         } catch (e) {
-          /* file:// などでは無視 */
+          /* 無視 */
+        }
+        if (rawBook !== slug) {
+          try {
+            window.history.replaceState(
+              null,
+              "",
+              HB.buildUrlWithBook(window.location.href, slug)
+            );
+          } catch (e) {
+            /* file:// などでは無視 */
+          }
         }
       }
     }
@@ -390,19 +398,38 @@ function refreshBookTarget() {
   bookTargetSet = book ? HB.expandTargetIds(book, tools) : null;
 }
 
+// https:// のURLだけを許す（data由来のリンクのスキーム検証）。
+function isHttpUrl(u) {
+  return typeof u === "string" && /^https:\/\//i.test(u);
+}
+
+// 本の種別の札（書籍／シリーズ／関連ツール）。
+function bookKindLabel(book) {
+  const isJa = currentLang === "ja";
+  if (book.relation === "related") {
+    return isJa ? "関連ツール" : "Related tools (book in Japanese)";
+  }
+  if (book.kind === "series") return isJa ? "シリーズ" : "Series";
+  return isJa ? "書籍" : "Book (in Japanese)";
+}
+
+// 件数の括弧を言語ごとに出し分ける（日本語は全角、英語は半角＋スペース）。
+function countSuffix(n) {
+  return currentLang === "ja" ? `（${n}）` : ` (${n})`;
+}
+
 // 本を選ぶ/外す。URL・select・読み上げを更新して再描画する。
 function setBookFilter(slug, opts) {
   filters.book = slug || "";
   const sel = document.getElementById("filter-book");
   if (sel) sel.value = filters.book;
+  // URL を更新する。本を切り替え/解除したら、前の本の章ジャンプのハッシュは外す。
   try {
-    if (HB) {
-      window.history.replaceState(
-        null,
-        "",
-        HB.buildUrlWithBook(window.location.href, filters.book)
-      );
-    }
+    const u = new URL(window.location.href);
+    if (filters.book) u.searchParams.set("book", filters.book);
+    else u.searchParams.delete("book");
+    if (u.hash.indexOf("#book-group-") === 0) u.hash = "";
+    window.history.replaceState(null, "", u.toString());
   } catch (e) {
     /* 無視 */
   }
@@ -477,12 +504,12 @@ function renderToolList() {
       const h = document.createElement("h3");
       h.className = "book-group-heading";
       h.id = `book-group-${g.key}`;
+      h.tabIndex = -1;
       const label = currentLang === "ja" ? g.label_ja : g.label_en;
-      h.textContent = `${label}（${g.items.length}）`;
+      h.textContent = `${label}${countSuffix(g.items.length)}`;
       listEl.appendChild(h);
       g.items.forEach((tool) => listEl.appendChild(createToolCard(tool, book)));
     });
-    maybeScrollToHash();
     return;
   }
 
@@ -530,18 +557,7 @@ function renderBookBanner(book, shownCount, displayGroups) {
   // 種別の札
   const badge = document.createElement("span");
   badge.className = "book-banner-badge";
-  badge.textContent =
-    book.relation === "related"
-      ? isJa
-        ? "関連ツール"
-        : "Related tools (book in Japanese)"
-      : book.kind === "series"
-      ? isJa
-        ? "シリーズ"
-        : "Series"
-      : isJa
-      ? "書籍"
-      : "Book (in Japanese)";
+  badge.textContent = bookKindLabel(book);
   banner.appendChild(badge);
 
   // 書名
@@ -576,10 +592,11 @@ function renderBookBanner(book, shownCount, displayGroups) {
       : hit;
   meta.appendChild(count);
 
-  if (book.url) {
+  if (isHttpUrl(book.url)) {
     const link = document.createElement("a");
     link.className = "book-banner-link";
     link.href = book.url;
+    link.rel = "noopener";
     link.textContent = isJa
       ? book.url_label_ja || "紹介ページを開く"
       : book.url_label_en || "Open book page";
@@ -630,19 +647,22 @@ function renderBookBanner(book, shownCount, displayGroups) {
     }
     const summary = document.createElement("summary");
     summary.textContent = isJa
-      ? `章へ移動（${displayGroups.length}）`
-      : `Jump to section (${displayGroups.length})`;
+      ? `章へ移動${countSuffix(displayGroups.length)}`
+      : `Jump to section${countSuffix(displayGroups.length)}`;
     details.appendChild(summary);
     displayGroups.forEach((g) => {
       const a = document.createElement("a");
       a.className = "book-jump-link";
       a.href = `#book-group-${g.key}`;
       const label = isJa ? g.label_ja : g.label_en;
-      a.textContent = `${label}（${g.items.length}）`;
+      a.textContent = `${label}${countSuffix(g.items.length)}`;
       a.addEventListener("click", (e) => {
         e.preventDefault();
         const target = document.getElementById(`book-group-${g.key}`);
-        if (target) target.scrollIntoView();
+        if (target) {
+          target.scrollIntoView();
+          target.focus();
+        }
         try {
           window.history.replaceState(null, "", "#book-group-" + g.key);
         } catch (err) {
@@ -966,7 +986,11 @@ function renderBookProgress() {
     const title = document.createElement("a");
     title.className = "category-progress-title book-progress-title";
     title.href = `?book=${encodeURIComponent(s.book.slug)}`;
-    title.textContent = HB.bookLabel(s.book, currentLang);
+    const kind = document.createElement("span");
+    kind.className = "book-progress-kind";
+    kind.textContent = bookKindLabel(s.book);
+    title.appendChild(kind);
+    title.appendChild(document.createTextNode(HB.bookLabel(s.book, currentLang)));
     title.addEventListener("click", (e) => {
       e.preventDefault();
       switchTab("tab-tools");

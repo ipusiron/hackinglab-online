@@ -173,7 +173,7 @@
 
 - **slug**：`?book=` の値。英小文字・数字・ハイフンのみ、40文字以内、全体で一意
 - **kind**：`book`（書籍）か `series`（プロジェクト）。プルダウンのグループに使う
-- **title_ja / title_en**：正式題名（バナーの見出し）。英語の正式題名が無い本は説明的な英題を入れる
+- **title_ja / title_en**：正式題名（バナーの見出し）。英語の正式題名がない本は説明的な英題を入れる
 - **label_ja / label_en**：プルダウンに出す短い名（表示幅14以下）
 - **url**：読者の入口（紹介・サポート・プロジェクトページ）。`https://` で始める
 - **ids**：明示の対象ツール（`dayNNN` の配列、昇順。全件が `tools.json` にあること）
@@ -181,6 +181,30 @@
 - **relation**：`introduced`（既定）／`related`（本にツールが登場しない関連ツール。`note_ja`・`note_en` が必須）
 - **chapters / refs / common_ref**：ツールが本のどこ（章・付録の節）に出るかを示す。`refs` は `{ "dayNNN": [{ "ch": "ch08", "pages": ["123"] }] }` の形。`pages` は任意で、空なら表示しない
 - **dashboard**：`false` にすると書籍別進捗の行を出さない（プルダウンと `?book=` では選べる）
+
+章ごとにツールを示す本（`book`）の例：
+
+```json
+{
+  "slug": "example-book",
+  "kind": "book",
+  "title_ja": "書名",
+  "title_en": "Book title",
+  "label_ja": "書名",
+  "label_en": "Book title",
+  "url": "https://akademeia.info/?page_id=00000",
+  "relation": "introduced",
+  "ids": ["day017", "day047"],
+  "chapters": [
+    { "key": "ch02", "label_ja": "第2章", "label_en": "Ch. 2" },
+    { "key": "ch08", "label_ja": "第8章", "label_en": "Ch. 8" }
+  ],
+  "refs": {
+    "day017": [{ "ch": "ch02" }, { "ch": "ch08" }],
+    "day047": [{ "ch": "ch08", "pages": ["123"] }]
+  }
+}
+```
 
 本を1件足す手順＝①対象の `dayNNN` を調べる ②`ids`（または `id_range`）と、章があれば `chapters`・`refs` を書く ③`npm test` で検証 ④PR。`npm test` が `data/books.json` の構文・`ids` の存在・`refs` の整合などを失敗で止めるので、CI のログだけで直せます。
 
