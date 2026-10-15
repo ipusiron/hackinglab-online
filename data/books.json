@@ -2,6 +2,1038 @@
   "schema_version": 1,
   "books": [
     {
+      "slug": "genai-crypto",
+      "kind": "book",
+      "title_ja": "生成AI時代の暗号技術入門　AIエージェントで挑む古典暗号の自動解析",
+      "title_en": "Introduction to Cryptography in the Generative AI Era: Automated Analysis of Classical Ciphers with AI Agents",
+      "label_ja": "生成AI時代の暗号技術入門",
+      "label_en": "GenAI-Era Cryptography",
+      "url": "https://akademeia.info/?page_id=50528",
+      "url_label_ja": "サポートページを開く",
+      "url_label_en": "Open support page",
+      "relation": "introduced",
+      "note_ja": "本文で使うツールには章を、付録Bのカタログに載せたツールには付録Bの節を示します。",
+      "note_en": "Tools used in the main text show their chapter; tools listed in the Appendix B catalog show their section.",
+      "ids": [
+        "day003",
+        "day004",
+        "day005",
+        "day008",
+        "day009",
+        "day010",
+        "day012",
+        "day014",
+        "day017",
+        "day018",
+        "day022",
+        "day024",
+        "day025",
+        "day027",
+        "day028",
+        "day030",
+        "day032",
+        "day034",
+        "day036",
+        "day037",
+        "day042",
+        "day043",
+        "day044",
+        "day045",
+        "day046",
+        "day047",
+        "day049",
+        "day051",
+        "day052",
+        "day055",
+        "day067",
+        "day069",
+        "day071",
+        "day072",
+        "day076",
+        "day078",
+        "day080",
+        "day084",
+        "day086",
+        "day093",
+        "day094",
+        "day095",
+        "day097",
+        "day099",
+        "day103",
+        "day104",
+        "day105",
+        "day106",
+        "day107",
+        "day108",
+        "day109",
+        "day110"
+      ],
+      "chapters": [
+        {
+          "key": "ch01",
+          "label_ja": "第1章",
+          "label_en": "Ch. 1"
+        },
+        {
+          "key": "ch02",
+          "label_ja": "第2章",
+          "label_en": "Ch. 2"
+        },
+        {
+          "key": "ch03",
+          "label_ja": "第3章",
+          "label_en": "Ch. 3"
+        },
+        {
+          "key": "ch04",
+          "label_ja": "第4章",
+          "label_en": "Ch. 4"
+        },
+        {
+          "key": "ch05",
+          "label_ja": "第5章",
+          "label_en": "Ch. 5"
+        },
+        {
+          "key": "ch07",
+          "label_ja": "第7章",
+          "label_en": "Ch. 7"
+        },
+        {
+          "key": "ch08",
+          "label_ja": "第8章",
+          "label_en": "Ch. 8"
+        },
+        {
+          "key": "ch10",
+          "label_ja": "第10章",
+          "label_en": "Ch. 10"
+        },
+        {
+          "key": "app-b-enc",
+          "label_ja": "付録B　古典暗号の暗号化・復号ツール",
+          "label_en": "Appendix B: Encryption/decryption tools"
+        },
+        {
+          "key": "app-b-ana",
+          "label_ja": "付録B　暗号解読ツール",
+          "label_en": "Appendix B: Cryptanalysis tools"
+        },
+        {
+          "key": "app-b-misc",
+          "label_ja": "付録B　その他の周辺ツール",
+          "label_en": "Appendix B: Other related tools"
+        }
+      ],
+      "refs": {
+        "day003": [
+          {
+            "ch": "ch02"
+          },
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day004": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day005": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day008": [
+          {
+            "ch": "ch07"
+          },
+          {
+            "ch": "app-b-ana"
+          }
+        ],
+        "day009": [
+          {
+            "ch": "ch08"
+          },
+          {
+            "ch": "app-b-ana"
+          }
+        ],
+        "day010": [
+          {
+            "ch": "ch03"
+          },
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day012": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day014": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day017": [
+          {
+            "ch": "ch02"
+          },
+          {
+            "ch": "ch08"
+          },
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day018": [
+          {
+            "ch": "app-b-ana"
+          }
+        ],
+        "day022": [
+          {
+            "ch": "ch01"
+          },
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day024": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day025": [
+          {
+            "ch": "ch01"
+          }
+        ],
+        "day027": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day028": [
+          {
+            "ch": "ch08"
+          },
+          {
+            "ch": "app-b-ana"
+          }
+        ],
+        "day030": [
+          {
+            "ch": "ch08"
+          },
+          {
+            "ch": "app-b-ana"
+          }
+        ],
+        "day032": [
+          {
+            "ch": "ch04"
+          },
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day034": [
+          {
+            "ch": "ch03"
+          },
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day036": [
+          {
+            "ch": "ch05"
+          },
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day037": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day042": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day043": [
+          {
+            "ch": "ch03"
+          },
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day044": [
+          {
+            "ch": "ch08"
+          },
+          {
+            "ch": "app-b-ana"
+          }
+        ],
+        "day045": [
+          {
+            "ch": "app-b-ana"
+          }
+        ],
+        "day046": [
+          {
+            "ch": "ch08"
+          },
+          {
+            "ch": "app-b-ana"
+          }
+        ],
+        "day047": [
+          {
+            "ch": "ch07"
+          },
+          {
+            "ch": "ch08"
+          },
+          {
+            "ch": "app-b-ana"
+          }
+        ],
+        "day049": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day051": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day052": [
+          {
+            "ch": "ch10"
+          },
+          {
+            "ch": "app-b-misc"
+          }
+        ],
+        "day055": [
+          {
+            "ch": "ch05"
+          },
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day067": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day069": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day071": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day072": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day076": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day078": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day080": [
+          {
+            "ch": "ch04"
+          },
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day084": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day086": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day093": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day094": [
+          {
+            "ch": "ch04"
+          },
+          {
+            "ch": "app-b-misc"
+          }
+        ],
+        "day095": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day097": [
+          {
+            "ch": "ch01"
+          },
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day099": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day103": [
+          {
+            "ch": "app-b-ana"
+          }
+        ],
+        "day104": [
+          {
+            "ch": "app-b-ana"
+          }
+        ],
+        "day105": [
+          {
+            "ch": "app-b-ana"
+          }
+        ],
+        "day106": [
+          {
+            "ch": "app-b-ana"
+          }
+        ],
+        "day107": [
+          {
+            "ch": "app-b-ana"
+          }
+        ],
+        "day108": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day109": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day110": [
+          {
+            "ch": "app-b-ana"
+          }
+        ]
+      }
+    },
+    {
+      "slug": "claudecode-cryptanalysis",
+      "kind": "book",
+      "title_ja": "Claude Code暗号解読決戦 ミジンコ vs. AIエージェント",
+      "title_en": "Claude Code Cryptanalysis Showdown: Mijinko vs. AI Agents",
+      "label_ja": "Claude Code暗号解読決戦",
+      "label_en": "Claude Code Cryptanalysis",
+      "url": "https://akademeia.info/?page_id=49831",
+      "url_label_ja": "紹介ページを開く",
+      "url_label_en": "Open book page",
+      "relation": "introduced",
+      "note_ja": "商業版『生成AI時代の暗号技術入門』の底本です。本文で使うツールには章を、付録Bのカタログに載せたツールには付録Bの節を示します。",
+      "note_en": "The self-published original of \"Introduction to Cryptography in the Generative AI Era\". Tools used in the main text show their chapter; tools in the Appendix B catalog show their section.",
+      "dashboard": false,
+      "ids": [
+        "day003",
+        "day004",
+        "day005",
+        "day008",
+        "day009",
+        "day010",
+        "day012",
+        "day014",
+        "day017",
+        "day018",
+        "day022",
+        "day024",
+        "day027",
+        "day028",
+        "day030",
+        "day032",
+        "day034",
+        "day036",
+        "day037",
+        "day042",
+        "day043",
+        "day044",
+        "day045",
+        "day046",
+        "day047",
+        "day049",
+        "day051",
+        "day055",
+        "day067",
+        "day069",
+        "day071",
+        "day072",
+        "day076",
+        "day078",
+        "day080",
+        "day084",
+        "day086",
+        "day093",
+        "day095",
+        "day097",
+        "day099",
+        "day103",
+        "day104",
+        "day105",
+        "day106",
+        "day107",
+        "day108",
+        "day109",
+        "day110"
+      ],
+      "chapters": [
+        {
+          "key": "ch02",
+          "label_ja": "第2章",
+          "label_en": "Ch. 2"
+        },
+        {
+          "key": "ch04",
+          "label_ja": "第4章",
+          "label_en": "Ch. 4"
+        },
+        {
+          "key": "ch05",
+          "label_ja": "第5章",
+          "label_en": "Ch. 5"
+        },
+        {
+          "key": "app-b-enc",
+          "label_ja": "付録B　古典暗号の暗号化・復号ツール",
+          "label_en": "Appendix B: Encryption/decryption tools"
+        },
+        {
+          "key": "app-b-ana",
+          "label_ja": "付録B　暗号解読ツール",
+          "label_en": "Appendix B: Cryptanalysis tools"
+        }
+      ],
+      "refs": {
+        "day003": [
+          {
+            "ch": "ch02"
+          },
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day004": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day005": [
+          {
+            "ch": "ch02"
+          },
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day008": [
+          {
+            "ch": "ch04"
+          },
+          {
+            "ch": "app-b-ana"
+          }
+        ],
+        "day009": [
+          {
+            "ch": "ch05"
+          },
+          {
+            "ch": "app-b-ana"
+          }
+        ],
+        "day010": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day012": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day014": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day017": [
+          {
+            "ch": "ch02"
+          },
+          {
+            "ch": "ch05"
+          },
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day018": [
+          {
+            "ch": "app-b-ana"
+          }
+        ],
+        "day022": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day024": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day027": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day028": [
+          {
+            "ch": "ch05"
+          },
+          {
+            "ch": "app-b-ana"
+          }
+        ],
+        "day030": [
+          {
+            "ch": "ch05"
+          },
+          {
+            "ch": "app-b-ana"
+          }
+        ],
+        "day032": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day034": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day036": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day037": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day042": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day043": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day044": [
+          {
+            "ch": "ch05"
+          },
+          {
+            "ch": "app-b-ana"
+          }
+        ],
+        "day045": [
+          {
+            "ch": "app-b-ana"
+          }
+        ],
+        "day046": [
+          {
+            "ch": "ch05"
+          },
+          {
+            "ch": "app-b-ana"
+          }
+        ],
+        "day047": [
+          {
+            "ch": "ch04"
+          },
+          {
+            "ch": "ch05"
+          },
+          {
+            "ch": "app-b-ana"
+          }
+        ],
+        "day049": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day051": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day055": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day067": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day069": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day071": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day072": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day076": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day078": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day080": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day084": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day086": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day093": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day095": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day097": [
+          {
+            "ch": "ch02"
+          },
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day099": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day103": [
+          {
+            "ch": "app-b-ana"
+          }
+        ],
+        "day104": [
+          {
+            "ch": "app-b-ana"
+          }
+        ],
+        "day105": [
+          {
+            "ch": "app-b-ana"
+          }
+        ],
+        "day106": [
+          {
+            "ch": "app-b-ana"
+          }
+        ],
+        "day107": [
+          {
+            "ch": "app-b-ana"
+          }
+        ],
+        "day108": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day109": [
+          {
+            "ch": "app-b-enc"
+          }
+        ],
+        "day110": [
+          {
+            "ch": "app-b-ana"
+          }
+        ]
+      }
+    },
+    {
+      "slug": "security-tools-100-book",
+      "kind": "book",
+      "title_ja": "生成AIで作るセキュリティツール100",
+      "title_en": "100 Security Tools with Generative AI",
+      "label_ja": "ツール100（同人誌）",
+      "label_en": "Security Tools 100 (book)",
+      "url": "https://akademeia.info/?page_id=44531",
+      "url_label_ja": "紹介ページを開く",
+      "url_label_en": "Open book page",
+      "relation": "introduced",
+      "note_ja": "付録Aに全ツールの一覧があります。章の表示があるツールは本文でも扱っています。",
+      "note_en": "Appendix A lists every tool. Tools that show a chapter are also covered in the main text.",
+      "dashboard": false,
+      "id_range": [
+        "day001",
+        "day100"
+      ],
+      "chapters": [
+        {
+          "key": "ch03",
+          "label_ja": "第3章",
+          "label_en": "Ch. 3"
+        },
+        {
+          "key": "ch04",
+          "label_ja": "第4章",
+          "label_en": "Ch. 4"
+        },
+        {
+          "key": "ch05",
+          "label_ja": "第5章",
+          "label_en": "Ch. 5"
+        },
+        {
+          "key": "ch06",
+          "label_ja": "第6章",
+          "label_en": "Ch. 6"
+        },
+        {
+          "key": "app-a",
+          "label_ja": "付録A　ツール一覧",
+          "label_en": "Appendix A: Tool list"
+        }
+      ],
+      "common_ref": "app-a",
+      "refs": {
+        "day009": [
+          {
+            "ch": "ch04"
+          }
+        ],
+        "day012": [
+          {
+            "ch": "ch06"
+          }
+        ],
+        "day014": [
+          {
+            "ch": "ch06"
+          }
+        ],
+        "day017": [
+          {
+            "ch": "ch04"
+          }
+        ],
+        "day022": [
+          {
+            "ch": "ch03"
+          },
+          {
+            "ch": "ch04"
+          }
+        ],
+        "day024": [
+          {
+            "ch": "ch04"
+          }
+        ],
+        "day025": [
+          {
+            "ch": "ch03"
+          }
+        ],
+        "day028": [
+          {
+            "ch": "ch04"
+          }
+        ],
+        "day030": [
+          {
+            "ch": "ch04"
+          }
+        ],
+        "day032": [
+          {
+            "ch": "ch03"
+          }
+        ],
+        "day033": [
+          {
+            "ch": "ch05"
+          }
+        ],
+        "day035": [
+          {
+            "ch": "ch04"
+          }
+        ],
+        "day036": [
+          {
+            "ch": "ch04"
+          }
+        ],
+        "day038": [
+          {
+            "ch": "ch05"
+          }
+        ],
+        "day044": [
+          {
+            "ch": "ch04"
+          }
+        ],
+        "day046": [
+          {
+            "ch": "ch04"
+          }
+        ],
+        "day047": [
+          {
+            "ch": "ch04"
+          }
+        ],
+        "day050": [
+          {
+            "ch": "ch05"
+          }
+        ],
+        "day058": [
+          {
+            "ch": "ch04"
+          }
+        ],
+        "day063": [
+          {
+            "ch": "ch05"
+          }
+        ],
+        "day065": [
+          {
+            "ch": "ch05"
+          }
+        ],
+        "day066": [
+          {
+            "ch": "ch05"
+          }
+        ],
+        "day074": [
+          {
+            "ch": "ch05"
+          }
+        ],
+        "day075": [
+          {
+            "ch": "ch03"
+          }
+        ],
+        "day082": [
+          {
+            "ch": "ch04"
+          },
+          {
+            "ch": "ch05"
+          }
+        ],
+        "day087": [
+          {
+            "ch": "ch03"
+          }
+        ],
+        "day097": [
+          {
+            "ch": "ch04"
+          }
+        ],
+        "day098": [
+          {
+            "ch": "ch03"
+          }
+        ],
+        "day100": [
+          {
+            "ch": "ch04"
+          }
+        ]
+      }
+    },
+    {
       "slug": "security-tools-100",
       "kind": "series",
       "title_ja": "「生成AIで作るセキュリティツール100」プロジェクト",
@@ -11,7 +1043,10 @@
       "url": "https://akademeia.info/?page_id=42163",
       "url_label_ja": "プロジェクトページを開く",
       "url_label_en": "Open project page",
-      "id_range": ["day001", "day100"]
+      "id_range": [
+        "day001",
+        "day100"
+      ]
     },
     {
       "slug": "security-tools-200",
@@ -23,7 +1058,10 @@
       "url": "https://akademeia.info/?page_id=44607",
       "url_label_ja": "プロジェクトページを開く",
       "url_label_en": "Open project page",
-      "id_range": ["day101", "day200"]
+      "id_range": [
+        "day101",
+        "day200"
+      ]
     }
   ]
 }
