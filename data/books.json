@@ -1277,6 +1277,103 @@
       }
     },
     {
+      "slug": "airgap-input",
+      "kind": "book",
+      "title_ja": "エアギャップ・ブリッジ　隔離環境のデータ入力技法",
+      "title_en": "Air-Gap Bridge: Data Input Techniques for Isolated Environments",
+      "label_ja": "エアギャップ（入力技法）",
+      "label_en": "Air-Gap Bridge (input)",
+      "url": "https://akademeia.info/?page_id=53563",
+      "url_label_ja": "紹介ページを開く",
+      "url_label_en": "Open book page",
+      "relation": "introduced",
+      "note_ja": "QRコード入力の学習に使うツール（第5章）と、本書のWi-Fi HIDブリッジを独立プロジェクト化したHIDBeam（第7章）を示します。",
+      "note_en": "Shows the QR learning tool used in Ch. 5 and HIDBeam, the standalone project derived from the book's Wi-Fi HID bridge (Ch. 7).",
+      "dashboard": true,
+      "ids": [
+        "day102",
+        "day113"
+      ],
+      "chapters": [
+        {
+          "key": "ch05",
+          "label_ja": "第5章　QRコード入力の実験",
+          "label_en": "Ch. 5: QR code input"
+        },
+        {
+          "key": "ch07",
+          "label_ja": "第7章　Wi-Fi HIDブリッジ方式",
+          "label_en": "Ch. 7: Wi-Fi HID bridge"
+        }
+      ],
+      "refs": {
+        "day102": [
+          {
+            "ch": "ch05"
+          }
+        ],
+        "day113": [
+          {
+            "ch": "ch07"
+          }
+        ]
+      }
+    },
+    {
+      "slug": "airgap-output",
+      "kind": "book",
+      "title_ja": "エアギャップ・ブリッジ　隔離環境のデータ出力技法",
+      "title_en": "Air-Gap Bridge: Data Output Techniques for Isolated Environments",
+      "label_ja": "エアギャップ（出力技法）",
+      "label_en": "Air-Gap Bridge (output)",
+      "url": "https://akademeia.info/?page_id=53554",
+      "url_label_ja": "紹介ページを開く",
+      "url_label_en": "Open book page",
+      "relation": "related",
+      "note_ja": "本書にツールは登場しません。各章の話題を手を動かして試せるツールを著者が選び、章を添えています。",
+      "note_en": "This book does not mention any of these tools. The author picked tools for trying out each chapter's topic; the chapter is shown on each card.",
+      "dashboard": true,
+      "ids": [
+        "day021",
+        "day074",
+        "day102"
+      ],
+      "chapters": [
+        {
+          "key": "ch05",
+          "label_ja": "第5章　物理カメラ方式",
+          "label_en": "Ch. 5: Physical camera"
+        },
+        {
+          "key": "ch06",
+          "label_ja": "第6章　物理カメラ方式の実験",
+          "label_en": "Ch. 6: Physical camera experiments"
+        },
+        {
+          "key": "ch08",
+          "label_ja": "第8章　省コンテキスト監視システム",
+          "label_en": "Ch. 8: Low-context monitoring"
+        }
+      ],
+      "refs": {
+        "day021": [
+          {
+            "ch": "ch08"
+          }
+        ],
+        "day074": [
+          {
+            "ch": "ch05"
+          }
+        ],
+        "day102": [
+          {
+            "ch": "ch06"
+          }
+        ]
+      }
+    },
+    {
       "slug": "security-tools-100",
       "kind": "series",
       "title_ja": "「生成AIで作るセキュリティツール100」プロジェクト",
