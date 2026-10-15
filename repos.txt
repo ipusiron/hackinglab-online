@@ -114,4 +114,7 @@ https://github.com/ipusiron/gematria-cipherlab
 https://github.com/ipusiron/semantic-candidate-ranker
 
 https://github.com/ipusiron/softmax-confidence-meter
+https://github.com/ipusiron/async-rpc-failure-simulator
 https://github.com/ipusiron/hid-beam
+https://github.com/ipusiron/hex-dump-trainer
+https://github.com/ipusiron/postmirror
