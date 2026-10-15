@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-10-15T15:38:40Z",
+  "generated_at": "2026-10-15T15:56:34Z",
   "tools": [
     {
       "id": "day001",
@@ -1240,6 +1240,7 @@
         "Web Security"
       ],
       "category_ids": [
+        "privacy",
         "web-security"
       ],
       "difficulty": 1,
@@ -2491,6 +2492,7 @@
         "Browser Fingerprinting"
       ],
       "category_ids": [
+        "privacy",
         "web-security"
       ],
       "difficulty": 2,
@@ -2995,6 +2997,7 @@
         "Web Security"
       ],
       "category_ids": [
+        "privacy",
         "web-security"
       ],
       "difficulty": 3,
@@ -3676,7 +3679,10 @@
         "Design Failure Visualization",
         "Asynchronous Security"
       ],
-      "category_ids": [],
+      "category_ids": [
+        "async-security",
+        "design-failure-visualization"
+      ],
       "difficulty": 4,
       "tags": [
         "async",
@@ -3710,6 +3716,7 @@
         "HID"
       ],
       "category_ids": [
+        "air-gap",
         "physical-security"
       ],
       "difficulty": 3,
@@ -3754,7 +3761,7 @@
       ],
       "repo_url": "https://github.com/ipusiron/hex-dump-trainer",
       "demo_url": "https://ipusiron.github.io/hex-dump-trainer/",
-      "hub": false
+      "hub": true
     },
     {
       "id": "day115",
@@ -3773,7 +3780,8 @@
         "Coding Theory"
       ],
       "category_ids": [
-        "coding-theory"
+        "coding-theory",
+        "privacy"
       ],
       "difficulty": 2,
       "tags": [
