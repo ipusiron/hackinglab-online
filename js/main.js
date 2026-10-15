@@ -4,11 +4,18 @@
 let currentLang = "ja"; // "ja" | "en"
 let tools = [];
 let categories = [];
+let books = [];
 let filters = {
+  book: "",
   categoryId: "",
   progress: "all",
   search: ""
 };
+
+// 書籍フィルターの純関数（js/books.js）。読み込めていなければ null として退避する。
+const HB = typeof HLOBooks !== "undefined" ? HLOBooks : null;
+// いま選択中の本の対象 id 集合（renderToolList / setBookFilter で更新）。
+let bookTargetSet = null;
 
 const PROGRESS_LABELS = {
   ja: ["未着手", "学習中", "一周完了", "定着済み"],
@@ -58,9 +65,14 @@ function setupStaticUI() {
   });
 
   // フィルター
+  const bookSelect = document.getElementById("filter-book");
   const categorySelect = document.getElementById("filter-category");
   const progressSelect = document.getElementById("filter-progress");
   const searchInput = document.getElementById("filter-search-input");
+
+  bookSelect?.addEventListener("change", (e) => {
+    setBookFilter(e.target.value);
+  });
 
   categorySelect?.addEventListener("change", (e) => {
     filters.categoryId = e.target.value;
@@ -140,10 +152,89 @@ async function loadData() {
       lastUpdatedEl.textContent = toolsJson.generated_at || "-";
     }
 
+    // 書籍データ（自己完結した読み込み。失敗してもハブは従来どおり動く）
+    books = [];
+    try {
+      const bRes = await fetch("./data/books.json");
+      if (bRes.ok) {
+        const bJson = await bRes.json();
+        if (bJson && Array.isArray(bJson.books)) books = bJson.books;
+      }
+    } catch (e) {
+      // 無視（no-books として続行）
+    }
+    if (!HB) console.warn("books.js not loaded; book filter disabled");
+    applyBooksAvailability();
+
+    // ?book= の解決（存在しない slug は無視。表記違いは正規形へ直す）
+    if (HB && books.length) {
+      const slug = HB.resolveBookParam(window.location.search, books);
+      if (slug) {
+        filters.book = slug;
+        try {
+          window.history.replaceState(
+            null,
+            "",
+            HB.buildUrlWithBook(window.location.href, slug)
+          );
+        } catch (e) {
+          /* file:// などでは無視 */
+        }
+      }
+    }
+
+    applyHeaderHeightVar();
     setupFilterOptions();
     renderAll();
+    maybeScrollToHash();
   } catch (err) {
     console.error("Error loading data:", err);
+  }
+}
+
+// books.json の有無でUIを出し分ける。
+function applyBooksAvailability() {
+  const haveBooks = !!(HB && Array.isArray(books) && books.length > 0);
+  const filtersEl = document.getElementById("tool-filters");
+  const bookGroup = document.getElementById("filter-book-group");
+  const dashBooks = document.getElementById("dashboard-books");
+  if (filtersEl) filtersEl.classList.toggle("no-books", !haveBooks);
+  if (bookGroup) bookGroup.hidden = !haveBooks;
+  if (!haveBooks) {
+    if (dashBooks) dashBooks.hidden = true;
+    filters.book = "";
+    if (!Array.isArray(books)) books = [];
+  }
+}
+
+// 固定ヘッダーの高さを CSS 変数 --header-h に書き、章ジャンプのスクロール位置に使う。
+function applyHeaderHeightVar() {
+  const header = document.getElementById("site-header");
+  if (!header) return;
+  const set = () =>
+    document.documentElement.style.setProperty(
+      "--header-h",
+      header.offsetHeight + "px"
+    );
+  set();
+  try {
+    new ResizeObserver(set).observe(header);
+  } catch (e) {
+    window.addEventListener("resize", set);
+  }
+}
+
+// #book-group-<key> のハッシュがあればそこへスクロールする。
+function maybeScrollToHash() {
+  const h = window.location.hash;
+  if (!h || h.indexOf("#book-group-") !== 0) return;
+  const el = document.getElementById(h.slice(1));
+  if (el) {
+    try {
+      el.scrollIntoView();
+    } catch (e) {
+      /* 無視 */
+    }
   }
 }
 
@@ -215,8 +306,39 @@ function switchTab(targetId) {
 // ---- フィルターの選択肢セットアップ ----
 
 function setupFilterOptions() {
+  const bookSelect = document.getElementById("filter-book");
   const categorySelect = document.getElementById("filter-category");
   const progressSelect = document.getElementById("filter-progress");
+
+  if (bookSelect) {
+    bookSelect.innerHTML = "";
+
+    const optAll = document.createElement("option");
+    optAll.value = "";
+    optAll.textContent = currentLang === "ja" ? "すべて" : "All";
+    bookSelect.appendChild(optAll);
+
+    if (HB && Array.isArray(books) && books.length) {
+      const addGroup = (kind, labelJa, labelEn) => {
+        const list = books.filter((b) => b.kind === kind);
+        if (!list.length) return;
+        const og = document.createElement("optgroup");
+        og.label = currentLang === "ja" ? labelJa : labelEn;
+        list.forEach((b) => {
+          const opt = document.createElement("option");
+          opt.value = b.slug;
+          opt.textContent = HB.bookLabel(b, currentLang);
+          og.appendChild(opt);
+        });
+        bookSelect.appendChild(og);
+      };
+      addGroup("book", "書籍", "Books");
+      addGroup("series", "シリーズ", "Series");
+    }
+
+    // 言語切替などで作り直したあとも選択を保つ
+    bookSelect.value = filters.book;
+  }
 
   if (categorySelect) {
     categorySelect.innerHTML = "";
@@ -232,6 +354,8 @@ function setupFilterOptions() {
       opt.textContent = currentLang === "ja" ? cat.ja : cat.en;
       categorySelect.appendChild(opt);
     });
+
+    categorySelect.value = filters.categoryId;
   }
 
   if (progressSelect) {
@@ -249,6 +373,63 @@ function setupFilterOptions() {
       opt.textContent = label;
       progressSelect.appendChild(opt);
     });
+
+    progressSelect.value = filters.progress;
+  }
+}
+
+// ---- 書籍フィルターの操作 ----
+
+function currentBook() {
+  if (!filters.book || !HB || !Array.isArray(books)) return null;
+  return books.find((b) => b.slug === filters.book) || null;
+}
+
+function refreshBookTarget() {
+  const book = currentBook();
+  bookTargetSet = book ? HB.expandTargetIds(book, tools) : null;
+}
+
+// 本を選ぶ/外す。URL・select・読み上げを更新して再描画する。
+function setBookFilter(slug, opts) {
+  filters.book = slug || "";
+  const sel = document.getElementById("filter-book");
+  if (sel) sel.value = filters.book;
+  try {
+    if (HB) {
+      window.history.replaceState(
+        null,
+        "",
+        HB.buildUrlWithBook(window.location.href, filters.book)
+      );
+    }
+  } catch (e) {
+    /* 無視 */
+  }
+  refreshBookTarget();
+  updateBookStatus(filters.book, opts && opts.cleared);
+  renderToolList();
+}
+
+// スクリーンリーダー向けの状態通知（本の選択・解除のときだけ更新）。
+function updateBookStatus(slug, cleared) {
+  const el = document.getElementById("book-status");
+  if (!el) return;
+  if (slug) {
+    const book = currentBook();
+    const name = book ? HB.bookTitle(book, currentLang) : slug;
+    const n = bookTargetSet ? bookTargetSet.size : 0;
+    el.textContent =
+      currentLang === "ja"
+        ? `『${name}』で絞り込み中。該当${n}本。`
+        : `Filtered by "${name}": ${n === 1 ? "1 tool" : n + " tools"}.`;
+  } else if (cleared) {
+    el.textContent =
+      currentLang === "ja"
+        ? "書籍の絞り込みを解除しました。"
+        : "Book filter cleared.";
+  } else {
+    el.textContent = "";
   }
 }
 
@@ -259,27 +440,225 @@ function renderToolList() {
   if (!listEl) return;
 
   listEl.innerHTML = "";
+  refreshBookTarget();
+  const book = currentBook();
 
-  const filtered = tools
-    .filter((t) => t.hub !== false)
-    .filter((t) => filterByCategory(t))
-    .filter((t) => filterByProgress(t))
-    .filter((t) => filterBySearch(t));
+  const baseMatch = (t) =>
+    t.hub !== false &&
+    filterByBook(t) &&
+    filterByCategory(t) &&
+    filterByProgress(t) &&
+    filterBySearch(t);
 
-  if (filtered.length === 0) {
-    const p = document.createElement("p");
+  const matched = tools.filter(baseMatch);
+  const matchedIds = new Set(matched.map((t) => t.id));
+
+  // chapters を持つ本は、章の順にグループ分けして見出しを挟む
+  let displayGroups = null;
+  if (book && Array.isArray(book.chapters) && book.chapters.length && HB) {
+    displayGroups = HB.buildGroups(book, tools)
+      .map((g) => ({
+        key: g.key,
+        label_ja: g.label_ja,
+        label_en: g.label_en,
+        items: g.items.filter((t) => matchedIds.has(t.id))
+      }))
+      .filter((g) => g.items.length);
+  }
+
+  renderBookBanner(book, matched.length, displayGroups);
+
+  if (displayGroups) {
+    if (!displayGroups.length) {
+      appendEmptyState(listEl, book);
+      return;
+    }
+    displayGroups.forEach((g) => {
+      const h = document.createElement("h3");
+      h.className = "book-group-heading";
+      h.id = `book-group-${g.key}`;
+      const label = currentLang === "ja" ? g.label_ja : g.label_en;
+      h.textContent = `${label}（${g.items.length}）`;
+      listEl.appendChild(h);
+      g.items.forEach((tool) => listEl.appendChild(createToolCard(tool, book)));
+    });
+    maybeScrollToHash();
+    return;
+  }
+
+  if (matched.length === 0) {
+    appendEmptyState(listEl, book);
+    return;
+  }
+
+  matched.forEach((tool) => {
+    listEl.appendChild(createToolCard(tool, book));
+  });
+}
+
+function appendEmptyState(listEl, book) {
+  const p = document.createElement("p");
+  if (book) {
+    const label = HB ? HB.bookLabel(book, currentLang) : "";
+    p.textContent =
+      currentLang === "ja"
+        ? `「${label}」の中に、ほかの条件に一致するツールがありません。`
+        : `No tools from "${label}" match the other filters.`;
+  } else {
     p.textContent =
       currentLang === "ja"
         ? "条件に一致するツールがありません。"
         : "No tools match the current filters.";
-    listEl.appendChild(p);
+  }
+  listEl.appendChild(p);
+}
+
+// 選択中の本のバナー（札・書名・件数・リンク・解除・注記・章ジャンプ）。
+function renderBookBanner(book, shownCount, displayGroups) {
+  const banner = document.getElementById("book-banner");
+  if (!banner) return;
+  if (!book) {
+    banner.hidden = true;
+    banner.innerHTML = "";
     return;
   }
+  banner.hidden = false;
+  banner.innerHTML = "";
+  const isJa = currentLang === "ja";
+  const n = bookTargetSet ? bookTargetSet.size : 0;
 
-  filtered.forEach((tool) => {
-    const card = createToolCard(tool);
-    listEl.appendChild(card);
+  // 種別の札
+  const badge = document.createElement("span");
+  badge.className = "book-banner-badge";
+  badge.textContent =
+    book.relation === "related"
+      ? isJa
+        ? "関連ツール"
+        : "Related tools (book in Japanese)"
+      : book.kind === "series"
+      ? isJa
+        ? "シリーズ"
+        : "Series"
+      : isJa
+      ? "書籍"
+      : "Book (in Japanese)";
+  banner.appendChild(badge);
+
+  // 書名
+  const h2 = document.createElement("h2");
+  h2.id = "book-banner-title";
+  h2.className = "book-banner-title";
+  h2.tabIndex = -1;
+  h2.textContent = HB.bookTitle(book, currentLang);
+  if (!isJa && book.title_ja) {
+    const sub = document.createElement("span");
+    sub.className = "book-banner-subtitle";
+    sub.lang = "ja";
+    sub.textContent = book.title_ja;
+    h2.appendChild(document.createTextNode(" "));
+    h2.appendChild(sub);
+  }
+  banner.appendChild(h2);
+
+  // メタ行（件数・リンク・解除）
+  const meta = document.createElement("div");
+  meta.className = "book-banner-meta";
+
+  const count = document.createElement("span");
+  count.className = "book-banner-count";
+  const unit = isJa ? `${n}本` : n === 1 ? "1 tool" : `${n} tools`;
+  const hit = isJa ? `該当 ${unit}` : `${unit}`;
+  count.textContent =
+    shownCount !== n
+      ? isJa
+        ? `${hit}（表示中 ${shownCount}本）`
+        : `${hit} (${shownCount} shown)`
+      : hit;
+  meta.appendChild(count);
+
+  if (book.url) {
+    const link = document.createElement("a");
+    link.className = "book-banner-link";
+    link.href = book.url;
+    link.textContent = isJa
+      ? book.url_label_ja || "紹介ページを開く"
+      : book.url_label_en || "Open book page";
+    meta.appendChild(link);
+  }
+
+  const clearBtn = document.createElement("button");
+  clearBtn.type = "button";
+  clearBtn.className = "book-banner-clear";
+  clearBtn.textContent = isJa ? "解除" : "Clear";
+  clearBtn.setAttribute("aria-label", isJa ? "書籍の絞り込みを解除" : "Clear book filter");
+  clearBtn.addEventListener("click", () => {
+    setBookFilter("", { cleared: true });
+    const sel = document.getElementById("filter-book");
+    if (sel) sel.focus();
   });
+  meta.appendChild(clearBtn);
+
+  banner.appendChild(meta);
+
+  // 注記
+  const noteText = isJa ? book.note_ja : book.note_en;
+  if (noteText) {
+    const note = document.createElement("p");
+    note.className = "book-banner-note";
+    note.textContent = noteText;
+    banner.appendChild(note);
+  }
+  const hasPages = displayGroups && book.refs
+    ? Object.keys(book.refs).some((k) =>
+        (book.refs[k] || []).some((r) => Array.isArray(r.pages) && r.pages.length)
+      )
+    : false;
+  const pagesNote = isJa ? book.pages_note_ja : book.pages_note_en;
+  if (hasPages && pagesNote) {
+    const pn = document.createElement("p");
+    pn.className = "book-banner-note book-banner-pages-note";
+    pn.textContent = pagesNote;
+    banner.appendChild(pn);
+  }
+
+  // 章ジャンプ（章が2つ以上あるときだけ。畳んでおく）
+  if (displayGroups && displayGroups.length >= 2) {
+    const details = document.createElement("details");
+    details.className = "book-jump";
+    if (window.matchMedia && window.matchMedia("(min-width: 768px)").matches) {
+      details.open = true;
+    }
+    const summary = document.createElement("summary");
+    summary.textContent = isJa
+      ? `章へ移動（${displayGroups.length}）`
+      : `Jump to section (${displayGroups.length})`;
+    details.appendChild(summary);
+    displayGroups.forEach((g) => {
+      const a = document.createElement("a");
+      a.className = "book-jump-link";
+      a.href = `#book-group-${g.key}`;
+      const label = isJa ? g.label_ja : g.label_en;
+      a.textContent = `${label}（${g.items.length}）`;
+      a.addEventListener("click", (e) => {
+        e.preventDefault();
+        const target = document.getElementById(`book-group-${g.key}`);
+        if (target) target.scrollIntoView();
+        try {
+          window.history.replaceState(null, "", "#book-group-" + g.key);
+        } catch (err) {
+          /* 無視 */
+        }
+      });
+      details.appendChild(a);
+    });
+    banner.appendChild(details);
+  }
+}
+
+function filterByBook(tool) {
+  if (!filters.book) return true;
+  if (!bookTargetSet) return true; // 本が解決できないときは絞らない
+  return bookTargetSet.has(tool.id);
 }
 
 function filterByCategory(tool) {
@@ -299,6 +678,7 @@ function filterBySearch(tool) {
   const q = filters.search;
 
   const textParts = [
+    tool.id || "",
     tool.title || "",
     tool.subtitle_ja || "",
     tool.subtitle_en || "",
@@ -311,7 +691,7 @@ function filterBySearch(tool) {
   return text.includes(q);
 }
 
-function createToolCard(tool) {
+function createToolCard(tool, book) {
   const card = document.createElement("article");
   card.className = "tool-card";
 
@@ -361,6 +741,16 @@ function createToolCard(tool) {
   meta.appendChild(diffSpan);
   meta.appendChild(catSpan);
 
+  // 本を選んでいるときだけ、その本での掲載箇所（章・ページ）を1場所1チップで出す
+  if (book && HB) {
+    HB.formatRef(book, tool.id, currentLang).forEach((txt) => {
+      const chip = document.createElement("span");
+      chip.className = "tool-book-ref";
+      chip.textContent = txt;
+      meta.appendChild(chip);
+    });
+  }
+
   const footer = document.createElement("div");
   footer.className = "tool-footer";
 
@@ -381,12 +771,14 @@ function createToolCard(tool) {
   const progressBtn = document.createElement("button");
   progressBtn.type = "button";
   progressBtn.className = "tool-progress-button";
+  progressBtn.dataset.slug = tool.slug;
   updateProgressButton(progressBtn, tool.slug);
 
   progressBtn.addEventListener("click", () => {
     const level = (getProgress(tool.slug) + 1) % 4;
     setProgress(tool.slug, level);
-    updateProgressButton(progressBtn, tool.slug);
+    // 同じツールが複数の章に出ているときは、全部のボタンを同期する
+    syncProgressButtons(tool.slug);
     renderDashboard();
   });
 
@@ -459,6 +851,19 @@ function updateProgressButton(btn, slug) {
   btn.classList.add(`progress-${level}`);
 }
 
+// 同じ slug の進捗ボタンをすべて更新する（章をまたいで同じツールが出る場合の同期）。
+function syncProgressButtons(slug) {
+  let sel;
+  try {
+    sel = `.tool-progress-button[data-slug="${CSS.escape(slug)}"]`;
+  } catch (e) {
+    sel = ".tool-progress-button";
+  }
+  document.querySelectorAll(sel).forEach((b) => {
+    if (b.dataset.slug === slug) updateProgressButton(b, slug);
+  });
+}
+
 // ---- ダッシュボード描画 ----
 
 function renderDashboard() {
@@ -514,6 +919,85 @@ function renderDashboard() {
   }
 
   renderCategoryProgress();
+  renderBookProgress();
+}
+
+// ---- 書籍・シリーズ別進捗 ----
+
+function renderBookProgress() {
+  const section = document.getElementById("dashboard-books");
+  const container = document.getElementById("book-progress-list");
+  if (!section || !container) return;
+  container.innerHTML = "";
+
+  if (!HB || !Array.isArray(books) || !books.length) {
+    section.hidden = true;
+    return;
+  }
+
+  const stats = [];
+  books
+    .filter((b) => b.dashboard !== false)
+    .forEach((b) => {
+      const target = HB.expandTargetIds(b, tools);
+      if (!target.size) return;
+      let n0 = 0,
+        n1 = 0,
+        n2 = 0,
+        n3 = 0;
+      tools.forEach((t) => {
+        if (t.hub === false || !target.has(t.id)) return;
+        const lvl = getProgress(t.slug);
+        if (lvl === 0) n0++;
+        else if (lvl === 1) n1++;
+        else if (lvl === 2) n2++;
+        else n3++;
+      });
+      stats.push({ book: b, n0, n1, n2, n3, total: target.size });
+    });
+
+  section.hidden = stats.length === 0;
+  if (!stats.length) return;
+
+  stats.forEach((s) => {
+    const item = document.createElement("div");
+    item.className = "category-progress-item book-progress-item";
+
+    const title = document.createElement("a");
+    title.className = "category-progress-title book-progress-title";
+    title.href = `?book=${encodeURIComponent(s.book.slug)}`;
+    title.textContent = HB.bookLabel(s.book, currentLang);
+    title.addEventListener("click", (e) => {
+      e.preventDefault();
+      switchTab("tab-tools");
+      setBookFilter(s.book.slug);
+      const h2 = document.getElementById("book-banner-title");
+      if (h2) h2.focus();
+    });
+
+    const bar = document.createElement("div");
+    bar.className = "category-progress-bar";
+    [["bar-n0", s.n0], ["bar-n1", s.n1], ["bar-n2", s.n2], ["bar-n3", s.n3]].forEach(
+      ([cls, v]) => {
+        const seg = document.createElement("div");
+        seg.className = cls;
+        seg.style.flex = v;
+        bar.appendChild(seg);
+      }
+    );
+
+    const detail = document.createElement("div");
+    detail.className = "category-progress-detail";
+    detail.textContent =
+      currentLang === "ja"
+        ? `未着手${s.n0} / 学習中${s.n1} / 一周完了${s.n2} / 定着済み${s.n3} （全${s.total}）`
+        : `Not started ${s.n0} / In progress ${s.n1} / First pass ${s.n2} / Mastered ${s.n3} (total ${s.total})`;
+
+    item.appendChild(title);
+    item.appendChild(bar);
+    item.appendChild(detail);
+    container.appendChild(item);
+  });
 }
 
 // ---- 円グラフ描画 ----
