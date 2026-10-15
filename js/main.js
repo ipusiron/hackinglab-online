@@ -97,6 +97,10 @@ function setupStaticUI() {
   const resetBtn = document.getElementById("reset-all-progress");
   resetBtn?.addEventListener("click", handleResetAllProgress);
 
+  // はじめ方は既定で開く（HTML）。狭い画面では初期表示を圧迫しないよう畳む
+  const startHere = document.getElementById("start-here");
+  if (startHere && window.innerWidth < 768) startHere.open = false;
+
   updateLanguageUI();
 }
 

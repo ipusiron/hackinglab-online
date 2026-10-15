@@ -200,6 +200,76 @@ body {
 }
 
 /* ================================
+ * はじめ方（Start here）
+ * ================================ */
+
+#start-here {
+  margin-bottom: 0.75rem;
+  padding: 0.6rem 0.9rem;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+}
+
+#start-here > summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #111827;
+  cursor: pointer;
+}
+
+.start-here-body {
+  padding-top: 0.3rem;
+}
+
+.start-here-lead {
+  margin: 0.2rem 0 0.5rem;
+  font-size: 0.9rem;
+  color: #374151;
+  line-height: 1.5;
+}
+
+.start-here-entries {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.start-here-entries a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.3rem 0.8rem;
+  border-radius: 0.5rem;
+  border: 1px solid #2563eb;
+  background-color: #2563eb;
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.start-here-entries a:hover {
+  background-color: #1d4ed8;
+}
+
+.start-here-note {
+  margin: 0.3rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: #6b7280;
+}
+
+.start-here-nocompare {
+  color: #5b21b6;
+  font-weight: 600;
+}
+
+/* ================================
  * 選択中の書籍・シリーズのバナー
  * ================================ */
 

@@ -72,6 +72,38 @@
         class="tab-panel"
         aria-labelledby="tab-tools-label"
       >
+        <!-- はじめ方（Start here）：比較しない独学の入口 -->
+        <details id="start-here" open>
+          <summary>
+            <span class="label-ja">はじめ方</span>
+            <span class="label-en" style="display: none">Start here</span>
+          </summary>
+          <div class="start-here-body">
+            <p class="start-here-lead">
+              <span class="label-ja">著書40冊超・執筆25年以上の著者が生成AIで作った、手を動かして学ぶセキュリティツールの独学の場です。本のサポートページから来ると、その本で使うツールだけが表示されます。</span>
+              <span class="label-en" style="display: none">A self-study place of hands-on security tools, built with generative AI by an author of 40+ books over 25+ years. Coming from a book's support page shows only the tools that book uses.</span>
+            </p>
+            <nav class="start-here-entries" aria-label="はじめ方の入口">
+              <a href="?book=security-tools-100">
+                <span class="label-ja">ツール100を見る</span>
+                <span class="label-en" style="display: none">Browse Tools 100</span>
+              </a>
+              <a href="?book=security-tools-200">
+                <span class="label-ja">ツール200を見る</span>
+                <span class="label-en" style="display: none">Browse Tools 200</span>
+              </a>
+              <a href="./">
+                <span class="label-ja">すべてのツール</span>
+                <span class="label-en" style="display: none">All tools</span>
+              </a>
+            </nav>
+            <p class="start-here-note start-here-nocompare">
+              <span class="label-ja">進捗はこの端末にだけ残ります。ランキングも、他人との比較もありません。</span>
+              <span class="label-en" style="display: none">Your progress stays on this device only. No ranking, no comparing yourself with others.</span>
+            </p>
+          </div>
+        </details>
+
         <!-- 選択中の書籍・シリーズのバナー（JSで中身を挿入） -->
         <section id="book-banner" aria-labelledby="book-banner-title" hidden></section>
         <p id="book-status" class="visually-hidden" role="status"></p>
@@ -250,6 +282,19 @@
             このサイトは「生成AIで作るセキュリティツール」プロジェクトで開発された教育向けツールを集約した、独学支援プラットフォームです。
           </p>
 
+          <h3>このサイトの方針</h3>
+          <ul>
+            <li>
+              ランク制・順位・バッジ・称号は、これからも実装しません。超初心者から初心者のうちは、他人と比べる必要がないと考えているからです。
+            </li>
+            <li>
+              各ツールの本体はGitHub Pages（<code>ipusiron.github.io/&lt;ツール&gt;/</code>）に置いています。このサイトはツールを置き換えるのではなく、探すための索引と、学ぶための文脈に徹します。
+            </li>
+            <li>
+              著者の書籍・連載とも行き来できます。本で読んだ手法をツールで確かめ、ツールから本の該当箇所へ戻れます。
+            </li>
+          </ul>
+
           <h3>サイトの使い方</h3>
           <ul>
             <li>
@@ -266,7 +311,7 @@
           <p>
             IPUSIRON（イプシロン）は、セキュリティや暗号技術を専門とする技術書著者・教育者です。
             1979年に福島県相馬市で生まれ、現在も地元に在住しています。
-            20年以上にわたり技術書を執筆し、商業誌・同人誌を含めて30冊以上の書籍を刊行してきました。
+            25年以上にわたり技術書を執筆し、商業誌・同人誌を含めて40冊超の書籍を刊行してきました。
           </p>
 
           <p>代表的な著書には以下があります。</p>
@@ -298,6 +343,25 @@
             AI".
           </p>
 
+          <h3>Our approach</h3>
+          <ul>
+            <li>
+              No ranking, scores, badges or titles — now or later. Beginners
+              have no need to compare themselves with others.
+            </li>
+            <li>
+              Each tool itself lives on GitHub Pages
+              (<code>ipusiron.github.io/&lt;tool&gt;/</code>). This site is an
+              index and a layer of learning context, not a replacement for the
+              tools.
+            </li>
+            <li>
+              It also links back and forth with the author's books and series:
+              try a technique from a book here, and jump from a tool back to the
+              relevant chapter.
+            </li>
+          </ul>
+
           <h3>How to use this site</h3>
           <ul>
             <li>
@@ -320,8 +384,8 @@
             IPUSIRON is a prolific Japanese technical author and educator
             specializing in security and cryptography. Born in 1979 in Soma
             City, Fukushima, Japan, he continues to reside in his hometown. With
-            over 20 years of experience in technical writing, he has published
-            more than 30 books on cryptography, hacking, and cybersecurity—both
+            over 25 years of experience in technical writing, he has published
+            more than 40 books on cryptography, hacking, and cybersecurity—both
             commercially and independently.
           </p>
 
