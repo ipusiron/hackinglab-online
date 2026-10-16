@@ -2,6 +2,8 @@ name: Update tools.json
 
 on:
   push:
+    branches:
+      - main
     paths:
       - 'repos.txt'
       - 'data/categories.json'
