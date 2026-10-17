@@ -119,3 +119,4 @@ https://github.com/ipusiron/hid-beam
 https://github.com/ipusiron/hex-dump-trainer
 https://github.com/ipusiron/postmirror
 https://github.com/ipusiron/codabar-lens
+https://github.com/ipusiron/hash-chain-tamper-trainer
