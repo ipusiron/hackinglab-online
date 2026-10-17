@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-10-16T17:45:10Z",
+  "generated_at": "2026-10-17T05:00:39Z",
   "tools": [
     {
       "id": "day001",
@@ -3826,6 +3826,40 @@
       ],
       "repo_url": "https://github.com/ipusiron/codabar-lens",
       "demo_url": "https://ipusiron.github.io/codabar-lens/",
+      "hub": true
+    },
+    {
+      "id": "day117",
+      "slug": "hash-chain-tamper-trainer",
+      "title": "Hash Chain Tamper Trainer",
+      "subtitle_ja": "ハッシュチェーンの改変と張り直しを学ぶ",
+      "subtitle_en": "Learn tampering and rechaining",
+      "description_ja": "架空の記録を改変し、張り直しと守りの計算からハッシュチェーンの検出範囲を確かめる教材",
+      "description_en": "Explore hash-chain detection by changing fictional records, rechaining them and comparing protections",
+      "category_ja": [
+        "ハッシュ関数",
+        "フォレンジック"
+      ],
+      "category_en": [
+        "Hash Function",
+        "Digital Forensics"
+      ],
+      "category_ids": [
+        "forensics",
+        "hash-function"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "hash-chain",
+        "sha256",
+        "hmac",
+        "digital-signature",
+        "timestamp",
+        "forensics",
+        "offline"
+      ],
+      "repo_url": "https://github.com/ipusiron/hash-chain-tamper-trainer",
+      "demo_url": "https://ipusiron.github.io/hash-chain-tamper-trainer/",
       "hub": true
     }
   ]
