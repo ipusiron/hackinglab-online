@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-10-17T05:00:39Z",
+  "generated_at": "2026-10-19T12:38:28Z",
   "tools": [
     {
       "id": "day001",
@@ -3832,9 +3832,9 @@
       "id": "day117",
       "slug": "hash-chain-tamper-trainer",
       "title": "Hash Chain Tamper Trainer",
-      "subtitle_ja": "ハッシュチェーンの改変と張り直しを学ぶ",
+      "subtitle_ja": "ハッシュチェーンの改変と作り直しを学ぶ",
       "subtitle_en": "Learn tampering and rechaining",
-      "description_ja": "架空の記録を改変し、張り直しと守りの計算からハッシュチェーンの検出範囲を確かめる教材",
+      "description_ja": "架空の記録を改変し、作り直しと守りの計算からハッシュチェーンの検出範囲を確かめる教材",
       "description_en": "Explore hash-chain detection by changing fictional records, rechaining them and comparing protections",
       "category_ja": [
         "ハッシュ関数",
@@ -3860,6 +3860,40 @@
       ],
       "repo_url": "https://github.com/ipusiron/hash-chain-tamper-trainer",
       "demo_url": "https://ipusiron.github.io/hash-chain-tamper-trainer/",
+      "hub": true
+    },
+    {
+      "id": "day118",
+      "slug": "sha256-byte-inspector",
+      "title": "SHA-256 Byte Inspector",
+      "subtitle_ja": "SHA-256に渡すバイト列と計算の中身を見る",
+      "subtitle_en": "See the bytes and every step of SHA-256",
+      "description_ja": "文字列や16進のバイト列がSHA-256に渡る形を全バイトで示し、パディングから64ラウンド・最終加算までの計算を1歩ずつ追う教材",
+      "description_en": "Shows every byte that SHA-256 receives from text or hex input and steps through padding, the message schedule, 64 rounds and the final addition",
+      "category_ja": [
+        "ハッシュ関数",
+        "現代暗号"
+      ],
+      "category_en": [
+        "Hash Function",
+        "Modern Cryptography"
+      ],
+      "category_ids": [
+        "clamodernsic-crypto",
+        "hash-function"
+      ],
+      "difficulty": 3,
+      "tags": [
+        "sha256",
+        "hash",
+        "utf-8",
+        "padding",
+        "fips-180-4",
+        "visualization",
+        "offline"
+      ],
+      "repo_url": "https://github.com/ipusiron/sha256-byte-inspector",
+      "demo_url": "https://ipusiron.github.io/sha256-byte-inspector/",
       "hub": true
     }
   ]
