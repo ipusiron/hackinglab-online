@@ -1287,12 +1287,13 @@
       "url_label_ja": "紹介ページを開く",
       "url_label_en": "Open book page",
       "relation": "introduced",
-      "note_ja": "QRコード入力の学習に使うツール（第5章）と、本書のWi-Fi HIDブリッジを独立プロジェクト化したHIDBeam（第7章）を示します。",
-      "note_en": "Shows the QR learning tool used in Ch. 5 and HIDBeam, the standalone project derived from the book's Wi-Fi HID bridge (Ch. 7).",
+      "note_ja": "QRコード入力の学習に使うツール（第5章）、本書のWi-Fi HIDブリッジを独立プロジェクト化したHIDBeam（第7章）、音響モデムによる入力の到達を確かめるツール（第9章）を示します。",
+      "note_en": "Shows the QR learning tool used in Ch. 5, HIDBeam—the standalone project derived from the book's Wi-Fi HID bridge (Ch. 7)—and a tool for checking acoustic-modem reach (Ch. 9).",
       "dashboard": true,
       "ids": [
         "day102",
-        "day113"
+        "day113",
+        "day119"
       ],
       "chapters": [
         {
@@ -1304,6 +1305,11 @@
           "key": "ch07",
           "label_ja": "第7章　Wi-Fi HIDブリッジ方式",
           "label_en": "Ch. 7: Wi-Fi HID bridge"
+        },
+        {
+          "key": "ch09",
+          "label_ja": "第9章　将来展望",
+          "label_en": "Ch. 9: Future directions"
         }
       ],
       "refs": {
@@ -1315,6 +1321,11 @@
         "day113": [
           {
             "ch": "ch07"
+          }
+        ],
+        "day119": [
+          {
+            "ch": "ch09"
           }
         ]
       }
@@ -1336,9 +1347,15 @@
       "ids": [
         "day021",
         "day074",
-        "day102"
+        "day102",
+        "day119"
       ],
       "chapters": [
+        {
+          "key": "ch02",
+          "label_ja": "第2章　エアギャップとは何か",
+          "label_en": "Ch. 2: What is an air gap"
+        },
         {
           "key": "ch05",
           "label_ja": "第5章　物理カメラ方式",
@@ -1369,6 +1386,11 @@
         "day102": [
           {
             "ch": "ch06"
+          }
+        ],
+        "day119": [
+          {
+            "ch": "ch02"
           }
         ]
       }
