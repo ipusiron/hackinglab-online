@@ -71,6 +71,11 @@
   { "id": "steganography", "ja": "ステガノグラフィー", "en": "Steganography", "aliases_en": ["steganography"] },
   { "id": "osint", "ja": "OSINT", "en": "OSINT" },
   { "id": "encoding", "ja": "符号化", "en": "Encoding", "aliases_ja": ["エンコーディング"] },
+  { "id": "email-security", "ja": "メールセキュリティ", "en": "Email Security" },
+  { "id": "deception", "ja": "欺瞞技術", "en": "Deception Technology", "aliases_ja": ["ハニーポット"], "aliases_en": ["Honeypot"] },
+  { "id": "data-representation", "ja": "データ表現", "en": "Data Representation" },
+  { "id": "visual-cryptography", "ja": "視覚暗号", "en": "Visual Cryptography" },
+  { "id": "learning-support", "ja": "学習支援", "en": "Learning Support" },
 
   { "id": "lab-experiment", "ja": "実験ツール", "en": "Lab Experiments" },
   { "id": "misc", "ja": "その他", "en": "Miscellaneous" }
