@@ -39,7 +39,7 @@
 
   { "id": "web-security", "ja": "Webセキュリティ", "en": "Web Security" },
   { "id": "authentication", "ja": "認証", "en": "Authentication" },
-  { "id": "password-analysis", "ja": "パスワード解析", "en": "Password Analysis" },
+  { "id": "password-analysis", "ja": "パスワード解析", "en": "Password Analysis", "aliases_ja": ["パスワード分析", "パスワード解読"], "aliases_en": ["Password Cracking"] },
   { "id": "network", "ja": "ネットワーク", "en": "Networking" },
   { "id": "hardening", "ja": "ハードニング", "en": "System Hardening" },
   { "id": "forensics", "ja": "フォレンジック", "en": "Digital Forensics", "aliases_ja": ["デジタルフォレンジック"], "aliases_en": ["Forensics"] },
@@ -47,17 +47,17 @@
   { "id": "reverse-engineering", "ja": "リバースエンジニアリング", "en": "Reverse Engineering" },
   { "id": "vulnerability-research", "ja": "脆弱性調査", "en": "Vulnerability Research" },
   { "id": "exploit-development", "ja": "エクスプロイト開発", "en": "Exploit Development" },
-  { "id": "cryptanalysis", "ja": "暗号解析", "en": "Cryptanalysis" },
+  { "id": "cryptanalysis", "ja": "暗号解析", "en": "Cryptanalysis", "aliases_ja": ["暗号解読"] },
 
   { "id": "social-engineering", "ja": "ソーシャルエンジニアリング", "en": "Social Engineering" },
   { "id": "communication-tech", "ja": "通信技術", "en": "Communication Technologies" },
-  { "id": "physical-security", "ja": "物理的セキュリティ", "en": "Physical Security" },
+  { "id": "physical-security", "ja": "物理的セキュリティ", "en": "Physical Security", "aliases_ja": ["物理セキュリティ"] },
   { "id": "prepper", "ja": "プレッパー", "en": "Prepping / Survival" },
   { "id": "lockpicking", "ja": "鍵開け", "en": "Lockpicking" },
   { "id": "computer-science", "ja": "コンピューターサイエンス", "en": "Computer Science" },
   { "id": "attack-detection", "ja": "攻撃検知", "en": "Attack Detection" },
   { "id": "deep-learning", "ja": "ディープラーニング", "en": "Deep Learning" },
-  { "id": "security-management", "ja": "セキュリティマネジメント", "en": "Security Management" },
+  { "id": "security-management", "ja": "セキュリティマネジメント", "en": "Security Management", "aliases_ja": ["セキュリティ管理"] },
   { "id": "cyber-ninjutsu", "ja": "サイバー忍術", "en": "Cyber Ninjutsu" },
   { "id": "mobile-hacking", "ja": "モバイルハッキング", "en": "Mobile Hacking" },
   { "id": "information-theory", "ja": "情報理論", "en": "Information Theory" },
@@ -67,6 +67,10 @@
   { "id": "design-failure-visualization", "ja": "設計ミス可視化", "en": "Design Failure Visualization" },
   { "id": "async-security", "ja": "非同期セキュリティ", "en": "Asynchronous Security" },
   { "id": "air-gap", "ja": "エアギャップ", "en": "Air Gap" },
+
+  { "id": "steganography", "ja": "ステガノグラフィー", "en": "Steganography", "aliases_en": ["steganography"] },
+  { "id": "osint", "ja": "OSINT", "en": "OSINT" },
+  { "id": "encoding", "ja": "符号化", "en": "Encoding", "aliases_ja": ["エンコーディング"] },
 
   { "id": "lab-experiment", "ja": "実験ツール", "en": "Lab Experiments" },
   { "id": "misc", "ja": "その他", "en": "Miscellaneous" }
