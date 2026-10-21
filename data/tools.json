@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-10-21T03:48:33Z",
+  "generated_at": "2026-10-21T06:45:17Z",
   "tools": [
     {
       "id": "day001",
@@ -3957,6 +3957,38 @@
       ],
       "repo_url": "https://github.com/ipusiron/airborne-tone-link",
       "demo_url": "https://ipusiron.github.io/airborne-tone-link/",
+      "hub": true
+    },
+    {
+      "id": "day121",
+      "slug": "dtmfusion",
+      "title": "DTMFusion",
+      "subtitle_ja": "電話の音を鳴らし、回路で見て、番号へ戻す",
+      "subtitle_en": "Play telephone tones, trace the circuit, recover the digits",
+      "description_ja": "DTMFの2音を透かし回路・波形・Goertzel解析で学ぶ教材。理想波とTP5089の教育用モデル、規格別の周波数偏差判定を備えます。",
+      "description_en": "Learn DTMF through transparent circuits, waveforms and Goertzel analysis, with ideal tones, a TP5089 teaching model and frequency-offset decisions.",
+      "category_ja": [
+        "通信技術",
+        "プライバシー"
+      ],
+      "category_en": [
+        "Communication Technologies",
+        "Privacy"
+      ],
+      "category_ids": [
+        "communication-tech",
+        "privacy"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "dtmf",
+        "goertzel",
+        "web-audio",
+        "side-channel",
+        "electronics"
+      ],
+      "repo_url": "https://github.com/ipusiron/dtmfusion",
+      "demo_url": "https://ipusiron.github.io/dtmfusion/",
       "hub": true
     }
   ]
