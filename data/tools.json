@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-10-21T06:45:17Z",
+  "generated_at": "2026-10-21T16:52:48Z",
   "tools": [
     {
       "id": "day001",
@@ -3989,6 +3989,37 @@
       ],
       "repo_url": "https://github.com/ipusiron/dtmfusion",
       "demo_url": "https://ipusiron.github.io/dtmfusion/",
+      "hub": true
+    },
+    {
+      "id": "day122",
+      "slug": "photon-flicker-link",
+      "title": "Photon Flicker Link",
+      "subtitle_ja": "光で短文を送り、カメラとグラフで通信を観察",
+      "subtitle_en": "Send short text through light and observe the camera signal",
+      "description_ja": "明暗の対と専用クロックで1ビットずつ送り、カメラで最大8バイトの文字列へ復元する教材。時系列グラフ、ブロック訂正、ローカル動画の解析に対応します。",
+      "description_en": "A serial optical link using grayscale pairs and a separate clock, with block correction, camera traces and local video analysis for up to 8 UTF-8 bytes.",
+      "category_ja": [
+        "プライバシー",
+        "光学監視"
+      ],
+      "category_en": [
+        "Privacy",
+        "Optical Surveillance"
+      ],
+      "category_ids": [
+        "privacy"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "optical-channel",
+        "visible-light-communication",
+        "air-gap",
+        "camera",
+        "signal-processing"
+      ],
+      "repo_url": "https://github.com/ipusiron/photon-flicker-link",
+      "demo_url": "https://ipusiron.github.io/photon-flicker-link/",
       "hub": true
     }
   ]
