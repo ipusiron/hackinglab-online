@@ -121,3 +121,5 @@ https://github.com/ipusiron/postmirror
 https://github.com/ipusiron/codabar-lens
 https://github.com/ipusiron/hash-chain-tamper-trainer
 https://github.com/ipusiron/sha256-byte-inspector
+https://github.com/ipusiron/ultrasonic-reach-meter
+https://github.com/ipusiron/airborne-tone-link
