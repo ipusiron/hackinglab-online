@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-10-19T12:38:28Z",
+  "generated_at": "2026-10-21T03:48:33Z",
   "tools": [
     {
       "id": "day001",
@@ -3894,6 +3894,69 @@
       ],
       "repo_url": "https://github.com/ipusiron/sha256-byte-inspector",
       "demo_url": "https://ipusiron.github.io/sha256-byte-inspector/",
+      "hub": true
+    },
+    {
+      "id": "day119",
+      "slug": "ultrasonic-reach-meter",
+      "title": "Ultrasonic Reach Meter",
+      "subtitle_ja": "端末の到達と耳の上限を分けて確かめる",
+      "subtitle_en": "Separate device reach from your hearing limit",
+      "description_ja": "スピーカーとマイクの14〜21.5kHzでの到達と、自分の耳で聞こえた最高周波数を分けて確かめる教材",
+      "description_en": "Explore speaker-to-microphone reach at 14–21.5kHz separately from the highest frequency you hear",
+      "category_ja": [
+        "プライバシー",
+        "音響監視"
+      ],
+      "category_en": [
+        "Privacy",
+        "Acoustic Surveillance"
+      ],
+      "category_ids": [
+        "privacy"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "ultrasound",
+        "privacy",
+        "web-audio",
+        "microphone",
+        "hearing",
+        "offline"
+      ],
+      "repo_url": "https://github.com/ipusiron/ultrasonic-reach-meter",
+      "demo_url": "https://ipusiron.github.io/ultrasonic-reach-meter/",
+      "hub": true
+    },
+    {
+      "id": "day120",
+      "slug": "airborne-tone-link",
+      "title": "Airborne Tone Link",
+      "subtitle_ja": "音で短文を送り、通信路を可視化",
+      "subtitle_en": "Send short text through sound and visualize the channel",
+      "description_ja": "可聴・近超音波の2トーンで最大256バイトを送受信する教材。送受信のグラフを並べ、音の長さと回数をそろえて、通信の成立と限界を確かめます。",
+      "description_en": "An educational two-tone modem with transmit/receive spectrograms, independent duration and repeat controls, CRC-8 and local WAV decoding.",
+      "category_ja": [
+        "プライバシー",
+        "音響監視"
+      ],
+      "category_en": [
+        "Privacy",
+        "Acoustic Surveillance"
+      ],
+      "category_ids": [
+        "privacy"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "acoustic-channel",
+        "mfsk",
+        "spectrogram",
+        "air-gap",
+        "web-audio"
+      ],
+      "repo_url": "https://github.com/ipusiron/airborne-tone-link",
+      "demo_url": "https://ipusiron.github.io/airborne-tone-link/",
       "hub": true
     }
   ]
