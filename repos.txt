@@ -123,3 +123,4 @@ https://github.com/ipusiron/hash-chain-tamper-trainer
 https://github.com/ipusiron/sha256-byte-inspector
 https://github.com/ipusiron/ultrasonic-reach-meter
 https://github.com/ipusiron/airborne-tone-link
+https://github.com/ipusiron/dtmfusion
