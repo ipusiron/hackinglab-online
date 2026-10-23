@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-10-21T16:52:48Z",
+  "generated_at": "2026-10-23T03:17:24Z",
   "tools": [
     {
       "id": "day001",
@@ -4020,6 +4020,72 @@
       ],
       "repo_url": "https://github.com/ipusiron/photon-flicker-link",
       "demo_url": "https://ipusiron.github.io/photon-flicker-link/",
+      "hub": true
+    },
+    {
+      "id": "day123",
+      "slug": "shamir-sharing-cipherlab",
+      "title": "ShamirSharing CipherLab",
+      "subtitle_ja": "座標平面とバイトで追うシャミアの秘密分散",
+      "subtitle_en": "Shamir secret sharing with coordinate planes and bytes",
+      "description_ja": "GF(p)の座標平面とGF(2⁸)のバイト表で、シャミアの(k,n)しきい値法を学ぶ教材。",
+      "description_en": "Explore Shamir (k,n) threshold sharing with coordinate planes, byte tables, and implementation pitfalls.",
+      "category_ja": [
+        "現代暗号",
+        "情報理論"
+      ],
+      "category_en": [
+        "Modern Cryptography",
+        "Information Theory"
+      ],
+      "category_ids": [
+        "clamodernsic-crypto",
+        "information-theory"
+      ],
+      "difficulty": 3,
+      "tags": [
+        "shamir",
+        "secret-sharing",
+        "finite-field",
+        "lagrange-interpolation"
+      ],
+      "repo_url": "https://github.com/ipusiron/shamir-sharing-cipherlab",
+      "demo_url": "https://ipusiron.github.io/shamir-sharing-cipherlab/",
+      "hub": true
+    },
+    {
+      "id": "day124",
+      "slug": "scatter-seeds",
+      "title": "Scatter Seeds",
+      "subtitle_ja": "秘密を紙の共有に分けて備える",
+      "subtitle_en": "Split a secret into paper shares for recovery",
+      "description_ja": "シャミアの秘密分散で秘密を分け、全組を検査して証書として印刷し、QRまたは文字列から復元するツール。",
+      "description_en": "Split secrets with Shamir sharing, verify every threshold subset, print certificates, and restore by QR or text.",
+      "category_ja": [
+        "プレッパー",
+        "現代暗号",
+        "物理的セキュリティ"
+      ],
+      "category_en": [
+        "Prepping / Survival",
+        "Modern Cryptography",
+        "Physical Security"
+      ],
+      "category_ids": [
+        "clamodernsic-crypto",
+        "physical-security",
+        "prepper"
+      ],
+      "difficulty": 3,
+      "tags": [
+        "shamir",
+        "secret-sharing",
+        "bip39",
+        "paper-backup",
+        "qr-code"
+      ],
+      "repo_url": "https://github.com/ipusiron/scatter-seeds",
+      "demo_url": "https://ipusiron.github.io/scatter-seeds/",
       "hub": true
     }
   ]
