@@ -1428,8 +1428,8 @@
       "chapters": [
         {
           "key": "sec09-2",
-          "label_ja": "9.2節",
-          "label_en": "Section 9.2"
+          "label_ja": "9.2節　秘密分散共有法",
+          "label_en": "Section 9.2: Secret sharing"
         }
       ],
       "refs": {
