@@ -1408,6 +1408,42 @@
       }
     },
     {
+      "slug": "ango-gijutsu-no-subete",
+      "kind": "book",
+      "title_ja": "暗号技術のすべて",
+      "title_en": "Ango Gijutsu no Subete (All About Cryptographic Technology)",
+      "label_ja": "暗号技術のすべて",
+      "label_en": "All About Crypto",
+      "url": "https://akademeia.info/?page_id=157",
+      "url_label_ja": "紹介ページを開く",
+      "url_label_en": "Open book page",
+      "relation": "related",
+      "note_ja": "本書にツールは登場しません。各節の話題を手を動かして試せるツールを著者が選び、節を添えています。",
+      "note_en": "This book does not mention any of these tools. The author picked tools for trying out each section's topic; the section is shown on each card.",
+      "pages_note_ja": "ページ番号は紙版（翔泳社、2017年8月）のものです。",
+      "pages_note_en": "Page numbers refer to the print edition (Shoeisha, August 2017).",
+      "ids": [
+        "day123"
+      ],
+      "chapters": [
+        {
+          "key": "sec09-2",
+          "label_ja": "9.2節",
+          "label_en": "Section 9.2"
+        }
+      ],
+      "refs": {
+        "day123": [
+          {
+            "ch": "sec09-2",
+            "pages": [
+              "652-661"
+            ]
+          }
+        ]
+      }
+    },
+    {
       "slug": "security-tools-100",
       "kind": "series",
       "title_ja": "「生成AIで作るセキュリティツール100」プロジェクト",
