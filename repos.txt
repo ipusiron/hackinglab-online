@@ -125,3 +125,5 @@ https://github.com/ipusiron/ultrasonic-reach-meter
 https://github.com/ipusiron/airborne-tone-link
 https://github.com/ipusiron/dtmfusion
 https://github.com/ipusiron/photon-flicker-link
+https://github.com/ipusiron/shamir-sharing-cipherlab
+https://github.com/ipusiron/scatter-seeds
