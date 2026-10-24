@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-10-23T03:17:24Z",
+  "generated_at": "2026-10-24T05:16:02Z",
   "tools": [
     {
       "id": "day001",
@@ -4086,6 +4086,38 @@
       ],
       "repo_url": "https://github.com/ipusiron/scatter-seeds",
       "demo_url": "https://ipusiron.github.io/scatter-seeds/",
+      "hub": true
+    },
+    {
+      "id": "day125",
+      "slug": "overlay-qr-shares",
+      "title": "Overlay QR Shares",
+      "subtitle_ja": "紙を重ねて戻す秘密のQR",
+      "subtitle_en": "Recover a secret QR by overlaying printed shares",
+      "description_ja": "秘密のQRを視覚暗号で2〜5枚に分け、必要な枚数を重ねてカメラで読み取る、通信不要のツール。",
+      "description_en": "Split a secret QR into 2–5 visual cryptography shares and read the required overlay with a camera, without network requests.",
+      "category_ja": [
+        "QRコード",
+        "プレッパー"
+      ],
+      "category_en": [
+        "QR Code",
+        "Prepping / Survival"
+      ],
+      "category_ids": [
+        "prepper",
+        "qr-code"
+      ],
+      "difficulty": 3,
+      "tags": [
+        "visual-cryptography",
+        "qr-code",
+        "secret-sharing",
+        "paper-backup",
+        "offline"
+      ],
+      "repo_url": "https://github.com/ipusiron/overlay-qr-shares",
+      "demo_url": "https://ipusiron.github.io/overlay-qr-shares/",
       "hub": true
     }
   ]
