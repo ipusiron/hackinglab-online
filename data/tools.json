@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-10-24T05:16:02Z",
+  "generated_at": "2026-10-29T03:40:38Z",
   "tools": [
     {
       "id": "day001",
@@ -343,7 +343,9 @@
         "OSINT",
         "Geospatial"
       ],
-      "category_ids": [],
+      "category_ids": [
+        "osint"
+      ],
       "difficulty": 1,
       "tags": [
         "OpenStreetMap",
@@ -406,7 +408,8 @@
         "Forensics"
       ],
       "category_ids": [
-        "forensics"
+        "forensics",
+        "osint"
       ],
       "difficulty": 3,
       "tags": [
@@ -638,7 +641,9 @@
         "OSINT",
         "Google Hacking"
       ],
-      "category_ids": [],
+      "category_ids": [
+        "osint"
+      ],
       "difficulty": 1,
       "tags": [
         "google-dork",
@@ -798,7 +803,9 @@
         "Morse Code",
         "Encoding"
       ],
-      "category_ids": [],
+      "category_ids": [
+        "encoding"
+      ],
       "difficulty": 2,
       "tags": [
         "binary-tree",
@@ -1111,7 +1118,9 @@
       "category_en": [
         "Email Security"
       ],
-      "category_ids": [],
+      "category_ids": [
+        "email-security"
+      ],
       "difficulty": 2,
       "tags": [
         "SPF",
@@ -1144,7 +1153,8 @@
         "concealment-cipher"
       ],
       "category_ids": [
-        "classic-crypto"
+        "classic-crypto",
+        "steganography"
       ],
       "difficulty": 2,
       "tags": [
@@ -1177,7 +1187,8 @@
         "Encoding"
       ],
       "category_ids": [
-        "clamodernsic-crypto"
+        "clamodernsic-crypto",
+        "encoding"
       ],
       "difficulty": 1,
       "tags": [
@@ -1305,6 +1316,7 @@
         "Acoustic Surveillance"
       ],
       "category_ids": [
+        "acoustic-surveillance",
         "physical-security"
       ],
       "difficulty": 3,
@@ -1544,7 +1556,8 @@
         "Security Analysis"
       ],
       "category_ids": [
-        "authentication"
+        "authentication",
+        "password-analysis"
       ],
       "difficulty": 4,
       "tags": [
@@ -1678,7 +1691,9 @@
         "Encoding",
         "Representation Conversion"
       ],
-      "category_ids": [],
+      "category_ids": [
+        "encoding"
+      ],
       "difficulty": 3,
       "tags": [
         "base32",
@@ -1747,7 +1762,9 @@
         "Intrusion Detection",
         "Honeypot"
       ],
-      "category_ids": [],
+      "category_ids": [
+        "deception"
+      ],
       "difficulty": 4,
       "tags": [
         "canary",
@@ -1778,7 +1795,8 @@
         "Steganography"
       ],
       "category_ids": [
-        "classic-crypto"
+        "classic-crypto",
+        "steganography"
       ],
       "difficulty": 2,
       "tags": [
@@ -2134,7 +2152,9 @@
       "category_en": [
         "Data Representation"
       ],
-      "category_ids": [],
+      "category_ids": [
+        "data-representation"
+      ],
       "difficulty": 2,
       "tags": [
         "gray-code",
@@ -2230,7 +2250,8 @@
         "Steganography"
       ],
       "category_ids": [
-        "classic-crypto"
+        "classic-crypto",
+        "steganography"
       ],
       "difficulty": 1,
       "tags": [
@@ -2259,7 +2280,9 @@
       "category_en": [
         "Visual Cryptography"
       ],
-      "category_ids": [],
+      "category_ids": [
+        "visual-cryptography"
+      ],
       "difficulty": 3,
       "tags": [
         "visual-cryptography",
@@ -2455,6 +2478,7 @@
       ],
       "category_ids": [
         "classic-crypto",
+        "encoding",
         "substitution-cipher"
       ],
       "difficulty": 1,
@@ -2563,7 +2587,9 @@
         "Text Conversion",
         "Encoding"
       ],
-      "category_ids": [],
+      "category_ids": [
+        "encoding"
+      ],
       "difficulty": 1,
       "tags": [
         "leet",
@@ -2793,7 +2819,8 @@
         "Steganography"
       ],
       "category_ids": [
-        "classic-crypto"
+        "classic-crypto",
+        "steganography"
       ],
       "difficulty": 1,
       "tags": [
@@ -2928,7 +2955,8 @@
         "OSINT"
       ],
       "category_ids": [
-        "forensics"
+        "forensics",
+        "osint"
       ],
       "difficulty": 2,
       "tags": [
@@ -2961,7 +2989,8 @@
         "Forensics"
       ],
       "category_ids": [
-        "forensics"
+        "forensics",
+        "osint"
       ],
       "difficulty": 2,
       "tags": [
@@ -3427,7 +3456,9 @@
         "Word Puzzle",
         "steganography"
       ],
-      "category_ids": [],
+      "category_ids": [
+        "steganography"
+      ],
       "difficulty": 1,
       "tags": [
         "steganography",
@@ -3650,7 +3681,9 @@
         "Learning Support",
         "Analysis Aid"
       ],
-      "category_ids": [],
+      "category_ids": [
+        "learning-support"
+      ],
       "difficulty": 1,
       "tags": [
         "softmax",
@@ -3694,7 +3727,7 @@
         "security-design"
       ],
       "repo_url": "https://github.com/ipusiron/async-rpc-failure-simulator",
-      "demo_url": "https://ipusiron.github.io/async-rpc-failure-simulator/",
+      "demo_url": "",
       "hub": true
     },
     {
@@ -3913,6 +3946,7 @@
         "Acoustic Surveillance"
       ],
       "category_ids": [
+        "acoustic-surveillance",
         "privacy"
       ],
       "difficulty": 2,
@@ -3945,6 +3979,7 @@
         "Acoustic Surveillance"
       ],
       "category_ids": [
+        "acoustic-surveillance",
         "privacy"
       ],
       "difficulty": 2,
@@ -4008,6 +4043,7 @@
         "Optical Surveillance"
       ],
       "category_ids": [
+        "optical-surveillance",
         "privacy"
       ],
       "difficulty": 2,
@@ -4094,8 +4130,8 @@
       "title": "Overlay QR Shares",
       "subtitle_ja": "紙を重ねて戻す秘密のQR",
       "subtitle_en": "Recover a secret QR by overlaying printed shares",
-      "description_ja": "秘密のQRを視覚暗号で2〜5枚に分け、必要な枚数を重ねてカメラで読み取る、通信不要のツール。",
-      "description_en": "Split a secret QR into 2–5 visual cryptography shares and read the required overlay with a camera, without network requests.",
+      "description_ja": "秘密のQRを視覚暗号で2〜5枚に分け、必要枚数を重ねてカメラで復元するツール。分割と復元はブラウザー内で処理。",
+      "description_en": "Split a secret QR into 2–5 visual cryptography shares and read the required overlay with a camera. Splitting and recovery run in your browser.",
       "category_ja": [
         "QRコード",
         "プレッパー"
@@ -4118,6 +4154,38 @@
       ],
       "repo_url": "https://github.com/ipusiron/overlay-qr-shares",
       "demo_url": "https://ipusiron.github.io/overlay-qr-shares/",
+      "hub": true
+    },
+    {
+      "id": "day126",
+      "slug": "blakley-sharing-cipherlab",
+      "title": "BlakleySharing CipherLab",
+      "subtitle_ja": "超平面の交点と秘密候補で学ぶBlakleyの秘密分散",
+      "subtitle_en": "Learn Blakley secret sharing through intersections and candidate secrets",
+      "description_ja": "有限体の直線・平面・行列で、Blakleyの秘密分散、Shamirとの対応、乱数と検査の条件を学ぶ教材。",
+      "description_en": "Explore Blakley secret sharing with finite-field geometry, Shamir comparisons, randomness and validation experiments.",
+      "category_ja": [
+        "現代暗号",
+        "情報理論"
+      ],
+      "category_en": [
+        "Modern Cryptography",
+        "Information Theory"
+      ],
+      "category_ids": [
+        "clamodernsic-crypto",
+        "information-theory"
+      ],
+      "difficulty": 3,
+      "tags": [
+        "blakley",
+        "secret-sharing",
+        "finite-field",
+        "linear-algebra",
+        "cryptography-education"
+      ],
+      "repo_url": "https://github.com/ipusiron/blakley-sharing-cipherlab",
+      "demo_url": "https://ipusiron.github.io/blakley-sharing-cipherlab/",
       "hub": true
     }
   ]
