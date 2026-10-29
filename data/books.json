@@ -1287,14 +1287,15 @@
       "url_label_ja": "紹介ページを開く",
       "url_label_en": "Open book page",
       "relation": "introduced",
-      "note_ja": "QRコード入力の学習に使うツール（第5章）、本書のWi-Fi HIDブリッジを独立プロジェクト化したHIDBeam（第7章）、音響モデムによる入力の到達を確かめるツール（第9章）を示します。",
-      "note_en": "Shows the QR learning tool used in Ch. 5, HIDBeam—the standalone project derived from the book's Wi-Fi HID bridge (Ch. 7)—and a tool for checking acoustic-modem reach (Ch. 9).",
+      "note_ja": "QRコード入力の学習に使うツール（第5章）、本書のWi-Fi HIDブリッジを独立プロジェクト化したHIDBeam（第7章）、音や光の経路で入力が届くかを確かめるツール（第9章）を示します。",
+      "note_en": "Shows the QR learning tool used in Ch. 5, HIDBeam—the standalone project derived from the book's Wi-Fi HID bridge (Ch. 7)—and tools for checking whether input can reach over acoustic and optical paths (Ch. 9).",
       "dashboard": true,
       "ids": [
         "day102",
         "day113",
         "day119",
-        "day120"
+        "day120",
+        "day122"
       ],
       "chapters": [
         {
@@ -1333,6 +1334,11 @@
           {
             "ch": "ch09"
           }
+        ],
+        "day122": [
+          {
+            "ch": "ch09"
+          }
         ]
       }
     },
@@ -1355,7 +1361,8 @@
         "day074",
         "day102",
         "day119",
-        "day120"
+        "day120",
+        "day122"
       ],
       "chapters": [
         {
@@ -1401,6 +1408,11 @@
           }
         ],
         "day120": [
+          {
+            "ch": "ch02"
+          }
+        ],
+        "day122": [
           {
             "ch": "ch02"
           }
