@@ -235,9 +235,9 @@ def main() -> int:
         if y is None:
             continue
 
-        # YAMLに repo_url/demo_url がなければここで補完も可能
+        # YAMLに repo_url がなければ補完する。demo_url は補完しない
+        # （空ならハブはデモボタンを出さない。Pages のないツールで404を出さないため）
         y.setdefault("repo_url", f"https://github.com/{owner}/{repo}")
-        y.setdefault("demo_url", f"https://{owner}.github.io/{repo}/")
 
         tool_entry = build_tool_entry(y, cat_maps)
 
