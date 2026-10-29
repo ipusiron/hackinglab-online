@@ -9,9 +9,9 @@
   {
     "id": "clamodernsic-crypto",
     "ja": "現代暗号",
-    "en": "Mordern cryptography",
+    "en": "Modern cryptography",
     "aliases_ja": ["現代的暗号"],
-    "aliases_en": ["Mordern Cryptography", "Mordern Cipher", "mordern crypto"]
+    "aliases_en": ["Modern Cryptography", "Mordern cryptography", "Mordern Cryptography", "Mordern Cipher", "mordern crypto"]
   },
 
   {
@@ -77,6 +77,7 @@
   { "id": "visual-cryptography", "ja": "視覚暗号", "en": "Visual Cryptography" },
   { "id": "learning-support", "ja": "学習支援", "en": "Learning Support" },
   { "id": "acoustic-surveillance", "ja": "音響監視", "en": "Acoustic Surveillance" },
+  { "id": "optical-surveillance", "ja": "光学監視", "en": "Optical Surveillance" },
 
   { "id": "lab-experiment", "ja": "実験ツール", "en": "Lab Experiments" },
   { "id": "misc", "ja": "その他", "en": "Miscellaneous" }
