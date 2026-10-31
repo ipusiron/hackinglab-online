@@ -129,3 +129,4 @@ https://github.com/ipusiron/shamir-sharing-cipherlab
 https://github.com/ipusiron/scatter-seeds
 https://github.com/ipusiron/overlay-qr-shares
 https://github.com/ipusiron/blakley-sharing-cipherlab
+https://github.com/ipusiron/account-domino-mapper
