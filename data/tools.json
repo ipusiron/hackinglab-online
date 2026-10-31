@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-10-29T03:40:38Z",
+  "generated_at": "2026-10-31T17:00:03Z",
   "tools": [
     {
       "id": "day001",
@@ -4186,6 +4186,41 @@
       ],
       "repo_url": "https://github.com/ipusiron/blakley-sharing-cipherlab",
       "demo_url": "https://ipusiron.github.io/blakley-sharing-cipherlab/",
+      "hub": true
+    },
+    {
+      "id": "day127",
+      "slug": "account-domino-mapper",
+      "title": "Account Domino Mapper",
+      "subtitle_ja": "アカウントの連鎖と閉め出しを比べる教材",
+      "subtitle_en": "Account takeover chains and lockouts, side by side",
+      "description_ja": "架空の3人のアカウントを、ログインと復旧の入口（かつ・または）の地図で表し、漏えい・SIMスワップ・メールの乗っ取り・窓口のなりすましの4枚のカードで、倒れていく順を段ごとに再生する教材。スマホ・電話番号・メールを失ったときの閉め出しと、入口を1つ変える1手（スマホを足す・条件を付け替える・復旧の入口を外す）の前後を並べて比べる。本物の構成は入れず、外部へは何も送らない。日英対応。",
+      "description_en": "A teaching aid that maps three fictional people's accounts by their log-in and recovery entrances (AND/OR) and replays, step by step, how a breach, a SIM swap, an email takeover or a help-desk impersonation topples them. It shows which accounts the owner is locked out of after losing the phone, the number or an email account, and compares before and after one change to a single entrance: adding the phone, replacing one requirement, or removing a recovery entrance. No real account details; nothing is sent anywhere. Japanese and English UI.",
+      "category_ja": [
+        "認証",
+        "セキュリティマネジメント"
+      ],
+      "category_en": [
+        "Authentication",
+        "Security Management"
+      ],
+      "category_ids": [
+        "authentication",
+        "security-management"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "account-recovery",
+        "account-takeover",
+        "password-reuse",
+        "sim-swap",
+        "multi-factor-authentication",
+        "lockout",
+        "education",
+        "visualization"
+      ],
+      "repo_url": "https://github.com/ipusiron/account-domino-mapper",
+      "demo_url": "https://ipusiron.github.io/account-domino-mapper/",
       "hub": true
     }
   ]
