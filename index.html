@@ -4,6 +4,10 @@
     <meta charset="UTF-8" />
     <title>ハッキング・ラボ・オンライン | Hacking Lab Online</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'"
+    />
     
     <!-- Favicon -->
     <link rel="icon" href="./favicon/HLO.ico" sizes="any">
@@ -18,19 +22,17 @@
     <header id="site-header">
       <div class="header-inner">
         <div class="site-title-block">
-          <div class="site-title">
-            <span id="site-title-ja">ハッキング・ラボ・オンライン</span>
-            <span id="site-title-en" style="display: none"
-              >Hacking Lab Online</span
-            >
-          </div>
+          <h1 class="site-title">
+            <span id="site-title-ja" class="label-ja">ハッキング・ラボ・オンライン</span>
+            <span id="site-title-en" class="label-en">Hacking Lab Online</span>
+          </h1>
           <div class="site-subtitle">
             <span class="label-ja">
               「生成AIで作るセキュリティツール」プロジェクトから生まれたツールを基盤とした独学プラットフォーム
             </span>
-            <span class="label-en" style="display: none">
-              A self-learning platform built on the tools born from the “100
-              Security Tools with Generative AI” project
+            <span class="label-en">
+              A self-learning platform built on the tools born from the “Security
+              Tools with Generative AI” project
             </span>
           </div>
         </div>
@@ -38,30 +40,53 @@
         <div class="header-controls">
           <button type="button" id="lang-ja" data-lang="ja">JA</button>
           <button type="button" id="lang-en" data-lang="en">EN</button>
-          <button type="button" id="help-button" class="help-button">?</button>
+          <button
+            type="button"
+            id="help-button"
+            class="help-button"
+            aria-haspopup="dialog"
+            aria-controls="help-dialog"
+            aria-label="ヘルプ"
+            data-aria-label-ja="ヘルプ"
+            data-aria-label-en="Help"
+          >?</button>
         </div>
       </div>
     </header>
 
     <!-- タブナビゲーション -->
-    <nav id="tab-nav">
+    <nav
+      id="tab-nav"
+      role="tablist"
+      aria-label="表示の切り替え"
+      data-aria-label-ja="表示の切り替え"
+      data-aria-label-en="Views"
+    >
       <button
         type="button"
         class="tab-button"
+        id="tab-tools-label"
+        role="tab"
+        aria-controls="tab-tools"
         data-tab-target="tab-tools"
         aria-selected="true"
+        tabindex="0"
       >
         <span class="label-ja">ツール一覧</span>
-        <span class="label-en" style="display: none">Tools</span>
+        <span class="label-en">Tools</span>
       </button>
       <button
         type="button"
         class="tab-button"
+        id="tab-dashboard-label"
+        role="tab"
+        aria-controls="tab-dashboard"
         data-tab-target="tab-dashboard"
         aria-selected="false"
+        tabindex="-1"
       >
         <span class="label-ja">学習ダッシュボード</span>
-        <span class="label-en" style="display: none">Dashboard</span>
+        <span class="label-en">Dashboard</span>
       </button>
     </nav>
 
@@ -70,36 +95,42 @@
       <section
         id="tab-tools"
         class="tab-panel"
+        role="tabpanel"
         aria-labelledby="tab-tools-label"
       >
         <!-- はじめ方（Start here）：比較しない独学の入口 -->
         <details id="start-here" open>
           <summary>
             <span class="label-ja">はじめ方</span>
-            <span class="label-en" style="display: none">Start here</span>
+            <span class="label-en">Start here</span>
           </summary>
           <div class="start-here-body">
             <p class="start-here-lead">
               <span class="label-ja">著書40冊超・執筆25年以上の著者が生成AIで作った、手を動かして学ぶセキュリティツールの独学の場です。本のサポートページから来ると、その本で使うツールだけが表示されます。</span>
-              <span class="label-en" style="display: none">A self-study place of hands-on security tools, built with generative AI by an author of 40+ books over 25+ years. Coming from a book's support page shows only the tools that book uses.</span>
+              <span class="label-en">A self-study place of hands-on security tools, built with generative AI by an author of 40+ books over 25+ years. Coming from a book's support page shows only the tools that book uses.</span>
             </p>
-            <nav class="start-here-entries" aria-label="はじめ方の入口">
+            <nav
+              class="start-here-entries"
+              aria-label="はじめ方の入口"
+              data-aria-label-ja="はじめ方の入口"
+              data-aria-label-en="Ways to start"
+            >
               <a href="?book=security-tools-100">
                 <span class="label-ja">ツール100を見る</span>
-                <span class="label-en" style="display: none">Browse Tools 100</span>
+                <span class="label-en">Browse Tools 100</span>
               </a>
               <a href="?book=security-tools-200">
                 <span class="label-ja">ツール200を見る</span>
-                <span class="label-en" style="display: none">Browse Tools 200</span>
+                <span class="label-en">Browse Tools 200</span>
               </a>
               <a href="./">
                 <span class="label-ja">すべてのツール</span>
-                <span class="label-en" style="display: none">All tools</span>
+                <span class="label-en">All tools</span>
               </a>
             </nav>
             <p class="start-here-note start-here-nocompare">
               <span class="label-ja">進捗はこの端末にだけ残ります。ランキングも、他人との比較もありません。</span>
-              <span class="label-en" style="display: none">Your progress stays on this device only. No ranking, no comparing yourself with others.</span>
+              <span class="label-en">Your progress stays on this device only. No ranking, no comparing yourself with others.</span>
             </p>
           </div>
         </details>
@@ -114,7 +145,7 @@
           <div class="filter-group" id="filter-book-group" hidden>
             <label for="filter-book">
               <span class="label-ja">書籍・シリーズ</span>
-              <span class="label-en" style="display: none">Books &amp; series</span>
+              <span class="label-en">Books &amp; series</span>
             </label>
             <select id="filter-book">
               <!-- JSで "すべて / All" + books.json から選択肢を生成 -->
@@ -125,7 +156,7 @@
           <div class="filter-group">
             <label for="filter-category">
               <span class="label-ja">カテゴリ</span>
-              <span class="label-en" style="display: none">Category</span>
+              <span class="label-en">Category</span>
             </label>
             <select id="filter-category">
               <!-- JSで "すべて / All" + categories.json から選択肢を生成 -->
@@ -136,7 +167,7 @@
           <div class="filter-group">
             <label for="filter-progress">
               <span class="label-ja">進捗</span>
-              <span class="label-en" style="display: none">Progress</span>
+              <span class="label-en">Progress</span>
             </label>
             <select id="filter-progress">
               <!-- JSで「すべて / 未着手 / 学習中 / 一周完了 / 定着済み」を生成 -->
@@ -147,7 +178,7 @@
           <div class="filter-group filter-search">
             <label for="filter-search-input" class="visually-hidden">
               <span class="label-ja">検索</span>
-              <span class="label-en" style="display: none">Search</span>
+              <span class="label-en">Search</span>
             </label>
             <input
               type="search"
@@ -167,6 +198,7 @@
       <section
         id="tab-dashboard"
         class="tab-panel"
+        role="tabpanel"
         aria-labelledby="tab-dashboard-label"
         hidden
       >
@@ -175,7 +207,7 @@
           <h2>
             <span class="label-ja">全体サマリー
             </span>
-            <span class="label-en" style="display: none">Overall summary</span>
+            <span class="label-en">Overall summary</span>
           </h2>
 
           <!-- 数値サマリー -->
@@ -198,7 +230,7 @@
           <div id="share-controls">
             <button type="button" id="share-on-x">
               <span class="label-ja">Xで進捗をシェア</span>
-              <span class="label-en" style="display: none"
+              <span class="label-en"
                 >Share progress on X</span
               >
             </button>
@@ -209,7 +241,7 @@
         <section id="dashboard-categories">
           <h2>
             <span class="label-ja">カテゴリ別進捗</span>
-            <span class="label-en" style="display: none"
+            <span class="label-en"
               >Progress by category</span
             >
           </h2>
@@ -223,7 +255,7 @@
         <section id="dashboard-books" hidden>
           <h2>
             <span class="label-ja">書籍・シリーズ別進捗</span>
-            <span class="label-en" style="display: none"
+            <span class="label-en"
               >Progress by book &amp; series</span
             >
           </h2>
@@ -237,7 +269,7 @@
         <section id="dashboard-reset">
           <button type="button" id="reset-all-progress">
             <span class="label-ja">すべて未着手にリセット</span>
-            <span class="label-en" style="display: none"
+            <span class="label-en"
               >Reset all to "Not started"</span
             >
           </button>
@@ -250,7 +282,7 @@
       <div class="footer-inner">
         <div id="data-updated">
           <span class="label-ja">データ更新:</span>
-          <span class="label-en" style="display: none">Last data update:</span>
+          <span class="label-en">Last data update:</span>
           <span id="last-updated-value">-</span>
         </div>
 
@@ -258,8 +290,10 @@
           <a
             href="https://github.com/ipusiron/hackinglab-online"
             target="_blank"
+            rel="noopener"
           >
-            GitHub リポジトリ
+            <span class="label-ja">GitHub リポジトリ</span>
+            <span class="label-en">GitHub repository</span>
           </a>
         </div>
 
@@ -271,11 +305,27 @@
 
     <!-- ヘルプモーダル -->
     <div id="help-modal" class="modal" hidden>
-      <div class="modal-content">
-        <button id="help-close" class="modal-close">×</button>
+      <div
+        id="help-dialog"
+        class="modal-content"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="help-title"
+        tabindex="-1"
+      >
+        <button
+          type="button"
+          id="help-close"
+          class="modal-close"
+          aria-label="閉じる"
+          data-aria-label-ja="閉じる"
+          data-aria-label-en="Close"
+        >×</button>
 
-        <h2 class="label-ja">ヘルプ</h2>
-        <h2 class="label-en" style="display: none">Help</h2>
+        <h2 id="help-title">
+          <span class="label-ja">ヘルプ</span>
+          <span class="label-en">Help</span>
+        </h2>
 
         <div class="label-ja">
           <p>
@@ -336,11 +386,10 @@
           </p>
         </div>
 
-        <div class="label-en" style="display: none">
+        <div class="label-en">
           <p>
             This site is a self-learning platform built on educational tools
-            created in the project "100 Security Tools Developed with Generative
-            AI".
+            created in the project "Security Tools with Generative AI".
           </p>
 
           <h3>Our approach</h3>
@@ -392,19 +441,19 @@
           <p>Notable titles include:</p>
           <ul>
             <li>
-              <i>The Complete Guide to Cryptography</i> (暗号技術のすべて)
+              <i>The Complete Guide to Cryptography</i> <span lang="ja">(暗号技術のすべて)</span>
             </li>
             <li>
               <i>How to Build a Hacking Lab – Complete Edition</i>
-              (ハッキング・ラボのつくりかた 完全版)
+              <span lang="ja">(ハッキング・ラボのつくりかた 完全版)</span>
             </li>
             <li>
               <i>The Textbook of White-Hat Hackers</i>
-              (ホワイトハッカーの教科書)
+              <span lang="ja">(ホワイトハッカーの教科書)</span>
             </li>
             <li>
               <i>The Hacker’s School: A Handbook of Lockpicking</i>
-              (ハッカーの学校 鍵開けの教科書)
+              <span lang="ja">(ハッカーの学校 鍵開けの教科書)</span>
             </li>
           </ul>
 
@@ -428,6 +477,8 @@
     </div>
 
     <script src="./js/books.js"></script>
+    <script src="./js/storage.js"></script>
+    <script src="./js/tabs.js"></script>
     <script src="./js/main.js"></script>
   </body>
 </html>

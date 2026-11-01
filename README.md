@@ -63,7 +63,9 @@
 │   └ style.css             # 全体スタイル（モバイルファースト）
 ├ js/
 │   ├ main.js               # フロントロジック（一覧・進捗管理・ダッシュボード）
-│   └ books.js              # 書籍フィルターの純関数（DOM非依存・テスト対象）
+│   ├ books.js              # 書籍フィルターの純関数（DOM非依存・テスト対象）
+│   ├ storage.js            # localStorage の安全なラッパー（使えない環境ではメモリーに退避）
+│   └ tabs.js               # タブのキーボード操作の純関数
 ├ data/
 │   ├ categories.json       # カテゴリマスター（手動管理）
 │   ├ books.json            # 書籍・シリーズ定義（手動管理）
@@ -71,7 +73,8 @@
 ├ repos.txt                 # ツールリポジトリ一覧（1行1URL）
 ├ package.json              # テスト設定（依存なし・node --test）
 ├ test/
-│   └ books.test.js         # books.json とデータ検証のテスト
+│   ├ books.test.js         # books.json とデータ検証のテスト
+│   └ site.test.js          # storage.js・tabs.js と index.html（ARIA・CSP など）の検査
 ├ scripts/
 │   └ update_tools.py       # README からメタ情報を抽出して tools.json を生成
 └ .github/

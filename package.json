@@ -2,7 +2,7 @@
   "name": "hackinglab-online",
   "private": true,
   "scripts": {
-    "test": "node --test test/books.test.js"
+    "test": "node --test test/books.test.js test/site.test.js"
   },
   "engines": {
     "node": ">=20"
