@@ -17,6 +17,33 @@ const HB = typeof HLOBooks !== "undefined" ? HLOBooks : null;
 // いま選択中の本の対象 id 集合（renderToolList / setBookFilter で更新）。
 let bookTargetSet = null;
 
+// localStorage を安全に使うラッパー（js/storage.js）。読み込めていなければ同等の最小実装で代える。
+const progressStore =
+  typeof HLOStorage !== "undefined"
+    ? HLOStorage.createSafeStorage(() => window.localStorage)
+    : (() => {
+        const memory = new Map();
+        return {
+          getItem(key) {
+            try {
+              const v = window.localStorage.getItem(key);
+              if (v !== null) return v;
+            } catch (e) {
+              /* メモリーへ退避 */
+            }
+            return memory.has(key) ? memory.get(key) : null;
+          },
+          setItem(key, value) {
+            memory.set(key, String(value));
+            try {
+              window.localStorage.setItem(key, String(value));
+            } catch (e) {
+              /* 保存できない環境では、このページを開いているあいだだけ保持する */
+            }
+          }
+        };
+      })();
+
 const PROGRESS_LABELS = {
   ja: ["未着手", "学習中", "一周完了", "定着済み"],
   en: ["Not started", "In progress", "First pass", "Mastered"]
@@ -55,12 +82,20 @@ function setupStaticUI() {
     renderAll();
   });
 
-  // タブ切替
-  const tabButtons = document.querySelectorAll(".tab-button");
-  tabButtons.forEach((btn) => {
+  // タブ切替（クリック、および ←/→/Home/End のキーボード操作）
+  const tabButtons = Array.from(document.querySelectorAll(".tab-button"));
+  tabButtons.forEach((btn, i) => {
     btn.addEventListener("click", () => {
       const targetId = btn.getAttribute("data-tab-target");
       switchTab(targetId);
+    });
+    btn.addEventListener("keydown", (e) => {
+      const next = nextTabIndex(e.key, i, tabButtons.length);
+      if (next < 0) return;
+      e.preventDefault();
+      const nextBtn = tabButtons[next];
+      switchTab(nextBtn.getAttribute("data-tab-target"));
+      nextBtn.focus();
     });
   });
 
@@ -108,6 +143,7 @@ function setupStaticUI() {
 
 function setupHelpModal() {
   const helpModal = document.getElementById("help-modal");
+  const helpDialog = document.getElementById("help-dialog");
   const helpButton = document.getElementById("help-button");
   const helpClose = document.getElementById("help-close");
 
@@ -116,20 +152,82 @@ function setupHelpModal() {
   // 念のため初期状態で隠しておく
   helpModal.hidden = true;
 
-  helpButton?.addEventListener("click", () => {
-    helpModal.hidden = false;
-  });
+  // 開いたときにフォーカスを持っていた要素（閉じたらそこへ戻す）
+  let returnFocusTo = null;
 
-  helpClose?.addEventListener("click", () => {
+  const openHelp = () => {
+    returnFocusTo = document.activeElement;
+    helpModal.hidden = false;
+    // ダイアログの中へフォーカスを移す（ダイアログ名が読み上げられる）
+    (helpDialog || helpClose)?.focus();
+    if (helpDialog) helpDialog.scrollTop = 0;
+  };
+
+  const closeHelp = () => {
+    if (helpModal.hidden) return;
     helpModal.hidden = true;
-  });
+    const target =
+      returnFocusTo && document.contains(returnFocusTo) ? returnFocusTo : helpButton;
+    returnFocusTo = null;
+    target?.focus();
+  };
+
+  helpButton?.addEventListener("click", openHelp);
+  helpClose?.addEventListener("click", closeHelp);
 
   // オーバーレイ部分クリックで閉じる
   helpModal.addEventListener("click", (e) => {
-    if (e.target === helpModal) {
-      helpModal.hidden = true;
+    if (e.target === helpModal) closeHelp();
+  });
+
+  // Esc で閉じる。Tab / Shift+Tab はダイアログの中で循環させる（aria-modal）
+  document.addEventListener("keydown", (e) => {
+    if (helpModal.hidden) return;
+    if (e.key === "Escape" || e.key === "Esc") {
+      e.preventDefault();
+      closeHelp();
+      return;
+    }
+    if (e.key !== "Tab" || !helpDialog) return;
+    const focusables = getFocusableElements(helpDialog);
+    if (!focusables.length) {
+      e.preventDefault();
+      helpDialog.focus();
+      return;
+    }
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    const active = document.activeElement;
+    if (!helpDialog.contains(active)) {
+      e.preventDefault();
+      first.focus();
+    } else if (e.shiftKey && (active === first || active === helpDialog)) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && active === last) {
+      e.preventDefault();
+      first.focus();
     }
   });
+}
+
+// 要素の中のフォーカスできる（かつ表示されている）要素を並び順で返す。
+function getFocusableElements(container) {
+  const selector =
+    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+  return Array.from(container.querySelectorAll(selector)).filter(
+    (el) => el.getClientRects().length > 0
+  );
+}
+
+// タブのキーボード操作で次に選ぶ位置（js/tabs.js）。読み込めていなければ同じ規則で計算する。
+function nextTabIndex(key, current, count) {
+  if (typeof HLOTabs !== "undefined") return HLOTabs.nextTabIndex(key, current, count);
+  if (key === "ArrowRight") return (current + 1) % count;
+  if (key === "ArrowLeft") return (current - 1 + count) % count;
+  if (key === "Home") return 0;
+  if (key === "End") return count - 1;
+  return -1;
 }
 
 // ---- データ読み込み ----
@@ -262,21 +360,14 @@ function renderAll() {
 function updateLanguageUI() {
   const isJa = currentLang === "ja";
 
-  // JA/EN ラベル切替
-  document.querySelectorAll(".label-ja").forEach((el) => {
-    el.style.display = isJa ? "" : "none";
-  });
-  document.querySelectorAll(".label-en").forEach((el) => {
-    el.style.display = isJa ? "none" : "";
-  });
+  // ページの言語。.label-ja / .label-en の出し分けも、この lang を見て CSS で行う
+  document.documentElement.lang = isJa ? "ja" : "en";
 
-  // サイトタイトル
-  const titleJa = document.getElementById("site-title-ja");
-  const titleEn = document.getElementById("site-title-en");
-  if (titleJa && titleEn) {
-    titleJa.style.display = isJa ? "" : "none";
-    titleEn.style.display = isJa ? "none" : "";
-  }
+  // 読み上げ用のラベル（data-aria-label-ja / data-aria-label-en を持つ要素）
+  document.querySelectorAll("[data-aria-label-ja]").forEach((el) => {
+    const label = isJa ? el.dataset.ariaLabelJa : el.dataset.ariaLabelEn;
+    if (label) el.setAttribute("aria-label", label);
+  });
 
   // 言語ボタン
   const langJaBtn = document.getElementById("lang-ja");
@@ -308,10 +399,12 @@ function switchTab(targetId) {
     panel.hidden = panel.id !== targetId;
   });
 
+  // 選ばれたタブだけを Tab キーで止まる位置にする（roving tabindex）
   const tabButtons = document.querySelectorAll(".tab-button");
   tabButtons.forEach((btn) => {
-    const target = btn.getAttribute("data-tab-target");
-    btn.setAttribute("aria-selected", target === targetId ? "true" : "false");
+    const selected = btn.getAttribute("data-tab-target") === targetId;
+    btn.setAttribute("aria-selected", selected ? "true" : "false");
+    btn.tabIndex = selected ? 0 : -1;
   });
 }
 
@@ -855,19 +948,18 @@ function getCategoryLabels(tool) {
 
 // ---- 進捗管理（localStorage） ----
 
+// 読み書きは progressStore 経由（例外を投げず、使えない環境ではメモリーに退避する）。
 function getProgress(slug) {
-  const key = `progress_${slug}`;
-  const raw = localStorage.getItem(key);
+  const raw = progressStore.getItem(`progress_${slug}`);
   const num = Number(raw);
-  if (Number.isInteger(num) && num >= 0 && num <= 3) {
+  if (raw !== null && Number.isInteger(num) && num >= 0 && num <= 3) {
     return num;
   }
   return 0;
 }
 
 function setProgress(slug, level) {
-  const key = `progress_${slug}`;
-  localStorage.setItem(key, String(level));
+  progressStore.setItem(`progress_${slug}`, String(level));
 }
 
 function updateProgressButton(btn, slug) {

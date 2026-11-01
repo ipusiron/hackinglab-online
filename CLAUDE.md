@@ -42,7 +42,10 @@ hub: true
 - `repos.txt`: Master list of tool repositories
 - `js/main.js`: All UI logic including filtering, progress tracking (localStorage), language switching, and X sharing
 - `js/books.js`: Pure functions for the book/series filter (DOM-free); tested by `test/books.test.js`
-- `test/books.test.js` + `package.json`: `node --test`, no dependencies
+- `js/storage.js`: Safe localStorage wrapper (never throws; falls back to in-memory when storage is unavailable)
+- `js/tabs.js`: Pure keyboard logic for the tabs (←/→/Home/End)
+- `test/books.test.js` + `test/site.test.js` + `package.json`: `node --test`, no dependencies. `site.test.js` covers the two modules above and static checks of `index.html` (ARIA references, dialog, h1, CSP, no inline styles/scripts)
+- `index.html` has a meta CSP (`default-src 'none'`, everything else `'self'`). Do not add inline `<script>`, `style="..."` or `on*=` attributes; JS-set `element.style` is fine. Language display is driven by `<html lang>` + CSS (`.label-ja` / `.label-en`)
 
 ## Commands
 
