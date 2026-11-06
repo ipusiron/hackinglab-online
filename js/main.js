@@ -240,6 +240,11 @@ function nextTabIndex(key, current, count) {
 // ---- データ読み込み ----
 
 async function loadData() {
+  // 書籍データは、一覧の2本（カテゴリ・ツール）を待つ前に同時に取り始める（あとから取ると往復1回分カードが遅れる）。
+  // 書籍データは無くても一覧を出せるので、失敗はここで受け止めて null にする（Promise.all には入れない）
+  const booksPromise = fetch("./data/books.json")
+    .then((res) => (res.ok ? res.json() : null))
+    .catch(() => null);
   try {
     const [catRes, toolsRes] = await Promise.all([
       fetch("./data/categories.json"),
@@ -262,16 +267,8 @@ async function loadData() {
     }
 
     // 書籍データ（自己完結した読み込み。失敗してもハブは従来どおり動く）
-    books = [];
-    try {
-      const bRes = await fetch("./data/books.json");
-      if (bRes.ok) {
-        const bJson = await bRes.json();
-        if (bJson && Array.isArray(bJson.books)) books = bJson.books;
-      }
-    } catch (e) {
-      // 無視（no-books として続行）
-    }
+    const bJson = await booksPromise;
+    books = bJson && Array.isArray(bJson.books) ? bJson.books : [];
     if (!HB) console.warn("books.js not loaded; book filter disabled");
     applyBooksAvailability();
 
