@@ -158,8 +158,11 @@ function setupHelpModal() {
     const active = document.activeElement;
     returnFocusTo = active && active !== document.body ? active : helpButton;
     helpModal.hidden = false;
-    // 開いているあいだは後ろのページを動かさない（css の html.help-open）
-    document.documentElement.classList.add("help-open");
+    // 開いているあいだは後ろのページを動かさない（css の html.help-open）。
+    // スクロールバーが幅を取っていたときだけ、その幅を残して後ろのページが横にずれないようにする（css の keep-gutter）
+    const root = document.documentElement;
+    root.classList.toggle("keep-gutter", window.innerWidth - root.clientWidth > 1);
+    root.classList.add("help-open");
     // ダイアログの中へフォーカスを移す（ダイアログ名が読み上げられる）
     (helpDialog || helpClose)?.focus();
     if (helpDialog) helpDialog.scrollTop = 0;
@@ -168,7 +171,7 @@ function setupHelpModal() {
   const closeHelp = () => {
     if (helpModal.hidden) return;
     helpModal.hidden = true;
-    document.documentElement.classList.remove("help-open");
+    document.documentElement.classList.remove("help-open", "keep-gutter");
     const target =
       returnFocusTo && document.contains(returnFocusTo) ? returnFocusTo : helpButton;
     returnFocusTo = null;

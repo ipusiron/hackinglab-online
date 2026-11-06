@@ -1,6 +1,6 @@
 // test/site.test.js
 // 依存なし（node:test / node:assert/strict / node:fs のみ）。
-// U1〜U2 は js/storage.js・js/tabs.js の純関数、H1〜H14 は index.html / js/main.js / css/style.css の静的な検査。
+// U1〜U2 は js/storage.js・js/tabs.js の純関数、H1〜H15 は index.html / js/main.js / css/style.css の静的な検査。
 
 const fs = require("node:fs");
 const path = require("node:path");
@@ -220,9 +220,9 @@ test("H11: ヘルプを開いているあいだ後ろのページを動かさず
   assert.match(bodyOf(".modal-close"), /position\s*:\s*sticky/);
   assert.match(mainJs, /classList\.add\("help-open"\)/);
   // 外すのは閉じる処理（closeHelp）の1か所だけ。ほかの経路で閉じると、ページがスクロールできないまま残る
-  const removes = mainJs.match(/classList\.remove\("help-open"\)/g) || [];
+  const removes = mainJs.match(/classList\.remove\("help-open"[,)]/g) || [];
   assert.equal(removes.length, 1);
-  assert.match(mainJs, /const closeHelp = \(\) => \{[^}]*classList\.remove\("help-open"\)/);
+  assert.match(mainJs, /const closeHelp = \(\) => \{[^}]*classList\.remove\("help-open"[,)]/);
 });
 
 test("H12: 強制カラーでも、選ばれたタブと円グラフ・凡例・進捗の棒を見分けられる", () => {
@@ -254,4 +254,16 @@ test("H14: ヘルプを閉じたら、開く前にフォーカスがなかった
   const open = mainJs.match(/const openHelp = \(\) => \{[\s\S]*?\n {2}\};/);
   assert.ok(open, "openHelp がない");
   assert.match(open[0], /returnFocusTo\s*=\s*[^;]*document\.body[^;]*helpButton/);
+});
+
+test("H15: ヘルプを開いたとき、スクロールバーの幅を残すのは開く前にスクロールバーが幅を取っていたときだけ", () => {
+  // いつも残すと、スクロールバーのない短いページで開いたときに後ろのページが横にずれる
+  assert.doesNotMatch(bodyOf("html.help-open"), /scrollbar-gutter/);
+  assert.match(bodyOf("html.help-open.keep-gutter"), /scrollbar-gutter\s*:\s*stable/);
+  const open = mainJs.match(/const openHelp = \(\) => \{[\s\S]*?\n {2}\};/);
+  assert.ok(open, "openHelp がない");
+  assert.match(open[0], /classList\.toggle\("keep-gutter",\s*window\.innerWidth\s*-\s*[\w.]+\.clientWidth\s*>\s*1\)/);
+  // keep-gutter を付けてから help-open を付ける（スクロールバーが消える前に測る）
+  assert.ok(open[0].indexOf('"keep-gutter"') < open[0].indexOf('classList.add("help-open")'));
+  assert.match(mainJs, /classList\.remove\("help-open",\s*"keep-gutter"\)/);
 });

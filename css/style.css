@@ -840,10 +840,14 @@ html[lang="en"] .label-ja {
   display: flex;
 }
 
-/* ヘルプを開いているあいだは後ろのページを動かさない（main.js が html に help-open を付け外しする）。
-   scrollbar-gutter は、スクロールバーが消えて後ろのページが横にずれるのを防ぐ */
+/* ヘルプを開いているあいだは後ろのページを動かさない（main.js が html に help-open を付け外しする） */
 html.help-open {
   overflow: hidden;
+}
+
+/* 開く前にスクロールバーが幅を取っていたときだけ、その幅を残す（main.js が keep-gutter を付ける）。
+   残さないとスクロールバーが消えて後ろのページが横にずれ、スクロールバーのない短いページで残すと逆にずれる */
+html.help-open.keep-gutter {
   scrollbar-gutter: stable;
 }
 
