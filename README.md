@@ -74,7 +74,8 @@
 ├ package.json              # テスト設定（依存なし・node --test）
 ├ test/
 │   ├ books.test.js         # books.json とデータ検証のテスト
-│   └ site.test.js          # storage.js・tabs.js と index.html（ARIA・CSP など）の検査
+│   ├ site.test.js          # storage.js・tabs.js と index.html・style.css（ARIA・CSP・ヘルプの窓など）の検査
+│   └ scroll_focus.test.js  # 固定ヘッダーの下で止まる位置・フォーカスの移し方・言語の切り替えの検査
 ├ scripts/
 │   └ update_tools.py       # README からメタ情報を抽出して tools.json を生成
 └ .github/

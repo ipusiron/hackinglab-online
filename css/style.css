@@ -870,7 +870,7 @@ html.help-open.keep-gutter {
 }
 
 /* 「×」は本文と一緒に流れないよう、右上に残す（sticky）。押せる大きさは44px。
-   sticky の基準は本文の余白（1.5rem）の内側なので、top と margin を -1rem にして、角から8pxの今の位置に置く */
+   sticky の基準は本文の余白（1.5rem）の内側なので、top と margin を -1rem にして、角から8pxの位置に置く */
 .modal-close {
   position: sticky;
   top: -1rem;
