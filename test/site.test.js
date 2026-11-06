@@ -1,6 +1,6 @@
 // test/site.test.js
 // 依存なし（node:test / node:assert/strict / node:fs のみ）。
-// U1〜U2 は js/storage.js・js/tabs.js の純関数、H1〜H13 は index.html / js/main.js / css/style.css の静的な検査。
+// U1〜U2 は js/storage.js・js/tabs.js の純関数、H1〜H14 は index.html / js/main.js / css/style.css の静的な検査。
 
 const fs = require("node:fs");
 const path = require("node:path");
@@ -248,4 +248,10 @@ test("H13: 動きを減らす設定では、カードとカードのボタンを
   const lifts = [...cssNoComments.matchAll(/:hover\s*\{[^}]*transform:\s*translateY/g)].map((m) => m.index);
   assert.ok(lifts.length > 0);
   assert.ok(last.index > Math.max(...lifts), "ホバーの規則より前にある");
+});
+
+test("H14: ヘルプを閉じたら、開く前にフォーカスがなかったとき（マウスで押した Safari など）も ? へフォーカスを戻す", () => {
+  const open = mainJs.match(/const openHelp = \(\) => \{[\s\S]*?\n {2}\};/);
+  assert.ok(open, "openHelp がない");
+  assert.match(open[0], /returnFocusTo\s*=\s*[^;]*document\.body[^;]*helpButton/);
 });

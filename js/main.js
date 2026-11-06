@@ -154,7 +154,9 @@ function setupHelpModal() {
   let returnFocusTo = null;
 
   const openHelp = () => {
-    returnFocusTo = document.activeElement;
+    // マウスで押してもボタンへフォーカスが移らないブラウザー（Safari など）では body になるので、そのときは ? へ戻す
+    const active = document.activeElement;
+    returnFocusTo = active && active !== document.body ? active : helpButton;
     helpModal.hidden = false;
     // 開いているあいだは後ろのページを動かさない（css の html.help-open）
     document.documentElement.classList.add("help-open");
