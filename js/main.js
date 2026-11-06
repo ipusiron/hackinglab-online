@@ -185,7 +185,8 @@ function setListBusy(busy) {
   if (list) list.setAttribute("aria-busy", busy ? "true" : "false");
 }
 
-// 読み込みに失敗したときは、読み込み中のために取っておいた場所（一覧の高さ・本のバナー）を返す
+// 読み込みに失敗したときは、読み込み中のために取っておいた場所（一覧の高さ・本のバナー）を返す。
+// 最初から置いている書籍・シリーズの欄も、選択肢がないまま残さないよう、books.json を読めなかったときと同じく隠す
 function releaseReservedSpace() {
   setListBusy(false);
   const banner = document.getElementById("book-banner");
@@ -193,6 +194,10 @@ function releaseReservedSpace() {
     banner.classList.remove("is-pending");
     banner.hidden = true;
   }
+  const bookGroup = document.getElementById("filter-book-group");
+  if (bookGroup) bookGroup.hidden = true;
+  const filtersEl = document.getElementById("tool-filters");
+  if (filtersEl) filtersEl.classList.add("no-books");
 }
 
 // ---- ヘルプモーダル ----

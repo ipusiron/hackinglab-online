@@ -67,8 +67,15 @@ test("RB1: 書籍・シリーズの欄は最初から場所を取り、一覧は
   const load = fnBody("loadData");
   const iFree = load.indexOf("setListBusy(false)");
   assert.ok(iFree >= 0 && iFree < load.indexOf("renderAll()"), "一覧を描く前に読み込み中の印を外していない");
-  assert.match(fnBody("releaseReservedSpace"), /setListBusy\(false\)/);
+  const release = fnBody("releaseReservedSpace");
+  assert.match(release, /setListBusy\(false\)/);
   assert.match(load, /catch \(err\) \{[\s\S]*?releaseReservedSpace\(\)/, "読み込みに失敗したときに取っておいた場所を返していない");
+  // 読み込みに失敗したときは、選択肢のない書籍の欄を残さない（books.json を読めなかったときと同じく隠す）
+  assert.match(
+    release,
+    /getElementById\("filter-book-group"\)[\s\S]*?\.hidden = true/,
+    "読み込みに失敗したときに、選択肢のない書籍の欄が出たまま残る"
+  );
   // 再読み込み・戻るでブラウザーにスクロール位置を戻させない（読み込み中の高さの所で止まるため）
   assert.match(fnBody("setupStaticUI"), /history\.scrollRestoration = "manual"/);
 });
