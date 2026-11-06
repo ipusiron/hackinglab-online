@@ -141,3 +141,19 @@ test("RB6: 出すものが前回と同じなら一覧を作り直さない。判
   );
   assert.match(fnBody("setProgress"), /progressVersion\+\+/);
 });
+
+test("RB7: JavaScript が動かないときは、押しても動かない部品（JA・EN・?、タブ、絞り込み欄）を隠し、一覧の高さも取らない", () => {
+  const m = cssNoComments.match(/@media \(scripting: none\)\s*\{([\s\S]*?)\n\}/);
+  assert.ok(m, "@media (scripting: none) がない");
+  const hide = m[1].match(/([^{}]+)\{[^}]*display:\s*none[^}]*\}/);
+  assert.ok(hide, "部品を隠す規則がない");
+  const sels = hide[1].split(",").map((s) => s.trim());
+  for (const sel of [".header-controls", "#tab-nav", "#tool-filters"]) {
+    assert.ok(sels.includes(sel), `${sel} を隠していない`);
+  }
+  // 隠す部品が index.html にある（名前を変えたときに、隠し忘れないように）
+  assert.match(html, /<div class="header-controls">/);
+  assert.match(openTag("tab-nav"), /role="tablist"/);
+  assert.match(openTag("tool-filters"), /^<div\b/);
+  assert.match(m[1], /#tool-list\[aria-busy="true"\]\s*\{[^}]*min-height:\s*0/);
+});

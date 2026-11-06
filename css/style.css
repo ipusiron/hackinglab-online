@@ -1077,3 +1077,21 @@ html.help-open.keep-gutter {
     transform: none;
   }
 }
+
+/* ================================
+ * JavaScript が動かないとき
+ * ================================ */
+
+/* 押しても動かない部品を出さない：言語の切り替え（JA・EN）とヘルプ（?）、タブ（ツール一覧・学習ダッシュボード）、
+   絞り込み欄。一覧も JS が描くので、読み込み中のための高さも取らない */
+@media (scripting: none) {
+  .header-controls,
+  #tab-nav,
+  #tool-filters {
+    display: none;
+  }
+
+  #tool-list[aria-busy="true"] {
+    min-height: 0;
+  }
+}
