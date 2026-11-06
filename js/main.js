@@ -59,6 +59,9 @@ let progressVersion = 0;
 document.addEventListener("DOMContentLoaded", () => {
   setupStaticUI();
   setupHelpModal();
+  // 固定ヘッダーの高さは、データを読み込む前に書く（読み込み中と読み込みに失敗したときも、
+  // Tab・Shift+Tab で移った部品がヘッダーの下に隠れないように）
+  applyHeaderHeightVar();
   loadData();
 });
 
@@ -356,7 +359,6 @@ async function loadData() {
       }
     }
 
-    applyHeaderHeightVar();
     setupFilterOptions();
     setListBusy(false);
     renderAll();

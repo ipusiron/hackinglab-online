@@ -1,6 +1,6 @@
 // test/scroll_focus.test.js
 // 依存なし（node:test / node:assert/strict / node:fs のみ）。
-// SF1〜SF6 は、固定ヘッダーの下で止まる位置・フォーカスの移し方・言語の切り替えの直し方が、
+// SF1〜SF7 は、固定ヘッダーの下で止まる位置・フォーカスの移し方・言語の切り替えの直し方が、
 // あとの変更で外れていないかを見る静的な検査（index.html / js/main.js / css/style.css）。
 
 const fs = require("node:fs");
@@ -75,4 +75,16 @@ test("SF6: フォーカスが固定ヘッダーの中にあるあいだは scrol
   assert.match(b, /scroll-padding-top:\s*0(?:px)?\s*(?:;|$)/);
   // scroll-padding-top を書くのは html の規則とこの規則の2か所だけ（ほかで足すと、どちらが勝つかが詳細度しだいになる）
   assert.equal((cssNoComments.match(/scroll-padding-top\s*:/g) || []).length, 2);
+});
+
+test("SF7: 固定ヘッダーの高さ（--header-h）は、データを読み込む前に書く（読み込み中・失敗したときも Shift+Tab で戻った部品が隠れない）", () => {
+  const dcl = mainJs.match(/document\.addEventListener\("DOMContentLoaded", \(\) => \{([\s\S]*?)\n\}\);/);
+  assert.ok(dcl, "DOMContentLoaded の処理がない");
+  const body = dcl[1].replace(/\/\/[^\n]*/g, "");
+  const iHeader = body.indexOf("applyHeaderHeightVar()");
+  assert.ok(iHeader >= 0 && iHeader < body.indexOf("loadData()"), "loadData() の前に applyHeaderHeightVar() を呼んでいない");
+  // 読み込みのたびには呼ばない（ResizeObserver を重ねて付けない）
+  const load = mainJs.match(/async function loadData\(\)\s*\{[\s\S]*?\n\}/);
+  assert.ok(load, "loadData がない");
+  assert.doesNotMatch(load[0].replace(/\/\/[^\n]*/g, ""), /applyHeaderHeightVar\(\)/);
 });
