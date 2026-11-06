@@ -498,6 +498,24 @@ html[lang="en"] .label-ja {
   align-content: start;
 }
 
+/* 画面の外のカードは、見える所に来るまで配置の計算と描画を後回しにする（遅い端末で、はじめて開いたときや
+   検索・言語の切り替えで一覧を作るときに固まらないように）。まだ描いていないカードの高さは仮の値で、
+   auto は一度描いたカードの高さを覚えて使う。225px は中身の高さで、上下の余白と枠を足すと 259px
+   （390px 幅のカードの高さの中央値）になる。
+   章ごとに並べるとき（.is-grouped）は使わない。仮の高さのまま「章へ移動」の位置を計算すると、
+   着いたあとでカードの高さが変わり、見出しが固定ヘッダーの下に隠れるため */
+#tool-list:not(.is-grouped) > .tool-card {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 225px;
+}
+
+/* 言語を切り替えて読んでいた位置へ戻すあいだ（main.js の restoreReadingAnchor）は、読んでいたカードとその上の
+   カードを後回しにしない。仮の高さのまま位置を合わせると、描いたときに実際の高さに変わって読んでいたカードが動くため。
+   一度描いて高さを覚えたら、main.js が cv-hold を外す */
+#tool-list:not(.is-grouped) > .tool-card.cv-hold {
+  content-visibility: visible;
+}
+
 /* --- カード本体 --- */
 .tool-card {
   background-color: #ffffff;

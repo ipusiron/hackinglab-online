@@ -52,6 +52,10 @@ const PROGRESS_LABELS = {
 // 狭い画面の境目。css/style.css の、「はじめ方」を描く前に畳む規則（@media）と同じ式にする
 const NARROW_MQ = "(max-width: 767.98px)";
 
+// 一覧を作り直さずに済むかを見るための、前回の表示の鍵と、進捗を変えるたびに増やす版
+let lastListKey = null;
+let progressVersion = 0;
+
 document.addEventListener("DOMContentLoaded", () => {
   setupStaticUI();
   setupHelpModal();
@@ -445,8 +449,17 @@ function restoreReadingAnchor(anchor) {
   const header = document.getElementById("site-header");
   const el = listEl && listEl.children[anchor.index];
   if (!el || !header) return;
+  // 画面の外のカードは描くのを後回しにしている（css の content-visibility）。作り直したカードは仮の高さで並ぶので、
+  // そのまま合わせると、描いたときに上のカードが実際の高さに変わって読んでいた項目が動く。
+  // 読んでいた項目とその上のカードは、一度描いて高さを覚えるまで後回しにしない（css の .cv-hold）
+  const held = Array.prototype.slice.call(listEl.children, 0, anchor.index + 1);
+  held.forEach((c) => c.classList.add("cv-hold"));
   const hb = header.getBoundingClientRect().bottom;
   scrollByInstant(el.getBoundingClientRect().top - hb - anchor.offset);
+  // 次の描画が終わってから外す（描いたときに、カードの高さが覚えられる）
+  requestAnimationFrame(() =>
+    setTimeout(() => held.forEach((c) => c.classList.remove("cv-hold")), 0)
+  );
 }
 
 // ---- UIレンダリング全体 ----
@@ -660,7 +673,6 @@ function renderToolList() {
   const listEl = document.getElementById("tool-list");
   if (!listEl) return;
 
-  listEl.innerHTML = "";
   refreshBookTarget();
   const book = currentBook();
 
@@ -672,6 +684,19 @@ function renderToolList() {
     filterBySearch(t);
 
   const matched = tools.filter(baseMatch);
+
+  // 出すものが前回と同じなら作り直さない（検索の1文字ごとに全部のカードを作り直すと、遅い端末で固まる）。
+  // 言語・本・進捗が変わったときは、同じツールの並びでも文字・掲載箇所・進捗の表示が変わるので作り直す
+  const listKey = [
+    currentLang,
+    filters.book,
+    progressVersion,
+    matched.map((t) => t.id).join(",")
+  ].join("|");
+  if (listKey === lastListKey && listEl.firstElementChild) return;
+  lastListKey = listKey;
+
+  listEl.innerHTML = "";
   const matchedIds = new Set(matched.map((t) => t.id));
 
   // chapters を持つ本は、章の順にグループ分けして見出しを挟む
@@ -688,6 +713,8 @@ function renderToolList() {
   }
 
   renderBookBanner(book, matched.length, displayGroups);
+  // 章ごとに並べるときは、画面の外のカードの描画を後回しにしない（css の .is-grouped。章へ移動の止まる位置を保つ）
+  listEl.classList.toggle("is-grouped", !!displayGroups);
 
   if (displayGroups) {
     if (!displayGroups.length) {
@@ -1059,6 +1086,7 @@ function getProgress(slug) {
 
 function setProgress(slug, level) {
   progressStore.setItem(`progress_${slug}`, String(level));
+  progressVersion++; // 次に一覧を描くときは作り直す（全部リセットしたあとに、古い進捗の表示を残さない）
 }
 
 function updateProgressButton(btn, slug) {

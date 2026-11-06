@@ -79,3 +79,38 @@ test("RB4: ?book= で来たときは、データが届く前に本のバナー�
   // 読み込みに失敗したときは、取っておいたバナーの場所を返す
   assert.match(fnBody("releaseReservedSpace"), /classList\.remove\("is-pending"\)/);
 });
+
+test("RB5: 画面の外のカードは描くのを後回しにする。章ごとに並べるとき（.is-grouped）は使わない", () => {
+  const rulesWithAuto = [...cssNoComments.matchAll(/([^{}]*)\{([^{}]*content-visibility:\s*auto[^{}]*)\}/g)];
+  assert.equal(rulesWithAuto.length, 1, "content-visibility: auto は1か所だけに書く");
+  assert.equal(
+    rulesWithAuto[0][1].trim(),
+    "#tool-list:not(.is-grouped) > .tool-card",
+    "章ごとの表示を外していない（仮の高さのまま「章へ移動」の位置を計算し、見出しが固定ヘッダーの下に隠れる）"
+  );
+  assert.match(rulesWithAuto[0][2], /contain-intrinsic-size:\s*auto\s+\d+px/);
+  assert.match(fnBody("renderToolList"), /classList\.toggle\("is-grouped",\s*!!displayGroups\)/);
+  // 言語を切り替えて読んでいた位置へ戻すときは、読んでいたカードとその上のカードを、一度描くまで後回しにしない
+  assert.match(cssNoComments, /\.tool-card\.cv-hold\s*\{[^}]*content-visibility:\s*visible/);
+  const restore = fnBody("restoreReadingAnchor");
+  assert.match(restore, /classList\.add\("cv-hold"\)/);
+  assert.match(restore, /classList\.remove\("cv-hold"\)/);
+  assert.ok(
+    restore.indexOf('classList.add("cv-hold")') < restore.indexOf("scrollByInstant("),
+    "cv-hold を付ける前に位置を合わせている（仮の高さで合わせることになる）"
+  );
+});
+
+test("RB6: 出すものが前回と同じなら一覧を作り直さない。判定には言語・本・進捗の変化を含める", () => {
+  const r = fnBody("renderToolList");
+  const key = r.match(/const listKey = \[([\s\S]*?)\]\.join/);
+  assert.ok(key, "前回の表示と比べる鍵がない");
+  for (const part of ["currentLang", "filters.book", "progressVersion"]) {
+    assert.ok(key[1].includes(part), `鍵に ${part} がない（切り替えたあとに古い文字や進捗の表示が残る）`);
+  }
+  assert.ok(
+    r.indexOf("lastListKey") < r.indexOf('listEl.innerHTML = ""'),
+    "前回と比べる前に一覧を消している（同じ結果でも作り直す）"
+  );
+  assert.match(fnBody("setProgress"), /progressVersion\+\+/);
+});
