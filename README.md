@@ -74,7 +74,7 @@
 ├ package.json              # テスト設定（依存なし・node --test）
 ├ test/
 │   ├ books.test.js         # books.json とデータ検証のテスト
-│   ├ site.test.js          # storage.js・tabs.js と index.html・style.css（ARIA・CSP・ヘルプの窓など）の検査
+│   ├ site.test.js          # storage.js・tabs.js の純関数と、index.html・main.js・style.css の検査（ARIA・CSP・ヘルプの窓・データの読み込みの決まりなど）
 │   ├ scroll_focus.test.js  # 固定ヘッダーの下で止まる位置・フォーカスの移し方・言語の切り替えの検査
 │   └ robust.test.js        # 遅い回線・遅い端末で、読み込みの途中に画面がずれたり固まったりしないための検査
 ├ scripts/
