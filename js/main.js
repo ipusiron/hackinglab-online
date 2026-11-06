@@ -449,6 +449,8 @@ function scrollByInstant(dy) {
 
 // 一覧の途中で表示を作り直す前に、ヘッダーのすぐ下で読んでいた項目（カードか章の見出し）を覚える。
 // 一覧の先頭が見えているときは null（何もしない）。
+// holdFrom は、作り直したあとに描くのを後回しにしない範囲の始め（restoreReadingAnchor を参照）。
+// 画面の上端から1画面分の高さだけ上までにかかる、最初の項目の順番
 function captureReadingAnchor() {
   const listEl = document.getElementById("tool-list");
   const header = document.getElementById("site-header");
@@ -456,9 +458,13 @@ function captureReadingAnchor() {
   const hb = header.getBoundingClientRect().bottom;
   if (listEl.getBoundingClientRect().top >= hb) return null;
   const items = listEl.children;
+  let holdFrom = -1;
   for (let i = 0; i < items.length; i++) {
     const r = items[i].getBoundingClientRect();
-    if (r.top + r.height / 2 > hb) return { index: i, offset: r.top - hb };
+    if (holdFrom < 0 && r.bottom > -window.innerHeight) holdFrom = i;
+    if (r.top + r.height / 2 > hb) {
+      return { index: i, offset: r.top - hb, holdFrom: holdFrom < 0 ? i : holdFrom };
+    }
   }
   return null;
 }
@@ -471,10 +477,14 @@ function restoreReadingAnchor(anchor) {
   const header = document.getElementById("site-header");
   const el = listEl && listEl.children[anchor.index];
   if (!el || !header) return;
-  // 画面の外のカードは描くのを後回しにしている（css の content-visibility）。作り直したカードは仮の高さで並ぶので、
-  // そのまま合わせると、描いたときに上のカードが実際の高さに変わって読んでいた項目が動く。
-  // 読んでいた項目とその上のカードは、一度描いて高さを覚えるまで後回しにしない（css の .cv-hold）
-  const held = Array.prototype.slice.call(listEl.children, 0, anchor.index + 1);
+  // 画面の外のカードは描くのを後回しにしている（css の content-visibility。scroll anchoring のあるブラウザーだけ）。
+  // 作り直したカードは仮の高さで並ぶので、そのまま合わせると、画面にかかるカードを描いたときに実際の高さに変わり、
+  // 読んでいた項目が動く。読んでいた項目と、その上で画面にかかるカードは、一度描いて高さを覚えるまで後回しにしない
+  // （css の .cv-hold）。言語で高さが変わっても足りるよう、もとの画面の上端から1画面分の高さだけ上までを含める。
+  // それより上のカードは、描いて高さが変わってもブラウザーの scroll anchoring が見えている所を動かさない。
+  // 上のカードを全部描くと、一覧の途中で切り替えたときに、まだ描いていないカードの分だけ遅くなる
+  const from = Math.max(0, Math.min(anchor.holdFrom, anchor.index));
+  const held = Array.prototype.slice.call(listEl.children, from, anchor.index + 1);
   held.forEach((c) => c.classList.add("cv-hold"));
   const hb = header.getBoundingClientRect().bottom;
   scrollByInstant(el.getBoundingClientRect().top - hb - anchor.offset);

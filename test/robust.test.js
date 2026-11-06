@@ -107,7 +107,7 @@ test("RB4: ?book= で来たときは、データが届く前に本のバナー�
   assert.match(fnBody("releaseReservedSpace"), /classList\.remove\("is-pending"\)/);
 });
 
-test("RB5: 画面の外のカードは描くのを後回しにする。章ごとに並べるとき（.is-grouped）は使わない", () => {
+test("RB5: 画面の外のカードは描くのを後回しにする。章ごとに並べるとき（.is-grouped）と scroll anchoring のないブラウザーでは使わない", () => {
   const rulesWithAuto = [...cssNoComments.matchAll(/([^{}]*)\{([^{}]*content-visibility:\s*auto[^{}]*)\}/g)];
   assert.equal(rulesWithAuto.length, 1, "content-visibility: auto は1か所だけに書く");
   assert.equal(
@@ -116,8 +116,16 @@ test("RB5: 画面の外のカードは描くのを後回しにする。章ごと
     "章ごとの表示を外していない（仮の高さのまま「章へ移動」の位置を計算し、見出しが固定ヘッダーの下に隠れる）"
   );
   assert.match(rulesWithAuto[0][2], /contain-intrinsic-size:\s*auto\s+\d+px/);
+  // scroll anchoring のないブラウザー（Safari）では使わない。下へ飛んでから上へ戻るときに、描いたカードが
+  // 実際の高さに変わるたびに見えている所が跳ねる
+  const gate = cssNoComments.match(/@supports \(overflow-anchor: auto\)\s*\{([\s\S]*?)\n\}/);
+  assert.ok(gate, "@supports (overflow-anchor: auto) がない");
+  assert.ok(
+    gate.index < rulesWithAuto[0].index && rulesWithAuto[0].index < gate.index + gate[0].length,
+    "content-visibility: auto が @supports (overflow-anchor: auto) の外にある"
+  );
   assert.match(fnBody("renderToolList"), /classList\.toggle\("is-grouped",\s*!!displayGroups\)/);
-  // 言語を切り替えて読んでいた位置へ戻すときは、読んでいたカードとその上のカードを、一度描くまで後回しにしない
+  // 言語を切り替えて読んでいた位置へ戻すときは、読んでいたカードと、その上で画面にかかるカードを、一度描くまで後回しにしない
   assert.match(cssNoComments, /\.tool-card\.cv-hold\s*\{[^}]*content-visibility:\s*visible/);
   const restore = fnBody("restoreReadingAnchor");
   assert.match(restore, /classList\.add\("cv-hold"\)/);
@@ -126,6 +134,10 @@ test("RB5: 画面の外のカードは描くのを後回しにする。章ごと
     restore.indexOf('classList.add("cv-hold")') < restore.indexOf("scrollByInstant("),
     "cv-hold を付ける前に位置を合わせている（仮の高さで合わせることになる）"
   );
+  // 後回しにしないのは読んでいたカードの近くだけ（一覧の先頭からにすると、途中で切り替えたときに遅くなる）
+  assert.match(fnBody("captureReadingAnchor"), /holdFrom/);
+  assert.match(restore, /anchor\.holdFrom/);
+  assert.doesNotMatch(restore, /slice\.call\(listEl\.children,\s*0,/, "一覧の先頭から全部を後回しにしない範囲にしている");
 });
 
 test("RB6: 出すものが前回と同じなら一覧を作り直さない。判定には言語・本・進捗の変化を含める", () => {
