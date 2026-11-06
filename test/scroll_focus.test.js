@@ -1,6 +1,6 @@
 // test/scroll_focus.test.js
 // 依存なし（node:test / node:assert/strict / node:fs のみ）。
-// SF1〜SF5 は、固定ヘッダーの下で止まる位置・フォーカスの移し方・言語の切り替えの直し方が、
+// SF1〜SF6 は、固定ヘッダーの下で止まる位置・フォーカスの移し方・言語の切り替えの直し方が、
 // あとの変更で外れていないかを見る静的な検査（index.html / js/main.js / css/style.css）。
 
 const fs = require("node:fs");
@@ -67,4 +67,12 @@ test("SF5: 言語を切り替えるとき、読んでいたカードを覚えて
   assert.match(fn[0], /captureReadingAnchor\(\)/);
   assert.match(fn[0], /restoreReadingAnchor\(/);
   assert.match(fn[0], /if \(lang === currentLang\) return/);
+});
+
+test("SF6: フォーカスが固定ヘッダーの中にあるあいだは scroll-padding-top を 0 にする（Tab で JA・EN・? へ移ってもページを動かさない）", () => {
+  const b = cssBlock(/(?:^|\n)html:has\(#site-header :focus\)/);
+  assert.ok(b, "html:has(#site-header :focus) の規則がない");
+  assert.match(b, /scroll-padding-top:\s*0(?:px)?\s*(?:;|$)/);
+  // scroll-padding-top を書くのは html の規則とこの規則の2か所だけ（ほかで足すと、どちらが勝つかが詳細度しだいになる）
+  assert.equal((cssNoComments.match(/scroll-padding-top\s*:/g) || []).length, 2);
 });

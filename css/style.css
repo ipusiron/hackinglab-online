@@ -14,6 +14,13 @@ html {
   scroll-padding-top: calc(var(--header-h, 64px) + 0.5rem);
 }
 
+/* フォーカスがヘッダーの中（JA・EN・?）にあるあいだは、上の余白を外す。
+   固定ヘッダーの部品はいつも見えているのに、Chromium と WebKit（Safari）は余白の帯に隠れているとみなし、
+   Tab・Shift+Tab でヘッダーの部品へ移るたびにページを上へ動かすため。:has() のないブラウザーでは今までどおり */
+html:has(#site-header :focus) {
+  scroll-padding-top: 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
