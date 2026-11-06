@@ -253,6 +253,41 @@ html[lang="en"] .label-ja {
   padding-top: 0.3rem;
 }
 
+/* JS が動く狭い画面では、main.js が「はじめ方」を畳んで html に js-ready を付けるまで、中身を出さない。
+   開いた形で一度描いてから畳むと、下の絞り込み欄とフッターが上へずれるため。
+   式は js/main.js の NARROW_MQ と同じにする。JS が動かない環境（scripting: none）では今までどおり開いて見せる。
+   開閉の印も閉じた形（▶）にそろえる。
+   main.js が届かず js-ready が付かないままのときは、25秒後に中身と印を開いた形に戻す（入口のリンクを隠したままにしない） */
+@media (scripting: enabled) and (max-width: 767.98px) {
+  html:not(.js-ready) #start-here > summary {
+    list-style-type: disclosure-closed;
+    animation: hlo-unhide-marker 0s linear 25s forwards;
+  }
+
+  html:not(.js-ready) #start-here > .start-here-body {
+    max-height: 0;
+    padding-top: 0;
+    overflow: hidden;
+    visibility: hidden;
+    animation: hlo-unhide 0s linear 25s forwards;
+  }
+}
+
+@keyframes hlo-unhide-marker {
+  to {
+    list-style-type: disclosure-open;
+  }
+}
+
+@keyframes hlo-unhide {
+  to {
+    max-height: none;
+    padding-top: 0.3rem;
+    overflow: visible;
+    visibility: visible;
+  }
+}
+
 .start-here-lead {
   margin: 0.2rem 0 0.5rem;
   font-size: 0.9rem;
@@ -307,6 +342,13 @@ html[lang="en"] .label-ja {
   background-color: #faf5ff;
   border: 1px solid #e9d5ff;
   border-radius: 0.75rem;
+}
+
+/* ?book= で来たとき、データが届く前に取っておくバナーの場所（main.js が is-pending を付け、描くときに外す）。
+   高さはいちばん低いバナー（シリーズの133px）に合わせる。高すぎると、届いたときに下の部品が上へずれる */
+#book-banner.is-pending {
+  min-height: 133px;
+  visibility: hidden;
 }
 
 .book-banner-badge {
@@ -447,6 +489,13 @@ html[lang="en"] .label-ja {
   display: grid;
   grid-template-columns: 1fr;
   gap: 1rem;
+}
+
+/* 読み込みが終わるまで（main.js が aria-busy を false にするまで）は一覧の高さを1画面分取り、フッターを画面の外に置く。
+   空の一覧のまま描くと、カードが入ったときにフッターが画面の中から外へ飛ぶため */
+#tool-list[aria-busy="true"] {
+  min-height: 100vh;
+  align-content: start;
 }
 
 /* --- カード本体 --- */

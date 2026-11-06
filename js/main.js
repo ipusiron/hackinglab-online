@@ -49,6 +49,9 @@ const PROGRESS_LABELS = {
   en: ["Not started", "In progress", "First pass", "Mastered"]
 };
 
+// 狭い画面の境目。css/style.css の、「はじめ方」を描く前に畳む規則（@media）と同じ式にする
+const NARROW_MQ = "(max-width: 767.98px)";
+
 document.addEventListener("DOMContentLoaded", () => {
   setupStaticUI();
   setupHelpModal();
@@ -130,11 +133,59 @@ function setupStaticUI() {
   const resetBtn = document.getElementById("reset-all-progress");
   resetBtn?.addEventListener("click", handleResetAllProgress);
 
-  // はじめ方は既定で開く（HTML）。狭い画面では初期表示を圧迫しないよう畳む
+  // はじめ方は既定で開く（HTML）。狭い画面では初期表示を圧迫しないよう畳む。
+  // CSS は js-ready が付くまで狭い画面で中身を隠しているので、ここで畳んでも下の部品は動かない
   const startHere = document.getElementById("start-here");
-  if (startHere && window.innerWidth < 768) startHere.open = false;
+  if (startHere && window.matchMedia && window.matchMedia(NARROW_MQ).matches) {
+    startHere.open = false;
+  }
+  document.documentElement.classList.add("js-ready");
+  reserveBookBanner();
+
+  // 再読み込みや「戻る」で開き直したときは、いつも先頭から始める。一覧はデータが届いてから描くので、
+  // ブラウザーがスクロール位置を戻そうとすると、読み込み中に取っている高さ（一覧の1画面分）の所で止まり、
+  // 読んでいた所でも先頭でもない中途半端な位置になる（一覧をあとから描く作りなので、もとから位置は戻らなかった）
+  try {
+    if ("scrollRestoration" in window.history) window.history.scrollRestoration = "manual";
+  } catch (e) {
+    /* 無視 */
+  }
 
   updateLanguageUI();
+}
+
+// ?book= で来たときは、データが届く前にバナーの場所を取っておく（css の #book-banner.is-pending）。
+// 中身は一覧と一緒に描き、本が見つからないときと読み込みに失敗したときは隠す
+function reserveBookBanner() {
+  let raw = null;
+  try {
+    raw = new URLSearchParams(window.location.search).get("book");
+  } catch (e) {
+    raw = null;
+  }
+  const v = raw ? raw.trim().toLowerCase() : "";
+  if (!v || v === "all") return;
+  const banner = document.getElementById("book-banner");
+  if (!banner) return;
+  banner.classList.add("is-pending");
+  banner.hidden = false;
+}
+
+// 一覧の読み込み中の印（aria-busy）。CSS は "true" のあいだ一覧の高さを1画面分取り、
+// カードが入ったときにフッターが画面の中から外へ飛ばないようにする
+function setListBusy(busy) {
+  const list = document.getElementById("tool-list");
+  if (list) list.setAttribute("aria-busy", busy ? "true" : "false");
+}
+
+// 読み込みに失敗したときは、読み込み中のために取っておいた場所（一覧の高さ・本のバナー）を返す
+function releaseReservedSpace() {
+  setListBusy(false);
+  const banner = document.getElementById("book-banner");
+  if (banner && banner.classList.contains("is-pending")) {
+    banner.classList.remove("is-pending");
+    banner.hidden = true;
+  }
 }
 
 // ---- ヘルプモーダル ----
@@ -253,6 +304,7 @@ async function loadData() {
 
     if (!catRes.ok || !toolsRes.ok) {
       console.warn("Failed to load JSON files");
+      releaseReservedSpace();
       return;
     }
 
@@ -260,15 +312,17 @@ async function loadData() {
     const toolsJson = await toolsRes.json();
     tools = Array.isArray(toolsJson.tools) ? toolsJson.tools : [];
 
-    // 更新日時
+    // 書籍データ（自己完結した読み込み。失敗してもハブは従来どおり動く）
+    const bJson = await booksPromise;
+    books = bJson && Array.isArray(bJson.books) ? bJson.books : [];
+
+    // 更新日時。ここから描き終えるまで await をはさまないので、一覧と同じ時に画面に出る
+    // （先に入れると、書籍データを待つあいだにフッターだけが先に描き変わる）
     const lastUpdatedEl = document.getElementById("last-updated-value");
     if (lastUpdatedEl) {
       lastUpdatedEl.textContent = toolsJson.generated_at || "-";
     }
 
-    // 書籍データ（自己完結した読み込み。失敗してもハブは従来どおり動く）
-    const bJson = await booksPromise;
-    books = bJson && Array.isArray(bJson.books) ? bJson.books : [];
     if (!HB) console.warn("books.js not loaded; book filter disabled");
     applyBooksAvailability();
 
@@ -299,10 +353,12 @@ async function loadData() {
 
     applyHeaderHeightVar();
     setupFilterOptions();
+    setListBusy(false);
     renderAll();
     maybeScrollToHash();
   } catch (err) {
     console.error("Error loading data:", err);
+    releaseReservedSpace();
   }
 }
 
@@ -682,6 +738,7 @@ function appendEmptyState(listEl, book) {
 function renderBookBanner(book, shownCount, displayGroups) {
   const banner = document.getElementById("book-banner");
   if (!banner) return;
+  banner.classList.remove("is-pending"); // 読み込み中に取っておいた場所を、中身で置き換える
   if (!book) {
     banner.hidden = true;
     banner.innerHTML = "";
