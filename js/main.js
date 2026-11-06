@@ -156,6 +156,8 @@ function setupHelpModal() {
   const openHelp = () => {
     returnFocusTo = document.activeElement;
     helpModal.hidden = false;
+    // 開いているあいだは後ろのページを動かさない（css の html.help-open）
+    document.documentElement.classList.add("help-open");
     // ダイアログの中へフォーカスを移す（ダイアログ名が読み上げられる）
     (helpDialog || helpClose)?.focus();
     if (helpDialog) helpDialog.scrollTop = 0;
@@ -164,6 +166,7 @@ function setupHelpModal() {
   const closeHelp = () => {
     if (helpModal.hidden) return;
     helpModal.hidden = true;
+    document.documentElement.classList.remove("help-open");
     const target =
       returnFocusTo && document.contains(returnFocusTo) ? returnFocusTo : helpButton;
     returnFocusTo = null;
