@@ -10,6 +10,15 @@
 
 html {
   scroll-behavior: smooth;
+  /* 固定ヘッダーの下に隠れない位置までスクロールする（Tab・Shift+Tab・focus()・#リンク・scrollIntoView） */
+  scroll-padding-top: calc(var(--header-h, 64px) + 0.5rem);
+}
+
+/* フォーカスがヘッダーの中（JA・EN・?）にあるあいだは、上の余白を外す。
+   固定ヘッダーの部品はいつも見えているのに、Chromium と WebKit（Safari）は余白の帯に隠れているとみなし、
+   Tab・Shift+Tab でヘッダーの部品へ移るたびにページを上へ動かすため。:has() のないブラウザーでは今までどおり */
+html:has(#site-header :focus) {
+  scroll-padding-top: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -101,11 +110,21 @@ html[lang="en"] .label-ja {
   cursor: pointer;
 }
 
-.header-controls button[disabled] {
+.header-controls button[aria-pressed="true"] {
   background-color: #222;
   color: #fff;
   border-color: #222;
   cursor: default;
+}
+
+/* 強制カラー（Windows のハイコントラスト）でも今の言語がわかるようにする */
+@media (forced-colors: active) {
+  .header-controls button[aria-pressed="true"] {
+    forced-color-adjust: none;
+    background-color: Highlight;
+    color: HighlightText;
+    border-color: Highlight;
+  }
 }
 
 .help-button {
@@ -219,10 +238,11 @@ html[lang="en"] .label-ja {
   border-radius: 0.75rem;
 }
 
+/* 開閉の印（▶／▼）を出すため、display は summary の既定（list-item）のままにする。
+   display:flex にすると印が消える。文字を44pxの高さの上下中央に置くのは align-content で行う */
 #start-here > summary {
   min-height: 44px;
-  display: flex;
-  align-items: center;
+  align-content: center;
   font-size: 0.95rem;
   font-weight: 700;
   color: #111827;
@@ -387,7 +407,7 @@ html[lang="en"] .label-ja {
   font-size: 0.95rem;
   font-weight: 700;
   color: #111827;
-  scroll-margin-top: calc(var(--header-h, 64px) + 0.5rem);
+  /* 位置は html の scroll-padding-top で決める（ここにも足すと二重になる） */
 }
 
 /* ダッシュボードの書籍行の種別の札 */
@@ -827,12 +847,25 @@ html[lang="en"] .label-ja {
   display: flex;
 }
 
+/* ヘルプを開いているあいだは後ろのページを動かさない（main.js が html に help-open を付け外しする） */
+html.help-open {
+  overflow: hidden;
+}
+
+/* 開く前にスクロールバーが幅を取っていたときだけ、その幅を残す（main.js が keep-gutter を付ける）。
+   残さないとスクロールバーが消えて後ろのページが横にずれ、スクロールバーのない短いページで残すと逆にずれる */
+html.help-open.keep-gutter {
+  scrollbar-gutter: stable;
+}
+
 .modal-content {
   background: #fff;
   max-width: 600px;
   width: 100%;
   max-height: calc(100vh - 2rem);
+  max-height: calc(100dvh - 2rem); /* スマホのアドレスバーが出ているときも画面に収める */
   overflow-y: auto;
+  overscroll-behavior: contain; /* 本文の端まで送っても、後ろのページへスクロールを渡さない */
   padding: 1.5rem;
   border-radius: 0.75rem;
   position: relative;
@@ -843,13 +876,21 @@ html[lang="en"] .label-ja {
   outline: none;
 }
 
+/* 「×」は本文と一緒に流れないよう、右上に残す（sticky）。押せる大きさは44px。
+   sticky の基準は本文の余白（1.5rem）の内側なので、top と margin を -1rem にして、角から8pxの位置に置く */
 .modal-close {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
+  position: sticky;
+  top: -1rem;
+  float: right;
+  z-index: 1;
+  width: 44px;
+  height: 44px;
+  margin: -1rem -1rem 0 0.5rem;
   background: #fff;
   border: none;
-  font-size: 1.2rem;
+  border-radius: 50%;
+  font-size: 1.4rem;
+  line-height: 1;
   cursor: pointer;
 }
 
@@ -919,5 +960,53 @@ html[lang="en"] .label-ja {
 
   #tool-filters.no-books {
     grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr) minmax(0, 1.4fr);
+  }
+}
+
+/* ================================
+ * 強制カラー（Windows のハイコントラスト）
+ * ================================ */
+
+/* 選ばれたタブを、色だけでなく下線の太さと字の太さでも示す。
+   円グラフ・凡例の色見本・進捗の棒は、背景の色が消えないよう色を保ったまま枠を付ける */
+@media (forced-colors: active) {
+  .tab-button {
+    border-bottom: 4px solid Canvas;
+  }
+
+  .tab-button[aria-selected="true"] {
+    border-bottom-color: Highlight;
+    font-weight: 700;
+  }
+
+  .pie-chart,
+  .pie-legend-color,
+  .category-progress-bar {
+    forced-color-adjust: none;
+    border: 1px solid CanvasText;
+  }
+
+  .pie-chart::after {
+    background-color: Canvas;
+  }
+}
+
+/* ================================
+ * 動きを減らす設定
+ * ================================ */
+
+/* カードとカードのボタンを、マウスを乗せても浮かせない。
+   ホバーの規則より後ろに置く（前に置くと、同じ詳細度のホバーの規則が勝って浮いたまま残る） */
+@media (prefers-reduced-motion: reduce) {
+  .tool-card,
+  .tool-footer .tool-button,
+  .tool-progress-button {
+    transition: none;
+  }
+
+  .tool-card:hover,
+  .tool-footer .tool-button:hover,
+  .tool-progress-button:hover {
+    transform: none;
   }
 }

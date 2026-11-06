@@ -1,6 +1,6 @@
 // test/site.test.js
 // 依存なし（node:test / node:assert/strict / node:fs のみ）。
-// U1〜U2 は js/storage.js・js/tabs.js の純関数、H1〜H8 は index.html / js/main.js の静的な検査。
+// U1〜U2 は js/storage.js・js/tabs.js の純関数、H1〜H15 は index.html / js/main.js / css/style.css の静的な検査。
 
 const fs = require("node:fs");
 const path = require("node:path");
@@ -13,6 +13,8 @@ const { nextTabIndex } = require("../js/tabs.js");
 const ROOT = path.join(__dirname, "..");
 const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
 const mainJs = fs.readFileSync(path.join(ROOT, "js/main.js"), "utf8");
+const css = fs.readFileSync(path.join(ROOT, "css/style.css"), "utf8");
+const cssNoComments = css.replace(/\/\*[\s\S]*?\*\//g, "");
 
 // ---- U: 純関数 ----
 
@@ -177,4 +179,91 @@ test("H9: main.js が localStorage を直接読み書きしない（try/catch �
   assert.ok(calls.length <= 2, `localStorage の直接呼び出しが ${calls.length} か所`);
   assert.match(mainJs, /progressStore\.getItem/);
   assert.match(mainJs, /progressStore\.setItem/);
+});
+
+// ---- css/style.css の静的な検査 ----
+
+// CSS の規則を { selector, body } の配列にする（コメントを除き、@media の中も平らに拾う簡易版）
+function cssRules(text) {
+  const out = [];
+  const re = /([^{}]+)\{([^{}]*)\}/g;
+  let m;
+  while ((m = re.exec(text))) out.push({ selector: m[1].trim(), body: m[2] });
+  return out;
+}
+const rules = cssRules(cssNoComments);
+const bodyOf = (sel) =>
+  rules
+    .filter((r) => r.selector.split(",").map((s) => s.trim()).includes(sel))
+    .map((r) => r.body)
+    .join("\n");
+// @media (...) { ... } の中身（ファイルの先頭の段で閉じる "\n}" まで）
+const mediaBlocks = (condRe) =>
+  [...cssNoComments.matchAll(new RegExp(String.raw`@media\s*\(${condRe.source}\)\s*\{([\s\S]*?)\n\}`, "g"))].map(
+    (m) => ({ index: m.index, body: m[1] })
+  );
+
+test("H10: 折りたたみの見出し（summary）は開閉の印を消さない（display を変えない・list-style: none にしない）", () => {
+  const sums = rules.filter(
+    (r) => /summary(?!::)/.test(r.selector) && !/::(?:marker|-webkit-details-marker)/.test(r.selector)
+  );
+  assert.ok(sums.length > 0);
+  for (const r of sums) {
+    assert.doesNotMatch(r.body, /(^|[;\s])display\s*:\s*(?!list-item)/, `${r.selector} が display を変えている（印が消える）`);
+    assert.doesNotMatch(r.body, /list-style(-type)?\s*:\s*none/, `${r.selector} が印を消している`);
+  }
+});
+
+test("H11: ヘルプを開いているあいだ後ろのページを動かさず、「×」は本文と一緒に流れない", () => {
+  assert.match(bodyOf(".modal-content"), /overscroll-behavior\s*:\s*contain/);
+  assert.match(bodyOf("html.help-open"), /overflow\s*:\s*hidden/);
+  assert.match(bodyOf(".modal-close"), /position\s*:\s*sticky/);
+  assert.match(mainJs, /classList\.add\("help-open"\)/);
+  // 外すのは閉じる処理（closeHelp）の1か所だけ。ほかの経路で閉じると、ページがスクロールできないまま残る
+  const removes = mainJs.match(/classList\.remove\("help-open"[,)]/g) || [];
+  assert.equal(removes.length, 1);
+  assert.match(mainJs, /const closeHelp = \(\) => \{[^}]*classList\.remove\("help-open"[,)]/);
+});
+
+test("H12: 強制カラーでも、選ばれたタブと円グラフ・凡例・進捗の棒を見分けられる", () => {
+  const forced = mediaBlocks(/forced-colors:\s*active/).map((b) => b.body).join("\n");
+  assert.match(forced, /\.tab-button\[aria-selected="true"\]\s*\{[^}]*border-bottom-color:\s*Highlight/);
+  assert.match(forced, /\.tab-button\[aria-selected="true"\]\s*\{[^}]*font-weight:\s*700/);
+  for (const sel of [".pie-chart", ".pie-legend-color", ".category-progress-bar"]) {
+    assert.ok(forced.includes(sel), `${sel} の指定がない`);
+  }
+  assert.match(forced, /forced-color-adjust:\s*none/);
+});
+
+test("H13: 動きを減らす設定では、カードとカードのボタンをホバーで浮かせない（ホバーの規則より後ろで打ち消す）", () => {
+  const blocks = mediaBlocks(/prefers-reduced-motion:\s*reduce/);
+  assert.ok(blocks.length > 0, "prefers-reduced-motion: reduce の指定がない");
+  const last = blocks[blocks.length - 1];
+  for (const sel of [".tool-card:hover", ".tool-footer .tool-button:hover", ".tool-progress-button:hover"]) {
+    assert.ok(last.body.includes(sel), `${sel} を打ち消していない`);
+  }
+  assert.match(last.body, /transform:\s*none/);
+  assert.match(last.body, /transition:\s*none/);
+  // 浮かせるホバーの規則（translateY）より後ろにある（前にあると同じ詳細度のホバーの規則が勝つ）
+  const lifts = [...cssNoComments.matchAll(/:hover\s*\{[^}]*transform:\s*translateY/g)].map((m) => m.index);
+  assert.ok(lifts.length > 0);
+  assert.ok(last.index > Math.max(...lifts), "ホバーの規則より前にある");
+});
+
+test("H14: ヘルプを閉じたら、開く前にフォーカスがなかったとき（マウスで押した Safari など）も ? へフォーカスを戻す", () => {
+  const open = mainJs.match(/const openHelp = \(\) => \{[\s\S]*?\n {2}\};/);
+  assert.ok(open, "openHelp がない");
+  assert.match(open[0], /returnFocusTo\s*=\s*[^;]*document\.body[^;]*helpButton/);
+});
+
+test("H15: ヘルプを開いたとき、スクロールバーの幅を残すのは開く前にスクロールバーが幅を取っていたときだけ", () => {
+  // いつも残すと、スクロールバーのない短いページで開いたときに後ろのページが横にずれる
+  assert.doesNotMatch(bodyOf("html.help-open"), /scrollbar-gutter/);
+  assert.match(bodyOf("html.help-open.keep-gutter"), /scrollbar-gutter\s*:\s*stable/);
+  const open = mainJs.match(/const openHelp = \(\) => \{[\s\S]*?\n {2}\};/);
+  assert.ok(open, "openHelp がない");
+  assert.match(open[0], /classList\.toggle\("keep-gutter",\s*window\.innerWidth\s*-\s*[\w.]+\.clientWidth\s*>\s*1\)/);
+  // keep-gutter を付けてから help-open を付ける（スクロールバーが消える前に測る）
+  assert.ok(open[0].indexOf('"keep-gutter"') < open[0].indexOf('classList.add("help-open")'));
+  assert.match(mainJs, /classList\.remove\("help-open",\s*"keep-gutter"\)/);
 });

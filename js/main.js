@@ -68,19 +68,17 @@ function setupStaticUI() {
   const langJaBtn = document.getElementById("lang-ja");
   const langEnBtn = document.getElementById("lang-en");
 
-  langJaBtn?.addEventListener("click", () => {
-    currentLang = "ja";
+  const setLanguage = (lang) => {
+    if (lang === currentLang) return; // 今の言語のボタンは押しても何もしない
+    const anchor = captureReadingAnchor(); // 作り直す前に、読んでいたカードと高さを覚える
+    currentLang = lang;
     updateLanguageUI();
     setupFilterOptions(); // ラベルが変わるのでフィルターも再生成
     renderAll();
-  });
-
-  langEnBtn?.addEventListener("click", () => {
-    currentLang = "en";
-    updateLanguageUI();
-    setupFilterOptions();
-    renderAll();
-  });
+    restoreReadingAnchor(anchor);
+  };
+  langJaBtn?.addEventListener("click", () => setLanguage("ja"));
+  langEnBtn?.addEventListener("click", () => setLanguage("en"));
 
   // タブ切替（クリック、および ←/→/Home/End のキーボード操作）
   const tabButtons = Array.from(document.querySelectorAll(".tab-button"));
@@ -156,8 +154,15 @@ function setupHelpModal() {
   let returnFocusTo = null;
 
   const openHelp = () => {
-    returnFocusTo = document.activeElement;
+    // マウスで押してもボタンへフォーカスが移らないブラウザー（Safari など）では body になるので、そのときは ? へ戻す
+    const active = document.activeElement;
+    returnFocusTo = active && active !== document.body ? active : helpButton;
     helpModal.hidden = false;
+    // 開いているあいだは後ろのページを動かさない（css の html.help-open）。
+    // スクロールバーが幅を取っていたときだけ、その幅を残して後ろのページが横にずれないようにする（css の keep-gutter）
+    const root = document.documentElement;
+    root.classList.toggle("keep-gutter", window.innerWidth - root.clientWidth > 1);
+    root.classList.add("help-open");
     // ダイアログの中へフォーカスを移す（ダイアログ名が読み上げられる）
     (helpDialog || helpClose)?.focus();
     if (helpDialog) helpDialog.scrollTop = 0;
@@ -166,10 +171,12 @@ function setupHelpModal() {
   const closeHelp = () => {
     if (helpModal.hidden) return;
     helpModal.hidden = true;
+    document.documentElement.classList.remove("help-open", "keep-gutter");
     const target =
       returnFocusTo && document.contains(returnFocusTo) ? returnFocusTo : helpButton;
     returnFocusTo = null;
-    target?.focus();
+    // 戻す先は固定ヘッダーの ? なので、スクロールさせない（scroll-padding-top があると Chromium がページを動かす）
+    target?.focus({ preventScroll: true });
   };
 
   helpButton?.addEventListener("click", openHelp);
@@ -317,7 +324,8 @@ function applyBooksAvailability() {
   }
 }
 
-// 固定ヘッダーの高さを CSS 変数 --header-h に書き、章ジャンプのスクロール位置に使う。
+// 固定ヘッダーの高さを CSS 変数 --header-h に書く。html の scroll-padding-top がこれを使い、
+// 章へ移動・Tab での移動・focus() のどれでも、ヘッダーの下に隠れない位置で止まるようにする。
 function applyHeaderHeightVar() {
   const header = document.getElementById("site-header");
   if (!header) return;
@@ -334,7 +342,7 @@ function applyHeaderHeightVar() {
   }
 }
 
-// #book-group-<key> のハッシュがあればそこへスクロールする。
+// #book-group-<key> のハッシュがあればそこへスクロールし、見出しへフォーカスを移す。
 function maybeScrollToHash() {
   const h = window.location.hash;
   if (!h || h.indexOf("#book-group-") !== 0) return;
@@ -342,10 +350,50 @@ function maybeScrollToHash() {
   if (el) {
     try {
       el.scrollIntoView();
+      // 次の Tab がこの章から始まるように、見出しへフォーカスを移す（スクロールはし直さない）
+      el.focus({ preventScroll: true });
     } catch (e) {
       /* 無視 */
     }
   }
+}
+
+// なめらかなスクロール（html の scroll-behavior: smooth）を使わずに、すぐ動かす。
+function scrollByInstant(dy) {
+  if (!dy || Math.abs(dy) < 1) return;
+  try {
+    window.scrollBy({ top: dy, left: 0, behavior: "instant" });
+  } catch (e) {
+    window.scrollBy(0, dy);
+  }
+}
+
+// 一覧の途中で表示を作り直す前に、ヘッダーのすぐ下で読んでいた項目（カードか章の見出し）を覚える。
+// 一覧の先頭が見えているときは null（何もしない）。
+function captureReadingAnchor() {
+  const listEl = document.getElementById("tool-list");
+  const header = document.getElementById("site-header");
+  if (!listEl || !header || listEl.getClientRects().length === 0) return null;
+  const hb = header.getBoundingClientRect().bottom;
+  if (listEl.getBoundingClientRect().top >= hb) return null;
+  const items = listEl.children;
+  for (let i = 0; i < items.length; i++) {
+    const r = items[i].getBoundingClientRect();
+    if (r.top + r.height / 2 > hb) return { index: i, offset: r.top - hb };
+  }
+  return null;
+}
+
+// 作り直したあと、同じ順番の項目がヘッダーの下の同じ高さに来るようにスクロールする。
+// 言語を切り替えても絞り込みの結果と並び順は変わらないので、順番で同じ項目を引ける。
+function restoreReadingAnchor(anchor) {
+  if (!anchor) return;
+  const listEl = document.getElementById("tool-list");
+  const header = document.getElementById("site-header");
+  const el = listEl && listEl.children[anchor.index];
+  if (!el || !header) return;
+  const hb = header.getBoundingClientRect().bottom;
+  scrollByInstant(el.getBoundingClientRect().top - hb - anchor.offset);
 }
 
 // ---- UIレンダリング全体 ----
@@ -373,13 +421,9 @@ function updateLanguageUI() {
   const langJaBtn = document.getElementById("lang-ja");
   const langEnBtn = document.getElementById("lang-en");
   if (langJaBtn && langEnBtn) {
-    if (isJa) {
-      langJaBtn.disabled = true;
-      langEnBtn.disabled = false;
-    } else {
-      langJaBtn.disabled = false;
-      langEnBtn.disabled = true;
-    }
+    // disabled にするとフォーカスが外れるので、押されている状態（aria-pressed）で今の言語を示す
+    langJaBtn.setAttribute("aria-pressed", isJa ? "true" : "false");
+    langEnBtn.setAttribute("aria-pressed", isJa ? "false" : "true");
   }
 
   // 検索プレースホルダ
@@ -758,7 +802,8 @@ function renderBookBanner(book, shownCount, displayGroups) {
         const target = document.getElementById(`book-group-${g.key}`);
         if (target) {
           target.scrollIntoView();
-          target.focus();
+          // なめらかなスクロールの途中で focus() が位置を計算し直さないようにする
+          target.focus({ preventScroll: true });
         }
         try {
           window.history.replaceState(null, "", "#book-group-" + g.key);
