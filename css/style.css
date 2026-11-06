@@ -10,6 +10,8 @@
 
 html {
   scroll-behavior: smooth;
+  /* 固定ヘッダーの下に隠れない位置までスクロールする（Tab・Shift+Tab・focus()・#リンク・scrollIntoView） */
+  scroll-padding-top: calc(var(--header-h, 64px) + 0.5rem);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -101,11 +103,21 @@ html[lang="en"] .label-ja {
   cursor: pointer;
 }
 
-.header-controls button[disabled] {
+.header-controls button[aria-pressed="true"] {
   background-color: #222;
   color: #fff;
   border-color: #222;
   cursor: default;
+}
+
+/* 強制カラー（Windows のハイコントラスト）でも今の言語がわかるようにする */
+@media (forced-colors: active) {
+  .header-controls button[aria-pressed="true"] {
+    forced-color-adjust: none;
+    background-color: Highlight;
+    color: HighlightText;
+    border-color: Highlight;
+  }
 }
 
 .help-button {
@@ -387,7 +399,7 @@ html[lang="en"] .label-ja {
   font-size: 0.95rem;
   font-weight: 700;
   color: #111827;
-  scroll-margin-top: calc(var(--header-h, 64px) + 0.5rem);
+  /* 位置は html の scroll-padding-top で決める（ここにも足すと二重になる） */
 }
 
 /* ダッシュボードの書籍行の種別の札 */
