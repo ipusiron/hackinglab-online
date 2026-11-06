@@ -1,9 +1,11 @@
 // test/site.test.js
-// 依存なし（node:test / node:assert/strict / node:fs のみ）。
-// U1〜U2 は js/storage.js・js/tabs.js の純関数、H1〜H15 は index.html / js/main.js / css/style.css の静的な検査。
+// 依存なし（node:test / node:assert/strict / node:fs / node:zlib のみ）。
+// U1〜U2 は js/storage.js・js/tabs.js の純関数、H1〜H15 は index.html / js/main.js / css/style.css の静的な検査、
+// H16〜H20 はデータの読み込みの決まり（ハブの CLAUDE.md の Loading data）の検査。
 
 const fs = require("node:fs");
 const path = require("node:path");
+const zlib = require("node:zlib");
 const assert = require("node:assert/strict");
 const { test } = require("node:test");
 
@@ -266,4 +268,117 @@ test("H15: ヘルプを開いたとき、スクロールバーの幅を残すの
   // keep-gutter を付けてから help-open を付ける（スクロールバーが消える前に測る）
   assert.ok(open[0].indexOf('"keep-gutter"') < open[0].indexOf('classList.add("help-open")'));
   assert.match(mainJs, /classList\.remove\("help-open",\s*"keep-gutter"\)/);
+});
+
+// ---- データの読み込みの決まり（ハブの CLAUDE.md の Loading data） ----
+
+// JS のコメント（// と /* */）を空白に置き換える。文字列の中はそのまま（位置は変えない）
+function blankComments(src) {
+  let out = "";
+  for (let i = 0; i < src.length; i++) {
+    const c = src[i];
+    if (c === '"' || c === "'" || c === "`") {
+      let j = i + 1;
+      for (; j < src.length && src[j] !== c; j++) if (src[j] === "\\") j++;
+      out += src.slice(i, j + 1);
+      i = j;
+    } else if (c === "/" && src[i + 1] === "/") {
+      let j = src.indexOf("\n", i);
+      if (j < 0) j = src.length;
+      out += " ".repeat(j - i);
+      i = j - 1;
+    } else if (c === "/" && src[i + 1] === "*") {
+      let j = src.indexOf("*/", i + 2);
+      j = j < 0 ? src.length : j + 2;
+      out += src.slice(i, j).replace(/[^\n]/g, " ");
+      i = j - 1;
+    } else {
+      out += c;
+    }
+  }
+  return out;
+}
+
+// loadData の本体（宣言から、行頭の "}" まで。コメントは空白にする）
+function loadDataBody() {
+  const m = mainJs.match(/async function loadData\(\)\s*\{[\s\S]*?\n\}/);
+  assert.ok(m, "loadData がない");
+  return blankComments(m[0]);
+}
+
+// 文字列の中を飛ばしながら、pos にある "(" に対応する ")" の位置を返す
+function matchParen(src, pos) {
+  let depth = 0;
+  for (let i = pos; i < src.length; i++) {
+    const c = src[i];
+    if (c === '"' || c === "'" || c === "`") {
+      for (i++; i < src.length && src[i] !== c; i++) if (src[i] === "\\") i++;
+      continue;
+    }
+    if (c === "(") depth++;
+    else if (c === ")" && --depth === 0) return i;
+  }
+  return -1;
+}
+
+test("H16: script はすべて defer で async なし。books → storage → tabs → main の順に書き、main.js が最後", () => {
+  const tags = [...html.matchAll(/<script\b[^>]*>/g)].map((m) => m[0]);
+  const srcs = tags.map((t) => (t.match(/\ssrc="([^"]+)"/) || [])[1]);
+  for (const t of tags) {
+    assert.match(t, /\sdefer[\s>]/, `defer がない（meta の CSP で Chromium の先読みが止まり、1本ずつ取りに行くことがある）: ${t}`);
+    assert.doesNotMatch(t, /\sasync[\s>=]/, `async は実行の順番を保たない（main.js が books.js より先に動くと書籍の絞り込みが消える）: ${t}`);
+  }
+  const order = ["./js/books.js", "./js/storage.js", "./js/tabs.js", "./js/main.js"].map((s) => srcs.indexOf(s));
+  assert.ok(order.every((i) => i >= 0), `読み込む script が足りない: ${srcs.join(", ")}`);
+  assert.deepEqual([...order].sort((a, b) => a - b), order, "script の順番が books → storage → tabs → main でない");
+  assert.equal(srcs[srcs.length - 1], "./js/main.js", "main.js が最後の script でない");
+});
+
+test("H17: 最初の表示に使う data/*.json は、loadData の最初の await が終わる前に全部取り始める", () => {
+  const body = loadDataBody();
+  const urls = [...body.matchAll(/["'`](\.\/data\/[^"'`]+\.json)["'`]/g)].map((m) => ({ url: m[1], at: m.index }));
+  assert.ok(urls.length >= 3, "loadData に data/*.json が3本そろっていない");
+  const aw = body.search(/\bawait\b/);
+  assert.ok(aw > 0, "loadData に await がない");
+  // 最初の await が Promise.all(...) なら、その閉じかっこまでを「同時に取り始めた範囲」とみなす
+  let limit = aw;
+  const pa = body.slice(aw).match(/^await\s+Promise\.all\s*\(/);
+  if (pa) limit = matchParen(body, aw + pa[0].length - 1);
+  const late = urls.filter((u) => u.at > limit).map((u) => u.url);
+  assert.deepEqual(late, [], `ほかの JSON を待ってから取りに行っている（往復1回分カードが遅れる）: ${late.join(", ")}`);
+});
+
+test("H18: なくても一覧を出せる books.json は Promise.all に入れず、取り始めるところで失敗を受け止める", () => {
+  const body = loadDataBody();
+  const i = body.indexOf('"./data/books.json"');
+  assert.ok(i >= 0, "loadData で books.json を取っていない");
+  const aw = body.search(/await\s+Promise\.all\s*\(/);
+  assert.ok(aw > 0, "loadData に await Promise.all がない");
+  const open = body.indexOf("(", aw);
+  const close = matchParen(body, open);
+  assert.ok(i < open || i > close, "books.json が Promise.all の中にある（books.json の失敗で一覧まで出なくなる）");
+  assert.match(body.slice(i, body.indexOf(";", i)), /\.catch\(/, "books.json の失敗を、取り始める文の中で受け止めていない");
+});
+
+test("H19: tools.json は gzip で 80KB 以下（超えたら読み込み方か上限を見直す知らせ。ツールの数の上限ではない）", () => {
+  const raw = fs.readFileSync(path.join(ROOT, "data/tools.json"));
+  const gz = zlib.gzipSync(raw, { level: 6 }).length;
+  assert.ok(
+    gz <= 80 * 1024,
+    `tools.json が gzip で ${gz} バイト（上限 ${80 * 1024}）。ハブの CLAUDE.md の Loading data を見て、読み込み方か上限を見直す`
+  );
+});
+
+test("H20: 最初に一覧を描いた時刻は performance.mark で1回だけ残し、外へは送らない", () => {
+  assert.equal((mainJs.match(/performance\.mark\(/g) || []).length, 1, "performance.mark は1か所だけ");
+  assert.match(mainJs, /performance\.mark\("hlo:cards-painted"\)/);
+  const load = loadDataBody();
+  const iMark = load.indexOf("markCardsPainted()");
+  assert.ok(iMark > load.indexOf("renderAll()"), "一覧を描いたあとに印を付けていない");
+  // 読み込みをやり直しても付け直さない
+  assert.match(mainJs, /function markCardsPainted\(\)\s*\{\s*if \(cardsPaintedMarked\) return;/);
+  // 測った値を読み出して送る処理がない。CSP の connect-src も 'self' だけ
+  assert.doesNotMatch(mainJs, /sendBeacon|XMLHttpRequest|getEntries(?:ByName|ByType)?\(/);
+  const csp = html.match(/<meta\s+http-equiv="Content-Security-Policy"\s+content="([^"]+)"/)[1];
+  assert.match(csp, /connect-src 'self'(;|$)/);
 });

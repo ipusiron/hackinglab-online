@@ -295,8 +295,9 @@ function nextTabIndex(key, current, count) {
 // ---- データ読み込み ----
 
 async function loadData() {
-  // 書籍データは、一覧の2本（カテゴリ・ツール）を待つ前に同時に取り始める（あとから取ると往復1回分カードが遅れる）。
-  // 書籍データは無くても一覧を出せるので、失敗はここで受け止めて null にする（Promise.all には入れない）
+  // 最初の表示に使う JSON は、最初の await より前に全部取り始める（ほかを待ってから取ると、往復1回分カードが遅れる）。
+  // 書籍データは無くても一覧を出せるので、Promise.all には入れず、失敗はここで受け止めて null にする。
+  // 決まりはハブの CLAUDE.md（Loading data）にあり、test/site.test.js がこの形を確かめる
   const booksPromise = fetch("./data/books.json")
     .then((res) => (res.ok ? res.json() : null))
     .catch(() => null);
@@ -360,10 +361,29 @@ async function loadData() {
     setListBusy(false);
     renderAll();
     maybeScrollToHash();
+    markCardsPainted();
   } catch (err) {
     console.error("Error loading data:", err);
     releaseReservedSpace();
   }
+}
+
+// 最初に一覧を描いた時刻に印を付ける（DevTools の Performance で見るため。1回だけ付け、外へは送らない）
+let cardsPaintedMarked = false;
+function markCardsPainted() {
+  if (cardsPaintedMarked) return;
+  cardsPaintedMarked = true;
+  if (typeof performance === "undefined" || typeof performance.mark !== "function") return;
+  // 描いたカードが画面に出たあと（次の描画が終わったあと）に付ける
+  requestAnimationFrame(() =>
+    setTimeout(() => {
+      try {
+        performance.mark("hlo:cards-painted");
+      } catch (e) {
+        /* 無視 */
+      }
+    }, 0)
+  );
 }
 
 // books.json の有無でUIを出し分ける。

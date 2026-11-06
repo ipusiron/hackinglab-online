@@ -20,11 +20,38 @@ function openTag(idValue) {
   return m[0];
 }
 
-// main.js の関数の本体（宣言から、行頭の "}" まで）
+// JS のコメント（// と /* */）を空白に置き換える。文字列の中はそのまま（位置は変えない）
+function blankComments(src) {
+  let out = "";
+  for (let i = 0; i < src.length; i++) {
+    const c = src[i];
+    if (c === '"' || c === "'" || c === "`") {
+      let j = i + 1;
+      for (; j < src.length && src[j] !== c; j++) if (src[j] === "\\") j++;
+      out += src.slice(i, j + 1);
+      i = j;
+    } else if (c === "/" && src[i + 1] === "/") {
+      let j = src.indexOf("\n", i);
+      if (j < 0) j = src.length;
+      out += " ".repeat(j - i);
+      i = j - 1;
+    } else if (c === "/" && src[i + 1] === "*") {
+      let j = src.indexOf("*/", i + 2);
+      j = j < 0 ? src.length : j + 2;
+      out += src.slice(i, j).replace(/[^\n]/g, " ");
+      i = j - 1;
+    } else {
+      out += c;
+    }
+  }
+  return out;
+}
+
+// main.js の関数の本体（宣言から、行頭の "}" まで。コメントは空白にする）
 function fnBody(name) {
   const m = mainJs.match(new RegExp(String.raw`(?:async\s+)?function ${name}\([^)]*\)\s*\{[\s\S]*?\n\}`));
   assert.ok(m, `${name} がない`);
-  return m[0];
+  return blankComments(m[0]);
 }
 
 test("RB1: 書籍・シリーズの欄は最初から場所を取り、一覧は読み込みが終わるまで1画面分の高さを取る", () => {
