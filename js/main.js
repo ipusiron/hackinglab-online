@@ -72,6 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setupStaticUI();
   setupHelpModal();
   setupProgressSync();
+  setupHistory();
   // 固定ヘッダーの高さは、データを読み込む前に書く（読み込み中と読み込みに失敗したときも、
   // Tab・Shift+Tab で移った部品がヘッダーの下に隠れないように）
   applyHeaderHeightVar();
@@ -103,12 +104,13 @@ function setupStaticUI() {
   langJaBtn?.addEventListener("click", () => setLanguage("ja"));
   langEnBtn?.addEventListener("click", () => setLanguage("en"));
 
-  // タブ切替（クリック、および ←/→/Home/End のキーボード操作）。開いたタブは URL の ?tab= に残す
+  // タブ切替（クリック、および ←/→/Home/End のキーボード操作）。開いたタブは URL の ?tab= に残す。
+  // 押して切り替えたときは履歴を積み（戻るで前のタブへ戻る）、キーで切り替えたときは積まずに書き換える
   const tabButtons = Array.from(document.querySelectorAll(".tab-button"));
   tabButtons.forEach((btn, i) => {
     btn.addEventListener("click", () => {
       const targetId = btn.getAttribute("data-tab-target");
-      commitUrl({ tab: tabName(targetId) });
+      commitUrl({ tab: tabName(targetId) }, "push");
       switchTab(targetId);
     });
     btn.addEventListener("keydown", (e) => {
@@ -141,13 +143,15 @@ function setupStaticUI() {
     scrollByInstant(el.getBoundingClientRect().top - before);
   };
 
+  // 本とカテゴリーを選んだときは履歴を積む（戻るで1つ前の一覧へ戻る）。選択欄を矢印キーで動かすと1段ごとに変わるので、
+  // 同じ欄を続けて変えたときは1つにまとめる（commitUrl）
   bookSelect?.addEventListener("change", (e) => {
-    keepInPlace(bookSelect, () => setBookFilter(e.target.value));
+    keepInPlace(bookSelect, () => setBookFilter(e.target.value, { history: "push", source: "book" }));
   });
 
   categorySelect?.addEventListener("change", (e) => {
     keepInPlace(categorySelect, () => {
-      commitUrl({ cat: e.target.value });
+      commitUrl({ cat: e.target.value }, "push", "category");
       filters.categoryId = e.target.value;
       renderToolList();
     });
@@ -172,6 +176,27 @@ function setupStaticUI() {
   searchInput?.addEventListener("input", (e) => {
     if (e.isComposing) return;
     keepInPlace(searchInput, () => applySearch(searchInput.value));
+  });
+
+  // 「はじめ方」の入口（ツール100・ツール200・すべて）：Ctrl などを押さない左クリックのときは、ページを読み直さずに
+  // 書籍の選択と同じ処理で絞り、履歴を積む（読み直すと、開いた「はじめ方」と入れた条件が初めに戻り、回線がないと
+  // サイトから出てしまうため）。新しいタブで開く操作と、本のデータを読めていないときは、これまでどおりのリンクとして開く
+  document.querySelectorAll(".start-here-entries a").forEach((a) => {
+    a.addEventListener("click", (e) => {
+      if (e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+      if (!urlStateReady || !HB || !books.length) return;
+      let target;
+      try {
+        target = new URL(a.href);
+      } catch (err) {
+        return;
+      }
+      const raw = target.searchParams.get("book");
+      const slug = raw ? HB.resolveBookParam(target.search, books) : "";
+      if (raw && !slug) return; // books.json にない本は、リンクのまま開く
+      e.preventDefault();
+      keepInPlace(a, () => openStartEntry(slug));
+    });
   });
 
   // X共有ボタン
@@ -708,9 +733,16 @@ function currentUrlState() {
   };
 }
 
-// 一覧の条件を URL に書く（js/url.js）。partial に変えた条件を入れて、変える前に呼ぶ。今の履歴を書き換え、履歴は増やさない。
+// 同じ欄を続けて変えたときに、履歴を1つにまとめる長さ（選択欄を矢印キーで動かすと、1段ごとに変わるため）
+const MERGE_PUSH_MS = 1000;
+let lastPush = null;
+
+// 一覧の条件を URL に書く（js/url.js）。partial に変えた条件を入れて、画面を変える前に呼ぶ。
+// how が "push" のときは履歴を1つ積む（戻るで1つ前の一覧へ戻る）。積む前に、今の履歴へ見ていた位置を書いておく。
+// それ以外は今の履歴を書き換え、履歴は増やさない（検索の入力・キーでのタブの切り替え・開いたときの表記の直し）。
+// source を渡すと、同じ欄の続けた変更（前の変更から1秒以内）は積まずに書き換え、1つの履歴にまとめる。
 // データが届く前は、変えた条件だけを書く（本・カテゴリーはまだ URL から読んでいないので、上書きしない）
-function commitUrl(partial) {
+function commitUrl(partial, how, source) {
   if (!HU) return;
   const state = urlStateReady ? Object.assign(currentUrlState(), partial) : partial;
   let next;
@@ -720,11 +752,125 @@ function commitUrl(partial) {
     return;
   }
   if (next === window.location.href) return;
+  const now = Date.now();
+  let push = how === "push";
+  if (push && source && lastPush && lastPush.source === source && now - lastPush.time < MERGE_PUSH_MS) push = false;
   try {
-    window.history.replaceState(window.history.state, "", next);
+    if (push) {
+      saveViewInHistory();
+      window.history.pushState({}, "", next);
+    } else {
+      window.history.replaceState(window.history.state, "", next);
+    }
   } catch (e) {
-    /* file:// などでは無視 */
+    return; /* file:// などでは無視 */
   }
+  if (push) lastPush = { source: source || "", time: now };
+  else if (source && lastPush && lastPush.source === source) lastPush.time = now;
+}
+
+// 今の履歴に、見ている位置（スクロールの位置と、一覧でヘッダーのすぐ下にある項目）を書いておく。
+// 戻る・進むでこの履歴へ戻ってきたときに、同じ所を出す（restoreView）
+function saveViewInHistory() {
+  try {
+    const view = { y: Math.round(window.scrollY), anchor: captureReadingAnchor() };
+    window.history.replaceState(Object.assign({}, window.history.state, view), "");
+  } catch (e) {
+    /* 無視 */
+  }
+}
+
+// ---- 戻る・進む ----
+
+function setupHistory() {
+  window.addEventListener("popstate", (e) => applyHistoryState(e.state));
+  // スクロールが止まったら、今の履歴に位置を書く（進むで戻ってきたときも、離れたときの位置を出すため）
+  let timer = 0;
+  window.addEventListener(
+    "scroll",
+    () => {
+      clearTimeout(timer);
+      timer = setTimeout(saveViewInHistory, 300);
+    },
+    { passive: true }
+  );
+}
+
+// 戻る・進むで来た履歴の URL から、一覧の条件（本・カテゴリー・検索・タブ）を戻して描き直し、その履歴で見ていた位置を出す。
+// 条件が今と同じとき（章の位置の # だけが違うときなど）は何もせず、ブラウザーに任せる
+function applyHistoryState(view) {
+  lastPush = null; // 戻ったあとの変更は、まとめずに積む
+  if (!urlStateReady) {
+    // データが届く前はタブだけを合わせる（本・カテゴリー・検索は、データが届いたときに URL から読む）
+    const tab = HU ? HU.readState(window.location.search, {}).tab : "tools";
+    if (tab !== currentTab) switchTab(tab === "dashboard" ? "tab-dashboard" : "tab-tools");
+    return;
+  }
+  const next = readUrlState();
+  const searchInput = document.getElementById("filter-search-input");
+  const searchChanged = !!searchInput && searchInput.value.trim() !== next.q;
+  if (next.book === filters.book && next.cat === filters.categoryId && next.tab === currentTab && !searchChanged) return;
+
+  const filtersEl = document.getElementById("tool-filters");
+  const filtersTop = currentTab === "tools" && filtersEl ? filtersEl.getBoundingClientRect().top : null;
+  if (next.tab !== currentTab) switchTab(next.tab === "dashboard" ? "tab-dashboard" : "tab-tools");
+  filters.categoryId = next.cat;
+  const categorySelect = document.getElementById("filter-category");
+  if (categorySelect) categorySelect.value = next.cat;
+  if (searchChanged) {
+    searchInput.value = next.q;
+    setSearchQuery(next.q);
+  }
+  if (next.book !== filters.book) setBookFilter(next.book, { history: false, cleared: !next.book });
+  else renderToolList();
+  restoreView(view, filtersTop);
+}
+
+// 履歴に書いておいた位置を出す。一覧の途中なら、読んでいた項目を同じ高さに戻す（作り直したカードの仮の高さに惑わされない）。
+// 位置が書かれていない履歴（積んだあと、まだ離れていない履歴を進むで開いたとき）は、絞り込み欄を画面の同じ高さに保つ
+function restoreView(view, filtersTop) {
+  const listEl = document.getElementById("tool-list");
+  if (view && view.anchor && currentTab === "tools" && listEl && listEl.children[view.anchor.index]) {
+    restoreReadingAnchor(view.anchor);
+    return;
+  }
+  if (view && typeof view.y === "number") {
+    try {
+      window.scrollTo({ top: view.y, left: 0, behavior: "instant" });
+    } catch (e) {
+      window.scrollTo(0, view.y);
+    }
+    return;
+  }
+  const filtersEl = document.getElementById("tool-filters");
+  if (filtersTop !== null && currentTab === "tools" && filtersEl) {
+    scrollByInstant(filtersEl.getBoundingClientRect().top - filtersTop);
+  }
+}
+
+// 「はじめ方」の入口で本を選ぶ（slug が "" の「すべてのツール」は、カテゴリー・進捗・検索の条件も外す）。履歴を1つ積む
+function openStartEntry(slug) {
+  if (slug) {
+    setBookFilter(slug, { history: "push" });
+    return;
+  }
+  const hadBook = !!filters.book;
+  commitUrl({ book: "", cat: "", q: "" }, "push");
+  clearOtherFilters();
+  setBookFilter("", { history: false, cleared: hadBook });
+}
+
+// カテゴリー・進捗・検索の条件と欄を空にする（描き直しはしない）
+function clearOtherFilters() {
+  filters.categoryId = "";
+  filters.progress = "all";
+  const c = document.getElementById("filter-category");
+  const p = document.getElementById("filter-progress");
+  const s = document.getElementById("filter-search-input");
+  if (c) c.value = "";
+  if (p) p.value = "all";
+  if (s) s.value = "";
+  setSearchQuery("");
 }
 
 // ---- 書籍フィルターの操作 ----
@@ -760,9 +906,12 @@ function countSuffix(n) {
 }
 
 // 本を選ぶ/外す。URL・select・読み上げを更新して再描画する。
-// URL の ?book= も書き換える（本を切り替え/解除したら、前の本の章へ移動の # は外す。js/url.js）
+// URL の ?book= も書く（本を切り替え/解除したら、前の本の章へ移動の # は外す。js/url.js）。
+// opts.history："push" は履歴を積む（選択欄・解除・「はじめ方」の入口）。false は URL に書かない（戻る・進む、
+// 呼ぶ側で書いたとき）。既定は今の履歴を書き換える。opts.source は commitUrl の同じ欄の変更をまとめるための名前
 function setBookFilter(slug, opts) {
-  commitUrl({ book: slug || "" });
+  const o = opts || {};
+  if (o.history !== false) commitUrl({ book: slug || "" }, o.history, o.source);
   filters.book = slug || "";
   const sel = document.getElementById("filter-book");
   if (sel) sel.value = filters.book;
@@ -961,7 +1110,7 @@ function renderBookBanner(book, shownCount, displayGroups) {
   clearBtn.textContent = isJa ? "解除" : "Clear";
   clearBtn.setAttribute("aria-label", isJa ? "書籍の絞り込みを解除" : "Clear book filter");
   clearBtn.addEventListener("click", () => {
-    setBookFilter("", { cleared: true });
+    setBookFilter("", { cleared: true, history: "push" });
     const sel = document.getElementById("filter-book");
     if (sel) sel.focus();
   });
@@ -1016,8 +1165,10 @@ function renderBookBanner(book, shownCount, displayGroups) {
           // なめらかなスクロールの途中で focus() が位置を計算し直さないようにする
           target.focus({ preventScroll: true });
         }
+        // 章へ移動は履歴を積まずに書き換える（積んでも、戻ったときに前の章の見出しの位置には戻らず、ずれるため）。
+        // 履歴に書いておいた見ていた位置（state）は消さない
         try {
-          window.history.replaceState(null, "", "#book-group-" + g.key);
+          window.history.replaceState(window.history.state, "", "#book-group-" + g.key);
         } catch (err) {
           /* 無視 */
         }
@@ -1417,9 +1568,13 @@ function renderBookProgress() {
     title.appendChild(kind);
     title.appendChild(document.createTextNode(HB.bookLabel(s.book, currentLang)));
     title.addEventListener("click", (e) => {
+      // 新しいタブで開く操作（Ctrl・⌘・Shift・Alt を押したクリック）は、ふつうのリンクのまま
+      if (e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
       e.preventDefault();
+      // 一覧のタブへ移って本で絞る。履歴を1つ積み、戻るでダッシュボードへ戻れるようにする
+      commitUrl({ book: s.book.slug, tab: "tools" }, "push");
       switchTab("tab-tools");
-      setBookFilter(s.book.slug);
+      setBookFilter(s.book.slug, { history: false });
       const h2 = document.getElementById("book-banner-title");
       if (h2) h2.focus();
     });

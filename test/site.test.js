@@ -510,3 +510,61 @@ test("H26: 一覧の条件（本・カテゴリー・検索・タブ）は URL �
     assert.match(m[0], /href="https:\/\/hackinglab\.online\/"/, `canonical がトップを指していない: ${m[0]}`);
   }
 });
+
+test("H27: 本・カテゴリー・タブを選んで切り替えたら履歴を積み、戻る・進むで URL から一覧を戻す。検索の入力・キーでのタブの切り替え・章へ移動・開いたときは積まない", () => {
+  const commit = fnBody("commitUrl");
+  // 積むのは how が "push" のときだけ。積む前に、今の履歴へ見ていた位置を書く
+  assert.match(commit, /let push = how === "push";/);
+  assert.match(commit, /if \(push\) \{\s*saveViewInHistory\(\);\s*window\.history\.pushState\(/);
+  assert.match(commit, /window\.history\.replaceState\(window\.history\.state, "", next\)/);
+  // 同じ欄の続けた変更（選択欄を矢印キーで動かしたとき）は、1つの履歴にまとめる
+  assert.match(commit, /lastPush\.source === source && now - lastPush\.time < MERGE_PUSH_MS\) push = false;/);
+  assert.equal((mainJs.match(/pushState\(/g) || []).length, 1, "pushState は commitUrl の1か所だけ");
+  const setup = fnBody("setupStaticUI");
+  assert.match(setup, /setBookFilter\(e\.target\.value, \{ history: "push", source: "book" \}\)/, "プルダウンで本を選んでも履歴を積んでいない");
+  assert.match(setup, /commitUrl\(\{ cat: e\.target\.value \}, "push", "category"\)/, "カテゴリーを選んでも履歴を積んでいない");
+  const click = setup.slice(setup.indexOf('btn.addEventListener("click"'));
+  assert.match(click.slice(0, click.indexOf("\n    });")), /commitUrl\(\{ tab: tabName\(targetId\) \}, "push"\)/, "タブを押しても履歴を積んでいない");
+  const key = setup.slice(setup.indexOf('btn.addEventListener("keydown"'));
+  assert.doesNotMatch(key.slice(0, key.indexOf("\n    });")), /"push"/, "キーでのタブの切り替えで履歴を積んでいる");
+  assert.doesNotMatch(fnBody("applySearch"), /"push"/, "検索の入力で履歴を積んでいる");
+  assert.match(fnBody("renderBookBanner"), /setBookFilter\("", \{ cleared: true, history: "push" \}\)/, "解除で履歴を積んでいない");
+  // 章へ移動は積まずに書き換える（履歴に書いた位置などの state は残す）
+  assert.match(fnBody("renderBookBanner"), /window\.history\.replaceState\(window\.history\.state, "", "#book-group-" \+ g\.key\)/);
+  // 開いたときは積まない（何も操作しなければ、戻る1回でハブに来る前のページへ帰る）
+  assert.doesNotMatch(loadDataBody(), /"push"/);
+  // 戻る・進むでは URL から条件を読み直して描き直し、URL は書かない
+  assert.match(fnBody("setupHistory"), /addEventListener\("popstate", \(e\) => applyHistoryState\(e\.state\)\)/);
+  const apply = fnBody("applyHistoryState");
+  assert.match(apply, /const next = readUrlState\(\);/);
+  assert.match(apply, /setBookFilter\(next\.book, \{ history: false, cleared: !next\.book \}\)/);
+  assert.match(apply, /restoreView\(view, filtersTop\)/);
+  assert.doesNotMatch(apply, /commitUrl\(/, "戻る・進むで URL を書き換えている（戻る・進むの行き先がずれる）");
+  // ダッシュボードの本の行は、ふつうの左クリックだけ止めて一覧へ移り、履歴を積む
+  const row = fnBody("renderBookProgress");
+  assert.match(row, /e\.button !== 0 \|\| e\.ctrlKey \|\| e\.metaKey \|\| e\.shiftKey \|\| e\.altKey\) return;\s*e\.preventDefault\(\);/);
+  assert.match(row, /commitUrl\(\{ book: s\.book\.slug, tab: "tools" \}, "push"\)/);
+});
+
+test("H28: 「はじめ方」の入口は、ふつうの左クリックだけ読み直しを止めて書籍の選択と同じ処理で絞り、履歴を積む（「すべて」はほかの条件も外す）。新しいタブで開く操作はリンクのまま", () => {
+  const setup = fnBody("setupStaticUI");
+  const i = setup.indexOf('document.querySelectorAll(".start-here-entries a")');
+  assert.ok(i >= 0, "はじめ方の入口の処理がない（押すとページを読み直し、開いた「はじめ方」が閉じる）");
+  const h = setup.slice(i, setup.indexOf("\n  });", i));
+  // Ctrl・⌘・Shift・Alt・左以外のボタンは止めない（新しいタブで開く）。本のデータがないときと、books.json にない本も止めない
+  const iGuard = h.search(/if \(e\.defaultPrevented \|\| e\.button !== 0 \|\| e\.ctrlKey \|\| e\.metaKey \|\| e\.shiftKey \|\| e\.altKey\) return;/);
+  const iPrevent = h.indexOf("e.preventDefault()");
+  assert.ok(iGuard >= 0 && iPrevent > iGuard, "新しいタブで開く操作まで止めている");
+  assert.match(h, /if \(!urlStateReady \|\| !HB \|\| !books\.length\) return;/);
+  assert.match(h, /if \(raw && !slug\) return;/);
+  assert.match(h, /keepInPlace\(a, \(\) => openStartEntry\(slug\)\)/);
+  const open = fnBody("openStartEntry");
+  assert.match(open, /setBookFilter\(slug, \{ history: "push" \}\)/);
+  assert.match(open, /commitUrl\(\{ book: "", cat: "", q: "" \}, "push"\);\s*clearOtherFilters\(\);/);
+  const clear = fnBody("clearOtherFilters");
+  for (const re of [/filters\.categoryId = "";/, /filters\.progress = "all";/, /setSearchQuery\(""\);/]) assert.match(clear, re);
+  // href は残す（新しいタブ・JavaScript が動かないときの入口）
+  const nav = html.match(/<nav[^>]*class="start-here-entries"[\s\S]*?<\/nav>/);
+  assert.ok(nav, "はじめ方の入口がない");
+  assert.deepEqual([...nav[0].matchAll(/href="([^"]+)"/g)].map((m) => m[1]), ["?book=security-tools-100", "?book=security-tools-200", "./"]);
+});
