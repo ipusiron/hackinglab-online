@@ -450,3 +450,15 @@ test("H23: 検索欄の案内文は検索欄の地に 4.5:1 以上、入力欄�
     }
   }
 });
+
+test("H24: PC幅の一覧は auto-fill で列を作り（結果が1件でもカードを横幅いっぱいに伸ばさない）、0件の文は横幅いっぱいに出す", () => {
+  const cols = rules
+    .filter((r) => r.selector === "#tool-list")
+    .map((r) => (r.body.match(/grid-template-columns:\s*([^;]+)/) || [])[1])
+    .filter(Boolean);
+  assert.ok(cols.some((c) => /^repeat\(auto-fill,/.test(c.trim())), `#tool-list の列が auto-fill でない: ${cols.join(" / ")}`);
+  assert.ok(!cols.some((c) => /auto-fit/.test(c)), "auto-fit は空いた列を畳み、1件のカードが横幅いっぱいに伸びる");
+  // 0件の文（#tool-list の中の p）は、狭い列に入って折れないよう、すべての列にまたがる
+  assert.match(bodyOf("#tool-list > p"), /grid-column:\s*1\s*\/\s*-1/);
+  assert.match(fnBody("appendEmptyState"), /document\.createElement\("p"\)/, "0件の文が p でない（CSS の #tool-list > p が当たらない）");
+});

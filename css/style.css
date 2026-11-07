@@ -499,6 +499,11 @@ html[lang="en"] .label-ja {
   gap: 1rem;
 }
 
+/* 条件に合うツールがないときの文は、列の幅でなく一覧の横幅いっぱいに出す（PC幅の列に入ると折れるため） */
+#tool-list > p {
+  grid-column: 1 / -1;
+}
+
 /* 読み込みが終わるまで（main.js が aria-busy を false にするまで）は一覧の高さを1画面分取り、フッターを画面の外に置く。
    空の一覧のまま描くと、カードが入ったときにフッターが画面の中から外へ飛ぶため */
 #tool-list[aria-busy="true"] {
@@ -1035,9 +1040,10 @@ html.help-open.keep-gutter {
     grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr) minmax(0, 1.4fr);
   }
 
-  /* ツールカードのグリッド：PC幅では2〜3列 */
+  /* ツールカードのグリッド：PC幅では2〜3列。結果が1件・2件でも列の幅は変えない
+     （auto-fit だと空いた列が畳まれ、1件のカードが一覧の横幅いっぱいに伸びる） */
   #tool-list {
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 1.25rem;
   }
 
