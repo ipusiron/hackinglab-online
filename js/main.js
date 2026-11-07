@@ -24,6 +24,11 @@ let searchTerms = [];
 // ツール -> 検索用の項目。データは読み込んだあとに変わらないので、初めて検索したときに1回だけ作る
 let searchEntries = null;
 
+// URL を読む・作る純関数（js/url.js）。読み込めていなければ null とし、URL に条件を書かない（?book= だけは books.js で読む）
+const HU = typeof HLOUrl !== "undefined" ? HLOUrl : null;
+// いま開いているタブ（"tools" | "dashboard"）。URL の ?tab= と合わせる
+let currentTab = "tools";
+
 // localStorage を安全に使うラッパー（js/storage.js）。読み込めていなければ同等の最小実装で代える。
 const progressStore =
   typeof HLOStorage !== "undefined"
@@ -98,11 +103,12 @@ function setupStaticUI() {
   langJaBtn?.addEventListener("click", () => setLanguage("ja"));
   langEnBtn?.addEventListener("click", () => setLanguage("en"));
 
-  // タブ切替（クリック、および ←/→/Home/End のキーボード操作）
+  // タブ切替（クリック、および ←/→/Home/End のキーボード操作）。開いたタブは URL の ?tab= に残す
   const tabButtons = Array.from(document.querySelectorAll(".tab-button"));
   tabButtons.forEach((btn, i) => {
     btn.addEventListener("click", () => {
       const targetId = btn.getAttribute("data-tab-target");
+      commitUrl({ tab: tabName(targetId) });
       switchTab(targetId);
     });
     btn.addEventListener("keydown", (e) => {
@@ -110,10 +116,14 @@ function setupStaticUI() {
       if (next < 0) return;
       e.preventDefault();
       const nextBtn = tabButtons[next];
-      switchTab(nextBtn.getAttribute("data-tab-target"));
+      const targetId = nextBtn.getAttribute("data-tab-target");
+      commitUrl({ tab: tabName(targetId) });
+      switchTab(targetId);
       nextBtn.focus();
     });
   });
+  // ?tab=dashboard で開いたときは、データを待たずにダッシュボードのタブを開く（中身はデータが届いてから描く）
+  if (HU && HU.readState(window.location.search, {}).tab === "dashboard") switchTab("tab-dashboard");
 
   // フィルター
   const bookSelect = document.getElementById("filter-book");
@@ -137,11 +147,13 @@ function setupStaticUI() {
 
   categorySelect?.addEventListener("change", (e) => {
     keepInPlace(categorySelect, () => {
+      commitUrl({ cat: e.target.value });
       filters.categoryId = e.target.value;
       renderToolList();
     });
   });
 
+  // 進捗の条件はこの端末の記録で決まるので、URL に残さない
   progressSelect?.addEventListener("change", (e) => {
     keepInPlace(progressSelect, () => {
       filters.progress = e.target.value;
@@ -370,35 +382,26 @@ async function loadData() {
     if (!HB) console.warn("books.js not loaded; book filter disabled");
     applyBooksAvailability();
 
-    // ?book= の解決（存在しない slug は無視。表記違いのときだけ正規形へ直す）
-    if (HB && books.length) {
-      const slug = HB.resolveBookParam(window.location.search, books);
-      if (slug) {
-        filters.book = slug;
-        let rawBook = null;
-        try {
-          rawBook = new URLSearchParams(window.location.search).get("book");
-        } catch (e) {
-          /* 無視 */
-        }
-        if (rawBook !== slug) {
-          try {
-            window.history.replaceState(
-              null,
-              "",
-              HB.buildUrlWithBook(window.location.href, slug)
-            );
-          } catch (e) {
-            /* file:// などでは無視 */
-          }
-        }
-      }
+    // URL の条件（?book=・?cat=・?q=・?tab=）で一覧を出す。存在しない本・カテゴリーは無視する
+    const urlState = readUrlState();
+    filters.book = urlState.book;
+    filters.categoryId = urlState.cat;
+
+    // 検索欄：URL に ?q= があれば、その文字を欄に入れる。無いときは欄の文字を使う（戻るボタンや Firefox の再読み込みで
+    // 開き直すと、ブラウザーが欄の文字だけを戻すことがあり、input は起きない）。描く前に欄の値で絞り、欄の文字と一覧を食い違わせない
+    const searchInput = document.getElementById("filter-search-input");
+    if (searchInput) {
+      if (urlState.q) searchInput.value = urlState.q;
+      setSearchQuery(searchInput.value);
     }
 
-    // 戻るボタンや Firefox の再読み込みで開き直すと、ブラウザーが検索欄の文字だけを戻すことがある（input は起きない）。
-    // 描く前に欄の値を読み、残っていた文字で絞る（欄に文字があるのに一覧が絞られていない、という食い違いを出さない）
-    const searchInput = document.getElementById("filter-search-input");
-    if (searchInput) setSearchQuery(searchInput.value);
+    // 読めた条件だけを、URL に正規の形で書き直す（大文字や前後の空白・並びをそろえる。履歴は増やさない）。
+    // 存在しない本・カテゴリーの値は書き換えずに残す（絞り込みを変えると、画面の条件で書き直すので外れる）
+    const tidy = { q: searchInput ? searchInput.value : "" };
+    if (urlState.book) tidy.book = urlState.book;
+    if (urlState.cat) tidy.cat = urlState.cat;
+    commitUrl(tidy);
+    urlStateReady = true;
 
     setupFilterOptions();
     setListBusy(false);
@@ -576,7 +579,13 @@ function updateLanguageUI() {
 
 // ---- タブ切替 ----
 
+// タブのパネルの id と、URL の ?tab= の値（"tools" | "dashboard"）の対応
+function tabName(targetId) {
+  return targetId === "tab-dashboard" ? "dashboard" : "tools";
+}
+
 function switchTab(targetId) {
+  currentTab = tabName(targetId);
   const panels = document.querySelectorAll(".tab-panel");
   panels.forEach((panel) => {
     panel.hidden = panel.id !== targetId;
@@ -666,6 +675,58 @@ function setupFilterOptions() {
   }
 }
 
+// ---- 一覧の条件と URL ----
+
+// データを読み込み、URL の条件を一覧に入れたあとは true。そのあと URL に書くときは、画面の条件をすべて書く
+let urlStateReady = false;
+
+// URL の条件を、読み込んだデータで確かめて読む（js/url.js）。url.js を読めないときは、?book= だけを books.js で読む
+function readUrlState() {
+  const haveBooks = !!(HB && Array.isArray(books) && books.length);
+  if (HU) {
+    return HU.readState(window.location.search, {
+      books: haveBooks ? books.map((b) => b.slug) : [],
+      categories: Array.isArray(categories) ? categories.map((c) => c.id) : []
+    });
+  }
+  return {
+    book: haveBooks ? HB.resolveBookParam(window.location.search, books) : "",
+    cat: "",
+    q: "",
+    tab: "tools"
+  };
+}
+
+// 画面に出している一覧の条件（URL に書く形）
+function currentUrlState() {
+  const searchInput = document.getElementById("filter-search-input");
+  return {
+    book: filters.book,
+    cat: filters.categoryId,
+    q: searchInput ? searchInput.value : "",
+    tab: currentTab
+  };
+}
+
+// 一覧の条件を URL に書く（js/url.js）。partial に変えた条件を入れて、変える前に呼ぶ。今の履歴を書き換え、履歴は増やさない。
+// データが届く前は、変えた条件だけを書く（本・カテゴリーはまだ URL から読んでいないので、上書きしない）
+function commitUrl(partial) {
+  if (!HU) return;
+  const state = urlStateReady ? Object.assign(currentUrlState(), partial) : partial;
+  let next;
+  try {
+    next = HU.buildUrl(window.location.href, state);
+  } catch (e) {
+    return;
+  }
+  if (next === window.location.href) return;
+  try {
+    window.history.replaceState(window.history.state, "", next);
+  } catch (e) {
+    /* file:// などでは無視 */
+  }
+}
+
 // ---- 書籍フィルターの操作 ----
 
 function currentBook() {
@@ -699,20 +760,12 @@ function countSuffix(n) {
 }
 
 // 本を選ぶ/外す。URL・select・読み上げを更新して再描画する。
+// URL の ?book= も書き換える（本を切り替え/解除したら、前の本の章へ移動の # は外す。js/url.js）
 function setBookFilter(slug, opts) {
+  commitUrl({ book: slug || "" });
   filters.book = slug || "";
   const sel = document.getElementById("filter-book");
   if (sel) sel.value = filters.book;
-  // URL を更新する。本を切り替え/解除したら、前の本の章ジャンプのハッシュは外す。
-  try {
-    const u = new URL(window.location.href);
-    if (filters.book) u.searchParams.set("book", filters.book);
-    else u.searchParams.delete("book");
-    if (u.hash.indexOf("#book-group-") === 0) u.hash = "";
-    window.history.replaceState(null, "", u.toString());
-  } catch (e) {
-    /* 無視 */
-  }
   refreshBookTarget();
   updateBookStatus(filters.book, opts && opts.cleared);
   renderToolList();
@@ -1031,7 +1084,9 @@ function setSearchQuery(raw) {
 }
 
 // 検索欄の値で絞り込む。正規化した検索語が前と同じとき（後ろに空白を足しただけなど）は描き直さない。
+// URL の ?q= は欄の文字に合わせる（打つたびに履歴を増やさないよう、今の履歴を書き換える）
 function applySearch(raw) {
+  commitUrl({ q: raw });
   const before = filters.search;
   setSearchQuery(raw);
   if (filters.search === before) return;

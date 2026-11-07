@@ -328,16 +328,16 @@ function matchParen(src, pos) {
   return -1;
 }
 
-test("H16: script はすべて defer で async なし。books → search → storage → tabs → main の順に書き、main.js が最後", () => {
+test("H16: script はすべて defer で async なし。books → search → storage → tabs → url → main の順に書き、main.js が最後", () => {
   const tags = [...html.matchAll(/<script\b[^>]*>/g)].map((m) => m[0]);
   const srcs = tags.map((t) => (t.match(/\ssrc="([^"]+)"/) || [])[1]);
   for (const t of tags) {
     assert.match(t, /\sdefer[\s>]/, `defer がない（meta の CSP で Chromium の先読みが止まり、1本ずつ取りに行くことがある）: ${t}`);
     assert.doesNotMatch(t, /\sasync[\s>=]/, `async は実行の順番を保たない（main.js が books.js より先に動くと書籍の絞り込みが消える）: ${t}`);
   }
-  const order = ["./js/books.js", "./js/search.js", "./js/storage.js", "./js/tabs.js", "./js/main.js"].map((s) => srcs.indexOf(s));
+  const order = ["./js/books.js", "./js/search.js", "./js/storage.js", "./js/tabs.js", "./js/url.js", "./js/main.js"].map((s) => srcs.indexOf(s));
   assert.ok(order.every((i) => i >= 0), `読み込む script が足りない: ${srcs.join(", ")}`);
-  assert.deepEqual([...order].sort((a, b) => a - b), order, "script の順番が books → search → storage → tabs → main でない");
+  assert.deepEqual([...order].sort((a, b) => a - b), order, "script の順番が books → search → storage → tabs → url → main でない");
   assert.equal(srcs[srcs.length - 1], "./js/main.js", "main.js が最後の script でない");
 });
 
@@ -479,4 +479,34 @@ test("H25: 別のタブで進捗が変わったら（storage イベント）、�
   assert.match(refresh, /querySelectorAll\("\.tool-progress-button"\)[\s\S]*updateProgressButton\(/, "進捗ボタンを描き直していない");
   assert.match(refresh, /renderDashboard\(\)/, "ダッシュボードを描き直していない");
   assert.doesNotMatch(refresh, /renderToolList\(|renderAll\(/, "一覧を作り直している（焦点とスクロールの位置が動く）");
+});
+
+// ---- 一覧の条件と URL ----
+
+test("H26: 一覧の条件（本・カテゴリー・検索・タブ）は URL から読んで一覧を出し、変えたら URL に書く。進捗の条件と canonical は URL に入れない・変えない", () => {
+  const load = loadDataBody();
+  const iRead = load.indexOf("readUrlState()");
+  assert.ok(iRead >= 0 && iRead < load.indexOf("renderAll()"), "一覧を描く前に URL の条件を読んでいない");
+  assert.match(load, /filters\.book = urlState\.book;/);
+  assert.match(load, /filters\.categoryId = urlState\.cat;/);
+  // ?q= があれば検索欄に入れてから、欄の値で絞る（無いときは、ブラウザーが戻した欄の文字を使う。H22）
+  assert.match(load, /if \(urlState\.q\) searchInput\.value = urlState\.q;\s*setSearchQuery\(searchInput\.value\);/);
+  // 変えたら URL に書く（js/url.js の buildUrl。変える前に呼ぶ）
+  assert.match(fnBody("setBookFilter"), /commitUrl\(\{ book:/, "本を変えても ?book= を書いていない");
+  assert.match(fnBody("applySearch"), /commitUrl\(\{ q: raw \}/, "検索しても ?q= を書いていない");
+  const setup = fnBody("setupStaticUI");
+  const cat = setup.slice(setup.indexOf('categorySelect?.addEventListener("change"'));
+  assert.match(cat.slice(0, cat.indexOf("\n  });")), /commitUrl\(\{ cat: e\.target\.value \}/, "カテゴリーを変えても ?cat= を書いていない");
+  const prog = setup.slice(setup.indexOf('progressSelect?.addEventListener("change"'));
+  assert.doesNotMatch(prog.slice(0, prog.indexOf("\n  });")), /commitUrl\(/, "進捗の条件を URL に書いている（記録はこの端末だけのもの）");
+  assert.equal((setup.match(/commitUrl\(\{ tab: tabName\(targetId\) \}/g) || []).length, 2, "タブを押したとき・キーで切り替えたときに ?tab= を書いていない");
+  assert.match(fnBody("switchTab"), /currentTab = tabName\(targetId\);/);
+  // URL の書き方は js/url.js にまとめ、main.js は buildUrl を通す
+  assert.match(fnBody("commitUrl"), /HU\.buildUrl\(window\.location\.href, state\)/);
+  assert.match(fnBody("readUrlState"), /HU\.readState\(window\.location\.search,/);
+  // canonical はトップのまま（main.js は書き換えない。index.html に書くなら、トップを指す）
+  assert.doesNotMatch(blankComments(mainJs), /canonical/);
+  for (const m of html.matchAll(/<link[^>]*rel="canonical"[^>]*>/g)) {
+    assert.match(m[0], /href="https:\/\/hackinglab\.online\/"/, `canonical がトップを指していない: ${m[0]}`);
+  }
 });

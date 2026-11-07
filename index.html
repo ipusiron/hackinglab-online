@@ -476,14 +476,15 @@
       </div>
     </div>
 
-    <!-- defer：meta の CSP があると Chromium は先読みをやめるので、defer がないと5本を1本ずつ取りに行くことがあり、
-         遅い回線ではその分カードが遅れる。defer でも実行は書いた順（books → search → storage → tabs → main）で、DOMContentLoaded の前に終わる。
+    <!-- defer：meta の CSP があると Chromium は先読みをやめるので、defer がないと1本ずつ取りに行くことがあり、
+         遅い回線ではその分カードが遅れる。defer でも実行は書いた順（books → search → storage → tabs → url → main）で、DOMContentLoaded の前に終わる。
          async にはしない（実行の順番が崩れ、main.js が books.js より先に動くと書籍の絞り込みが消え、search.js より先に動くと
-         検索が入力全体の部分一致に戻る） -->
+         検索が入力全体の部分一致に戻り、url.js より先に動くと絞り込みの条件を URL に残さなくなる） -->
     <script src="./js/books.js" defer></script>
     <script src="./js/search.js" defer></script>
     <script src="./js/storage.js" defer></script>
     <script src="./js/tabs.js" defer></script>
+    <script src="./js/url.js" defer></script>
     <script src="./js/main.js" defer></script>
   </body>
 </html>
