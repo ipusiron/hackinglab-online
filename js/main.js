@@ -66,6 +66,7 @@ let progressVersion = 0;
 document.addEventListener("DOMContentLoaded", () => {
   setupStaticUI();
   setupHelpModal();
+  setupProgressSync();
   // 固定ヘッダーの高さは、データを読み込む前に書く（読み込み中と読み込みに失敗したときも、
   // Tab・Shift+Tab で移った部品がヘッダーの下に隠れないように）
   applyHeaderHeightVar();
@@ -1214,6 +1215,43 @@ function syncProgressButtons(slug) {
   document.querySelectorAll(sel).forEach((b) => {
     if (b.dataset.slug === slug) updateProgressButton(b, slug);
   });
+}
+
+// ---- 別のタブの進捗 ----
+
+// 同じブラウザーの別のタブで進捗が変わったら（storage イベント）、このタブの進捗ボタンとダッシュボードを描き直す。
+// 押したときの次の段階は保存した値から決めるので、描き直さないと、古い表示のまま押したときに1段飛んだように見えたり、
+// 別のタブで付けた「定着済み」を消したりする。全体のリセットでは本数分の知らせが続けて届くので、知らせが止まってから
+// 1回だけ描き直す。一覧は作り直さない（このタブで押したときと同じく、焦点とスクロールの位置を動かさない）
+const PROGRESS_SYNC_DELAY_MS = 100;
+let progressSyncTimer = 0;
+
+function setupProgressSync() {
+  window.addEventListener("storage", (e) => {
+    // key が null のときは、別のタブで保存した値がまとめて消された
+    if (e.key !== null && String(e.key).indexOf("progress_") !== 0) return;
+    clearTimeout(progressSyncTimer);
+    progressSyncTimer = setTimeout(refreshProgressViews, PROGRESS_SYNC_DELAY_MS);
+  });
+  // 隠れていたタブでは、知らせのあとの描き直しが遅れることがある。表に出たときは待たずに描き直す
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && progressSyncTimer) refreshProgressViews();
+  });
+  // 戻る・進むでページがそのまま戻ったとき（bfcache）は、離れていたあいだの知らせが届かないので描き直す
+  window.addEventListener("pageshow", (e) => {
+    if (e.persisted) refreshProgressViews();
+  });
+}
+
+function refreshProgressViews() {
+  clearTimeout(progressSyncTimer);
+  progressSyncTimer = 0;
+  if (!tools.length) return; // データが届く前は描くものがない（届いたときに、保存された値で描く）
+  // 一覧にあるボタンは、ここで全部今の値に合わせる（作り直しの省略で残したカードも、表示は新しい値になる）
+  document.querySelectorAll(".tool-progress-button").forEach((b) => {
+    if (b.dataset.slug) updateProgressButton(b, b.dataset.slug);
+  });
+  renderDashboard();
 }
 
 // ---- ダッシュボード描画 ----

@@ -47,7 +47,7 @@ hub: true
 - `js/tabs.js`: Pure keyboard logic for the tabs (←/→/Home/End)
 - `test/*.test.js` + `package.json`: `node --test`, no dependencies. `npm test` runs all five files (the list is in `package.json`; add a new test file there too):
   - `books.test.js`: the real `data/books.json` and `data/tools.json` (D1–D15, S1) and the pure functions in `js/books.js` on synthetic data (F1–F6)
-  - `site.test.js`: `js/storage.js` and `js/tabs.js` (U1–U2); static checks of `index.html`, `js/main.js` and `css/style.css` (H1–H15: ARIA references, tabs, dialog, h1, CSP, no inline styles/scripts, help dialog, forced colors, reduced motion); the data loading rules (H16–H20, see "Loading data"); the search input, the filters and the list (H21–H24: no filtering while Japanese text is still being composed, searching with the text the browser put back in the field on Back or reload, the contrast of the placeholder and the field borders, and keeping the card width when only one tool matches)
+  - `site.test.js`: `js/storage.js` and `js/tabs.js` (U1–U2); static checks of `index.html`, `js/main.js` and `css/style.css` (H1–H15: ARIA references, tabs, dialog, h1, CSP, no inline styles/scripts, help dialog, forced colors, reduced motion); the data loading rules (H16–H20, see "Loading data"); the search input, the filters and the list (H21–H24: no filtering while Japanese text is still being composed, searching with the text the browser put back in the field on Back or reload, the contrast of the placeholder and the field borders, and keeping the card width when only one tool matches); progress changed in another tab (H25)
   - `scroll_focus.test.js`: where jumps and focus stop under the fixed header, keeping the reading position when switching languages, and keeping the changed filter at the same height on screen (SF1–SF8)
   - `robust.test.js`: no layout shifts or freezes while loading on slow connections and devices, reaching the footer when jumping to the end of the list, the view without JavaScript, and keeping the footer out of the middle of the screen when few tools match (RB1–RB8)
   - `search.test.js`: the pure functions in `js/search.js` on synthetic data (Q1–Q7) and on the real `data/tools.json` and `data/categories.json` (QD1–QD5: inputs that mean the same give the same tools; no fixed counts, and the words are taken from the data itself, such as its tags and category names, so regenerating `tools.json` alone does not break them)
@@ -101,6 +101,8 @@ User progress is stored in browser localStorage with keys `progress_{slug}` cont
 - 1: 学習中 / In progress
 - 2: 一周完了 / First pass
 - 3: 定着済み / Mastered
+
+When another tab of the same browser changes the progress, the open page redraws its progress buttons and the dashboard (`storage` event, `setupProgressSync()` in `js/main.js`). The many events of a full reset are merged into one redraw, and the tool list itself is not rebuilt.
 
 ## Adding New Tools
 
