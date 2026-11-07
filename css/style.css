@@ -253,6 +253,41 @@ html[lang="en"] .label-ja {
   padding-top: 0.3rem;
 }
 
+/* JS が動く狭い画面では、main.js が「はじめ方」を畳んで html に js-ready を付けるまで、中身を出さない。
+   開いた形で一度描いてから畳むと、下の絞り込み欄とフッターが上へずれるため。
+   式は js/main.js の NARROW_MQ と同じにする。JS が動かない環境（scripting: none）では今までどおり開いて見せる。
+   開閉の印も閉じた形（▶）にそろえる。
+   main.js が届かず js-ready が付かないままのときは、25秒後に中身と印を開いた形に戻す（入口のリンクを隠したままにしない） */
+@media (scripting: enabled) and (max-width: 767.98px) {
+  html:not(.js-ready) #start-here > summary {
+    list-style-type: disclosure-closed;
+    animation: hlo-unhide-marker 0s linear 25s forwards;
+  }
+
+  html:not(.js-ready) #start-here > .start-here-body {
+    max-height: 0;
+    padding-top: 0;
+    overflow: hidden;
+    visibility: hidden;
+    animation: hlo-unhide 0s linear 25s forwards;
+  }
+}
+
+@keyframes hlo-unhide-marker {
+  to {
+    list-style-type: disclosure-open;
+  }
+}
+
+@keyframes hlo-unhide {
+  to {
+    max-height: none;
+    padding-top: 0.3rem;
+    overflow: visible;
+    visibility: visible;
+  }
+}
+
 .start-here-lead {
   margin: 0.2rem 0 0.5rem;
   font-size: 0.9rem;
@@ -307,6 +342,13 @@ html[lang="en"] .label-ja {
   background-color: #faf5ff;
   border: 1px solid #e9d5ff;
   border-radius: 0.75rem;
+}
+
+/* ?book= で来たとき、データが届く前に取っておくバナーの場所（main.js が is-pending を付け、描くときに外す）。
+   高さはいちばん低いバナー（シリーズの133px）に合わせる。高すぎると、届いたときに下の部品が上へずれる */
+#book-banner.is-pending {
+  min-height: 133px;
+  visibility: hidden;
 }
 
 .book-banner-badge {
@@ -447,6 +489,82 @@ html[lang="en"] .label-ja {
   display: grid;
   grid-template-columns: 1fr;
   gap: 1rem;
+}
+
+/* 読み込みが終わるまで（main.js が aria-busy を false にするまで）は一覧の高さを1画面分取り、フッターを画面の外に置く。
+   空の一覧のまま描くと、カードが入ったときにフッターが画面の中から外へ飛ぶため */
+#tool-list[aria-busy="true"] {
+  min-height: 100vh;
+  align-content: start;
+}
+
+/* 画面の外のカードは、見える所に来るまで配置の計算と描画を後回しにする（遅い端末で、はじめて開いたときや
+   検索・言語の切り替えで一覧を作るときに固まらないように）。まだ描いていないカードの高さは仮の値（下の
+   contain-intrinsic-size）で、auto は一度描いたカードの高さを覚えて使う。
+   使うのは scroll anchoring のあるブラウザー（overflow-anchor に対応するもの）だけ。ないブラウザー（今の Safari）では、
+   描いていないカードを仮の高さで並べたまま End キーなどで下へ飛んでから上へ戻ると、描いたカードが実際の高さに
+   変わるたびに見えている所が跳ねるため。
+   章ごとに並べるとき（.is-grouped）は使わない。仮の高さのまま「章へ移動」の位置を計算すると、
+   着いたあとでカードの高さが変わり、見出しが固定ヘッダーの下に隠れるため。
+   min-width: 0 は、描いていないカードが一覧の列を広げないため。描いていないカードは、最後に描いたときの幅
+   （一度も描いていなければ仮の幅）を最小の幅として使うので、そのままだと、広い幅で描いたカードを狭い幅で
+   画面の外に置いたとき（スマホを縦向きに回したときなど）や、とても狭い画面で、1列の一覧（1fr）がその幅まで
+   広がって横にはみ出す。カードの幅は、いつも一覧の列の幅に合わせる */
+@supports (overflow-anchor: auto) {
+  #tool-list:not(.is-grouped) > .tool-card {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 225px;
+    min-width: 0;
+  }
+
+  /* 仮の高さは中身の高さで、上下の余白と枠を足すと行の高さになる。並ぶ列の数と言語ごとに、実際の行の高さの平均と
+     同じか少し高くする。End キーやスクロールバーで一番下へ飛ぶと、途中や着いた所で描いたカードが仮の高さより
+     高ければページが伸びて、止まった所がフッターの手前になる。高めなら、描くたびにページが縮み、一番下に収まる。
+     英語は説明が長く、カードが高い。
+     - 1列（767px まで）：日本語 225px（足して 259px。390px 幅の平均は 257px）、英語 260px（294px。同 273px）
+     - 2列（768px から）：日本語 248px（285px。平均 257〜261px）、英語 278px（315px。同 269〜286px）
+     - 3列（912px から。一覧の幅が 280px×3 と間 20px×2 以上になる）：日本語 293px（330px。平均 293px）、
+       英語 333px（370px。同 334px） */
+  html[lang="en"] #tool-list:not(.is-grouped) > .tool-card {
+    contain-intrinsic-size: auto 260px;
+  }
+
+  @media (min-width: 768px) {
+    #tool-list:not(.is-grouped) > .tool-card {
+      contain-intrinsic-size: auto 248px;
+    }
+
+    html[lang="en"] #tool-list:not(.is-grouped) > .tool-card {
+      contain-intrinsic-size: auto 278px;
+    }
+  }
+
+  @media (min-width: 912px) {
+    #tool-list:not(.is-grouped) > .tool-card {
+      contain-intrinsic-size: auto 293px;
+    }
+
+    html[lang="en"] #tool-list:not(.is-grouped) > .tool-card {
+      contain-intrinsic-size: auto 333px;
+    }
+  }
+
+  /* 2列・3列で並ぶ広い画面（768px から）では、一覧の最後の12枚（6行・4行）をはじめから描いておく。仮の高さを高めにしても、
+     Chromium で End キーを押すと、着いた所のカードを描いたときにページが伸びて、フッターの手前で止まることがあったため。
+     1列の狭い画面（主にスマホ）では使わない。遅い端末で開くときに描く量が増えるうえ、End キーやスクロールバーで
+     一番下へ飛ぶことは少ないため */
+  @media (min-width: 768px) {
+    #tool-list:not(.is-grouped) > .tool-card:nth-last-child(-n + 12) {
+      content-visibility: visible;
+    }
+  }
+
+  /* 言語を切り替えて読んでいた位置へ戻すあいだ（main.js の restoreReadingAnchor）は、読んでいたカードと、
+     その上で画面にかかるカードを後回しにしない。仮の高さのまま位置を合わせると、描いたときに実際の高さに変わって
+     読んでいたカードが動くため。一度描いて高さを覚えたら、main.js が cv-hold を外す */
+  #tool-list:not(.is-grouped) > .tool-card.cv-hold {
+    content-visibility: visible;
+  }
 }
 
 /* --- カード本体 --- */
@@ -1008,5 +1126,23 @@ html.help-open.keep-gutter {
   .tool-footer .tool-button:hover,
   .tool-progress-button:hover {
     transform: none;
+  }
+}
+
+/* ================================
+ * JavaScript が動かないとき
+ * ================================ */
+
+/* 押しても動かない部品を出さない：言語の切り替え（JA・EN）とヘルプ（?）、タブ（ツール一覧・学習ダッシュボード）、
+   絞り込み欄。一覧も JS が描くので、読み込み中のための高さも取らない */
+@media (scripting: none) {
+  .header-controls,
+  #tab-nav,
+  #tool-filters {
+    display: none;
+  }
+
+  #tool-list[aria-busy="true"] {
+    min-height: 0;
   }
 }

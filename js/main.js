@@ -49,9 +49,19 @@ const PROGRESS_LABELS = {
   en: ["Not started", "In progress", "First pass", "Mastered"]
 };
 
+// 狭い画面の境目。css/style.css の、「はじめ方」を描く前に畳む規則（@media）と同じ式にする
+const NARROW_MQ = "(max-width: 767.98px)";
+
+// 一覧を作り直さずに済むかを見るための、前回の表示の鍵と、進捗を変えるたびに増やす版
+let lastListKey = null;
+let progressVersion = 0;
+
 document.addEventListener("DOMContentLoaded", () => {
   setupStaticUI();
   setupHelpModal();
+  // 固定ヘッダーの高さは、データを読み込む前に書く（読み込み中と読み込みに失敗したときも、
+  // Tab・Shift+Tab で移った部品がヘッダーの下に隠れないように）
+  applyHeaderHeightVar();
   loadData();
 });
 
@@ -130,11 +140,64 @@ function setupStaticUI() {
   const resetBtn = document.getElementById("reset-all-progress");
   resetBtn?.addEventListener("click", handleResetAllProgress);
 
-  // はじめ方は既定で開く（HTML）。狭い画面では初期表示を圧迫しないよう畳む
+  // はじめ方は既定で開く（HTML）。狭い画面では初期表示を圧迫しないよう畳む。
+  // CSS は js-ready が付くまで狭い画面で中身を隠しているので、ここで畳んでも下の部品は動かない
   const startHere = document.getElementById("start-here");
-  if (startHere && window.innerWidth < 768) startHere.open = false;
+  if (startHere && window.matchMedia && window.matchMedia(NARROW_MQ).matches) {
+    startHere.open = false;
+  }
+  document.documentElement.classList.add("js-ready");
+  reserveBookBanner();
+
+  // 再読み込みや「戻る」で開き直したときは、いつも先頭から始める。一覧はデータが届いてから描くので、
+  // ブラウザーがスクロール位置を戻そうとすると、読み込み中に取っている高さ（一覧の1画面分）の所で止まり、
+  // 読んでいた所でも先頭でもない中途半端な位置になる（一覧をあとから描く作りなので、もとから位置は戻らなかった）
+  try {
+    if ("scrollRestoration" in window.history) window.history.scrollRestoration = "manual";
+  } catch (e) {
+    /* 無視 */
+  }
 
   updateLanguageUI();
+}
+
+// ?book= で来たときは、データが届く前にバナーの場所を取っておく（css の #book-banner.is-pending）。
+// 中身は一覧と一緒に描き、本が見つからないときと読み込みに失敗したときは隠す
+function reserveBookBanner() {
+  let raw = null;
+  try {
+    raw = new URLSearchParams(window.location.search).get("book");
+  } catch (e) {
+    raw = null;
+  }
+  const v = raw ? raw.trim().toLowerCase() : "";
+  if (!v || v === "all") return;
+  const banner = document.getElementById("book-banner");
+  if (!banner) return;
+  banner.classList.add("is-pending");
+  banner.hidden = false;
+}
+
+// 一覧の読み込み中の印（aria-busy）。CSS は "true" のあいだ一覧の高さを1画面分取り、
+// カードが入ったときにフッターが画面の中から外へ飛ばないようにする。renderToolList は "true" のあいだ描かない
+function setListBusy(busy) {
+  const list = document.getElementById("tool-list");
+  if (list) list.setAttribute("aria-busy", busy ? "true" : "false");
+}
+
+// 読み込みに失敗したときは、読み込み中のために取っておいた場所（一覧の高さ・本のバナー）を返す。
+// 最初から置いている書籍・シリーズの欄も、選択肢がないまま残さないよう、books.json を読めなかったときと同じく隠す
+function releaseReservedSpace() {
+  setListBusy(false);
+  const banner = document.getElementById("book-banner");
+  if (banner && banner.classList.contains("is-pending")) {
+    banner.classList.remove("is-pending");
+    banner.hidden = true;
+  }
+  const bookGroup = document.getElementById("filter-book-group");
+  if (bookGroup) bookGroup.hidden = true;
+  const filtersEl = document.getElementById("tool-filters");
+  if (filtersEl) filtersEl.classList.add("no-books");
 }
 
 // ---- ヘルプモーダル ----
@@ -240,6 +303,12 @@ function nextTabIndex(key, current, count) {
 // ---- データ読み込み ----
 
 async function loadData() {
+  // 最初の表示に使う JSON は、最初の await より前に全部取り始める（ほかを待ってから取ると、往復1回分カードが遅れる）。
+  // 書籍データは無くても一覧を出せるので、Promise.all には入れず、失敗はここで受け止めて null にする。
+  // 決まりはハブの CLAUDE.md（Loading data）にあり、test/site.test.js がこの形を確かめる
+  const booksPromise = fetch("./data/books.json")
+    .then((res) => (res.ok ? res.json() : null))
+    .catch(() => null);
   try {
     const [catRes, toolsRes] = await Promise.all([
       fetch("./data/categories.json"),
@@ -248,6 +317,7 @@ async function loadData() {
 
     if (!catRes.ok || !toolsRes.ok) {
       console.warn("Failed to load JSON files");
+      releaseReservedSpace();
       return;
     }
 
@@ -255,23 +325,17 @@ async function loadData() {
     const toolsJson = await toolsRes.json();
     tools = Array.isArray(toolsJson.tools) ? toolsJson.tools : [];
 
-    // 更新日時
+    // 書籍データ（自己完結した読み込み。失敗してもハブは従来どおり動く）
+    const bJson = await booksPromise;
+    books = bJson && Array.isArray(bJson.books) ? bJson.books : [];
+
+    // 更新日時。ここから描き終えるまで await をはさまないので、一覧と同じ時に画面に出る
+    // （先に入れると、書籍データを待つあいだにフッターだけが先に描き変わる）
     const lastUpdatedEl = document.getElementById("last-updated-value");
     if (lastUpdatedEl) {
       lastUpdatedEl.textContent = toolsJson.generated_at || "-";
     }
 
-    // 書籍データ（自己完結した読み込み。失敗してもハブは従来どおり動く）
-    books = [];
-    try {
-      const bRes = await fetch("./data/books.json");
-      if (bRes.ok) {
-        const bJson = await bRes.json();
-        if (bJson && Array.isArray(bJson.books)) books = bJson.books;
-      }
-    } catch (e) {
-      // 無視（no-books として続行）
-    }
     if (!HB) console.warn("books.js not loaded; book filter disabled");
     applyBooksAvailability();
 
@@ -300,13 +364,33 @@ async function loadData() {
       }
     }
 
-    applyHeaderHeightVar();
     setupFilterOptions();
+    setListBusy(false);
     renderAll();
     maybeScrollToHash();
+    markCardsPainted();
   } catch (err) {
     console.error("Error loading data:", err);
+    releaseReservedSpace();
   }
+}
+
+// 最初に一覧を描いた時刻に印を付ける（DevTools の Performance で見るため。1回だけ付け、外へは送らない）
+let cardsPaintedMarked = false;
+function markCardsPainted() {
+  if (cardsPaintedMarked) return;
+  cardsPaintedMarked = true;
+  if (typeof performance === "undefined" || typeof performance.mark !== "function") return;
+  // 描いたカードが画面に出たあと（次の描画が終わったあと）に付ける
+  requestAnimationFrame(() =>
+    setTimeout(() => {
+      try {
+        performance.mark("hlo:cards-painted");
+      } catch (e) {
+        /* 無視 */
+      }
+    }, 0)
+  );
 }
 
 // books.json の有無でUIを出し分ける。
@@ -370,6 +454,8 @@ function scrollByInstant(dy) {
 
 // 一覧の途中で表示を作り直す前に、ヘッダーのすぐ下で読んでいた項目（カードか章の見出し）を覚える。
 // 一覧の先頭が見えているときは null（何もしない）。
+// holdFrom は、作り直したあとに描くのを後回しにしない範囲の始め（restoreReadingAnchor を参照）。
+// 画面の上端から1画面分の高さだけ上までにかかる、最初の項目の順番
 function captureReadingAnchor() {
   const listEl = document.getElementById("tool-list");
   const header = document.getElementById("site-header");
@@ -377,9 +463,13 @@ function captureReadingAnchor() {
   const hb = header.getBoundingClientRect().bottom;
   if (listEl.getBoundingClientRect().top >= hb) return null;
   const items = listEl.children;
+  let holdFrom = -1;
   for (let i = 0; i < items.length; i++) {
     const r = items[i].getBoundingClientRect();
-    if (r.top + r.height / 2 > hb) return { index: i, offset: r.top - hb };
+    if (holdFrom < 0 && r.bottom > -window.innerHeight) holdFrom = i;
+    if (r.top + r.height / 2 > hb) {
+      return { index: i, offset: r.top - hb, holdFrom: holdFrom < 0 ? i : holdFrom };
+    }
   }
   return null;
 }
@@ -392,8 +482,21 @@ function restoreReadingAnchor(anchor) {
   const header = document.getElementById("site-header");
   const el = listEl && listEl.children[anchor.index];
   if (!el || !header) return;
+  // 画面の外のカードは描くのを後回しにしている（css の content-visibility。scroll anchoring のあるブラウザーだけ）。
+  // 作り直したカードは仮の高さで並ぶので、そのまま合わせると、画面にかかるカードを描いたときに実際の高さに変わり、
+  // 読んでいた項目が動く。読んでいた項目と、その上で画面にかかるカードは、一度描いて高さを覚えるまで後回しにしない
+  // （css の .cv-hold）。言語で高さが変わっても足りるよう、もとの画面の上端から1画面分の高さだけ上までを含める。
+  // それより上のカードは、描いて高さが変わってもブラウザーの scroll anchoring が見えている所を動かさない。
+  // 上のカードを全部描くと、一覧の途中で切り替えたときに、まだ描いていないカードの分だけ遅くなる
+  const from = Math.max(0, Math.min(anchor.holdFrom, anchor.index));
+  const held = Array.prototype.slice.call(listEl.children, from, anchor.index + 1);
+  held.forEach((c) => c.classList.add("cv-hold"));
   const hb = header.getBoundingClientRect().bottom;
   scrollByInstant(el.getBoundingClientRect().top - hb - anchor.offset);
+  // 次の描画が終わってから外す（描いたときに、カードの高さが覚えられる）
+  requestAnimationFrame(() =>
+    setTimeout(() => held.forEach((c) => c.classList.remove("cv-hold")), 0)
+  );
 }
 
 // ---- UIレンダリング全体 ----
@@ -606,8 +709,11 @@ function updateBookStatus(slug, cleared) {
 function renderToolList() {
   const listEl = document.getElementById("tool-list");
   if (!listEl) return;
+  // データが届くまでは描かない。読み込み中に言語を切り替えたり検索欄に入力したりしても、空のデータで
+  // 「一致するツールがありません」を出したり、?book= のために取っておいたバナーの場所を外したりしない
+  // （外すと、データが届いたときにバナーがまた下の部品を押し下げる）。データが届くと、loadData が印を外してから描く
+  if (listEl.getAttribute("aria-busy") === "true") return;
 
-  listEl.innerHTML = "";
   refreshBookTarget();
   const book = currentBook();
 
@@ -619,6 +725,19 @@ function renderToolList() {
     filterBySearch(t);
 
   const matched = tools.filter(baseMatch);
+
+  // 出すものが前回と同じなら作り直さない（検索の1文字ごとに全部のカードを作り直すと、遅い端末で固まる）。
+  // 言語・本・進捗が変わったときは、同じツールの並びでも文字・掲載箇所・進捗の表示が変わるので作り直す
+  const listKey = [
+    currentLang,
+    filters.book,
+    progressVersion,
+    matched.map((t) => t.id).join(",")
+  ].join("|");
+  if (listKey === lastListKey && listEl.firstElementChild) return;
+  lastListKey = listKey;
+
+  listEl.innerHTML = "";
   const matchedIds = new Set(matched.map((t) => t.id));
 
   // chapters を持つ本は、章の順にグループ分けして見出しを挟む
@@ -635,6 +754,8 @@ function renderToolList() {
   }
 
   renderBookBanner(book, matched.length, displayGroups);
+  // 章ごとに並べるときは、画面の外のカードの描画を後回しにしない（css の .is-grouped。章へ移動の止まる位置を保つ）
+  listEl.classList.toggle("is-grouped", !!displayGroups);
 
   if (displayGroups) {
     if (!displayGroups.length) {
@@ -685,6 +806,7 @@ function appendEmptyState(listEl, book) {
 function renderBookBanner(book, shownCount, displayGroups) {
   const banner = document.getElementById("book-banner");
   if (!banner) return;
+  banner.classList.remove("is-pending"); // 読み込み中に取っておいた場所を、中身で置き換える
   if (!book) {
     banner.hidden = true;
     banner.innerHTML = "";
@@ -1005,6 +1127,7 @@ function getProgress(slug) {
 
 function setProgress(slug, level) {
   progressStore.setItem(`progress_${slug}`, String(level));
+  progressVersion++; // 次に一覧を描くときは作り直す（全部リセットしたあとに、古い進捗の表示を残さない）
 }
 
 function updateProgressButton(btn, slug) {

@@ -141,8 +141,8 @@
 
         <!-- フィルターバー -->
         <div id="tool-filters">
-          <!-- 書籍・シリーズフィルター -->
-          <div class="filter-group" id="filter-book-group" hidden>
+          <!-- 書籍・シリーズフィルター（最初から場所を取る。books.json か一覧のデータを読めなかったときは JS が隠す） -->
+          <div class="filter-group" id="filter-book-group">
             <label for="filter-book">
               <span class="label-ja">書籍・シリーズ</span>
               <span class="label-en">Books &amp; series</span>
@@ -188,8 +188,8 @@
           </div>
         </div>
 
-        <!-- ツール一覧（カードをJSで挿入） -->
-        <div id="tool-list">
+        <!-- ツール一覧（カードをJSで挿入）。データが届くまでは aria-busy="true" で、CSS が1画面分の高さを取る -->
+        <div id="tool-list" aria-busy="true">
           <!-- JSでツールカードを追加 -->
         </div>
       </section>
@@ -476,9 +476,12 @@
       </div>
     </div>
 
-    <script src="./js/books.js"></script>
-    <script src="./js/storage.js"></script>
-    <script src="./js/tabs.js"></script>
-    <script src="./js/main.js"></script>
+    <!-- defer：meta の CSP があると Chromium は先読みをやめるので、defer がないと4本を1本ずつ取りに行くことがあり、
+         遅い回線ではその分カードが遅れる。defer でも実行は書いた順（books → storage → tabs → main）で、DOMContentLoaded の前に終わる。
+         async にはしない（実行の順番が崩れ、main.js が books.js より先に動くと書籍の絞り込みが消える） -->
+    <script src="./js/books.js" defer></script>
+    <script src="./js/storage.js" defer></script>
+    <script src="./js/tabs.js" defer></script>
+    <script src="./js/main.js" defer></script>
   </body>
 </html>
