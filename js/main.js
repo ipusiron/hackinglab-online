@@ -186,6 +186,17 @@ function setupStaticUI() {
     keepInPlace(searchInput, () => applySearch(searchInput.value));
   });
 
+  // URL の ?q= は、開いたときに検索欄へ入れる（データを待たずに、読み込み中から欄に語を出す）。データが届いたときは
+  // 欄を書き換えずに欄の値で絞る（読み込み中に打った文字の末尾の空白や、変換中の文字を消さない）。
+  // 欄にすでに同じ語があるとき（戻るボタンなどでブラウザーが戻した文字。末尾の空白も残す）はそのままにする。違う語があるときは
+  // URL の語にする（Firefox は、同じページの別の履歴で打った語を欄に戻すことがある）。ただし、欄にフォーカスがあって文字が
+  // 入っているとき（main.js が動く前に打ち始めていたとき）は、打った文字を残す
+  if (searchInput && HU) {
+    const q = HU.readState(window.location.search, {}).q;
+    const typing = document.activeElement === searchInput && searchInput.value !== "";
+    if (q && searchInput.value.trim() !== q && !typing) searchInput.value = q;
+  }
+
   // 「はじめ方」の入口（ツール100・ツール200・すべて）：Ctrl などを押さない左クリックのときは、ページを読み直さずに
   // 書籍の選択と同じ処理で絞り、履歴を積む（読み直すと、開いた「はじめ方」と入れた条件が初めに戻り、回線がないと
   // サイトから出てしまうため）。Ctrl・⌘・Shift・Alt を押したクリック（新しいタブや窓で開く操作など）と、本のデータを
@@ -424,13 +435,11 @@ async function loadData() {
     filters.book = urlState.book;
     filters.categoryId = urlState.cat;
 
-    // 検索欄：URL に ?q= があれば、その文字を欄に入れる。無いときは欄の文字を使う（戻るボタンや Firefox の再読み込みで
-    // 開き直すと、ブラウザーが欄の文字だけを戻すことがあり、input は起きない）。描く前に欄の値で絞り、欄の文字と一覧を食い違わせない
+    // 検索欄：描く前に欄の値で絞り、欄の文字と一覧を食い違わせない。URL の ?q= は開いたときに欄へ入れてあり（setupStaticUI）、
+    // ここでは欄を書き換えない（読み込み中に打った文字を消さない）。戻るボタンや Firefox の再読み込みで開き直すと、ブラウザーが
+    // 欄の文字を戻すことがあり、input は起きないので、その文字もここで読む
     const searchInput = document.getElementById("filter-search-input");
-    if (searchInput) {
-      if (urlState.q) searchInput.value = urlState.q;
-      setSearchQuery(searchInput.value);
-    }
+    if (searchInput) setSearchQuery(searchInput.value);
 
     // 読めた条件だけを、URL に正規の形で書き直す（大文字や前後の空白・並びをそろえる。履歴は増やさない）。
     // 存在しない本・カテゴリー・タブの値は書き換えずに残す（絞り込みを変えると、画面の条件で書き直すので外れる）
@@ -841,14 +850,16 @@ function applyHistoryState(view) {
   lastPush = null; // 戻ったあとの変更は、まとめずに積む
   // 言語は戻る・進むで変えない。前の言語のときに積んだ履歴へ来たら、URL の ?lang= を今の言語に直す
   syncLangParam();
+  const searchInput = document.getElementById("filter-search-input");
   if (!urlStateReady) {
-    // データが届く前はタブだけを合わせる（本・カテゴリー・検索は、データが届いたときに URL から読む）
-    const tab = HU ? HU.readState(window.location.search, {}).tab : "tools";
-    if (tab !== currentTab) switchTab(tab === "dashboard" ? "tab-dashboard" : "tab-tools");
+    // データが届く前はタブと検索欄だけを合わせる（本・カテゴリーは、データが届いたときに URL から読む）
+    if (!HU) return;
+    const st = HU.readState(window.location.search, {});
+    if (st.tab !== currentTab) switchTab(st.tab === "dashboard" ? "tab-dashboard" : "tab-tools");
+    if (searchInput && searchInput.value.trim() !== st.q) searchInput.value = st.q;
     return;
   }
   const next = readUrlState();
-  const searchInput = document.getElementById("filter-search-input");
   const searchChanged = !!searchInput && searchInput.value.trim() !== next.q;
   if (next.book === filters.book && next.cat === filters.categoryId && next.tab === currentTab && !searchChanged) return;
 

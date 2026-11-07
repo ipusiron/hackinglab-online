@@ -503,8 +503,16 @@ test("H26: 一覧の条件（本・カテゴリー・検索・タブ）は URL �
   assert.ok(iRead >= 0 && iRead < load.indexOf("renderAll()"), "一覧を描く前に URL の条件を読んでいない");
   assert.match(load, /filters\.book = urlState\.book;/);
   assert.match(load, /filters\.categoryId = urlState\.cat;/);
-  // ?q= があれば検索欄に入れてから、欄の値で絞る（無いときは、ブラウザーが戻した欄の文字を使う。H22）
-  assert.match(load, /if \(urlState\.q\) searchInput\.value = urlState\.q;\s*setSearchQuery\(searchInput\.value\);/);
+  // ?q= は開いたときに（データを待たずに）検索欄へ入れる。欄に同じ語があるとき（ブラウザーが戻した文字）と、欄にフォーカスが
+  // あって文字が入っているとき（main.js が動く前に打ち始めていたとき）はそのまま。データが届いたときは欄を書き換えず、欄の値で
+  // 絞る（読み込み中に打った文字の末尾の空白や、変換中の文字を消さない。ブラウザーが戻した文字で絞るのは H22）
+  assert.match(
+    fnBody("setupStaticUI"),
+    /const q = HU\.readState\(window\.location\.search, \{\}\)\.q;\s*const typing = document\.activeElement === searchInput && searchInput\.value !== "";\s*if \(q && searchInput\.value\.trim\(\) !== q && !typing\) searchInput\.value = q;/,
+    "開いたときに ?q= を検索欄へ入れていない"
+  );
+  assert.doesNotMatch(load, /searchInput\.value\s*=(?!=)/, "データが届いたときに検索欄を書き換えている（読み込み中に打った文字の末尾の空白や、変換中の文字が消える）");
+  assert.match(load, /if \(searchInput\) setSearchQuery\(searchInput\.value\);/);
   // 変えたら URL に書く（js/url.js の buildUrl。変える前に呼ぶ）
   assert.match(fnBody("setBookFilter"), /commitUrl\(\{ book:/, "本を変えても ?book= を書いていない");
   assert.match(fnBody("applySearch"), /commitUrl\(\{ q: raw \}/, "検索しても ?q= を書いていない");
@@ -554,6 +562,8 @@ test("H27: 本・カテゴリー・タブを選んで切り替えたら履歴を
   assert.match(apply, /setBookFilter\(next\.book, \{ history: false, cleared: !next\.book \}\)/);
   assert.match(apply, /restoreView\(view, filtersTop\)/);
   assert.doesNotMatch(apply, /commitUrl\(/, "戻る・進むで URL を書き換えている（戻る・進むの行き先がずれる）");
+  // データが届く前に戻る・進むを押したときも、タブと検索欄は URL に合わせる（本・カテゴリーはデータが届いてから URL で読む）
+  assert.match(apply, /if \(searchInput && searchInput\.value\.trim\(\) !== st\.q\) searchInput\.value = st\.q;/, "読み込み中に戻る・進むを押したとき、検索欄を URL に合わせていない");
   // ダッシュボードの本の行は、ふつうの左クリックだけ止めて一覧へ移り、履歴を積む
   const row = fnBody("renderBookProgress");
   assert.match(row, /e\.button !== 0 \|\| e\.ctrlKey \|\| e\.metaKey \|\| e\.shiftKey \|\| e\.altKey\) return;\s*e\.preventDefault\(\);/);
