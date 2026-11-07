@@ -321,16 +321,16 @@ function matchParen(src, pos) {
   return -1;
 }
 
-test("H16: script はすべて defer で async なし。books → storage → tabs → main の順に書き、main.js が最後", () => {
+test("H16: script はすべて defer で async なし。books → search → storage → tabs → main の順に書き、main.js が最後", () => {
   const tags = [...html.matchAll(/<script\b[^>]*>/g)].map((m) => m[0]);
   const srcs = tags.map((t) => (t.match(/\ssrc="([^"]+)"/) || [])[1]);
   for (const t of tags) {
     assert.match(t, /\sdefer[\s>]/, `defer がない（meta の CSP で Chromium の先読みが止まり、1本ずつ取りに行くことがある）: ${t}`);
     assert.doesNotMatch(t, /\sasync[\s>=]/, `async は実行の順番を保たない（main.js が books.js より先に動くと書籍の絞り込みが消える）: ${t}`);
   }
-  const order = ["./js/books.js", "./js/storage.js", "./js/tabs.js", "./js/main.js"].map((s) => srcs.indexOf(s));
+  const order = ["./js/books.js", "./js/search.js", "./js/storage.js", "./js/tabs.js", "./js/main.js"].map((s) => srcs.indexOf(s));
   assert.ok(order.every((i) => i >= 0), `読み込む script が足りない: ${srcs.join(", ")}`);
-  assert.deepEqual([...order].sort((a, b) => a - b), order, "script の順番が books → storage → tabs → main でない");
+  assert.deepEqual([...order].sort((a, b) => a - b), order, "script の順番が books → search → storage → tabs → main でない");
   assert.equal(srcs[srcs.length - 1], "./js/main.js", "main.js が最後の script でない");
 });
 

@@ -17,6 +17,13 @@ const HB = typeof HLOBooks !== "undefined" ? HLOBooks : null;
 // いま選択中の本の対象 id 集合（renderToolList / setBookFilter で更新）。
 let bookTargetSet = null;
 
+// キーワード検索の純関数（js/search.js）。読み込めていなければ null とし、入力全体の部分一致で代える。
+const HS = typeof HLOSearch !== "undefined" ? HLOSearch : null;
+// いまの検索語（HS.parseQuery で正規化して分けたもの。filters.search はこれを空白でつないだ文字列）
+let searchTerms = [];
+// ツール -> 検索用の項目。データは読み込んだあとに変わらないので、初めて検索したときに1回だけ作る
+let searchEntries = null;
+
 // localStorage を安全に使うラッパー（js/storage.js）。読み込めていなければ同等の最小実装で代える。
 const progressStore =
   typeof HLOStorage !== "undefined"
@@ -128,8 +135,7 @@ function setupStaticUI() {
   });
 
   searchInput?.addEventListener("input", (e) => {
-    filters.search = e.target.value.toLowerCase();
-    renderToolList();
+    applySearch(e.target.value);
   });
 
   // X共有ボタン
@@ -324,6 +330,7 @@ async function loadData() {
     categories = await catRes.json();
     const toolsJson = await toolsRes.json();
     tools = Array.isArray(toolsJson.tools) ? toolsJson.tools : [];
+    searchEntries = null; // 検索用の項目は、このデータで作り直す
 
     // 書籍データ（自己完結した読み込み。失敗してもハブは従来どおり動く）
     const bJson = await booksPromise;
@@ -959,8 +966,17 @@ function filterByProgress(tool) {
 
 function filterBySearch(tool) {
   if (!filters.search) return true;
-  const q = filters.search;
 
+  // 全角と半角・大文字と小文字をそろえ、空白で区切った語をすべて含むツールを出す（js/search.js）
+  if (HS) {
+    if (!searchEntries) {
+      const catIndex = HS.categoryIndex(categories);
+      searchEntries = new Map(tools.map((t) => [t, HS.buildEntry(t, catIndex)]));
+    }
+    return HS.matches(searchEntries.get(tool), searchTerms);
+  }
+
+  // js/search.js を読めないときは、これまでどおり入力全体を部分一致で探す（前後の空白は setSearchQuery で除く）
   const textParts = [
     tool.id || "",
     tool.title || "",
@@ -972,7 +988,25 @@ function filterBySearch(tool) {
   ];
 
   const text = textParts.join(" ").toLowerCase();
-  return text.includes(q);
+  return text.includes(filters.search);
+}
+
+// 検索欄の値を検索語にして filters に入れる（描き直しはしない）。
+function setSearchQuery(raw) {
+  if (HS) {
+    searchTerms = HS.parseQuery(raw);
+    filters.search = searchTerms.join(" ");
+  } else {
+    filters.search = String(raw == null ? "" : raw).trim().toLowerCase();
+  }
+}
+
+// 検索欄の値で絞り込む。正規化した検索語が前と同じとき（後ろに空白を足しただけなど）は描き直さない。
+function applySearch(raw) {
+  const before = filters.search;
+  setSearchQuery(raw);
+  if (filters.search === before) return;
+  renderToolList();
 }
 
 function createToolCard(tool, book) {
