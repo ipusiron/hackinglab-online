@@ -123,6 +123,13 @@ test("RB5: 画面の外のカードは描くのを後回しにする。章ごと
     "章ごとの表示を外していない（仮の高さのまま「章へ移動」の位置を計算し、見出しが固定ヘッダーの下に隠れる）"
   );
   assert.match(rulesWithAuto[0][2], /contain-intrinsic-size:\s*auto\s+\d+px/);
+  // 描いていないカードは、覚えた幅（描いていなければ仮の幅）を最小の幅として使う。グリッドの項目の自動の最小幅を外さないと、
+  // 広い幅で描いたあとに狭い幅へ変えたときや、とても狭い画面で、1列の一覧が広がって横にはみ出す
+  assert.match(
+    rulesWithAuto[0][2],
+    /(?:^|;)\s*min-width:\s*0(?:px)?\s*(?:;|$)/,
+    "描くのを後回しにするカードに min-width: 0 がない（狭い幅で一覧が横にはみ出す）"
+  );
   // scroll anchoring のないブラウザー（Safari）では使わない。下へ飛んでから上へ戻るときに、描いたカードが
   // 実際の高さに変わるたびに見えている所が跳ねる
   const gate = cssNoComments.match(/@supports \(overflow-anchor: auto\)\s*\{([\s\S]*?)\n\}/);
