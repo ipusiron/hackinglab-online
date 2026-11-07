@@ -328,17 +328,31 @@ function matchParen(src, pos) {
   return -1;
 }
 
-test("H16: script はすべて defer で async なし。books → search → storage → tabs → url → main の順に書き、main.js が最後", () => {
-  const tags = [...html.matchAll(/<script\b[^>]*>/g)].map((m) => m[0]);
-  const srcs = tags.map((t) => (t.match(/\ssrc="([^"]+)"/) || [])[1]);
+test("H16: 描く前に言語を決める js/lang.js だけは defer なしで head に置き、ほかの script はすべて defer（async なし）で books → search → storage → tabs → url → main の順に、lang.js より前に fetchpriority=\"high\" で置く", () => {
+  const headEnd = html.indexOf("</head>");
+  const tags = [...html.matchAll(/<script\b[^>]*>/g)].map((m) => ({ tag: m[0], at: m.index, src: (m[0].match(/\ssrc="([^"]+)"/) || [])[1] }));
   for (const t of tags) {
-    assert.match(t, /\sdefer[\s>]/, `defer がない（meta の CSP で Chromium の先読みが止まり、1本ずつ取りに行くことがある）: ${t}`);
-    assert.doesNotMatch(t, /\sasync[\s>=]/, `async は実行の順番を保たない（main.js が books.js より先に動くと書籍の絞り込みが消える）: ${t}`);
+    assert.doesNotMatch(t.tag, /\sasync[\s>=]/, `async は実行の順番を保たない（main.js が books.js より先に動くと書籍の絞り込みが消える）: ${t.tag}`);
+    assert.ok(t.at < headEnd, `script が head の外にある: ${t.tag}`);
   }
-  const order = ["./js/books.js", "./js/search.js", "./js/storage.js", "./js/tabs.js", "./js/url.js", "./js/main.js"].map((s) => srcs.indexOf(s));
+  // 例外は lang.js の1本だけ：描く前に <html lang> を決めるので defer を付けない。CSP の meta と CSS のあとに置く
+  const blocking = tags.filter((t) => !/\sdefer[\s>]/.test(t.tag));
+  assert.deepEqual(blocking.map((t) => t.src), ["./js/lang.js"], "defer のない script は js/lang.js だけにする（ほかは、meta の CSP で Chromium の先読みが止まり、1本ずつ取りに行くことがある）");
+  const lang = blocking[0];
+  assert.ok(lang.at > html.indexOf('http-equiv="Content-Security-Policy"'), "lang.js が CSP の meta より前にある");
+  assert.ok(lang.at > html.indexOf('rel="stylesheet"'), "lang.js が CSS より前にある（CSS を取り始めるのが lang.js を待つ分だけ遅れる）");
+  // defer の script は lang.js より前に書き、fetchpriority="high" を付ける。後ろに書くと lang.js を待つあいだに見つけられず、
+  // 付けないと Chromium は head の中の defer の script を後回しにするので、どちらでも遅い回線でカードが1往復遅れる
+  const deferred = tags.filter((t) => t !== lang);
+  for (const t of deferred) {
+    assert.ok(t.at < lang.at, `defer の script が lang.js より後ろにある: ${t.tag}`);
+    assert.match(t.tag, /\sfetchpriority="high"[\s>]/, `fetchpriority="high" がない: ${t.tag}`);
+  }
+  const srcs = deferred.map((t) => t.src);
+  const order = ["./js/books.js", "./js/search.js", "./js/storage.js", "./js/tabs.js", "./js/url.js", "./js/main.js"].map((x) => srcs.indexOf(x));
   assert.ok(order.every((i) => i >= 0), `読み込む script が足りない: ${srcs.join(", ")}`);
   assert.deepEqual([...order].sort((a, b) => a - b), order, "script の順番が books → search → storage → tabs → url → main でない");
-  assert.equal(srcs[srcs.length - 1], "./js/main.js", "main.js が最後の script でない");
+  assert.equal(srcs[srcs.length - 1], "./js/main.js", "main.js が defer の script の最後でない");
 });
 
 test("H17: 最初の表示に使う data/*.json は、loadData の最初の await が終わる前に全部取り始める", () => {
@@ -575,4 +589,29 @@ test("H29: カードの「GitHub」「デモ」のリンクは、英語表示の
   assert.match(card, /repoBtn\.href = \(HU \? HU\.repoLink\(tool\.repo_url, currentLang\) : tool\.repo_url\) \|\| "#";/);
   // 言語を切り替えたら一覧を作り直すので、リンクも新しい言語になる（作り直しの省略の鍵に言語が入っている。RB6）
   assert.match(fnBody("renderToolList"), /const listKey = \[\s*currentLang,/);
+});
+
+test("H30: 選んだ言語を覚える。JA・EN で選んだ言語を保存し（js/storage.js のラッパーを通す）、URL の ?lang= を合わせ、戻る・進むでも変えない", () => {
+  // 最初の言語は、描く前に js/lang.js が書いた <html lang> から取る
+  assert.match(mainJs, /let currentLang = document\.documentElement\.lang === "en" \? "en" : "ja";/);
+  const set = mainJs.match(/const setLanguage = \(lang\) => \{[\s\S]*?\n {2}\};/);
+  assert.ok(set, "setLanguage がない");
+  const iSave = set[0].indexOf("progressStore.setItem(LANG_KEY, lang)");
+  assert.ok(iSave > set[0].indexOf("currentLang = lang;"), "選んだ言語を保存していない（再読み込みや「はじめ方」の入口で日本語に戻る）");
+  assert.ok(set[0].indexOf("syncLangParam()") > iSave, "言語を切り替えても URL の ?lang= を合わせていない");
+  assert.match(mainJs, /const LANG_KEY = typeof HLOLang !== "undefined" && HLOLang\.KEY \? HLOLang\.KEY : "hlo_lang";/);
+  // ?lang= は今の履歴を書き換えて合わせる（言語のほかの条件は書かない）。開いたときと、戻る・進むのときも合わせる
+  const sync = fnBody("syncLangParam");
+  assert.match(sync, /HU\.buildUrl\(window\.location\.href, \{ lang: currentLang \}\)/);
+  assert.match(sync, /window\.history\.replaceState\(/);
+  assert.doesNotMatch(sync, /pushState/);
+  assert.match(fnBody("setupStaticUI"), /syncLangParam\(\);/);
+  assert.match(fnBody("applyHistoryState"), /lastPush = null;[^\n]*\n[^\n]*\n\s*syncLangParam\(\);/);
+  // 英語のときは「はじめ方」の入口・ダッシュボードの本の行・Xで共有する URL に ?lang=en を付ける
+  assert.match(fnBody("updateLanguageUI"), /HU\.withLang\(new URL\(base, window\.location\.href\)\.toString\(\), "en"\)/);
+  assert.match(fnBody("renderBookProgress"), /HU\.withLang\(new URL\(rowHref, window\.location\.href\)\.toString\(\), "en"\)/);
+  assert.match(fnBody("handleShareOnX"), /const url = HU \? HU\.withLang\(base, currentLang\) : base;/);
+  // 検索欄の案内文は index.html に書かない（英語で開いたとき、main.js が動く前に日本語の文が出ないように）
+  assert.doesNotMatch(openTag("filter-search-input"), /\splaceholder=/);
+  assert.match(fnBody("updateLanguageUI"), /searchInput\.placeholder = isJa/);
 });

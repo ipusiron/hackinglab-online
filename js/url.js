@@ -5,14 +5,14 @@
 // 履歴（pushState・replaceState・popstate）の扱いと画面の描き直しは js/main.js が行う。
 //
 // 一覧の条件の URL の形（いつもこの順に並べ、値が空の条件は書かない）：
-//   ?book=<本の slug>（books.json）&cat=<カテゴリーの id>（categories.json）&q=<検索欄の文字>&tab=dashboard
-// 進捗の条件はこの端末の記録で決まるので、URL に入れない。
+//   ?book=<本の slug>（books.json）&cat=<カテゴリーの id>（categories.json）&q=<検索欄の文字>&tab=dashboard&lang=en
+// 進捗の条件はこの端末の記録で決まるので、URL に入れない。表示の言語は英語のときだけ lang=en を書く（決めるのは js/lang.js）。
 
 (function (root) {
   "use strict";
 
-  // URL に書く一覧の条件の名前（この順に並べる）
-  var KEYS = ["book", "cat", "q", "tab"];
+  // URL に書く条件の名前（この順に並べる）
+  var KEYS = ["book", "cat", "q", "tab", "lang"];
 
   function lower(v) {
     return String(v == null ? "" : v).trim().toLowerCase();
@@ -56,6 +56,8 @@
   // href に一覧の条件を書いた URL を返す。state に入れた条件だけを書き換え、入れなかった条件とほかのパラメーターは残す。
   // 条件は KEYS の順に並べ、ほかのパラメーターはその後ろに元の順で置く。空の値は書かず、何も残らなければ "?" も付けない。
   // 本を変えるときは、前の本の章の位置（#book-group-…）を外す。ほかの # はそのまま残す。
+  // lang は "en" なら lang=en を書く。"ja" なら書かない（ただし、もとの URL が ?lang=ja ならそのまま残す。?lang=ja のリンクで
+  // 開いた人が、再読み込みや絞り込みのあとも日本語のままになるように）。
   function buildUrl(href, state) {
     var url = new URL(href);
     var s = state || {};
@@ -67,6 +69,7 @@
     if (has(s, "cat")) values.cat = s.cat ? String(s.cat) : null;
     if (has(s, "q")) values.q = String(s.q == null ? "" : s.q).trim() || null;
     if (has(s, "tab")) values.tab = s.tab === "dashboard" ? "dashboard" : null;
+    if (has(s, "lang")) values.lang = s.lang === "en" ? "en" : lower(cur.get("lang")) === "ja" ? "ja" : null;
     if (has(s, "book") && lower(cur.get("book")) !== lower(values.book) && url.hash.indexOf("#book-group-") === 0) {
       url.hash = "";
     }
@@ -79,6 +82,21 @@
     });
     var qs = out.toString();
     url.search = qs ? "?" + qs : "";
+    return url.toString();
+  }
+
+  // 絶対 URL の href に、英語のときだけ ?lang=en を付ける（ほかのパラメーターと # は残す）。日本語のときと、URL として
+  // 読めないときはそのまま返す（「はじめ方」の入口・ダッシュボードの本の行を新しいタブで開いたとき、Xで共有する URL）
+  function withLang(href, lang) {
+    var h = String(href == null ? "" : href);
+    if (lang !== "en") return h;
+    var url;
+    try {
+      url = new URL(h);
+    } catch (e) {
+      return h;
+    }
+    url.searchParams.set("lang", "en");
     return url.toString();
   }
 
@@ -114,6 +132,7 @@
     KEYS: KEYS,
     readState: readState,
     buildUrl: buildUrl,
+    withLang: withLang,
     repoLink: repoLink,
     demoLink: demoLink
   };

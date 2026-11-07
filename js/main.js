@@ -1,7 +1,8 @@
 // js/main.js
 
 // グローバル状態
-let currentLang = "ja"; // "ja" | "en"
+// 表示の言語。js/lang.js が描く前に決めて <html lang> に書いている（?lang= → 保存した言語 → 日本語）
+let currentLang = document.documentElement.lang === "en" ? "en" : "ja"; // "ja" | "en"
 let tools = [];
 let categories = [];
 let books = [];
@@ -56,6 +57,9 @@ const progressStore =
         };
       })();
 
+// 選んだ言語を保存するキー（js/lang.js が開いたときに読む）
+const LANG_KEY = typeof HLOLang !== "undefined" && HLOLang.KEY ? HLOLang.KEY : "hlo_lang";
+
 const PROGRESS_LABELS = {
   ja: ["未着手", "学習中", "一周完了", "定着済み"],
   en: ["Not started", "In progress", "First pass", "Mastered"]
@@ -96,6 +100,10 @@ function setupStaticUI() {
     if (lang === currentLang) return; // 今の言語のボタンは押しても何もしない
     const anchor = captureReadingAnchor(); // 作り直す前に、読んでいたカードと高さを覚える
     currentLang = lang;
+    // 選んだ言語を覚え（再読み込みや、新しいタブで開いたときも同じ言語で始める）、URL の ?lang= も合わせる。
+    // 保存は進捗と同じ安全なラッパー（js/storage.js）を通すので、保存できない環境でも、このページの中では切り替わる
+    progressStore.setItem(LANG_KEY, lang);
+    syncLangParam();
     updateLanguageUI();
     setupFilterOptions(); // ラベルが変わるのでフィルターも再生成
     renderAll();
@@ -215,6 +223,9 @@ function setupStaticUI() {
   }
   document.documentElement.classList.add("js-ready");
   reserveBookBanner();
+
+  // URL の ?lang= を、描く前に決めた言語に合わせる（保存した言語が英語なら lang=en を付ける。履歴は増やさない）
+  syncLangParam();
 
   // 再読み込みや「戻る」で開き直したときは、いつも先頭から始める。一覧はデータが届いてから描くので、
   // ブラウザーがスクロール位置を戻そうとすると、読み込み中に取っている高さ（一覧の1画面分）の所で止まり、
@@ -593,13 +604,21 @@ function updateLanguageUI() {
     langEnBtn.setAttribute("aria-pressed", isJa ? "false" : "true");
   }
 
-  // 検索プレースホルダ
+  // 検索プレースホルダ（index.html には書かない。英語で開いたときに、main.js が動く前の日本語の文を出さないため）
   const searchInput = document.getElementById("filter-search-input");
   if (searchInput) {
     searchInput.placeholder = isJa
       ? "タイトル・説明・タグで検索"
       : "Search by title / description / tags";
   }
+
+  // 「はじめ方」の入口は、英語のときは ?lang=en を付けた href にする（新しいタブで開いたときや、リンクを写したときも英語で開く）。
+  // もとの href は data-href に取っておき、日本語に戻したらそれに戻す
+  document.querySelectorAll(".start-here-entries a").forEach((a) => {
+    if (!a.dataset.href) a.dataset.href = a.getAttribute("href");
+    const base = a.dataset.href;
+    a.setAttribute("href", isJa || !HU ? base : HU.withLang(new URL(base, window.location.href).toString(), "en"));
+  });
 }
 
 // ---- タブ切替 ----
@@ -769,6 +788,24 @@ function commitUrl(partial, how, source) {
   else if (source && lastPush && lastPush.source === source) lastPush.time = now;
 }
 
+// URL の ?lang= を今の言語に合わせる（英語なら lang=en、日本語なら付けない。?lang=ja で開いたときは残す。js/url.js）。
+// 言語のほかの条件は書き換えず、履歴は増やさない
+function syncLangParam() {
+  if (!HU) return;
+  let next;
+  try {
+    next = HU.buildUrl(window.location.href, { lang: currentLang });
+  } catch (e) {
+    return;
+  }
+  if (next === window.location.href) return;
+  try {
+    window.history.replaceState(window.history.state, "", next);
+  } catch (e) {
+    /* file:// などでは無視 */
+  }
+}
+
 // 今の履歴に、見ている位置（スクロールの位置と、一覧でヘッダーのすぐ下にある項目）を書いておく。
 // 戻る・進むでこの履歴へ戻ってきたときに、同じ所を出す（restoreView）
 function saveViewInHistory() {
@@ -800,6 +837,8 @@ function setupHistory() {
 // 条件が今と同じとき（章の位置の # だけが違うときなど）は何もせず、ブラウザーに任せる
 function applyHistoryState(view) {
   lastPush = null; // 戻ったあとの変更は、まとめずに積む
+  // 言語は戻る・進むで変えない。前の言語のときに積んだ履歴へ来たら、URL の ?lang= を今の言語に直す
+  syncLangParam();
   if (!urlStateReady) {
     // データが届く前はタブだけを合わせる（本・カテゴリー・検索は、データが届いたときに URL から読む）
     const tab = HU ? HU.readState(window.location.search, {}).tab : "tools";
@@ -1562,7 +1601,8 @@ function renderBookProgress() {
 
     const title = document.createElement("a");
     title.className = "category-progress-title book-progress-title";
-    title.href = `?book=${encodeURIComponent(s.book.slug)}`;
+    const rowHref = `?book=${encodeURIComponent(s.book.slug)}`;
+    title.href = HU && currentLang === "en" ? HU.withLang(new URL(rowHref, window.location.href).toString(), "en") : rowHref;
     const kind = document.createElement("span");
     kind.className = "book-progress-kind";
     kind.textContent = bookKindLabel(s.book);
@@ -1800,7 +1840,9 @@ function handleShareOnX() {
       else if (lvl === 3) n3++;
     });
 
-  const url = window.location.origin + window.location.pathname;
+  // 英語表示のときは ?lang=en を付ける（共有されたリンクを開いた人も英語で始まる）
+  const base = window.location.origin + window.location.pathname;
+  const url = HU ? HU.withLang(base, currentLang) : base;
 
   let text;
   if (currentLang === "ja") {

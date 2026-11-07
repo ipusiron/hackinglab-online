@@ -16,6 +16,22 @@
     <link rel="apple-touch-icon" href="./favicon/HLO_glitch_hex.png">
 
     <link rel="stylesheet" href="./css/style.css" />
+
+    <!-- script はすべてここ（CSP の meta のあと）に置く。
+         defer の6本：実行は書いた順（books → search → storage → tabs → url → main）で、ページを読み終えてから
+         DOMContentLoaded の前に終わる。meta の CSP があると Chromium は先読みをしないので、defer がないと1本ずつ取りに行くことがあり、
+         遅い回線ではその分カードが遅れる。async にはしない（実行の順番が崩れ、main.js がほかより先に動くと、書籍の絞り込み・
+         検索・URL の条件が働かない）。下の lang.js より前に書き、fetchpriority="high" を付ける（後ろに書くと lang.js を待つあいだに
+         見つけられないことがあり、付けないと Chromium は lang.js を待つあいだ head の中の defer の script を後回しにする。
+         どちらでも遅い回線ではカードが1往復ほど遅れた）。
+         lang.js：表示の言語（<html lang>）を描く前に決める（保存した言語が英語でも、日本語の文を一瞬も出さない）ので defer を付けない -->
+    <script src="./js/books.js" defer fetchpriority="high"></script>
+    <script src="./js/search.js" defer fetchpriority="high"></script>
+    <script src="./js/storage.js" defer fetchpriority="high"></script>
+    <script src="./js/tabs.js" defer fetchpriority="high"></script>
+    <script src="./js/url.js" defer fetchpriority="high"></script>
+    <script src="./js/main.js" defer fetchpriority="high"></script>
+    <script src="./js/lang.js"></script>
   </head>
   <body>
     <!-- ヘッダー：サイト名＋サブタイトル＋言語切替＋ヘルプ -->
@@ -180,10 +196,10 @@
               <span class="label-ja">検索</span>
               <span class="label-en">Search</span>
             </label>
+            <!-- 案内文（placeholder）は main.js が今の言語で入れる -->
             <input
               type="search"
               id="filter-search-input"
-              placeholder="タイトル・説明・タグで検索"
             />
           </div>
         </div>
@@ -476,15 +492,5 @@
       </div>
     </div>
 
-    <!-- defer：meta の CSP があると Chromium は先読みをやめるので、defer がないと1本ずつ取りに行くことがあり、
-         遅い回線ではその分カードが遅れる。defer でも実行は書いた順（books → search → storage → tabs → url → main）で、DOMContentLoaded の前に終わる。
-         async にはしない（実行の順番が崩れ、main.js が books.js より先に動くと書籍の絞り込みが消え、search.js より先に動くと
-         検索が入力全体の部分一致に戻り、url.js より先に動くと絞り込みの条件を URL に残さなくなる） -->
-    <script src="./js/books.js" defer></script>
-    <script src="./js/search.js" defer></script>
-    <script src="./js/storage.js" defer></script>
-    <script src="./js/tabs.js" defer></script>
-    <script src="./js/url.js" defer></script>
-    <script src="./js/main.js" defer></script>
   </body>
 </html>

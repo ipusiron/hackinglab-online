@@ -110,7 +110,10 @@ html[lang="en"] .label-ja {
   cursor: pointer;
 }
 
-.header-controls button[aria-pressed="true"] {
+/* 今の言語のボタン。押された見た目は <html lang> で決める（描く前に js/lang.js が lang を書くので、保存した言語が英語でも、
+   最初の描画から EN が押された見た目になる）。読み上げソフトには、main.js が aria-pressed で今の言語を伝える */
+html:not([lang="en"]) #lang-ja,
+html[lang="en"] #lang-en {
   background-color: #222;
   color: #fff;
   border-color: #222;
@@ -119,7 +122,8 @@ html[lang="en"] .label-ja {
 
 /* 強制カラー（Windows のハイコントラスト）でも今の言語がわかるようにする */
 @media (forced-colors: active) {
-  .header-controls button[aria-pressed="true"] {
+  html:not([lang="en"]) #lang-ja,
+  html[lang="en"] #lang-en {
     forced-color-adjust: none;
     background-color: Highlight;
     color: HighlightText;

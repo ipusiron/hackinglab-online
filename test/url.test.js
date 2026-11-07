@@ -1,7 +1,8 @@
 // test/url.test.js
 // 依存なし（node:test / node:assert/strict のみ）。
 // js/url.js の純関数の検査。UR1・UR2 は一覧の条件（?book=・?cat=・?q=・?tab=）を URL から読む・URL へ書く関数、
-// UR3 はカードの「GitHub」「デモ」のリンクの言語ごとの形を、この中の小さなデータで確かめる（data/*.json の中身には頼らない）。
+// UR3 はカードの「GitHub」「デモ」のリンクの言語ごとの形、UR4 は URL の ?lang= の書き方を、
+// この中の小さなデータで確かめる（data/*.json の中身には頼らない）。
 
 const assert = require("node:assert/strict");
 const { test } = require("node:test");
@@ -130,4 +131,29 @@ test("UR3: demoLink は英語表示のときだけ、ipusiron.github.io のデ�
   assert.equal(U.demoLink("", "en"), "");
   assert.equal(U.demoLink("not a url", "en"), "not a url");
   assert.equal(U.demoLink(undefined, "en"), "");
+});
+
+test("UR4: buildUrl の lang は、英語なら lang=en を最後の条件として書き、日本語なら外す（?lang=ja で開いたときは残す）", () => {
+  assert.equal(U.buildUrl(BASE, { lang: "en" }), BASE + "?lang=en");
+  assert.equal(U.buildUrl(BASE + "?lang=en&book=genai-crypto", { lang: "en" }), BASE + "?book=genai-crypto&lang=en");
+  assert.equal(U.buildUrl(BASE + "?book=genai-crypto&lang=en", { lang: "ja" }), BASE + "?book=genai-crypto");
+  assert.equal(U.buildUrl(BASE + "?lang=EN", { lang: "en" }), BASE + "?lang=en");
+  // ?lang=ja で開いたときは、日本語のあいだ残す（付け足しはしない）
+  assert.equal(U.buildUrl(BASE + "?lang=ja", { lang: "ja" }), BASE + "?lang=ja");
+  assert.equal(U.buildUrl(BASE + "?lang=JA", { lang: "ja" }), BASE + "?lang=ja");
+  assert.equal(U.buildUrl(BASE, { lang: "ja" }), BASE);
+  // ja と en 以外の値は、言語を書くときに外れる
+  assert.equal(U.buildUrl(BASE + "?lang=fr", { lang: "ja" }), BASE);
+  // lang を渡さなければ、もとの値をそのまま残す（本などを変えても言語の指定は変わらない）
+  assert.equal(U.buildUrl(BASE + "?lang=en", { book: "genai-crypto" }), BASE + "?book=genai-crypto&lang=en");
+  assert.equal(U.buildUrl(BASE + "?lang=ja", { book: "genai-crypto", cat: "", q: "", tab: "tools" }), BASE + "?book=genai-crypto&lang=ja");
+});
+
+test("UR4: withLang は英語のときだけ絶対 URL に ?lang=en を付ける（ほかのパラメーターと # は残す）", () => {
+  assert.equal(U.withLang(BASE, "en"), BASE + "?lang=en");
+  assert.equal(U.withLang(BASE + "?book=security-tools-100", "en"), BASE + "?book=security-tools-100&lang=en");
+  assert.equal(U.withLang(BASE + "?lang=ja#x", "en"), BASE + "?lang=en#x");
+  assert.equal(U.withLang(BASE + "?book=x", "ja"), BASE + "?book=x");
+  assert.equal(U.withLang("?book=x", "en"), "?book=x");
+  assert.equal(U.withLang(undefined, "en"), "");
 });
