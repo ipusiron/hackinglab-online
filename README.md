@@ -64,6 +64,7 @@
 ├ js/
 │   ├ main.js               # フロントロジック（一覧・進捗管理・ダッシュボード）
 │   ├ books.js              # 書籍フィルターの純関数（DOM非依存・テスト対象）
+│   ├ search.js             # キーワード検索の純関数（DOM非依存・テスト対象）
 │   ├ storage.js            # localStorage の安全なラッパー（使えない環境ではメモリーに退避）
 │   └ tabs.js               # タブのキーボード操作の純関数
 ├ data/
@@ -76,7 +77,8 @@
 │   ├ books.test.js         # books.json とデータ検証のテスト
 │   ├ site.test.js          # storage.js・tabs.js の純関数と、index.html・main.js・style.css の検査（ARIA・CSP・ヘルプの窓・データの読み込みの決まりなど）
 │   ├ scroll_focus.test.js  # 固定ヘッダーの下で止まる位置・フォーカスの移し方・言語の切り替えの検査
-│   └ robust.test.js        # 遅い回線・遅い端末で、読み込みの途中に画面がずれたり固まったりしないための検査
+│   ├ robust.test.js        # 遅い回線・遅い端末で読み込みの途中に画面がずれたり固まったりしないこと、一覧の一番下へ飛んだときにフッターまで届くこと、JavaScript が動かないときの表示の検査
+│   └ search.test.js        # search.js の検査（全角と半角・前後の空白・複数の語・Day 番号・カテゴリー名で探せるか）
 ├ scripts/
 │   └ update_tools.py       # README からメタ情報を抽出して tools.json を生成
 └ .github/

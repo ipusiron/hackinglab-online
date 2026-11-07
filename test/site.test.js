@@ -1,7 +1,7 @@
 // test/site.test.js
 // 依存なし（node:test / node:assert/strict / node:fs / node:zlib のみ）。
 // U1〜U2 は js/storage.js・js/tabs.js の純関数、H1〜H15 は index.html / js/main.js / css/style.css の静的な検査、
-// H16〜H20 はデータの読み込みの決まり（ハブの CLAUDE.md の Loading data）の検査。
+// H16〜H20 はデータの読み込みの決まり（ハブの CLAUDE.md の Loading data）の検査、H21〜 は検索と絞り込み・一覧の表示の静的な検査。
 
 const fs = require("node:fs");
 const path = require("node:path");
@@ -306,6 +306,13 @@ function loadDataBody() {
   return blankComments(m[0]);
 }
 
+// main.js の関数の本体（宣言から、行頭の "}" まで。コメントは空白にする）
+function fnBody(name) {
+  const m = mainJs.match(new RegExp(String.raw`(?:async\s+)?function ${name}\([^)]*\)\s*\{[\s\S]*?\n\}`));
+  assert.ok(m, `${name} がない`);
+  return blankComments(m[0]);
+}
+
 // 文字列の中を飛ばしながら、pos にある "(" に対応する ")" の位置を返す
 function matchParen(src, pos) {
   let depth = 0;
@@ -321,16 +328,16 @@ function matchParen(src, pos) {
   return -1;
 }
 
-test("H16: script はすべて defer で async なし。books → storage → tabs → main の順に書き、main.js が最後", () => {
+test("H16: script はすべて defer で async なし。books → search → storage → tabs → main の順に書き、main.js が最後", () => {
   const tags = [...html.matchAll(/<script\b[^>]*>/g)].map((m) => m[0]);
   const srcs = tags.map((t) => (t.match(/\ssrc="([^"]+)"/) || [])[1]);
   for (const t of tags) {
     assert.match(t, /\sdefer[\s>]/, `defer がない（meta の CSP で Chromium の先読みが止まり、1本ずつ取りに行くことがある）: ${t}`);
     assert.doesNotMatch(t, /\sasync[\s>=]/, `async は実行の順番を保たない（main.js が books.js より先に動くと書籍の絞り込みが消える）: ${t}`);
   }
-  const order = ["./js/books.js", "./js/storage.js", "./js/tabs.js", "./js/main.js"].map((s) => srcs.indexOf(s));
+  const order = ["./js/books.js", "./js/search.js", "./js/storage.js", "./js/tabs.js", "./js/main.js"].map((s) => srcs.indexOf(s));
   assert.ok(order.every((i) => i >= 0), `読み込む script が足りない: ${srcs.join(", ")}`);
-  assert.deepEqual([...order].sort((a, b) => a - b), order, "script の順番が books → storage → tabs → main でない");
+  assert.deepEqual([...order].sort((a, b) => a - b), order, "script の順番が books → search → storage → tabs → main でない");
   assert.equal(srcs[srcs.length - 1], "./js/main.js", "main.js が最後の script でない");
 });
 
@@ -381,4 +388,77 @@ test("H20: 最初に一覧を描いた時刻は performance.mark で1回だけ�
   assert.doesNotMatch(mainJs, /sendBeacon|XMLHttpRequest|getEntries(?:ByName|ByType)?\(/);
   const csp = html.match(/<meta\s+http-equiv="Content-Security-Policy"\s+content="([^"]+)"/)[1];
   assert.match(csp, /connect-src 'self'(;|$)/);
+});
+
+// ---- 検索と絞り込み・一覧の表示 ----
+
+test("H21: 検索欄は日本語の変換中（isComposing の input）に絞らず、変換を確定したとき（compositionend）に欄の値で絞る", () => {
+  const s = fnBody("setupStaticUI");
+  const handler = (type) => {
+    const i = s.indexOf(`searchInput?.addEventListener("${type}"`);
+    assert.ok(i >= 0, `検索欄の ${type} の処理がない`);
+    return s.slice(i, s.indexOf("\n  });", i));
+  };
+  // 変換中の input では絞らない（未確定のかなで0件になったり、1文字ごとに一覧を作り直したりしない）
+  assert.match(handler("input"), /if \(e\.isComposing\) return;[\s\S]*applySearch\(/, "変換中の input でも絞っている");
+  // Chromium は確定の input も isComposing=true で出すので、compositionend で絞る処理が要る
+  assert.match(handler("compositionend"), /applySearch\(searchInput\.value\)/, "確定したときに絞っていない");
+  // 「変換中」の印を自分で持たない（compositionend を取りこぼすと、検索が止まったままになる）
+  assert.doesNotMatch(s, /compositionstart/, "compositionstart で変換中の印を持っている");
+  // Firefox は compositionend のあとにも input を出すので、同じ語なら描き直さない
+  assert.match(fnBody("applySearch"), /if \(filters\.search === before\) return;/, "同じ語でも描き直している");
+});
+
+test("H22: 戻るボタンなどでブラウザーが検索欄の文字だけを戻したときも、一覧をその語で絞る（loadData が描く前に欄の値を読む）", () => {
+  const load = loadDataBody();
+  const iRead = load.indexOf('getElementById("filter-search-input")');
+  assert.ok(iRead >= 0, "loadData で検索欄を読んでいない（欄の文字と一覧が食い違う）");
+  const iSet = load.indexOf("setSearchQuery(", iRead);
+  assert.ok(iSet > iRead, "検索欄の値を検索語にしていない");
+  assert.ok(iSet < load.indexOf("renderAll()"), "一覧を描いたあとで検索欄を読んでいる");
+});
+
+// WCAG のコントラスト比（色は #rrggbb）
+function contrastRatio(a, b) {
+  const lum = (hex) => {
+    const [r, g, bl] = [1, 3, 5]
+      .map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+      .map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+    return 0.2126 * r + 0.7152 * g + 0.0722 * bl;
+  };
+  const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+test("H23: 検索欄の案内文は検索欄の地に 4.5:1 以上、入力欄・選択欄の枠線は絞り込みの枠の地と検索欄の地に 3:1 以上", () => {
+  const color = (body, prop) => (body.match(new RegExp(`(?:^|[;\\s])${prop}:\\s*(#[0-9a-f]{6})\\b`, "i")) || [])[1];
+  const fieldBg = color(bodyOf('.filter-search input[type="search"]'), "background-color");
+  const boxBg = color(bodyOf("#tool-filters"), "background-color");
+  assert.ok(fieldBg && boxBg, "検索欄か絞り込みの枠の地の色がない");
+  const ph = bodyOf('.filter-search input[type="search"]::placeholder');
+  const phColor = color(ph, "color");
+  assert.ok(phColor, "案内文の色の指定がない（ブラウザーの既定の色は薄い）");
+  assert.match(ph, /opacity:\s*1\s*(?:;|$)/, "古い Firefox の opacity による半透明を打ち消していない");
+  const r = contrastRatio(phColor, fieldBg);
+  assert.ok(r >= 4.5, `案内文 ${phColor} と検索欄の地 ${fieldBg} の比が ${r.toFixed(2)}:1`);
+  for (const sel of ["#tool-filters select", '#tool-filters input[type="search"]']) {
+    const border = (bodyOf(sel).match(/border:\s*1px solid (#[0-9a-f]{6})\b/i) || [])[1];
+    assert.ok(border, `${sel} の枠線の色がない`);
+    for (const bg of [boxBg, fieldBg]) {
+      const rb = contrastRatio(border, bg);
+      assert.ok(rb >= 3, `${sel} の枠線 ${border} と地 ${bg} の比が ${rb.toFixed(2)}:1`);
+    }
+  }
+});
+
+test("H24: PC幅の一覧は auto-fill で列を作り（結果が1件でもカードを横幅いっぱいに伸ばさない）、0件の文は横幅いっぱいに出す", () => {
+  const cols = rules
+    .filter((r) => r.selector === "#tool-list")
+    .map((r) => (r.body.match(/grid-template-columns:\s*([^;]+)/) || [])[1])
+    .filter(Boolean);
+  assert.ok(cols.some((c) => /^repeat\(auto-fill,/.test(c.trim())), `#tool-list の列が auto-fill でない: ${cols.join(" / ")}`);
+  assert.ok(!cols.some((c) => /auto-fit/.test(c)), "auto-fit は空いた列を畳み、1件のカードが横幅いっぱいに伸びる");
+  // 0件の文（#tool-list の中の p）は、狭い列に入って折れないよう、すべての列にまたがる
+  assert.match(bodyOf("#tool-list > p"), /grid-column:\s*1\s*\/\s*-1/);
+  assert.match(fnBody("appendEmptyState"), /document\.createElement\("p"\)/, "0件の文が p でない（CSS の #tool-list > p が当たらない）");
 });

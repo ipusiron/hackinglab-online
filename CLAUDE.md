@@ -42,13 +42,15 @@ hub: true
 - `repos.txt`: Master list of tool repositories
 - `js/main.js`: All UI logic including filtering, progress tracking (localStorage), language switching, and X sharing
 - `js/books.js`: Pure functions for the book/series filter (DOM-free); tested by `test/books.test.js`
+- `js/search.js`: Pure functions for the keyword search (DOM-free); tested by `test/search.test.js`. Both the query and the tool text are normalized (NFKC, lower case); every space-separated word must match; a Day number (`Day12`, `day 12`) is padded to three digits and matches only that tool's id (a number of only zeros, such as `Day0` while typing `Day050`, is matched as plain text instead); the searched text is the id, title, subtitles, descriptions, tags and the category names shown on the card (`categories.json` ja/en, not aliases or names that appear only in a tool README)
 - `js/storage.js`: Safe localStorage wrapper (never throws; falls back to in-memory when storage is unavailable)
 - `js/tabs.js`: Pure keyboard logic for the tabs (←/→/Home/End)
-- `test/*.test.js` + `package.json`: `node --test`, no dependencies. `npm test` runs all four files (the list is in `package.json`; add a new test file there too):
+- `test/*.test.js` + `package.json`: `node --test`, no dependencies. `npm test` runs all five files (the list is in `package.json`; add a new test file there too):
   - `books.test.js`: the real `data/books.json` and `data/tools.json` (D1–D15, S1) and the pure functions in `js/books.js` on synthetic data (F1–F6)
-  - `site.test.js`: the two modules above (U1–U2); static checks of `index.html`, `js/main.js` and `css/style.css` (H1–H15: ARIA references, tabs, dialog, h1, CSP, no inline styles/scripts, help dialog, forced colors, reduced motion); the data loading rules (H16–H20, see "Loading data")
-  - `scroll_focus.test.js`: where jumps and focus stop under the fixed header, and keeping the reading position when switching languages (SF1–SF7)
+  - `site.test.js`: `js/storage.js` and `js/tabs.js` (U1–U2); static checks of `index.html`, `js/main.js` and `css/style.css` (H1–H15: ARIA references, tabs, dialog, h1, CSP, no inline styles/scripts, help dialog, forced colors, reduced motion); the data loading rules (H16–H20, see "Loading data"); the search input, the filters and the list (H21–H24: no filtering while Japanese text is still being composed, searching with the text the browser put back in the field on Back or reload, the contrast of the placeholder and the field borders, and keeping the card width when only one tool matches)
+  - `scroll_focus.test.js`: where jumps and focus stop under the fixed header, keeping the reading position when switching languages, and keeping the changed filter at the same height on screen (SF1–SF8)
   - `robust.test.js`: no layout shifts or freezes while loading on slow connections and devices, reaching the footer when jumping to the end of the list, and the view without JavaScript (RB1–RB7)
+  - `search.test.js`: the pure functions in `js/search.js` on synthetic data (Q1–Q6) and on the real `data/tools.json` and `data/categories.json` (QD1–QD5: inputs that mean the same give the same tools; no fixed counts)
 - The static checks read the source text of `index.html`, `js/main.js` and `css/style.css` (comments are ignored where it matters). When you rename a function, selector or id that a check names, update the check in the same change
 - `index.html` has a meta CSP (`default-src 'none'`, everything else `'self'`). Do not add inline `<script>`, `style="..."` or `on*=` attributes; JS-set `element.style` is fine. Language display is driven by `<html lang>` + CSS (`.label-ja` / `.label-en`)
 
@@ -56,7 +58,7 @@ hub: true
 On a slow mobile connection every extra round trip delays the cards by about 0.6 s, so keep these rules when adding data or scripts. `test/site.test.js` (H16–H20) checks them.
 - Start every JSON the first view needs before the first `await` in `loadData()` (`js/main.js`). The required ones (`categories.json`, `tools.json`) go into one `Promise.all`. Optional ones (`books.json`) are started next to it and catch their own failure (`.catch(() => null)`), so a missing or broken optional file never stops the tool list. Do not put optional data into the `Promise.all`, and do not fetch anything after awaiting the others.
 - JSON that the first view does not need is fetched when its screen is opened, not in `loadData()`.
-- Every `<script>` in `index.html` has `defer` and never `async`. The meta CSP stops Chromium's preload scanner, so without `defer` Chromium can fetch them one by one, each waiting for the one before (a round trip each on a slow connection); `defer` keeps the execution order books → storage → tabs → main.
+- Every `<script>` in `index.html` has `defer` and never `async`. The meta CSP stops Chromium's preload scanner, so without `defer` Chromium can fetch them one by one, each waiting for the one before (a round trip each on a slow connection); `defer` keeps the execution order books → search → storage → tabs → main.
 - `data/tools.json` stays at or below 80 KB gzipped (127 tools were about 42 KB in November 2026). Going over is a signal to revisit how the list is loaded, or the limit; it is not a cap on the number of tools.
 - After the first list render, `main.js` sets `performance.mark("hlo:cards-painted")` once, to check the timing in DevTools. The timing is never read back or sent anywhere.
 
@@ -90,7 +92,7 @@ GitHub Actions workflow (`.github/workflows/update-tools.yml`) automatically reg
 `.github/workflows/test.yml` runs `npm test` on push to `main`, on pull requests, and after the tools.json regeneration (`workflow_run`). When a run is red, open the log and find the failing test's ID; its message says which rule broke and why:
 - `D*` or `S1` (`books.test.js`), typically right after a regeneration: `data/books.json` refers to a tool id that is no longer in `tools.json`, or a book entry is broken. Fix `data/books.json`. If D1 reports a BOM in `tools.json`, fix `scripts/update_tools.py` instead. Never edit `tools.json` by hand
 - `H19` (`site.test.js`): `tools.json` grew past 80 KB gzipped. Revisit how the list is loaded, or the limit (see "Loading data"); it is not a reason to stop adding tools
-- Any other ID (`F*`, `U*`, `H*`, `SF*`, `RB*`): a change to `index.html`, `js/` or `css/style.css` broke a rule. Fix the change, or update the check if the rule itself was changed on purpose
+- Any other ID (`F*`, `U*`, `H*`, `SF*`, `RB*`, `Q*`): a change to `index.html`, `js/` or `css/style.css` broke a rule. Fix the change, or update the check if the rule itself was changed on purpose
 
 ## Progress System
 

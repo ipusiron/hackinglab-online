@@ -17,6 +17,13 @@ const HB = typeof HLOBooks !== "undefined" ? HLOBooks : null;
 // いま選択中の本の対象 id 集合（renderToolList / setBookFilter で更新）。
 let bookTargetSet = null;
 
+// キーワード検索の純関数（js/search.js）。読み込めていなければ null とし、入力全体の部分一致で代える。
+const HS = typeof HLOSearch !== "undefined" ? HLOSearch : null;
+// いまの検索語（HS.parseQuery で正規化して分けたもの。filters.search はこれを空白でつないだ文字列）
+let searchTerms = [];
+// ツール -> 検索用の項目。データは読み込んだあとに変わらないので、初めて検索したときに1回だけ作る
+let searchEntries = null;
+
 // localStorage を安全に使うラッパー（js/storage.js）。読み込めていなければ同等の最小実装で代える。
 const progressStore =
   typeof HLOStorage !== "undefined"
@@ -113,23 +120,45 @@ function setupStaticUI() {
   const progressSelect = document.getElementById("filter-progress");
   const searchInput = document.getElementById("filter-search-input");
 
+  // 絞り込みを変えると、上にある本のバナーが出入りしたり、バナーの件数や「章へ移動」の行の数が変わったりして、
+  // いま操作した欄が動く（本を選ぶと、バナーの高さの分だけ下へずれ、結果のカードが画面の外へ出る）。
+  // 操作した欄が画面の同じ高さに残るように、動いた分だけすぐにスクロールで戻す（なめらかに動かすと、
+  // 欄がいったん下がってから戻って見える）。ページの先頭より上へは戻せないので、先頭でバナーが消えたときなどは欄が上へ動く
+  const keepInPlace = (el, update) => {
+    const before = el.getBoundingClientRect().top;
+    update();
+    scrollByInstant(el.getBoundingClientRect().top - before);
+  };
+
   bookSelect?.addEventListener("change", (e) => {
-    setBookFilter(e.target.value);
+    keepInPlace(bookSelect, () => setBookFilter(e.target.value));
   });
 
   categorySelect?.addEventListener("change", (e) => {
-    filters.categoryId = e.target.value;
-    renderToolList();
+    keepInPlace(categorySelect, () => {
+      filters.categoryId = e.target.value;
+      renderToolList();
+    });
   });
 
   progressSelect?.addEventListener("change", (e) => {
-    filters.progress = e.target.value;
-    renderToolList();
+    keepInPlace(progressSelect, () => {
+      filters.progress = e.target.value;
+      renderToolList();
+    });
   });
 
+  // 日本語入力の変換中（未確定）は絞らず、確定したとき（compositionend）に欄の値で絞る。
+  // Chromium は確定の input も isComposing=true で出し、そのあとに compositionend を出す（後ろに input は来ない）。
+  // Firefox は compositionend のあとに isComposing=false の input を出す。どちらの順でも、同じ語なら
+  // applySearch が描き直さないので、絞るのは1回だけ。変換を通らない英字は、今までどおり1文字ごとに絞る。
+  // 「変換中」の印は自分では持たない（compositionend を取りこぼすと、検索が止まったままになるため）
+  searchInput?.addEventListener("compositionend", () => {
+    keepInPlace(searchInput, () => applySearch(searchInput.value));
+  });
   searchInput?.addEventListener("input", (e) => {
-    filters.search = e.target.value.toLowerCase();
-    renderToolList();
+    if (e.isComposing) return;
+    keepInPlace(searchInput, () => applySearch(searchInput.value));
   });
 
   // X共有ボタン
@@ -324,6 +353,7 @@ async function loadData() {
     categories = await catRes.json();
     const toolsJson = await toolsRes.json();
     tools = Array.isArray(toolsJson.tools) ? toolsJson.tools : [];
+    searchEntries = null; // 検索用の項目は、このデータで作り直す
 
     // 書籍データ（自己完結した読み込み。失敗してもハブは従来どおり動く）
     const bJson = await booksPromise;
@@ -363,6 +393,11 @@ async function loadData() {
         }
       }
     }
+
+    // 戻るボタンや Firefox の再読み込みで開き直すと、ブラウザーが検索欄の文字だけを戻すことがある（input は起きない）。
+    // 描く前に欄の値を読み、残っていた文字で絞る（欄に文字があるのに一覧が絞られていない、という食い違いを出さない）
+    const searchInput = document.getElementById("filter-search-input");
+    if (searchInput) setSearchQuery(searchInput.value);
 
     setupFilterOptions();
     setListBusy(false);
@@ -959,8 +994,17 @@ function filterByProgress(tool) {
 
 function filterBySearch(tool) {
   if (!filters.search) return true;
-  const q = filters.search;
 
+  // 全角と半角・大文字と小文字をそろえ、空白で区切った語をすべて含むツールを出す（js/search.js）
+  if (HS) {
+    if (!searchEntries) {
+      const catIndex = HS.categoryIndex(categories);
+      searchEntries = new Map(tools.map((t) => [t, HS.buildEntry(t, catIndex)]));
+    }
+    return HS.matches(searchEntries.get(tool), searchTerms);
+  }
+
+  // js/search.js を読めないときは、これまでどおり入力全体を部分一致で探す（前後の空白は setSearchQuery で除く）
   const textParts = [
     tool.id || "",
     tool.title || "",
@@ -972,7 +1016,25 @@ function filterBySearch(tool) {
   ];
 
   const text = textParts.join(" ").toLowerCase();
-  return text.includes(q);
+  return text.includes(filters.search);
+}
+
+// 検索欄の値を検索語にして filters に入れる（描き直しはしない）。
+function setSearchQuery(raw) {
+  if (HS) {
+    searchTerms = HS.parseQuery(raw);
+    filters.search = searchTerms.join(" ");
+  } else {
+    filters.search = String(raw == null ? "" : raw).trim().toLowerCase();
+  }
+}
+
+// 検索欄の値で絞り込む。正規化した検索語が前と同じとき（後ろに空白を足しただけなど）は描き直さない。
+function applySearch(raw) {
+  const before = filters.search;
+  setSearchQuery(raw);
+  if (filters.search === before) return;
+  renderToolList();
 }
 
 function createToolCard(tool, book) {

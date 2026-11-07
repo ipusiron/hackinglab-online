@@ -210,13 +210,21 @@ html[lang="en"] .label-ja {
   width: 100%;
   padding: 0.35rem 0.5rem;
   border-radius: 0.4rem;
-  border: 1px solid #d1d5db;
+  /* 欄の形がわかる濃さ（白の地に 3.45:1、検索欄の地 #f9fafb に 3.30:1。入力欄の枠の目安は 3:1 以上） */
+  border: 1px solid #8a8a8a;
   font-size: 1rem; /* iOS Safari の自動ズーム回避のため 16px 以上 */
   min-height: 44px; /* タップ領域 */
 }
 
 .filter-search input[type="search"] {
   background-color: #f9fafb;
+}
+
+/* 検索欄の案内文。ブラウザーの既定の色は薄い（検索欄の地に Chromium で 4.41:1、WebKit で 2.25:1）ので、
+   4.5:1 を超える色にする（4.63:1）。古い Firefox は案内文を opacity で半透明にしていたので、opacity も 1 にする */
+.filter-search input[type="search"]::placeholder {
+  color: #6b7280;
+  opacity: 1;
 }
 
 /* hidden 指定を display より優先させる（display:grid/flex に負けないように） */
@@ -489,6 +497,11 @@ html[lang="en"] .label-ja {
   display: grid;
   grid-template-columns: 1fr;
   gap: 1rem;
+}
+
+/* 条件に合うツールがないときの文は、列の幅でなく一覧の横幅いっぱいに出す（PC幅の列に入ると折れるため） */
+#tool-list > p {
+  grid-column: 1 / -1;
 }
 
 /* 読み込みが終わるまで（main.js が aria-busy を false にするまで）は一覧の高さを1画面分取り、フッターを画面の外に置く。
@@ -1027,9 +1040,10 @@ html.help-open.keep-gutter {
     grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr) minmax(0, 1.4fr);
   }
 
-  /* ツールカードのグリッド：PC幅では2〜3列 */
+  /* ツールカードのグリッド：PC幅では2〜3列。結果が1件・2件でも列の幅は変えない
+     （auto-fit だと空いた列が畳まれ、1件のカードが一覧の横幅いっぱいに伸びる） */
   #tool-list {
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 1.25rem;
   }
 
