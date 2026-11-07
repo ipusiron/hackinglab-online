@@ -492,7 +492,13 @@ test("H25: 別のタブで進捗が変わったら（storage イベント）、�
   const refresh = fnBody("refreshProgressViews");
   assert.match(refresh, /querySelectorAll\("\.tool-progress-button"\)[\s\S]*updateProgressButton\(/, "進捗ボタンを描き直していない");
   assert.match(refresh, /renderDashboard\(\)/, "ダッシュボードを描き直していない");
-  assert.doesNotMatch(refresh, /renderToolList\(|renderAll\(/, "一覧を作り直している（焦点とスクロールの位置が動く）");
+  assert.doesNotMatch(refresh, /renderToolList\(|renderAll\(/, "一覧を作り直している（フォーカスとスクロールの位置が動く）");
+  // ダッシュボードの本の行は作り直すので、作り直す前にフォーカスしている部品の目印を取り、作り直したあとに同じ行へ戻す（H32）
+  assert.match(
+    refresh,
+    /const focused = document\.activeElement;\s*const focusedKey = focusKey\(focused\);\s*renderDashboard\(\);\s*restoreRebuiltFocus\(focused, focusedKey\);/,
+    "別のタブの進捗で本の行を作り直すと、その行にあったフォーカスが body に落ちる"
+  );
 });
 
 // ---- 一覧の条件と URL ----
@@ -644,12 +650,20 @@ test("H31: 戻る・進むでタブが切り替わり、フォーカスしてい
   // ダッシュボードの本の行は作り直されるので、同じ行を引けるように本の slug を持たせ、書くときはそれを使う
   assert.match(fnBody("renderBookProgress"), /title\.dataset\.book = s\.book\.slug;/);
   assert.match(fnBody("focusKey"), /"book:" \+ el\.dataset\.book/);
-  // タブを切り替える前に、フォーカスしている部品のパネルを覚え、切り替えて隠れたら移す（データが届く前の戻る・進むも同じ）
+  // タブを切り替える前に、フォーカスしている部品とそのパネル・目印を覚え、描き直したあとに settleFocus で移す
+  // （データが届く前の戻る・進むも同じ）
   const apply = fnBody("applyHistoryState");
-  const iPanel = apply.indexOf("const focusPanel = panelOf(document.activeElement);");
+  const iPanel = apply.search(/const focused = document\.activeElement;\s*const focusPanel = panelOf\(focused\);\s*const focusedKey = focusKey\(focused\);/);
   assert.ok(iPanel >= 0 && iPanel < apply.indexOf("switchTab("), "タブを切り替える前に、フォーカスしている部品のパネルを覚えていない（切り替えたあとでは、隠れた部品から body に移っていることがある）");
-  assert.equal((apply.match(/if \(focusPanel && focusPanel\.hidden\) restoreFocus\(view\);/g) || []).length, 2, "タブが切り替わって隠れたパネルにフォーカスが残っても、移していない");
-  assert.match(apply, /restoreView\(view, filtersTop\);\s*if \(focusPanel && focusPanel\.hidden\) restoreFocus\(view\);/, "スクロールの位置を戻す前にフォーカスを移している");
+  assert.equal((apply.match(/settleFocus\(view, focused, focusPanel, focusedKey\);/g) || []).length, 2, "戻る・進むで描き直したあとに、フォーカスを移していない");
+  assert.match(apply, /restoreView\(view, filtersTop\);\s*settleFocus\(view, focused, focusPanel, focusedKey\);/, "スクロールの位置を戻す前にフォーカスを移している");
+  // 隠れたパネルに残る → restoreFocus、作り直して外れた → restoreRebuiltFocus（H32）、タブのボタンに残る → focusSelectedTab
+  const settle = fnBody("settleFocus");
+  assert.match(
+    settle,
+    /if \(focusPanel && focusPanel\.hidden\) restoreFocus\(view\);\s*else if \(focused && !focused\.isConnected\) restoreRebuiltFocus\(focused, key\);\s*else focusSelectedTab\(\);/,
+    "戻る・進むのあと、隠れたパネル・作り直して外れた部品・選ばれていないタブのボタンに残ったフォーカスを移していない"
+  );
   // 移し先は、書いておいた部品が表に出ていればそれ、無ければ選ばれたタブのボタン。restoreView が戻した位置は動かさない
   const restore = fnBody("restoreFocus");
   assert.match(restore, /elementForFocusKey\(view && view\.focus\)/);
@@ -657,9 +671,49 @@ test("H31: 戻る・進むでタブが切り替わり、フォーカスしてい
   assert.match(restore, /\.focus\(\{ preventScroll: true \}\)/, "フォーカスを移すときにスクロールしている");
   // タブのボタンを押して切り替えてから戻ったときなど、フォーカスがタブのボタンにあれば、選ばれたタブのボタンへ移す
   // （選ばれていないタブのボタンに残すと、読み上げではタブが替わったことが伝わらない）
-  assert.equal((apply.match(/if \(focusPanel && focusPanel\.hidden\) restoreFocus\(view\);\s*else focusSelectedTab\(\);/g) || []).length, 2, "戻る・進むでタブが切り替わっても、フォーカスが選ばれていないタブのボタンに残る");
   const tabFocus = fnBody("focusSelectedTab");
   assert.match(tabFocus, /active\.classList\.contains\("tab-button"\)/);
   assert.match(tabFocus, /if \(active\.getAttribute\("aria-selected"\) === "true"\) return;/);
   assert.match(tabFocus, /document\.querySelector\('\.tab-button\[aria-selected="true"\]'\)[\s\S]*\.focus\(\{ preventScroll: true \}\)/, "タブのボタンへ移すときにスクロールしている");
+});
+
+test("H32: 一覧・バナー・ダッシュボードの本の行を作り直して、フォーカスしていた部品が外れたときは、作り直した同じ部品へ（無ければ一覧かバナーの先頭の見出しへ）フォーカスを移す。スクロールはせず、フォーカスがページの中になかったときは何もしない", () => {
+  // 作り直す部品に目印を付ける：カードはツールの slug（章ごとに並べたときは章も）と部品の種類、バナーは部品の種類
+  const card = fnBody("createToolCard");
+  assert.match(card, /card\.dataset\.slug = tool\.slug/);
+  for (const part of ["demo", "repo", "progress"]) {
+    assert.match(card, new RegExp(String.raw`\.dataset\.part = "${part}";`), `カードの ${part} に目印がない`);
+  }
+  assert.match(fnBody("renderToolList"), /card\.dataset\.group = g\.key;/, "同じツールが複数の章に出るとき、同じ章のカードを引けない");
+  const banner = fnBody("renderBookBanner");
+  for (const re of [/link\.dataset\.part = "link";/, /clearBtn\.dataset\.part = "clear";/, /summary\.dataset\.part = "jump";/, /a\.dataset\.part = "jump:" \+ g\.key;/]) {
+    assert.match(banner, re, "バナーの部品に目印がない");
+  }
+  // 目印：カードは "tool:<種類>:<章>:<slug>"、バナーは本の slug を入れた "banner:<本>:<種類>"（本が替わったら同じ部品とみなさない）
+  const key = fnBody("focusKey");
+  assert.match(key, /`tool:\$\{part\}:\$\{card\.dataset\.group \|\| ""\}:\$\{card\.dataset\.slug\}`/);
+  assert.match(key, /`banner:\$\{filters\.book\}:\$\{part\}`/);
+  // 引くときは、同じ章のカードを先に、無ければ一覧で最初に出る同じツールの同じ部品。章へ移動のリンクが畳んだ中なら開閉の見出し
+  const find = fnBody("elementForFocusKey");
+  assert.match(find, /if \(\(card\.dataset\.group \|\| ""\) === group\) return el;\s*if \(!other\) other = el;/);
+  assert.match(find, /return details && !details\.open \? details\.querySelector\("summary"\) : el;/);
+  // 戻すのは、作り直す前の部品が文書から外れ、フォーカスが body に落ちたときだけ（作り直す前からフォーカスがページの部品に
+  // なかったとき、部品が残っているとき、ほかの部品へ移っているときは何もしない）。スクロールはしない
+  const restore = fnBody("restoreRebuiltFocus");
+  assert.match(restore, /if \(!prev \|\| prev === document\.body \|\| prev\.isConnected\) return;/);
+  assert.match(restore, /if \(active && active !== document\.body\) return;/);
+  assert.match(restore, /let target = elementForFocusKey\(key\);\s*if \(!isShown\(target\)\) target = fallbackFocusTarget\(key\);\s*if \(target\) target\.focus\(\{ preventScroll: true \}\);/);
+  assert.match(fnBody("isShown"), /el\.isConnected && el\.getClientRects\(\)\.length > 0/);
+  // 同じ部品が無いとき：バナーの部品ならバナーの書名、一覧の部品なら一覧の先頭の章の見出し（出ていなければもう一方、どちらも
+  // 出ていなければ選ばれたタブのボタン）
+  const fallback = fnBody("fallbackFocusTarget");
+  assert.match(fallback, /document\.getElementById\("book-banner-title"\)/);
+  assert.match(fallback, /document\.querySelector\("#tool-list \.book-group-heading"\)/);
+  assert.match(fallback, /const order = inBanner \? \[title, heading\] : \[heading, title\];\s*return order\.find\(isShown\) \|\| document\.querySelector\('\.tab-button\[aria-selected="true"\]'\);/);
+  // 見出しはフォーカスできる（tabIndex = -1）
+  assert.match(banner, /h2\.id = "book-banner-title";[\s\S]*?h2\.tabIndex = -1;/);
+  assert.match(fnBody("renderToolList"), /h\.className = "book-group-heading";[\s\S]*?h\.tabIndex = -1;/);
+  // 戻る・進む（settleFocus。H31）と別のタブの進捗（refreshProgressViews。H25）の両方から呼ぶ
+  assert.match(fnBody("settleFocus"), /else if \(focused && !focused\.isConnected\) restoreRebuiltFocus\(focused, key\);/);
+  assert.match(fnBody("refreshProgressViews"), /restoreRebuiltFocus\(focused, focusedKey\);/);
 });

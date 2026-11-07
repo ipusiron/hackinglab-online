@@ -891,9 +891,11 @@ function applyHistoryState(view) {
   lastPush = null; // 戻ったあとの変更は、まとめずに積む
   // 言語は戻る・進むで変えない。前の言語のときに積んだ履歴へ来たら、URL の ?lang= を今の言語に直す
   syncLangParam();
-  // タブを切り替える前に、フォーカスしている部品のパネルを覚える（切り替えて隠れたら、restoreFocus で移す。
-  // タブのボタンにフォーカスがあるときは、focusSelectedTab で選ばれたタブのボタンへ移す）
-  const focusPanel = panelOf(document.activeElement);
+  // 描き直す前に、フォーカスしている部品と、そのパネルと目印を覚える（タブを切り替えたり、一覧・バナーを作り直したりしたあとでは、
+  // フォーカスが body に移っていることがある）。描き直したあとに settleFocus で移す
+  const focused = document.activeElement;
+  const focusPanel = panelOf(focused);
+  const focusedKey = focusKey(focused);
   const searchInput = document.getElementById("filter-search-input");
   if (!urlStateReady) {
     // データが届く前はタブと検索欄だけを合わせる（本・カテゴリーは、データが届いたときに URL から読む）
@@ -901,8 +903,7 @@ function applyHistoryState(view) {
     const st = HU.readState(window.location.search, {});
     if (st.tab !== currentTab) switchTab(st.tab === "dashboard" ? "tab-dashboard" : "tab-tools");
     if (searchInput && searchInput.value.trim() !== st.q) searchInput.value = st.q;
-    if (focusPanel && focusPanel.hidden) restoreFocus(view);
-    else focusSelectedTab();
+    settleFocus(view, focused, focusPanel, focusedKey);
     return;
   }
   const next = readUrlState();
@@ -922,7 +923,16 @@ function applyHistoryState(view) {
   if (next.book !== filters.book) setBookFilter(next.book, { history: false, cleared: !next.book });
   else renderToolList();
   restoreView(view, filtersTop);
+  settleFocus(view, focused, focusPanel, focusedKey);
+}
+
+// 戻る・進むで描き直したあとのフォーカス（restoreView が戻したスクロールの位置は動かさない）。
+// タブが切り替わり、フォーカスしていた部品が隠れたパネルに残る → restoreFocus（履歴に書いておいた部品か、選ばれたタブのボタン）。
+// 一覧やバナーを作り直して、フォーカスしていた部品が文書から外れた → restoreRebuiltFocus（作り直した同じ部品か、先頭の見出し）。
+// フォーカスが選ばれていないタブのボタンに残る → focusSelectedTab
+function settleFocus(view, focused, focusPanel, key) {
   if (focusPanel && focusPanel.hidden) restoreFocus(view);
+  else if (focused && !focused.isConnected) restoreRebuiltFocus(focused, key);
   else focusSelectedTab();
 }
 
@@ -931,12 +941,21 @@ function panelOf(el) {
   return el && el.closest ? el.closest(".tab-panel") : null;
 }
 
-// フォーカスしている部品を、履歴に書ける形にする（restoreFocus で同じ部品を引く）。タブのパネルの中の、id のある部品と
-// ダッシュボードの本の行（本の slug）だけを書く。ほかの部品は作り直すと同じものを引けず、パネルの外の部品はタブを
-// 切り替えても隠れないので、書かない
+// フォーカスしている部品の目印。作り直した一覧・バナー・ダッシュボードの中から、同じ部品を引くのに使い（elementForFocusKey）、
+// 履歴にも書く（restoreFocus）。タブのパネルの中の部品だけを書く（パネルの外の部品は作り直さず、タブを切り替えても隠れない）。
+//   "#<id>"                       id のある部品（絞り込みの欄、バナーの書名、章の見出しなど）
+//   "book:<本の slug>"            ダッシュボードの本の行
+//   "tool:<種類>:<章>:<slug>"     カードの部品（種類は data-part の progress・demo・repo。章は、章ごとに並べたときの章の key）
+//   "banner:<本の slug>:<種類>"   本のバナーの部品（種類は data-part の link・clear・jump・jump:<章の key>）
 function focusKey(el) {
   if (!panelOf(el)) return null;
   if (el.classList.contains("book-progress-title") && el.dataset.book) return "book:" + el.dataset.book;
+  const part = el.dataset.part;
+  if (part) {
+    const card = el.closest(".tool-card");
+    if (card) return card.dataset.slug ? `tool:${part}:${card.dataset.group || ""}:${card.dataset.slug}` : null;
+    if (el.closest("#book-banner")) return filters.book ? `banner:${filters.book}:${part}` : null;
+  }
   return el.id ? "#" + el.id : null;
 }
 
@@ -946,12 +965,63 @@ function elementForFocusKey(key) {
     const slug = key.slice(5);
     return Array.from(document.querySelectorAll(".book-progress-title")).find((a) => a.dataset.book === slug) || null;
   }
+  if (key.indexOf("tool:") === 0) {
+    // 同じツールの同じ種類の部品。同じツールが複数の章に出るときは同じ章のものを、無ければ（本や章ごとの並びが変わったときなど）
+    // 一覧で最初に出るものを返す
+    const [, part, group, ...rest] = key.split(":");
+    const slug = rest.join(":");
+    let other = null;
+    for (const card of document.querySelectorAll("#tool-list .tool-card")) {
+      if (card.dataset.slug !== slug) continue;
+      const el = Array.from(card.querySelectorAll("[data-part]")).find((x) => x.dataset.part === part);
+      if (!el) continue;
+      if ((card.dataset.group || "") === group) return el;
+      if (!other) other = el;
+    }
+    return other;
+  }
+  if (key.indexOf("banner:") === 0) {
+    // 同じ本のバナーの同じ部品（本が替わったときは無い）。章へ移動のリンクが畳んだ中にあるときは（狭い画面では、作り直すと
+    // 畳む）、開閉の見出しを返す
+    const el = Array.from(document.querySelectorAll("#book-banner [data-part]")).find((x) => focusKey(x) === key) || null;
+    const details = el && el.closest("details");
+    return details && !details.open ? details.querySelector("summary") : el;
+  }
   return key.charAt(0) === "#" ? document.getElementById(key.slice(1)) : null;
+}
+
+// 要素が文書の中にあり、画面に出ているか（隠れたパネル・隠れたバナー・畳んだ中の部品は出ていない）
+function isShown(el) {
+  return !!el && el.isConnected && el.getClientRects().length > 0;
+}
+
+// 一覧・バナー・ダッシュボードの本の行を作り直して、フォーカスしていた部品 prev が文書から外れたときに、作り直した同じ部品へ
+// フォーカスを戻す（そのままでは body に落ち、キーボード・読み上げの利用者が位置を失う）。key は作り直す前に focusKey で取った目印。
+// 同じ部品が無ければ、一覧かバナーの先頭の見出しへ移す（fallbackFocusTarget）。スクロールはしない。
+// フォーカスがページの部品になかったとき（ページの何もない所を押したあとなど）、prev が残っているとき、フォーカスがもうほかの
+// 部品へ移っているときは何もしない
+function restoreRebuiltFocus(prev, key) {
+  if (!prev || prev === document.body || prev.isConnected) return;
+  const active = document.activeElement;
+  if (active && active !== document.body) return;
+  let target = elementForFocusKey(key);
+  if (!isShown(target)) target = fallbackFocusTarget(key);
+  if (target) target.focus({ preventScroll: true });
+}
+
+// 作り直したあとに同じ部品が無いときの移し先。バナーの部品だったらバナーの書名、一覧の部品だったら一覧の先頭の章の見出し
+// （出ていなければもう一方）。どちらも出ていなければ（本を選んでいない一覧や、ダッシュボードなど）選ばれたタブのボタン
+function fallbackFocusTarget(key) {
+  const title = document.getElementById("book-banner-title");
+  const heading = document.querySelector("#tool-list .book-group-heading");
+  const inBanner = typeof key === "string" && (key.indexOf("banner:") === 0 || key === "#book-banner-title");
+  const order = inBanner ? [title, heading] : [heading, title];
+  return order.find(isShown) || document.querySelector('.tab-button[aria-selected="true"]');
 }
 
 // 戻る・進むでタブが切り替わり、フォーカスしていた部品が隠れたパネルに残ったときに呼ぶ（そのままでは body にフォーカスが落ち、
 // キーボード・読み上げの利用者が位置を失う。ダッシュボードの本の行から一覧へ移って戻ったときなど）。履歴に書いておいた部品
-// （積む前にフォーカスしていた本の行など）が表に出ていればそこへ、無ければ選ばれたタブのボタンへ移す。
+// （積む前にフォーカスしていた本の行やカードのボタンなど）が表に出ていればそこへ、無ければ選ばれたタブのボタンへ移す。
 // restoreView が戻したスクロールの位置は動かさない
 function restoreFocus(view) {
   let target = elementForFocusKey(view && view.focus);
@@ -1154,7 +1224,12 @@ function renderToolList() {
       const label = currentLang === "ja" ? g.label_ja : g.label_en;
       h.textContent = `${label}${countSuffix(g.items.length)}`;
       listEl.appendChild(h);
-      g.items.forEach((tool) => listEl.appendChild(createToolCard(tool, book)));
+      g.items.forEach((tool) => {
+        const card = createToolCard(tool, book);
+        // 同じツールが複数の章に出るとき、作り直したあとに同じ章のカードへフォーカスを戻すため（focusKey）
+        card.dataset.group = g.key;
+        listEl.appendChild(card);
+      });
     });
     return;
   }
@@ -1239,9 +1314,11 @@ function renderBookBanner(book, shownCount, displayGroups) {
       : hit;
   meta.appendChild(count);
 
+  // リンク・解除・章へ移動の data-part は、バナーを作り直したあとに同じ部品へフォーカスを戻すための目印（focusKey）
   if (isHttpUrl(book.url)) {
     const link = document.createElement("a");
     link.className = "book-banner-link";
+    link.dataset.part = "link";
     link.href = book.url;
     link.rel = "noopener";
     link.textContent = isJa
@@ -1253,6 +1330,7 @@ function renderBookBanner(book, shownCount, displayGroups) {
   const clearBtn = document.createElement("button");
   clearBtn.type = "button";
   clearBtn.className = "book-banner-clear";
+  clearBtn.dataset.part = "clear";
   clearBtn.textContent = isJa ? "解除" : "Clear";
   clearBtn.setAttribute("aria-label", isJa ? "書籍の絞り込みを解除" : "Clear book filter");
   clearBtn.addEventListener("click", () => {
@@ -1293,6 +1371,7 @@ function renderBookBanner(book, shownCount, displayGroups) {
       details.open = true;
     }
     const summary = document.createElement("summary");
+    summary.dataset.part = "jump";
     summary.textContent = isJa
       ? `章へ移動${countSuffix(displayGroups.length)}`
       : `Jump to section${countSuffix(displayGroups.length)}`;
@@ -1300,6 +1379,7 @@ function renderBookBanner(book, shownCount, displayGroups) {
     displayGroups.forEach((g) => {
       const a = document.createElement("a");
       a.className = "book-jump-link";
+      a.dataset.part = "jump:" + g.key;
       a.href = `#book-group-${g.key}`;
       const label = isJa ? g.label_ja : g.label_en;
       a.textContent = `${label}${countSuffix(g.items.length)}`;
@@ -1393,6 +1473,8 @@ function applySearch(raw) {
 function createToolCard(tool, book) {
   const card = document.createElement("article");
   card.className = "tool-card";
+  // ツールの slug と、下のボタン・リンクの data-part は、一覧を作り直したあとに同じ部品へフォーカスを戻すための目印（focusKey）
+  card.dataset.slug = tool.slug || "";
 
   const header = document.createElement("div");
   header.className = "tool-card-header";
@@ -1464,6 +1546,7 @@ function createToolCard(tool, book) {
     demoBtn.target = "_blank";
     demoBtn.rel = "noopener";
     demoBtn.className = "tool-button";
+    demoBtn.dataset.part = "demo";
     demoBtn.textContent = currentLang === "ja" ? "デモ" : "Demo";
   }
 
@@ -1472,11 +1555,13 @@ function createToolCard(tool, book) {
   repoBtn.target = "_blank";
   repoBtn.rel = "noopener";
   repoBtn.className = "tool-button secondary";
+  repoBtn.dataset.part = "repo";
   repoBtn.textContent = "GitHub";
 
   const progressBtn = document.createElement("button");
   progressBtn.type = "button";
   progressBtn.className = "tool-progress-button";
+  progressBtn.dataset.part = "progress";
   progressBtn.dataset.slug = tool.slug;
   updateProgressButton(progressBtn, tool.slug);
 
@@ -1575,7 +1660,8 @@ function syncProgressButtons(slug) {
 // 同じブラウザーの別のタブで進捗が変わったら（storage イベント）、このタブの進捗ボタンとダッシュボードを描き直す。
 // 押したときの次の段階は保存した値から決めるので、描き直さないと、古い表示のまま押したときに1段飛んだように見えたり、
 // 別のタブで付けた「定着済み」を消したりする。全体のリセットでは本数分の知らせが続けて届くので、知らせが止まってから
-// 1回だけ描き直す。一覧は作り直さない（このタブで押したときと同じく、焦点とスクロールの位置を動かさない）
+// 1回だけ描き直す。一覧は作り直さない（このタブで押したときと同じく、フォーカスとスクロールの位置を動かさない）。
+// ダッシュボードの本の行は作り直すので、フォーカスしていた行は、作り直した同じ行へ戻す
 const PROGRESS_SYNC_DELAY_MS = 100;
 let progressSyncTimer = 0;
 
@@ -1604,7 +1690,11 @@ function refreshProgressViews() {
   document.querySelectorAll(".tool-progress-button").forEach((b) => {
     if (b.dataset.slug) updateProgressButton(b, b.dataset.slug);
   });
+  // 作り直す前にフォーカスしている部品と目印を覚え、作り直したあとに同じ部品へ戻す（スクロールはしない）
+  const focused = document.activeElement;
+  const focusedKey = focusKey(focused);
   renderDashboard();
+  restoreRebuiltFocus(focused, focusedKey);
 }
 
 // ---- ダッシュボード描画 ----
