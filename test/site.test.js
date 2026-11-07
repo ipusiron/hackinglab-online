@@ -627,7 +627,7 @@ test("H30: 選んだ言語を覚える。JA・EN で選んだ言語を保存し�
   assert.match(fnBody("updateLanguageUI"), /searchInput\.placeholder = isJa/);
 });
 
-test("H31: 戻る・進むでタブが切り替わり、フォーカスしていた部品が隠れたパネルに残るときは、履歴に書いておいた部品か選ばれたタブのボタンへフォーカスを移す（スクロールはしない）", () => {
+test("H31: 戻る・進むでタブが切り替わり、フォーカスしていた部品が隠れたパネルに残るときは、履歴に書いておいた部品か選ばれたタブのボタンへ、選ばれていないタブのボタンに残るときは選ばれたタブのボタンへフォーカスを移す（スクロールはしない）", () => {
   // 積む前（とスクロールが止まったとき）に、フォーカスしている部品を履歴に書く
   assert.match(fnBody("saveViewInHistory"), /focus: focusKey\(document\.activeElement\)/, "フォーカスしている部品を履歴に書いていない");
   // ダッシュボードの本の行は作り直されるので、同じ行を引けるように本の slug を持たせ、書くときはそれを使う
@@ -644,4 +644,11 @@ test("H31: 戻る・進むでタブが切り替わり、フォーカスしてい
   assert.match(restore, /elementForFocusKey\(view && view\.focus\)/);
   assert.match(restore, /document\.querySelector\('\.tab-button\[aria-selected="true"\]'\)/);
   assert.match(restore, /\.focus\(\{ preventScroll: true \}\)/, "フォーカスを移すときにスクロールしている");
+  // タブのボタンを押して切り替えてから戻ったときなど、フォーカスがタブのボタンにあれば、選ばれたタブのボタンへ移す
+  // （選ばれていないタブのボタンに残すと、読み上げではタブが替わったことが伝わらない）
+  assert.equal((apply.match(/if \(focusPanel && focusPanel\.hidden\) restoreFocus\(view\);\s*else focusSelectedTab\(\);/g) || []).length, 2, "戻る・進むでタブが切り替わっても、フォーカスが選ばれていないタブのボタンに残る");
+  const tabFocus = fnBody("focusSelectedTab");
+  assert.match(tabFocus, /active\.classList\.contains\("tab-button"\)/);
+  assert.match(tabFocus, /if \(active\.getAttribute\("aria-selected"\) === "true"\) return;/);
+  assert.match(tabFocus, /document\.querySelector\('\.tab-button\[aria-selected="true"\]'\)[\s\S]*\.focus\(\{ preventScroll: true \}\)/, "タブのボタンへ移すときにスクロールしている");
 });

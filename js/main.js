@@ -850,7 +850,8 @@ function applyHistoryState(view) {
   lastPush = null; // 戻ったあとの変更は、まとめずに積む
   // 言語は戻る・進むで変えない。前の言語のときに積んだ履歴へ来たら、URL の ?lang= を今の言語に直す
   syncLangParam();
-  // タブを切り替える前に、フォーカスしている部品のパネルを覚える（切り替えて隠れたら、restoreFocus で移す）
+  // タブを切り替える前に、フォーカスしている部品のパネルを覚える（切り替えて隠れたら、restoreFocus で移す。
+  // タブのボタンにフォーカスがあるときは、focusSelectedTab で選ばれたタブのボタンへ移す）
   const focusPanel = panelOf(document.activeElement);
   const searchInput = document.getElementById("filter-search-input");
   if (!urlStateReady) {
@@ -860,6 +861,7 @@ function applyHistoryState(view) {
     if (st.tab !== currentTab) switchTab(st.tab === "dashboard" ? "tab-dashboard" : "tab-tools");
     if (searchInput && searchInput.value.trim() !== st.q) searchInput.value = st.q;
     if (focusPanel && focusPanel.hidden) restoreFocus(view);
+    else focusSelectedTab();
     return;
   }
   const next = readUrlState();
@@ -880,6 +882,7 @@ function applyHistoryState(view) {
   else renderToolList();
   restoreView(view, filtersTop);
   if (focusPanel && focusPanel.hidden) restoreFocus(view);
+  else focusSelectedTab();
 }
 
 // 部品が入っているタブのパネル（無ければ null）
@@ -915,6 +918,17 @@ function restoreFocus(view) {
     target = document.querySelector('.tab-button[aria-selected="true"]');
   }
   if (target) target.focus({ preventScroll: true });
+}
+
+// 戻る・進むでタブが切り替わったときに、フォーカスがタブのボタンに残っていれば、選ばれたタブのボタンへ移す（タブのボタンを
+// 押して切り替えてから戻ると、押したボタンにフォーカスが残る。そのボタンはもう選ばれておらず、読み上げではタブが替わった
+// ことが伝わらない）。restoreView が戻したスクロールの位置は動かさない
+function focusSelectedTab() {
+  const active = document.activeElement;
+  if (!active || !active.classList || !active.classList.contains("tab-button")) return;
+  if (active.getAttribute("aria-selected") === "true") return;
+  const selected = document.querySelector('.tab-button[aria-selected="true"]');
+  if (selected) selected.focus({ preventScroll: true });
 }
 
 // 履歴に書いておいた位置を出す。一覧の途中なら、読んでいた項目を同じ高さに戻す（作り直したカードの仮の高さに惑わされない）。
