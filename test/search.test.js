@@ -72,7 +72,7 @@ test("Q3: parseQuery は Day 番号を3桁にそろえ、Day と数字のあい�
   assert.equal(S.dayTerm("day000"), null);
 });
 
-test("Q4: buildEntry は id・題名・副題・説明・タグと、categories.json の日英のカテゴリー名を含み、README にだけある名前と別名は含まない", () => {
+test("Q4: buildEntry は id・題名・副題・説明・タグと、categories.json の日英のカテゴリー名と別名を含み、README にだけある名前は含まない", () => {
   const idx = S.categoryIndex([
     { id: "lock", ja: "鍵開け", en: "Lockpicking", aliases_ja: ["ロックピッキング"], aliases_en: ["Lock Picking"] }
   ]);
@@ -92,12 +92,15 @@ test("Q4: buildEntry は id・題名・副題・説明・タグと、categories.
     idx
   );
   assert.equal(e.id, "day050");
-  for (const w of ["day050", "pin tumbler sim", "副題", "subtitle", "説明", "description", "tag1", "鍵開け", "lockpicking"]) {
+  for (const w of ["day050", "pin tumbler sim", "副題", "subtitle", "説明", "description", "tag1", "鍵開け", "lockpicking", "ロックピッキング", "lock picking"]) {
     assert.ok(e.text.includes(w), `${w} がない`);
   }
-  for (const w of ["錠前", "locks", "ロックピッキング", "lock picking"]) {
-    assert.ok(!e.text.includes(w), `${w} が入っている（カードに出ない名前で当たる）`);
+  for (const w of ["錠前", "locks"]) {
+    assert.ok(!e.text.includes(w), `${w} が入っている（README にだけあってカードに出ない名前で当たる）`);
   }
+  // 別名が配列でないときは無視する
+  const e2 = S.buildEntry({ id: "day051", category_ids: ["odd"] }, S.categoryIndex([{ id: "odd", ja: "名前", en: "Name", aliases_ja: "別名" }]));
+  assert.ok(!e2.text.includes("別名"));
   // 欠けた項目があっても例外を出さない
   assert.deepEqual(S.buildEntry({ id: "day001" }, idx), { id: "day001", text: "day001" });
   assert.deepEqual(S.buildEntry(null, idx), { id: "", text: "" });
@@ -209,12 +212,12 @@ test("QD4: 空白で区切った語は、すべての語を含むツールを出
   }
 });
 
-test("QD5: カテゴリー名（日英）で探すと、そのカテゴリーのツールがすべて出る", () => {
+test("QD5: カテゴリー名（日英）と別名で探すと、そのカテゴリーのツールがすべて出る", () => {
   let checked = 0;
   for (const c of categories) {
     const members = tools.filter((t) => (t.category_ids || []).includes(c.id)).map((t) => t.id);
     if (!members.length) continue;
-    for (const name of [c.ja, c.en]) {
+    for (const name of [c.ja, c.en, ...(c.aliases_ja || []), ...(c.aliases_en || [])]) {
       const got = new Set(find(name));
       for (const id of members) assert.ok(got.has(id), `「${name}」で ${id} が出ない`);
     }

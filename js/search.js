@@ -7,7 +7,7 @@
 // - 全角と半角（英数字・空白・カタカナ）と、大文字と小文字をそろえて比べる（NFKC と小文字化）
 // - 前後の空白を除き、空白（全角の空白を含む）で区切った語を、すべて含むツールを出す
 // - Day 番号の語（「Day12」「day 12」「Day012」）は3桁にそろえ、その番号のツールだけに当てる
-// - 探す対象は、id・題名・副題・説明・タグと、カードに出すカテゴリー名（categories.json の日英の名前）
+// - 探す対象は、id・題名・副題・説明・タグと、カードに出すカテゴリー名（categories.json の日英の名前と、表記ゆれ用の別名）
 
 (function (root) {
   "use strict";
@@ -54,8 +54,8 @@
   }
 
   // 1本のツールの検索用の項目（正規化した id と、探す対象をつないだ文字列）。
-  // カテゴリー名は category_ids から引いた categories.json の日英の名前だけを入れる
-  // （README にだけ書かれていてカードに出ない名前と、表記ゆれ用の別名は入れない）。
+  // カテゴリーは category_ids から引いた categories.json の日英の名前と、表記ゆれ用の別名（aliases_ja・aliases_en。
+  // 「デジタルフォレンジック」「クラシカル暗号」など）を入れる。README にだけ書かれていてカードに出ない名前は入れない。
   function buildEntry(tool, catIndex) {
     var t = tool || {};
     var parts = [t.id, t.title, t.subtitle_ja, t.subtitle_en, t.description_ja, t.description_en];
@@ -64,7 +64,10 @@
     var ids = Array.isArray(t.category_ids) ? t.category_ids : [];
     for (i = 0; i < ids.length; i++) {
       var c = catIndex ? catIndex[ids[i]] : null;
-      if (c) parts.push(c.ja, c.en);
+      if (!c) continue;
+      parts.push(c.ja, c.en);
+      if (Array.isArray(c.aliases_ja)) parts = parts.concat(c.aliases_ja);
+      if (Array.isArray(c.aliases_en)) parts = parts.concat(c.aliases_en);
     }
     var kept = [];
     for (i = 0; i < parts.length; i++) {
