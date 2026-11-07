@@ -1,7 +1,7 @@
 // test/scroll_focus.test.js
 // 依存なし（node:test / node:assert/strict / node:fs のみ）。
-// SF1〜SF7 は、固定ヘッダーの下で止まる位置・フォーカスの移し方・言語の切り替えの直し方が、
-// あとの変更で外れていないかを見る静的な検査（index.html / js/main.js / css/style.css）。
+// SF1〜SF8 は、固定ヘッダーの下で止まる位置・フォーカスの移し方・言語の切り替え・絞り込みを変えたときの欄の位置の
+// 直し方が、あとの変更で外れていないかを見る静的な検査（index.html / js/main.js / css/style.css）。
 
 const fs = require("node:fs");
 const path = require("node:path");
@@ -87,4 +87,21 @@ test("SF7: 固定ヘッダーの高さ（--header-h）は、データを読み�
   const load = mainJs.match(/async function loadData\(\)\s*\{[\s\S]*?\n\}/);
   assert.ok(load, "loadData がない");
   assert.doesNotMatch(load[0].replace(/\/\/[^\n]*/g, ""), /applyHeaderHeightVar\(\)/);
+});
+
+test("SF8: 絞り込み（本・カテゴリー・進捗・検索）を変えたときは、いま操作した欄を画面の同じ高さに保つ（なめらかにせず、すぐ動かす）", () => {
+  const fn = mainJs.match(/function setupStaticUI\(\)\s*\{[\s\S]*?\n\}/);
+  assert.ok(fn, "setupStaticUI がない");
+  const body = fn[0].replace(/\/\/[^\n]*/g, "");
+  const k = body.match(/const keepInPlace = \(el, update\) => \{([\s\S]*?)\n {2}\};/);
+  assert.ok(k, "keepInPlace がない");
+  // 変える前に欄の位置を測り、変えたあとに測り直して、動いた分だけスクロールで戻す
+  assert.match(k[1], /getBoundingClientRect\(\)\.top;[\s\S]*update\(\);[\s\S]*scrollByInstant\(/);
+  for (const v of ["bookSelect", "categorySelect", "progressSelect", "searchInput"]) {
+    assert.match(body, new RegExp(`keepInPlace\\(${v},`), `${v} を変えたときに、操作した欄の位置を保っていない`);
+  }
+  // 検索欄は、変換を確定したとき（compositionend）と、ふつうの入力（input）の両方で保つ
+  assert.equal((body.match(/keepInPlace\(searchInput,/g) || []).length, 2, "検索欄の2つの処理の両方で保っていない");
+  // すぐに動かす（html の scroll-behavior: smooth のままだと、欄がいったん下がってから戻って見える）
+  assert.match(mainJs, /function scrollByInstant\(dy\)\s*\{[\s\S]*?behavior:\s*"instant"/);
 });

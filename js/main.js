@@ -120,18 +120,32 @@ function setupStaticUI() {
   const progressSelect = document.getElementById("filter-progress");
   const searchInput = document.getElementById("filter-search-input");
 
+  // 絞り込みを変えると、上にある本のバナーが出入りしたり、バナーの件数や「章へ移動」の行の数が変わったりして、
+  // いま操作した欄が動く（本を選ぶと、バナーの高さの分だけ下へずれ、結果のカードが画面の外へ出る）。
+  // 操作した欄が画面の同じ高さに残るように、動いた分だけすぐにスクロールで戻す（なめらかに動かすと、
+  // 欄がいったん下がってから戻って見える）。ページの先頭より上へは戻せないので、先頭でバナーが消えたときなどは欄が上へ動く
+  const keepInPlace = (el, update) => {
+    const before = el.getBoundingClientRect().top;
+    update();
+    scrollByInstant(el.getBoundingClientRect().top - before);
+  };
+
   bookSelect?.addEventListener("change", (e) => {
-    setBookFilter(e.target.value);
+    keepInPlace(bookSelect, () => setBookFilter(e.target.value));
   });
 
   categorySelect?.addEventListener("change", (e) => {
-    filters.categoryId = e.target.value;
-    renderToolList();
+    keepInPlace(categorySelect, () => {
+      filters.categoryId = e.target.value;
+      renderToolList();
+    });
   });
 
   progressSelect?.addEventListener("change", (e) => {
-    filters.progress = e.target.value;
-    renderToolList();
+    keepInPlace(progressSelect, () => {
+      filters.progress = e.target.value;
+      renderToolList();
+    });
   });
 
   // 日本語入力の変換中（未確定）は絞らず、確定したとき（compositionend）に欄の値で絞る。
@@ -140,11 +154,11 @@ function setupStaticUI() {
   // applySearch が描き直さないので、絞るのは1回だけ。変換を通らない英字は、今までどおり1文字ごとに絞る。
   // 「変換中」の印は自分では持たない（compositionend を取りこぼすと、検索が止まったままになるため）
   searchInput?.addEventListener("compositionend", () => {
-    applySearch(searchInput.value);
+    keepInPlace(searchInput, () => applySearch(searchInput.value));
   });
   searchInput?.addEventListener("input", (e) => {
     if (e.isComposing) return;
-    applySearch(searchInput.value);
+    keepInPlace(searchInput, () => applySearch(searchInput.value));
   });
 
   // X共有ボタン
