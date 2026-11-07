@@ -765,15 +765,25 @@ function currentUrlState() {
 
 // 同じ欄を続けて変えたときに、履歴を1つにまとめる長さ（選択欄を矢印キーで動かすと、1段ごとに変わるため）
 const MERGE_PUSH_MS = 1000;
+// 最後に積んだ履歴（source は欄の名前、time は最後に変えた時刻、from は積む前の URL）
 let lastPush = null;
+// 積んだ履歴を外している途中（history.back() の popstate が届くまで）の印。dropPushedEntry を参照
+let droppingPush = null;
 
 // 一覧の条件を URL に書く（js/url.js）。partial に変えた条件を入れて、画面を変える前に呼ぶ。
 // how が "push" のときは履歴を1つ積む（戻るで1つ前の一覧へ戻る）。積む前に、今の履歴へ見ていた位置を書いておく。
 // それ以外は今の履歴を書き換え、履歴は増やさない（検索の入力・キーでのタブの切り替え・開いたときの表記の直し）。
-// source を渡すと、同じ欄の続けた変更（前の変更から1秒以内）は積まずに書き換え、1つの履歴にまとめる。
+// source を渡すと、同じ欄の続けた変更（前の変更から1秒以内）は積まずに書き換え、1つの履歴にまとめる。まとめた変更で
+// 積む前の URL に戻ったときは、積んだ履歴を外す（残すと、戻るを1回押しても URL も一覧も変わらない）。
 // データが届く前は、変えた条件だけを書く（本・カテゴリーはまだ URL から読んでいないので、上書きしない）
 function commitUrl(partial, how, source) {
   if (!HU) return;
+  if (droppingPush) {
+    // 積んだ履歴を外している途中は、まだその履歴にいるので書かない。外し終えてから、画面の条件で書く（finishDropPush）
+    if (how === "push" || !droppingPush.how) droppingPush.how = how === "push" ? "push" : "replace";
+    if (source) droppingPush.source = source;
+    return;
+  }
   const state = urlStateReady ? Object.assign(currentUrlState(), partial) : partial;
   let next;
   try {
@@ -784,7 +794,14 @@ function commitUrl(partial, how, source) {
   if (next === window.location.href) return;
   const now = Date.now();
   let push = how === "push";
-  if (push && source && lastPush && lastPush.source === source && now - lastPush.time < MERGE_PUSH_MS) push = false;
+  if (push && source && lastPush && lastPush.source === source && now - lastPush.time < MERGE_PUSH_MS) {
+    if (next === lastPush.from) {
+      dropPushedEntry();
+      return;
+    }
+    push = false;
+  }
+  const from = window.location.href;
   try {
     if (push) {
       saveViewInHistory();
@@ -795,8 +812,31 @@ function commitUrl(partial, how, source) {
   } catch (e) {
     return; /* file:// などでは無視 */
   }
-  if (push) lastPush = { source: source || "", time: now };
+  if (push) lastPush = { source: source || "", time: now, from };
   else if (source && lastPush && lastPush.source === source) lastPush.time = now;
+}
+
+// まとめた変更で積む前の URL に戻ったときに、積んだ履歴を外す（1つ前の履歴へ戻る。外した履歴は「進む」の先に残る）。
+// 画面はもう1つ前の履歴の条件なので、その popstate では描き直さない。届くまでに変えた条件は、届いてから URL に書く。
+// popstate が届かないときは1秒で待つのをやめ、今の履歴を画面の条件に書き換える（同じ URL の履歴が2つ並ぶ）
+function dropPushedEntry() {
+  lastPush = null;
+  droppingPush = { how: "", source: "", timer: setTimeout(finishDropPush, MERGE_PUSH_MS) };
+  try {
+    window.history.back();
+  } catch (e) {
+    finishDropPush();
+  }
+}
+
+function finishDropPush() {
+  const d = droppingPush;
+  if (!d) return;
+  droppingPush = null;
+  clearTimeout(d.timer);
+  // 外しているあいだに言語を切り替えていたら ?lang= を合わせ、条件を変えていたら書く（どちらもなければ何もしない）
+  syncLangParam();
+  commitUrl({}, d.how === "push" ? "push" : undefined, d.source || undefined);
 }
 
 // URL の ?lang= を今の言語に合わせる（英語なら lang=en、日本語なら付けない。?lang=ja で開いたときは残す。js/url.js）。
@@ -831,7 +871,8 @@ function saveViewInHistory() {
 // ---- 戻る・進む ----
 
 function setupHistory() {
-  window.addEventListener("popstate", (e) => applyHistoryState(e.state));
+  // commitUrl が積んだ履歴を外したとき（dropPushedEntry）の popstate では、画面がもう着いた履歴の条件なので描き直さない
+  window.addEventListener("popstate", (e) => (droppingPush ? finishDropPush() : applyHistoryState(e.state)));
   // スクロールが止まったら、今の履歴に位置を書く（進むで戻ってきたときも、離れたときの位置を出すため）
   let timer = 0;
   window.addEventListener(

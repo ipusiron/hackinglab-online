@@ -540,9 +540,20 @@ test("H27: 本・カテゴリー・タブを選んで切り替えたら履歴を
   assert.match(commit, /let push = how === "push";/);
   assert.match(commit, /if \(push\) \{\s*saveViewInHistory\(\);\s*window\.history\.pushState\(/);
   assert.match(commit, /window\.history\.replaceState\(window\.history\.state, "", next\)/);
-  // 同じ欄の続けた変更（選択欄を矢印キーで動かしたとき）は、1つの履歴にまとめる
-  assert.match(commit, /lastPush\.source === source && now - lastPush\.time < MERGE_PUSH_MS\) push = false;/);
+  // 同じ欄の続けた変更（選択欄を矢印キーで動かしたとき）は、1つの履歴にまとめる。まとめた変更で積む前の URL に戻ったら、
+  // 積んだ履歴を外す（残すと、戻るを1回押しても URL も一覧も変わらない）
+  assert.match(
+    commit,
+    /lastPush\.source === source && now - lastPush\.time < MERGE_PUSH_MS\) \{\s*if \(next === lastPush\.from\) \{\s*dropPushedEntry\(\);\s*return;\s*\}\s*push = false;\s*\}/
+  );
+  assert.match(commit, /const from = window\.location\.href;[\s\S]*if \(push\) lastPush = \{ source: source \|\| "", time: now, from \};/, "積む前の URL を覚えていない");
   assert.equal((mainJs.match(/pushState\(/g) || []).length, 1, "pushState は commitUrl の1か所だけ");
+  // 外すのは history.back()。届くまでは URL を書かずに覚え（まだ外す履歴にいる）、その popstate では描き直さない。
+  // 届いたら（届かなければ1秒で）、画面の条件を書く
+  const drop = fnBody("dropPushedEntry");
+  assert.match(drop, /droppingPush = \{[^}]*timer: setTimeout\(finishDropPush, MERGE_PUSH_MS\) \};\s*try \{\s*window\.history\.back\(\);/);
+  assert.match(commit, /if \(droppingPush\) \{[\s\S]*?return;\s*\}\s*const state =/, "外している途中に URL を書いている（外す履歴を書き換える）");
+  assert.match(fnBody("finishDropPush"), /droppingPush = null;\s*clearTimeout\(d\.timer\);\s*syncLangParam\(\);\s*commitUrl\(\{\}, d\.how === "push" \? "push" : undefined, d\.source \|\| undefined\);/);
   const setup = fnBody("setupStaticUI");
   assert.match(setup, /setBookFilter\(e\.target\.value, \{ history: "push", source: "book" \}\)/, "プルダウンで本を選んでも履歴を積んでいない");
   assert.match(setup, /commitUrl\(\{ cat: e\.target\.value \}, "push", "category"\)/, "カテゴリーを選んでも履歴を積んでいない");
@@ -557,7 +568,7 @@ test("H27: 本・カテゴリー・タブを選んで切り替えたら履歴を
   // 開いたときは積まない（何も操作しなければ、戻る1回でハブに来る前のページへ帰る）
   assert.doesNotMatch(loadDataBody(), /"push"/);
   // 戻る・進むでは URL から条件を読み直して描き直す。一覧の条件は URL に書かない（?lang= だけは今の言語に合わせる。H30）
-  assert.match(fnBody("setupHistory"), /addEventListener\("popstate", \(e\) => applyHistoryState\(e\.state\)\)/);
+  assert.match(fnBody("setupHistory"), /addEventListener\("popstate", \(e\) => \(droppingPush \? finishDropPush\(\) : applyHistoryState\(e\.state\)\)\)/);
   const apply = fnBody("applyHistoryState");
   assert.match(apply, /const next = readUrlState\(\);/);
   assert.match(apply, /setBookFilter\(next\.book, \{ history: false, cleared: !next\.book \}\)/);
