@@ -408,3 +408,12 @@ test("H21: 検索欄は日本語の変換中（isComposing の input）に絞ら
   // Firefox は compositionend のあとにも input を出すので、同じ語なら描き直さない
   assert.match(fnBody("applySearch"), /if \(filters\.search === before\) return;/, "同じ語でも描き直している");
 });
+
+test("H22: 戻るボタンなどでブラウザーが検索欄の文字だけを戻したときも、一覧をその語で絞る（loadData が描く前に欄の値を読む）", () => {
+  const load = loadDataBody();
+  const iRead = load.indexOf('getElementById("filter-search-input")');
+  assert.ok(iRead >= 0, "loadData で検索欄を読んでいない（欄の文字と一覧が食い違う）");
+  const iSet = load.indexOf("setSearchQuery(", iRead);
+  assert.ok(iSet > iRead, "検索欄の値を検索語にしていない");
+  assert.ok(iSet < load.indexOf("renderAll()"), "一覧を描いたあとで検索欄を読んでいる");
+});

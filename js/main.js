@@ -380,6 +380,11 @@ async function loadData() {
       }
     }
 
+    // 戻るボタンや Firefox の再読み込みで開き直すと、ブラウザーが検索欄の文字だけを戻すことがある（input は起きない）。
+    // 描く前に欄の値を読み、残っていた文字で絞る（欄に文字があるのに一覧が絞られていない、という食い違いを出さない）
+    const searchInput = document.getElementById("filter-search-input");
+    if (searchInput) setSearchQuery(searchInput.value);
+
     setupFilterOptions();
     setListBusy(false);
     renderAll();
