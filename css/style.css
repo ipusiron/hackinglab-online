@@ -499,9 +499,8 @@ html[lang="en"] .label-ja {
 }
 
 /* 画面の外のカードは、見える所に来るまで配置の計算と描画を後回しにする（遅い端末で、はじめて開いたときや
-   検索・言語の切り替えで一覧を作るときに固まらないように）。まだ描いていないカードの高さは仮の値で、
-   auto は一度描いたカードの高さを覚えて使う。225px は中身の高さで、上下の余白と枠を足すと 259px
-   （390px 幅のカードの高さの中央値）になる。
+   検索・言語の切り替えで一覧を作るときに固まらないように）。まだ描いていないカードの高さは仮の値（下の
+   contain-intrinsic-size）で、auto は一度描いたカードの高さを覚えて使う。
    使うのは scroll anchoring のあるブラウザー（overflow-anchor に対応するもの）だけ。ないブラウザー（今の Safari）では、
    描いていないカードを仮の高さで並べたまま End キーなどで下へ飛んでから上へ戻ると、描いたカードが実際の高さに
    変わるたびに見えている所が跳ねるため。
@@ -518,11 +517,45 @@ html[lang="en"] .label-ja {
     min-width: 0;
   }
 
-  /* 3列で並ぶ広い画面では、カードが行のいちばん高いカードに合わせて伸びるので、仮の高さも上げる
-     （254px に余白と枠を足すと 291px で、1280px 幅のカードの高さの中央値） */
-  @media (min-width: 1024px) {
+  /* 仮の高さは中身の高さで、上下の余白と枠を足すと行の高さになる。並ぶ列の数と言語ごとに、実際の行の高さの平均と
+     同じか少し高くする。End キーやスクロールバーで一番下へ飛ぶと、途中や着いた所で描いたカードが仮の高さより
+     高ければページが伸びて、止まった所がフッターの手前になる。高めなら、描くたびにページが縮み、一番下に収まる。
+     英語は説明が長く、カードが高い。
+     - 1列（767px まで）：日本語 225px（足して 259px。390px 幅の平均は 257px）、英語 260px（294px。同 273px）
+     - 2列（768px から）：日本語 248px（285px。平均 257〜261px）、英語 278px（315px。同 269〜286px）
+     - 3列（912px から。一覧の幅が 280px×3 と間 20px×2 以上になる）：日本語 293px（330px。平均 293px）、
+       英語 333px（370px。同 334px） */
+  html[lang="en"] #tool-list:not(.is-grouped) > .tool-card {
+    contain-intrinsic-size: auto 260px;
+  }
+
+  @media (min-width: 768px) {
     #tool-list:not(.is-grouped) > .tool-card {
-      contain-intrinsic-size: auto 254px;
+      contain-intrinsic-size: auto 248px;
+    }
+
+    html[lang="en"] #tool-list:not(.is-grouped) > .tool-card {
+      contain-intrinsic-size: auto 278px;
+    }
+  }
+
+  @media (min-width: 912px) {
+    #tool-list:not(.is-grouped) > .tool-card {
+      contain-intrinsic-size: auto 293px;
+    }
+
+    html[lang="en"] #tool-list:not(.is-grouped) > .tool-card {
+      contain-intrinsic-size: auto 333px;
+    }
+  }
+
+  /* 2列・3列で並ぶ広い画面（768px から）では、一覧の最後の12枚（6行・4行）をはじめから描いておく。仮の高さを高めにしても、
+     Chromium で End キーを押すと、着いた所のカードを描いたときにページが伸びて、フッターの手前で止まることがあったため。
+     1列の狭い画面（主にスマホ）では使わない。遅い端末で開くときに描く量が増えるうえ、End キーやスクロールバーで
+     一番下へ飛ぶことは少ないため */
+  @media (min-width: 768px) {
+    #tool-list:not(.is-grouped) > .tool-card:nth-last-child(-n + 12) {
+      content-visibility: visible;
     }
   }
 

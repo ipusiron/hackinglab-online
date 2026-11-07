@@ -48,7 +48,7 @@ hub: true
   - `books.test.js`: the real `data/books.json` and `data/tools.json` (D1–D15, S1) and the pure functions in `js/books.js` on synthetic data (F1–F6)
   - `site.test.js`: the two modules above (U1–U2); static checks of `index.html`, `js/main.js` and `css/style.css` (H1–H15: ARIA references, tabs, dialog, h1, CSP, no inline styles/scripts, help dialog, forced colors, reduced motion); the data loading rules (H16–H20, see "Loading data")
   - `scroll_focus.test.js`: where jumps and focus stop under the fixed header, and keeping the reading position when switching languages (SF1–SF7)
-  - `robust.test.js`: no layout shifts or freezes while loading on slow connections and devices, and the view without JavaScript (RB1–RB7)
+  - `robust.test.js`: no layout shifts or freezes while loading on slow connections and devices, reaching the footer when jumping to the end of the list, and the view without JavaScript (RB1–RB7)
 - The static checks read the source text of `index.html`, `js/main.js` and `css/style.css` (comments are ignored where it matters). When you rename a function, selector or id that a check names, update the check in the same change
 - `index.html` has a meta CSP (`default-src 'none'`, everything else `'self'`). Do not add inline `<script>`, `style="..."` or `on*=` attributes; JS-set `element.style` is fine. Language display is driven by `<html lang>` + CSS (`.label-ja` / `.label-en`)
 

@@ -121,7 +121,7 @@ test("RB4: ?book= で来たときは、データが届く前に本のバナー�
   );
 });
 
-test("RB5: 画面の外のカードは描くのを後回しにする。章ごとに並べるとき（.is-grouped）と scroll anchoring のないブラウザーでは使わない", () => {
+test("RB5: 画面の外のカードは描くのを後回しにする。章ごとに並べるとき（.is-grouped）と scroll anchoring のないブラウザーでは使わない。英語の仮の高さを別に持ち、広い画面では一覧の最後のカードをはじめから描く", () => {
   const rulesWithAuto = [...cssNoComments.matchAll(/([^{}]*)\{([^{}]*content-visibility:\s*auto[^{}]*)\}/g)];
   assert.equal(rulesWithAuto.length, 1, "content-visibility: auto は1か所だけに書く");
   assert.equal(
@@ -146,6 +146,26 @@ test("RB5: 画面の外のカードは描くのを後回しにする。章ごと
     "content-visibility: auto が @supports (overflow-anchor: auto) の外にある"
   );
   assert.match(fnBody("renderToolList"), /classList\.toggle\("is-grouped",\s*!!displayGroups\)/);
+  // 英語のカードは日本語より高いので、英語のときの仮の高さを別に持つ。日本語に合わせたままだと、End キーや
+  // スクロールバーで一番下へ飛ぶ途中でページが伸び続け、フッターのずっと手前で止まる
+  assert.match(
+    gate[1],
+    /html\[lang="en"\] #tool-list:not\(\.is-grouped\) > \.tool-card\s*\{[^}]*contain-intrinsic-size:\s*auto\s+\d+px/,
+    "英語のときの仮の高さ（contain-intrinsic-size）がない"
+  );
+  // 2列・3列の広い画面では、一覧の最後のカードをはじめから描く（一番下へ飛んで着いた所のカードが描かれて伸びると、
+  // フッターの手前で止まる）。1列の狭い画面では使わない（遅い端末で開くときに描く量が増える）
+  const wideBlocks = [...gate[1].matchAll(/@media \(min-width: 768px\)\s*\{((?:[^{}]*\{[^{}]*\})*[^{}]*)\}/g)].map((m) => m[1]);
+  const tail = wideBlocks
+    .map((b) => b.match(/#tool-list:not\(\.is-grouped\) > \.tool-card:nth-last-child\(-n \+ \d+\)\s*\{([^}]*)\}/))
+    .find(Boolean);
+  assert.ok(tail, "広い画面で、一覧の最後のカードをはじめから描く規則がない（一番下へ飛んでもフッターまで届かないことがある）");
+  assert.match(tail[1], /content-visibility:\s*visible/);
+  assert.doesNotMatch(
+    gate[1].replace(/@media[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/g, ""),
+    /nth-last-child/,
+    "一覧の最後のカードをはじめから描く規則が、1列の狭い画面にもかかっている（遅い端末で開くときに描く量が増える）"
+  );
   // 言語を切り替えて読んでいた位置へ戻すときは、読んでいたカードと、その上で画面にかかるカードを、一度描くまで後回しにしない
   assert.match(cssNoComments, /\.tool-card\.cv-hold\s*\{[^}]*content-visibility:\s*visible/);
   const restore = fnBody("restoreReadingAnchor");
