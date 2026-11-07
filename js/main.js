@@ -179,7 +179,7 @@ function reserveBookBanner() {
 }
 
 // 一覧の読み込み中の印（aria-busy）。CSS は "true" のあいだ一覧の高さを1画面分取り、
-// カードが入ったときにフッターが画面の中から外へ飛ばないようにする
+// カードが入ったときにフッターが画面の中から外へ飛ばないようにする。renderToolList は "true" のあいだ描かない
 function setListBusy(busy) {
   const list = document.getElementById("tool-list");
   if (list) list.setAttribute("aria-busy", busy ? "true" : "false");
@@ -709,6 +709,10 @@ function updateBookStatus(slug, cleared) {
 function renderToolList() {
   const listEl = document.getElementById("tool-list");
   if (!listEl) return;
+  // データが届くまでは描かない。読み込み中に言語を切り替えたり検索欄に入力したりしても、空のデータで
+  // 「一致するツールがありません」を出したり、?book= のために取っておいたバナーの場所を外したりしない
+  // （外すと、データが届いたときにバナーがまた下の部品を押し下げる）。データが届くと、loadData が印を外してから描く
+  if (listEl.getAttribute("aria-busy") === "true") return;
 
   refreshBookTarget();
   const book = currentBook();

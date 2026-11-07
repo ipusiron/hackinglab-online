@@ -105,13 +105,20 @@ test("RB3: データの更新日時は、一覧と同じ時に入れる（書籍
   );
 });
 
-test("RB4: ?book= で来たときは、データが届く前に本のバナーの場所を取り、描くときに外す", () => {
+test("RB4: ?book= で来たときは、データが届く前に本のバナーの場所を取り、描くときに外す。データが届くまでは一覧を描かない", () => {
   assert.match(cssNoComments, /#book-banner\.is-pending\s*\{[^}]*min-height:\s*\d+px/);
   assert.match(fnBody("reserveBookBanner"), /classList\.add\("is-pending"\)/);
   assert.match(fnBody("setupStaticUI"), /reserveBookBanner\(\)/);
   assert.match(fnBody("renderBookBanner"), /classList\.remove\("is-pending"\)/);
   // 読み込みに失敗したときは、取っておいたバナーの場所を返す
   assert.match(fnBody("releaseReservedSpace"), /classList\.remove\("is-pending"\)/);
+  // データが届く前に言語の切り替えや検索で一覧を描こうとしても、描かずに戻る（空のデータでバナーを描くと、取っておいた場所が外れる）
+  const r = fnBody("renderToolList");
+  const iBusy = r.search(/if \(listEl\.getAttribute\("aria-busy"\) === "true"\) return;/);
+  assert.ok(
+    iBusy >= 0 && iBusy < r.indexOf("renderBookBanner("),
+    "読み込み中（aria-busy=\"true\"）に一覧を描いている（取っておいたバナーの場所が外れ、データが届いたときに下の部品が押し下げられる）"
+  );
 });
 
 test("RB5: 画面の外のカードは描くのを後回しにする。章ごとに並べるとき（.is-grouped）と scroll anchoring のないブラウザーでは使わない", () => {
