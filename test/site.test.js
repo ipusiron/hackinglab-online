@@ -417,3 +417,36 @@ test("H22: 戻るボタンなどでブラウザーが検索欄の文字だけを
   assert.ok(iSet > iRead, "検索欄の値を検索語にしていない");
   assert.ok(iSet < load.indexOf("renderAll()"), "一覧を描いたあとで検索欄を読んでいる");
 });
+
+// WCAG のコントラスト比（色は #rrggbb）
+function contrastRatio(a, b) {
+  const lum = (hex) => {
+    const [r, g, bl] = [1, 3, 5]
+      .map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+      .map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+    return 0.2126 * r + 0.7152 * g + 0.0722 * bl;
+  };
+  const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+test("H23: 検索欄の案内文は検索欄の地に 4.5:1 以上、入力欄・選択欄の枠線は絞り込みの枠の地と検索欄の地に 3:1 以上", () => {
+  const color = (body, prop) => (body.match(new RegExp(`(?:^|[;\\s])${prop}:\\s*(#[0-9a-f]{6})\\b`, "i")) || [])[1];
+  const fieldBg = color(bodyOf('.filter-search input[type="search"]'), "background-color");
+  const boxBg = color(bodyOf("#tool-filters"), "background-color");
+  assert.ok(fieldBg && boxBg, "検索欄か絞り込みの枠の地の色がない");
+  const ph = bodyOf('.filter-search input[type="search"]::placeholder');
+  const phColor = color(ph, "color");
+  assert.ok(phColor, "案内文の色の指定がない（ブラウザーの既定の色は薄い）");
+  assert.match(ph, /opacity:\s*1\s*(?:;|$)/, "古い Firefox の opacity による半透明を打ち消していない");
+  const r = contrastRatio(phColor, fieldBg);
+  assert.ok(r >= 4.5, `案内文 ${phColor} と検索欄の地 ${fieldBg} の比が ${r.toFixed(2)}:1`);
+  for (const sel of ["#tool-filters select", '#tool-filters input[type="search"]']) {
+    const border = (bodyOf(sel).match(/border:\s*1px solid (#[0-9a-f]{6})\b/i) || [])[1];
+    assert.ok(border, `${sel} の枠線の色がない`);
+    for (const bg of [boxBg, fieldBg]) {
+      const rb = contrastRatio(border, bg);
+      assert.ok(rb >= 3, `${sel} の枠線 ${border} と地 ${bg} の比が ${rb.toFixed(2)}:1`);
+    }
+  }
+});
