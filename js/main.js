@@ -134,8 +134,17 @@ function setupStaticUI() {
     renderToolList();
   });
 
+  // 日本語入力の変換中（未確定）は絞らず、確定したとき（compositionend）に欄の値で絞る。
+  // Chromium は確定の input も isComposing=true で出し、そのあとに compositionend を出す（後ろに input は来ない）。
+  // Firefox は compositionend のあとに isComposing=false の input を出す。どちらの順でも、同じ語なら
+  // applySearch が描き直さないので、絞るのは1回だけ。変換を通らない英字は、今までどおり1文字ごとに絞る。
+  // 「変換中」の印は自分では持たない（compositionend を取りこぼすと、検索が止まったままになるため）
+  searchInput?.addEventListener("compositionend", () => {
+    applySearch(searchInput.value);
+  });
   searchInput?.addEventListener("input", (e) => {
-    applySearch(e.target.value);
+    if (e.isComposing) return;
+    applySearch(searchInput.value);
   });
 
   // X共有ボタン

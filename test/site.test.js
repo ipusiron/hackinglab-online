@@ -1,7 +1,7 @@
 // test/site.test.js
 // 依存なし（node:test / node:assert/strict / node:fs / node:zlib のみ）。
 // U1〜U2 は js/storage.js・js/tabs.js の純関数、H1〜H15 は index.html / js/main.js / css/style.css の静的な検査、
-// H16〜H20 はデータの読み込みの決まり（ハブの CLAUDE.md の Loading data）の検査。
+// H16〜H20 はデータの読み込みの決まり（ハブの CLAUDE.md の Loading data）の検査、H21〜 は検索と絞り込み・一覧の表示の静的な検査。
 
 const fs = require("node:fs");
 const path = require("node:path");
@@ -306,6 +306,13 @@ function loadDataBody() {
   return blankComments(m[0]);
 }
 
+// main.js の関数の本体（宣言から、行頭の "}" まで。コメントは空白にする）
+function fnBody(name) {
+  const m = mainJs.match(new RegExp(String.raw`(?:async\s+)?function ${name}\([^)]*\)\s*\{[\s\S]*?\n\}`));
+  assert.ok(m, `${name} がない`);
+  return blankComments(m[0]);
+}
+
 // 文字列の中を飛ばしながら、pos にある "(" に対応する ")" の位置を返す
 function matchParen(src, pos) {
   let depth = 0;
@@ -381,4 +388,23 @@ test("H20: 最初に一覧を描いた時刻は performance.mark で1回だけ�
   assert.doesNotMatch(mainJs, /sendBeacon|XMLHttpRequest|getEntries(?:ByName|ByType)?\(/);
   const csp = html.match(/<meta\s+http-equiv="Content-Security-Policy"\s+content="([^"]+)"/)[1];
   assert.match(csp, /connect-src 'self'(;|$)/);
+});
+
+// ---- 検索と絞り込み・一覧の表示 ----
+
+test("H21: 検索欄は日本語の変換中（isComposing の input）に絞らず、変換を確定したとき（compositionend）に欄の値で絞る", () => {
+  const s = fnBody("setupStaticUI");
+  const handler = (type) => {
+    const i = s.indexOf(`searchInput?.addEventListener("${type}"`);
+    assert.ok(i >= 0, `検索欄の ${type} の処理がない`);
+    return s.slice(i, s.indexOf("\n  });", i));
+  };
+  // 変換中の input では絞らない（未確定のかなで0件になったり、1文字ごとに一覧を作り直したりしない）
+  assert.match(handler("input"), /if \(e\.isComposing\) return;[\s\S]*applySearch\(/, "変換中の input でも絞っている");
+  // Chromium は確定の input も isComposing=true で出すので、compositionend で絞る処理が要る
+  assert.match(handler("compositionend"), /applySearch\(searchInput\.value\)/, "確定したときに絞っていない");
+  // 「変換中」の印を自分で持たない（compositionend を取りこぼすと、検索が止まったままになる）
+  assert.doesNotMatch(s, /compositionstart/, "compositionstart で変換中の印を持っている");
+  // Firefox は compositionend のあとにも input を出すので、同じ語なら描き直さない
+  assert.match(fnBody("applySearch"), /if \(filters\.search === before\) return;/, "同じ語でも描き直している");
 });
