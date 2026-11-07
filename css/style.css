@@ -183,6 +183,9 @@ html[lang="en"] .label-ja {
   max-width: 960px;
   margin: 0 auto;
   padding: 0.75rem 1rem 2.5rem;
+  /* 絞り込みの結果が少ないときも、フッターが画面の途中に上がってこないように、固定ヘッダーを除いた1画面分の高さを取る
+     （フッターは画面の下端のすぐ外に来る）。JavaScript が動かないときは取らない（下の @media (scripting: none)） */
+  min-height: calc(100vh - var(--header-h, 64px));
 }
 
 /* --------------------------------
@@ -1148,7 +1151,7 @@ html.help-open.keep-gutter {
  * ================================ */
 
 /* 押しても動かない部品を出さない：言語の切り替え（JA・EN）とヘルプ（?）、タブ（ツール一覧・学習ダッシュボード）、
-   絞り込み欄。一覧も JS が描くので、読み込み中のための高さも取らない */
+   絞り込み欄。一覧も JS が描くので、読み込み中のための高さも、一覧のための1画面分の高さも取らない */
 @media (scripting: none) {
   .header-controls,
   #tab-nav,
@@ -1156,7 +1159,8 @@ html.help-open.keep-gutter {
     display: none;
   }
 
-  #tool-list[aria-busy="true"] {
+  #tool-list[aria-busy="true"],
+  #main-content {
     min-height: 0;
   }
 }
