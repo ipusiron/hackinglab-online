@@ -1,7 +1,7 @@
 // test/url.test.js
 // 依存なし（node:test / node:assert/strict のみ）。
-// js/url.js の純関数の検査。UR1〜 は一覧の条件（?book=・?cat=・?q=・?tab=）を URL から読む・URL へ書く関数を、
-// この中の小さなデータで確かめる（data/*.json の中身には頼らない）。
+// js/url.js の純関数の検査。UR1・UR2 は一覧の条件（?book=・?cat=・?q=・?tab=）を URL から読む・URL へ書く関数、
+// UR3 はカードの「GitHub」「デモ」のリンクの言語ごとの形を、この中の小さなデータで確かめる（data/*.json の中身には頼らない）。
 
 const assert = require("node:assert/strict");
 const { test } = require("node:test");
@@ -99,4 +99,35 @@ test("UR2: パスと、読み直すと同じ条件になること（書いて読
     assert.equal(new URL(url).pathname, "/index.html");
     assert.deepEqual(U.readState(new URL(url).search, KNOWN), st, JSON.stringify(st));
   }
+});
+
+test("UR3: repoLink は英語表示のときだけ、リポジトリーのトップを英語の README（blob/HEAD/README.en.md）へ向ける", () => {
+  const repo = "https://github.com/ipusiron/password-checker";
+  assert.equal(U.repoLink(repo, "en"), repo + "/blob/HEAD/README.en.md");
+  assert.equal(U.repoLink(repo + "/", "en"), repo + "/blob/HEAD/README.en.md");
+  assert.equal(U.repoLink(repo + ".git", "en"), repo + "/blob/HEAD/README.en.md");
+  // 日本語表示は変えない
+  assert.equal(U.repoLink(repo, "ja"), repo);
+  assert.equal(U.repoLink(repo, undefined), repo);
+  // リポジトリーのトップ以外の形と、github.com 以外はそのまま
+  for (const u of [repo + "/tree/main/docs", "https://gitlab.com/ipusiron/x", "http://github.com/ipusiron/x", "https://github.com/ipusiron", ""]) {
+    assert.equal(U.repoLink(u, "en"), u, u);
+  }
+  assert.equal(U.repoLink(undefined, "en"), "");
+});
+
+test("UR3: demoLink は英語表示のときだけ、ipusiron.github.io のデモに ?lang=en を付ける（ほかのパラメーターと # は残す）", () => {
+  const demo = "https://ipusiron.github.io/password-checker/";
+  assert.equal(U.demoLink(demo, "en"), demo + "?lang=en");
+  assert.equal(U.demoLink(demo + "?mode=quiz#top", "en"), demo + "?mode=quiz&lang=en#top");
+  assert.equal(U.demoLink(demo + "?lang=ja", "en"), demo + "?lang=en");
+  // 日本語表示は変えない（?lang=ja も付けない）
+  assert.equal(U.demoLink(demo, "ja"), demo);
+  // ほかの場所（Google Colab など）と、空・壊れた値はそのまま
+  const colab = "https://colab.research.google.com/github/ipusiron/doh-watcher/blob/main/doh_watcher.ipynb";
+  assert.equal(U.demoLink(colab, "en"), colab);
+  assert.equal(U.demoLink("http://ipusiron.github.io/x/", "en"), "http://ipusiron.github.io/x/");
+  assert.equal(U.demoLink("", "en"), "");
+  assert.equal(U.demoLink("not a url", "en"), "not a url");
+  assert.equal(U.demoLink(undefined, "en"), "");
 });

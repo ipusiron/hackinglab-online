@@ -1310,10 +1310,11 @@ function createToolCard(tool, book) {
   // デモ URL があるツールだけ「デモ」ボタンを出す。
   // ハードウェア／バックエンド系など、ブラウザーで動かないツールは demo_url が空で、
   // その場合はボタンを出さず GitHub への導線だけにする（404 のデモボタンを避ける）。
+  // 英語表示のときは、デモに ?lang=en を付け、GitHub は英語の README を開く（js/url.js。日本語表示のリンクは変えない）
   let demoBtn = null;
   if (tool.demo_url) {
     demoBtn = document.createElement("a");
-    demoBtn.href = tool.demo_url;
+    demoBtn.href = HU ? HU.demoLink(tool.demo_url, currentLang) : tool.demo_url;
     demoBtn.target = "_blank";
     demoBtn.rel = "noopener";
     demoBtn.className = "tool-button";
@@ -1321,7 +1322,7 @@ function createToolCard(tool, book) {
   }
 
   const repoBtn = document.createElement("a");
-  repoBtn.href = tool.repo_url || "#";
+  repoBtn.href = (HU ? HU.repoLink(tool.repo_url, currentLang) : tool.repo_url) || "#";
   repoBtn.target = "_blank";
   repoBtn.rel = "noopener";
   repoBtn.className = "tool-button secondary";

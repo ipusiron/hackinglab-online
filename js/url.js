@@ -1,6 +1,6 @@
 // js/url.js
 //
-// URL を読む・作る純関数（DOM 非依存）。一覧の条件を URL に残すための読み書きを置く。
+// URL を読む・作る純関数（DOM 非依存）。一覧の条件を URL に残すための読み書きと、カードのリンクの言語ごとの形を置く。
 // ブラウザーでは IIFE で globalThis.HLOUrl に公開し、Node のテストでは module.exports から読む。
 // 履歴（pushState・replaceState・popstate）の扱いと画面の描き直しは js/main.js が行う。
 //
@@ -82,10 +82,40 @@
     return url.toString();
   }
 
+  // ---- カードのリンク（言語ごと） ----
+
+  // 英語表示のときの「GitHub」のリンク先。リポジトリーのトップ（https://github.com/<owner>/<repo>）なら、英語の README
+  // （README.en.md）を開く。既定のブランチが main でも master でも開けるよう、ブランチの名前の代わりに HEAD を使う。
+  // 日本語表示と、ほかの形の URL はそのまま返す
+  function repoLink(repoUrl, lang) {
+    var u = typeof repoUrl === "string" ? repoUrl : "";
+    if (lang !== "en") return u;
+    var m = /^(https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+?)(?:\.git)?\/?$/.exec(u);
+    return m ? m[1] + "/blob/HEAD/README.en.md" : u;
+  }
+
+  // 英語表示のときの「デモ」のリンク先。ipusiron.github.io のページなら ?lang=en を付ける（ほかのパラメーターと # は残す）。
+  // 日本語表示と、ほかの場所（Google Colab など）のリンクはそのまま返す
+  function demoLink(demoUrl, lang) {
+    var u = typeof demoUrl === "string" ? demoUrl : "";
+    if (lang !== "en" || !u) return u;
+    var url;
+    try {
+      url = new URL(u);
+    } catch (e) {
+      return u;
+    }
+    if (url.protocol !== "https:" || url.hostname !== "ipusiron.github.io") return u;
+    url.searchParams.set("lang", "en");
+    return url.toString();
+  }
+
   var api = {
     KEYS: KEYS,
     readState: readState,
-    buildUrl: buildUrl
+    buildUrl: buildUrl,
+    repoLink: repoLink,
+    demoLink: demoLink
   };
 
   if (typeof module !== "undefined" && module.exports) module.exports = api;
