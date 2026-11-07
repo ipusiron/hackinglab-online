@@ -560,7 +560,7 @@ test("H27: 本・カテゴリー・タブを選んで切り替えたら履歴を
   assert.match(row, /commitUrl\(\{ book: s\.book\.slug, tab: "tools" \}, "push"\)/);
 });
 
-test("H28: 「はじめ方」の入口は、ふつうの左クリックだけ読み直しを止めて書籍の選択と同じ処理で絞り、履歴を積む（「すべて」はほかの条件も外す）。新しいタブで開く操作はリンクのまま", () => {
+test("H28: 「はじめ方」の入口は、ふつうの左クリックだけ読み直しを止めて書籍の選択と同じ処理で絞り、履歴を積む（「すべて」はほかの条件も外す）。Ctrl などを押したクリックはリンクのまま", () => {
   const setup = fnBody("setupStaticUI");
   const i = setup.indexOf('document.querySelectorAll(".start-here-entries a")');
   assert.ok(i >= 0, "はじめ方の入口の処理がない（押すとページを読み直し、開いた「はじめ方」が閉じる）");
@@ -568,7 +568,7 @@ test("H28: 「はじめ方」の入口は、ふつうの左クリックだけ読
   // Ctrl・⌘・Shift・Alt・左以外のボタンは止めない（新しいタブで開く）。本のデータがないときと、books.json にない本も止めない
   const iGuard = h.search(/if \(e\.defaultPrevented \|\| e\.button !== 0 \|\| e\.ctrlKey \|\| e\.metaKey \|\| e\.shiftKey \|\| e\.altKey\) return;/);
   const iPrevent = h.indexOf("e.preventDefault()");
-  assert.ok(iGuard >= 0 && iPrevent > iGuard, "新しいタブで開く操作まで止めている");
+  assert.ok(iGuard >= 0 && iPrevent > iGuard, "Ctrl などを押したクリック（新しいタブで開く操作など）まで止めている");
   assert.match(h, /if \(!urlStateReady \|\| !HB \|\| !books\.length\) return;/);
   assert.match(h, /if \(raw && !slug\) return;/);
   assert.match(h, /keepInPlace\(a, \(\) => openStartEntry\(slug\)\)/);

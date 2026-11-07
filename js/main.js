@@ -188,7 +188,8 @@ function setupStaticUI() {
 
   // 「はじめ方」の入口（ツール100・ツール200・すべて）：Ctrl などを押さない左クリックのときは、ページを読み直さずに
   // 書籍の選択と同じ処理で絞り、履歴を積む（読み直すと、開いた「はじめ方」と入れた条件が初めに戻り、回線がないと
-  // サイトから出てしまうため）。新しいタブで開く操作と、本のデータを読めていないときは、これまでどおりのリンクとして開く
+  // サイトから出てしまうため）。Ctrl・⌘・Shift・Alt を押したクリック（新しいタブや窓で開く操作など）と、本のデータを
+  // 読めていないときは、これまでどおりのリンクとしてブラウザーに任せる
   document.querySelectorAll(".start-here-entries a").forEach((a) => {
     a.addEventListener("click", (e) => {
       if (e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
@@ -432,10 +433,11 @@ async function loadData() {
     }
 
     // 読めた条件だけを、URL に正規の形で書き直す（大文字や前後の空白・並びをそろえる。履歴は増やさない）。
-    // 存在しない本・カテゴリーの値は書き換えずに残す（絞り込みを変えると、画面の条件で書き直すので外れる）
+    // 存在しない本・カテゴリー・タブの値は書き換えずに残す（絞り込みを変えると、画面の条件で書き直すので外れる）
     const tidy = { q: searchInput ? searchInput.value : "" };
     if (urlState.book) tidy.book = urlState.book;
     if (urlState.cat) tidy.cat = urlState.cat;
+    if (urlState.tab === "dashboard") tidy.tab = urlState.tab;
     commitUrl(tidy);
     urlStateReady = true;
 
@@ -866,7 +868,7 @@ function applyHistoryState(view) {
 }
 
 // 履歴に書いておいた位置を出す。一覧の途中なら、読んでいた項目を同じ高さに戻す（作り直したカードの仮の高さに惑わされない）。
-// 位置が書かれていない履歴（積んだあと、まだ離れていない履歴を進むで開いたとき）は、絞り込み欄を画面の同じ高さに保つ
+// 位置が書かれていない履歴（積んですぐに離れた履歴を、進むで開いたときなど）は、絞り込み欄を画面の同じ高さに保つ
 function restoreView(view, filtersTop) {
   const listEl = document.getElementById("tool-list");
   if (view && view.anchor && currentTab === "tools" && listEl && listEl.children[view.anchor.index]) {
@@ -1609,7 +1611,7 @@ function renderBookProgress() {
     title.appendChild(kind);
     title.appendChild(document.createTextNode(HB.bookLabel(s.book, currentLang)));
     title.addEventListener("click", (e) => {
-      // 新しいタブで開く操作（Ctrl・⌘・Shift・Alt を押したクリック）は、ふつうのリンクのまま
+      // Ctrl・⌘・Shift・Alt を押したクリック（新しいタブや窓で開く操作など）は、ふつうのリンクとしてブラウザーに任せる
       if (e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
       e.preventDefault();
       // 一覧のタブへ移って本で絞る。履歴を1つ積み、戻るでダッシュボードへ戻れるようにする

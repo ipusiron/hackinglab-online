@@ -72,7 +72,7 @@ The list state is kept in the URL (`js/url.js`), and `js/main.js` decides when a
 - Choosing a book (the select, the banner's Clear button, the "Start here" entries, a book row of the dashboard), choosing a category, or clicking a tab pushes one entry, so Back returns to the previous list. Changes of the same select within one second are merged into one entry (moving a select with the arrow keys changes it one step at a time).
 - Typing in the search box, switching tabs with the arrow keys, jumping to a chapter and tidying the URL when the page opens replace the current entry. With no action, one Back still leaves the hub (for example, back to a book's support page).
 - On Back and Forward (`popstate`), the list is rebuilt from the URL and the scroll position saved in `history.state` is restored. The URL is not written there.
-- The "Start here" entries keep their `href`. Only a plain left click is handled in JS (no reload); Ctrl/⌘/Shift/Alt clicks and middle clicks still open the link in a new tab. "All tools" also clears the category, progress and search filters.
+- The "Start here" entries keep their `href`. Only a plain left click is handled in JS (no reload); clicks with Ctrl/⌘/Shift/Alt and middle clicks are left to the browser (a new tab or window, for example). "All tools" also clears the category, progress and search filters.
 
 ## Commands
 
