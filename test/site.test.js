@@ -555,13 +555,13 @@ test("H27: 本・カテゴリー・タブを選んで切り替えたら履歴を
   assert.match(fnBody("renderBookBanner"), /window\.history\.replaceState\(window\.history\.state, "", "#book-group-" \+ g\.key\)/);
   // 開いたときは積まない（何も操作しなければ、戻る1回でハブに来る前のページへ帰る）
   assert.doesNotMatch(loadDataBody(), /"push"/);
-  // 戻る・進むでは URL から条件を読み直して描き直し、URL は書かない
+  // 戻る・進むでは URL から条件を読み直して描き直す。一覧の条件は URL に書かない（?lang= だけは今の言語に合わせる。H30）
   assert.match(fnBody("setupHistory"), /addEventListener\("popstate", \(e\) => applyHistoryState\(e\.state\)\)/);
   const apply = fnBody("applyHistoryState");
   assert.match(apply, /const next = readUrlState\(\);/);
   assert.match(apply, /setBookFilter\(next\.book, \{ history: false, cleared: !next\.book \}\)/);
   assert.match(apply, /restoreView\(view, filtersTop\)/);
-  assert.doesNotMatch(apply, /commitUrl\(/, "戻る・進むで URL を書き換えている（戻る・進むの行き先がずれる）");
+  assert.doesNotMatch(apply, /commitUrl\(/, "戻る・進むで一覧の条件を URL に書いている（戻る・進むの行き先がずれる）");
   // データが届く前に戻る・進むを押したときも、タブと検索欄は URL に合わせる（本・カテゴリーはデータが届いてから URL で読む）
   assert.match(apply, /if \(searchInput && searchInput\.value\.trim\(\) !== st\.q\) searchInput\.value = st\.q;/, "読み込み中に戻る・進むを押したとき、検索欄を URL に合わせていない");
   // ダッシュボードの本の行は、ふつうの左クリックだけ止めて一覧へ移り、履歴を積む
