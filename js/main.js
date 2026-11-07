@@ -189,12 +189,12 @@ function setupStaticUI() {
   // URL の ?q= は、開いたときに検索欄へ入れる（データを待たずに、読み込み中から欄に語を出す）。データが届いたときは
   // 欄を書き換えずに欄の値で絞る（読み込み中に打った文字の末尾の空白や、変換中の文字を消さない）。
   // 欄にすでに同じ語があるとき（戻るボタンなどでブラウザーが戻した文字。末尾の空白も残す）はそのままにする。違う語があるときは
-  // URL の語にする（Firefox は、同じページの別の履歴で打った語を欄に戻すことがある）。ただし、欄にフォーカスがあって文字が
-  // 入っているとき（main.js が動く前に打ち始めていたとき）は、打った文字を残す
+  // URL の語にし、URL に ?q= がなければ欄を空にする（Firefox は、同じページの別の履歴で打った語を欄に戻すことがある）。
+  // ただし、欄にフォーカスがあって文字が入っているとき（main.js が動く前に打ち始めていたとき）は、打った文字を残す
   if (searchInput && HU) {
     const q = HU.readState(window.location.search, {}).q;
     const typing = document.activeElement === searchInput && searchInput.value !== "";
-    if (q && searchInput.value.trim() !== q && !typing) searchInput.value = q;
+    if (searchInput.value.trim() !== q && !typing) searchInput.value = q;
   }
 
   // 「はじめ方」の入口（ツール100・ツール200・すべて）：Ctrl などを押さない左クリックのときは、ページを読み直さずに

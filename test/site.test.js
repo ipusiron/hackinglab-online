@@ -504,12 +504,13 @@ test("H26: 一覧の条件（本・カテゴリー・検索・タブ）は URL �
   assert.match(load, /filters\.book = urlState\.book;/);
   assert.match(load, /filters\.categoryId = urlState\.cat;/);
   // ?q= は開いたときに（データを待たずに）検索欄へ入れる。欄に同じ語があるとき（ブラウザーが戻した文字）と、欄にフォーカスが
-  // あって文字が入っているとき（main.js が動く前に打ち始めていたとき）はそのまま。データが届いたときは欄を書き換えず、欄の値で
-  // 絞る（読み込み中に打った文字の末尾の空白や、変換中の文字を消さない。ブラウザーが戻した文字で絞るのは H22）
+  // あって文字が入っているとき（main.js が動く前に打ち始めていたとき）はそのまま。違う語があるときは、URL に ?q= がなくても
+  // URL に合わせる（Firefox が同じページの別の履歴から戻した語を消す）。データが届いたときは欄を書き換えず、欄の値で絞る
+  // （読み込み中に打った文字の末尾の空白や、変換中の文字を消さない。欄の値で絞るのは H22）
   assert.match(
     fnBody("setupStaticUI"),
-    /const q = HU\.readState\(window\.location\.search, \{\}\)\.q;\s*const typing = document\.activeElement === searchInput && searchInput\.value !== "";\s*if \(q && searchInput\.value\.trim\(\) !== q && !typing\) searchInput\.value = q;/,
-    "開いたときに ?q= を検索欄へ入れていない"
+    /const q = HU\.readState\(window\.location\.search, \{\}\)\.q;\s*const typing = document\.activeElement === searchInput && searchInput\.value !== "";\s*if \(searchInput\.value\.trim\(\) !== q && !typing\) searchInput\.value = q;/,
+    "開いたときに検索欄を URL の ?q= に合わせていない（?q= がないときに、ブラウザーが戻した別の履歴の語が残る）"
   );
   assert.doesNotMatch(load, /searchInput\.value\s*=(?!=)/, "データが届いたときに検索欄を書き換えている（読み込み中に打った文字の末尾の空白や、変換中の文字が消える）");
   assert.match(load, /if \(searchInput\) setSearchQuery\(searchInput\.value\);/);
