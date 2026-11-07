@@ -56,7 +56,7 @@ hub: true
 On a slow mobile connection every extra round trip delays the cards by about 0.6 s, so keep these rules when adding data or scripts. `test/site.test.js` (H16–H20) checks them.
 - Start every JSON the first view needs before the first `await` in `loadData()` (`js/main.js`). The required ones (`categories.json`, `tools.json`) go into one `Promise.all`. Optional ones (`books.json`) are started next to it and catch their own failure (`.catch(() => null)`), so a missing or broken optional file never stops the tool list. Do not put optional data into the `Promise.all`, and do not fetch anything after awaiting the others.
 - JSON that the first view does not need is fetched when its screen is opened, not in `loadData()`.
-- Every `<script>` in `index.html` has `defer` and never `async`. The meta CSP stops Chromium's preload scanner, so without `defer` Chromium can fetch them one by one (often on slow devices); `defer` keeps the execution order books → storage → tabs → main.
+- Every `<script>` in `index.html` has `defer` and never `async`. The meta CSP stops Chromium's preload scanner, so without `defer` Chromium can fetch them one by one, each waiting for the one before (a round trip each on a slow connection); `defer` keeps the execution order books → storage → tabs → main.
 - `data/tools.json` stays at or below 80 KB gzipped (127 tools were about 42 KB in November 2026). Going over is a signal to revisit how the list is loaded, or the limit; it is not a cap on the number of tools.
 - After the first list render, `main.js` sets `performance.mark("hlo:cards-painted")` once, to check the timing in DevTools. The timing is never read back or sent anywhere.
 
