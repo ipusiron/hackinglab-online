@@ -817,11 +817,11 @@ function syncLangParam() {
   }
 }
 
-// 今の履歴に、見ている位置（スクロールの位置と、一覧でヘッダーのすぐ下にある項目）を書いておく。
-// 戻る・進むでこの履歴へ戻ってきたときに、同じ所を出す（restoreView）
+// 今の履歴に、見ている位置（スクロールの位置と、一覧でヘッダーのすぐ下にある項目）と、フォーカスしている部品を書いておく。
+// 戻る・進むでこの履歴へ戻ってきたときに、同じ所を出す（restoreView・restoreFocus）
 function saveViewInHistory() {
   try {
-    const view = { y: Math.round(window.scrollY), anchor: captureReadingAnchor() };
+    const view = { y: Math.round(window.scrollY), anchor: captureReadingAnchor(), focus: focusKey(document.activeElement) };
     window.history.replaceState(Object.assign({}, window.history.state, view), "");
   } catch (e) {
     /* 無視 */
@@ -850,6 +850,8 @@ function applyHistoryState(view) {
   lastPush = null; // 戻ったあとの変更は、まとめずに積む
   // 言語は戻る・進むで変えない。前の言語のときに積んだ履歴へ来たら、URL の ?lang= を今の言語に直す
   syncLangParam();
+  // タブを切り替える前に、フォーカスしている部品のパネルを覚える（切り替えて隠れたら、restoreFocus で移す）
+  const focusPanel = panelOf(document.activeElement);
   const searchInput = document.getElementById("filter-search-input");
   if (!urlStateReady) {
     // データが届く前はタブと検索欄だけを合わせる（本・カテゴリーは、データが届いたときに URL から読む）
@@ -857,6 +859,7 @@ function applyHistoryState(view) {
     const st = HU.readState(window.location.search, {});
     if (st.tab !== currentTab) switchTab(st.tab === "dashboard" ? "tab-dashboard" : "tab-tools");
     if (searchInput && searchInput.value.trim() !== st.q) searchInput.value = st.q;
+    if (focusPanel && focusPanel.hidden) restoreFocus(view);
     return;
   }
   const next = readUrlState();
@@ -876,6 +879,42 @@ function applyHistoryState(view) {
   if (next.book !== filters.book) setBookFilter(next.book, { history: false, cleared: !next.book });
   else renderToolList();
   restoreView(view, filtersTop);
+  if (focusPanel && focusPanel.hidden) restoreFocus(view);
+}
+
+// 部品が入っているタブのパネル（無ければ null）
+function panelOf(el) {
+  return el && el.closest ? el.closest(".tab-panel") : null;
+}
+
+// フォーカスしている部品を、履歴に書ける形にする（restoreFocus で同じ部品を引く）。タブのパネルの中の、id のある部品と
+// ダッシュボードの本の行（本の slug）だけを書く。ほかの部品は作り直すと同じものを引けず、パネルの外の部品はタブを
+// 切り替えても隠れないので、書かない
+function focusKey(el) {
+  if (!panelOf(el)) return null;
+  if (el.classList.contains("book-progress-title") && el.dataset.book) return "book:" + el.dataset.book;
+  return el.id ? "#" + el.id : null;
+}
+
+function elementForFocusKey(key) {
+  if (typeof key !== "string") return null;
+  if (key.indexOf("book:") === 0) {
+    const slug = key.slice(5);
+    return Array.from(document.querySelectorAll(".book-progress-title")).find((a) => a.dataset.book === slug) || null;
+  }
+  return key.charAt(0) === "#" ? document.getElementById(key.slice(1)) : null;
+}
+
+// 戻る・進むでタブが切り替わり、フォーカスしていた部品が隠れたパネルに残ったときに呼ぶ（そのままでは body にフォーカスが落ち、
+// キーボード・読み上げの利用者が位置を失う。ダッシュボードの本の行から一覧へ移って戻ったときなど）。履歴に書いておいた部品
+// （積む前にフォーカスしていた本の行など）が表に出ていればそこへ、無ければ選ばれたタブのボタンへ移す。
+// restoreView が戻したスクロールの位置は動かさない
+function restoreFocus(view) {
+  let target = elementForFocusKey(view && view.focus);
+  if (!target || !panelOf(target) || panelOf(target).hidden || !target.getClientRects().length) {
+    target = document.querySelector('.tab-button[aria-selected="true"]');
+  }
+  if (target) target.focus({ preventScroll: true });
 }
 
 // 履歴に書いておいた位置を出す。一覧の途中なら、読んでいた項目を同じ高さに戻す（作り直したカードの仮の高さに惑わされない）。
@@ -1614,6 +1653,7 @@ function renderBookProgress() {
 
     const title = document.createElement("a");
     title.className = "category-progress-title book-progress-title";
+    title.dataset.book = s.book.slug; // 戻ってきたときに、同じ本の行へフォーカスを戻すため（focusKey）
     const rowHref = `?book=${encodeURIComponent(s.book.slug)}`;
     title.href = HU && currentLang === "en" ? HU.withLang(new URL(rowHref, window.location.href).toString(), "en") : rowHref;
     const kind = document.createElement("span");

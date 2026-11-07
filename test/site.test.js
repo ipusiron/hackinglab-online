@@ -625,3 +625,22 @@ test("H30: 選んだ言語を覚える。JA・EN で選んだ言語を保存し�
   assert.doesNotMatch(openTag("filter-search-input"), /\splaceholder=/);
   assert.match(fnBody("updateLanguageUI"), /searchInput\.placeholder = isJa/);
 });
+
+test("H31: 戻る・進むでタブが切り替わり、フォーカスしていた部品が隠れたパネルに残るときは、履歴に書いておいた部品か選ばれたタブのボタンへフォーカスを移す（スクロールはしない）", () => {
+  // 積む前（とスクロールが止まったとき）に、フォーカスしている部品を履歴に書く
+  assert.match(fnBody("saveViewInHistory"), /focus: focusKey\(document\.activeElement\)/, "フォーカスしている部品を履歴に書いていない");
+  // ダッシュボードの本の行は作り直されるので、同じ行を引けるように本の slug を持たせ、書くときはそれを使う
+  assert.match(fnBody("renderBookProgress"), /title\.dataset\.book = s\.book\.slug;/);
+  assert.match(fnBody("focusKey"), /"book:" \+ el\.dataset\.book/);
+  // タブを切り替える前に、フォーカスしている部品のパネルを覚え、切り替えて隠れたら移す（データが届く前の戻る・進むも同じ）
+  const apply = fnBody("applyHistoryState");
+  const iPanel = apply.indexOf("const focusPanel = panelOf(document.activeElement);");
+  assert.ok(iPanel >= 0 && iPanel < apply.indexOf("switchTab("), "タブを切り替える前に、フォーカスしている部品のパネルを覚えていない（切り替えたあとでは、隠れた部品から body に移っていることがある）");
+  assert.equal((apply.match(/if \(focusPanel && focusPanel\.hidden\) restoreFocus\(view\);/g) || []).length, 2, "タブが切り替わって隠れたパネルにフォーカスが残っても、移していない");
+  assert.match(apply, /restoreView\(view, filtersTop\);\s*if \(focusPanel && focusPanel\.hidden\) restoreFocus\(view\);/, "スクロールの位置を戻す前にフォーカスを移している");
+  // 移し先は、書いておいた部品が表に出ていればそれ、無ければ選ばれたタブのボタン。restoreView が戻した位置は動かさない
+  const restore = fnBody("restoreFocus");
+  assert.match(restore, /elementForFocusKey\(view && view\.focus\)/);
+  assert.match(restore, /document\.querySelector\('\.tab-button\[aria-selected="true"\]'\)/);
+  assert.match(restore, /\.focus\(\{ preventScroll: true \}\)/, "フォーカスを移すときにスクロールしている");
+});
