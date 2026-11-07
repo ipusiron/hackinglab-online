@@ -7,7 +7,7 @@
     "aliases_en": ["Classical Cryptography", "Classical Cipher", "classic crypto"]
   },
   {
-    "id": "clamodernsic-crypto",
+    "id": "modern-crypto",
     "ja": "現代暗号",
     "en": "Modern cryptography",
     "aliases_ja": ["現代的暗号"],

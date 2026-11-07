@@ -36,7 +36,7 @@ hub: true
 ```
 
 ### Key Files
-- `data/categories.json`: Category definitions with id, ja, en fields
+- `data/categories.json`: Category definitions with id, ja, en fields (and optional `aliases_ja`/`aliases_en`). The id appears in the URL as `?cat=`, so it uses only lower-case letters, digits and hyphens (checked by C1). Renaming or removing an id needs a regenerated `tools.json` in the same change, and links that still carry the old id open the list without the category filter
 - `data/books.json`: Book/series filter definitions (manual). Tools are referenced by `id` (`dayNNN`), not slug
 - `data/tools.json`: Auto-generated tool registry (do not edit manually)
 - `repos.txt`: Master list of tool repositories
@@ -48,7 +48,7 @@ hub: true
 - `js/storage.js`: Safe localStorage wrapper (never throws; falls back to in-memory when storage is unavailable)
 - `js/tabs.js`: Pure keyboard logic for the tabs (←/→/Home/End)
 - `test/*.test.js` + `package.json`: `node --test`, no dependencies. `npm test` runs all seven files (the list is in `package.json`; add a new test file there too):
-  - `books.test.js`: the real `data/books.json` and `data/tools.json` (D1–D15, S1) and the pure functions in `js/books.js` on synthetic data (F1–F6)
+  - `books.test.js`: the real `data/books.json` and `data/tools.json` (D1–D15, S1), the category ids of `data/categories.json` and the ones used in `tools.json` (C1), and the pure functions in `js/books.js` on synthetic data (F1–F6)
   - `site.test.js`: `js/storage.js` and `js/tabs.js` (U1–U2); static checks of `index.html`, `js/main.js` and `css/style.css` (H1–H15: ARIA references, tabs, dialog, h1, CSP, no inline styles/scripts, help dialog, forced colors, reduced motion); the data loading rules (H16–H20, see "Loading data"); the search input, the filters and the list (H21–H24: no filtering while Japanese text is still being composed, searching with the text the browser put back in the field on Back or reload, the contrast of the placeholder and the field borders, and keeping the card width when only one tool matches); progress changed in another tab (H25); the list state in the URL, Back and Forward, and the "Start here" entries (H26–H28, see "Back and Forward"); the card links in English view (H29); remembering the chosen language (H30); where the focus goes when Back or Forward switches the tab (H31, see "Back and Forward")
   - `scroll_focus.test.js`: where jumps and focus stop under the fixed header, keeping the reading position when switching languages, and keeping the changed filter at the same height on screen (SF1–SF8)
   - `robust.test.js`: no layout shifts or freezes while loading on slow connections and devices, reaching the footer when jumping to the end of the list, the view without JavaScript, and keeping the footer out of the middle of the screen when few tools match (RB1–RB8)
@@ -105,6 +105,7 @@ GitHub Actions workflow (`.github/workflows/update-tools.yml`) automatically reg
 
 `.github/workflows/test.yml` runs `npm test` on push to `main`, on pull requests, and after the tools.json regeneration (`workflow_run`). When a run is red, open the log and find the failing test's ID; its message says which rule broke and why:
 - `D*` or `S1` (`books.test.js`), typically right after a regeneration: `data/books.json` refers to a tool id that is no longer in `tools.json`, or a book entry is broken. Fix `data/books.json`. If D1 reports a BOM in `tools.json`, fix `scripts/update_tools.py` instead. Never edit `tools.json` by hand
+- `C1` (`books.test.js`): a category id in `data/categories.json` uses characters other than lower-case letters, digits and hyphens or appears twice, or `tools.json` has a category id that is not in `categories.json` (an id was renamed or removed without regenerating `tools.json`). Regenerate `tools.json` in the same change. If the change reached `main` without it, the regeneration workflow fixes it and the test run after it passes
 - `H19` (`site.test.js`): `tools.json` grew past 80 KB gzipped. Revisit how the list is loaded, or the limit (see "Loading data"); it is not a reason to stop adding tools
 - Any other ID (`F*`, `U*`, `UR*`, `LG*`, `H*`, `SF*`, `RB*`, `Q*`, `QD*`): a change to `index.html`, `js/` or `css/style.css` broke a rule. Fix the change, or update the check if the rule itself was changed on purpose
 

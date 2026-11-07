@@ -1,6 +1,6 @@
 // test/books.test.js
 // 依存なし（node:test / node:assert/strict / node:fs のみ）。
-// 実データ（data/books.json・data/tools.json）に対する検査は D1〜D15・S1。
+// 実データ（data/books.json・data/tools.json）に対する検査は D1〜D15・S1、data/categories.json の id の検査は C1。
 // F1〜F6 はこのファイル内の合成データで関数の挙動を確かめる（実データの本数や再生成の状態に依存させない）。
 
 const fs = require("node:fs");
@@ -51,6 +51,25 @@ test("実データ: 各シリーズの対象集合が tools.json のツールを
   // day001〜100 と day101〜 は重ならない
   for (const id of s100) assert.ok(B.dayNum(id) <= 100);
   for (const id of s200) assert.ok(B.dayNum(id) >= 101);
+});
+
+test("C1: categories.json の id は英小文字・数字・ハイフンだけで重複せず、tools.json の category_ids はすべて categories.json にある", () => {
+  const categories = JSON.parse(fs.readFileSync(path.join(ROOT, "data/categories.json"), "utf8"));
+  assert.ok(Array.isArray(categories) && categories.length >= 1, "categories.json が1件以上の配列でない");
+  // id は絞り込みの URL（?cat=）にそのまま出るので、本の slug と同じ形にする
+  const seen = new Set();
+  for (const c of categories) {
+    assert.match(String(c && c.id), /^[a-z0-9]+(-[a-z0-9]+)*$/, `id の形式が不正: ${c && c.id}`);
+    assert.ok(!seen.has(c.id), `id が重複: ${c.id}`);
+    seen.add(c.id);
+  }
+  // id を変えたり消したりしたときは、tools.json も作り直す（古い id のままのツールは、カードにそのカテゴリーが出ず、
+  // そのカテゴリーで絞っても出ない）
+  for (const t of tools) {
+    for (const id of t.category_ids || []) {
+      assert.ok(seen.has(id), `${t.id} の category_ids に categories.json にない id がある: ${id}（tools.json を作り直す）`);
+    }
+  }
 });
 
 // ---- 合成データ（関数の挙動） ----
