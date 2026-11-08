@@ -10,7 +10,8 @@
 
 html {
   scroll-behavior: smooth;
-  /* 固定ヘッダーの下に隠れない位置までスクロールする（Tab・Shift+Tab・focus()・#リンク・scrollIntoView） */
+  /* 固定ヘッダーの下に隠れない位置までスクロールする（Tab・Shift+Tab・focus()・#リンク・scrollIntoView）。
+     ヘッダーを固定しない画面（下の「ヘッダーを固定しない画面」）では --header-h が 0 なので、画面の上端から 0.5rem の所に止まる */
   scroll-padding-top: calc(var(--header-h, 64px) + 0.5rem);
 }
 
@@ -155,6 +156,41 @@ html[lang="en"] #lang-en {
   background-color: #f3f4f6;
 }
 
+/* ヘッダーを固定しない画面：狭い画面（767px まで）と低い画面（高さ 500px まで。スマホを横にしたときや拡大したとき）。
+   固定したままだと、スクロールしてもヘッダーが上に残って一覧の見える所が2〜3割狭くなり、400% に拡大するとほぼ全面を覆う。
+   固定しないあいだは止まる位置の余白（--header-h）も 0 にする（章の見出しなどは画面の上端から 0.5rem の所に止まる）。
+   main.js（applyHeaderHeightVar）も、固定していないときは 0 を書く */
+@media (max-width: 767.98px), (max-height: 500px) {
+  html {
+    --header-h: 0px;
+  }
+
+  #site-header {
+    position: static;
+  }
+}
+
+/* 480px より狭い画面では、JA・EN・? を題字の上の行へ回して題字に横幅を空け、題字を少し小さくする
+   （題字と副題がボタンの横の狭い幅に押し込まれて何行にも折れ、最初の画面のヘッダーが高くなるため） */
+@media (max-width: 479.98px) {
+  .header-inner {
+    flex-wrap: wrap;
+    row-gap: 0.25rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .header-controls {
+    order: -1;
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .site-title {
+    font-size: 1.25rem;
+  }
+}
+
 /* --------------------------------
  * タブ
  * -------------------------------- */
@@ -194,7 +230,8 @@ html[lang="en"] #lang-en {
   margin: 0 auto;
   padding: 0.75rem 1rem 2.5rem;
   /* 絞り込みの結果が少ないときも、フッターが画面の途中に上がってこないように、固定ヘッダーを除いた1画面分の高さを取る
-     （フッターは画面の下端のすぐ外に来る）。JavaScript が動かないときは取らない（下の @media (scripting: none)） */
+     （フッターは画面の下端のすぐ外に来る。ヘッダーを固定しない画面では --header-h が 0 なので、1画面分）。
+     JavaScript が動かないときは取らない（下の @media (scripting: none)） */
   min-height: calc(100vh - var(--header-h, 64px));
 }
 

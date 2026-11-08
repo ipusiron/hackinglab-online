@@ -731,3 +731,38 @@ test("H33: ヘルプの「?」は px の幅・高さで固定せず、rem の最
   assert.match(help, /aspect-ratio:\s*1\s*(?:;|$)/);
   assert.match(help, /(?:^|[;\s])padding:\s*0\s*(?:;|$)/);
 });
+
+test("H34: ヘッダーを固定するのは広くて高い画面だけ。狭い画面（767px まで）と低い画面（高さ 500px まで）では固定せず、止まる位置の余白（--header-h）を 0 にする。480px 未満では JA・EN・? を題字の上の行へ回す", () => {
+  // 固定は #site-header の規則に書き、固定しない画面の @media がそれより後ろで static にする
+  const base = cssNoComments.search(/(?:^|\n)#site-header\s*\{[^}]*position:\s*sticky/);
+  assert.ok(base >= 0, "#site-header の固定（sticky）の規則がない");
+  const blocks = mediaBlocks(/max-width:\s*767\.98px\),\s*\(max-height:\s*500px/);
+  assert.equal(blocks.length, 1, "狭い画面と低い画面の @media (max-width: 767.98px), (max-height: 500px) が1つでない");
+  const b = blocks[0];
+  assert.ok(b.index > base, "固定しない画面の規則が、固定の規則より前にある（固定が勝つ）");
+  assert.match(b.body, /#site-header\s*\{[^}]*position:\s*static/, "狭い画面・低い画面でヘッダーを固定したまま（一覧の見える所が2〜3割狭くなる）");
+  // 止まる位置の余白は 0 にする（残すと、固定しないヘッダーの高さの分だけ、章の見出しが画面の上端から下に止まる）
+  assert.match(b.body, /(?:^|\n)\s*html\s*\{[^}]*--header-h:\s*0(?:px)?\s*(?:;|\})/, "固定しない画面で --header-h を 0 にしていない");
+  // ほかの所で #site-header の position を変えない
+  const positions = rules.filter((r) => r.selector.split(",").map((s) => s.trim()).includes("#site-header") && /position\s*:/.test(r.body));
+  assert.equal(positions.length, 2, "#site-header の position を決める規則は、固定と、固定しない画面の2つだけにする");
+  // main.js も、固定していないときは 0 を書く（書いた値は CSS の @media より勝つ）。高さだけが変わって固定するかが替わったときも書き直す
+  const hh = fnBody("applyHeaderHeightVar");
+  assert.match(hh, /const fixed = getComputedStyle\(header\)\.position === "sticky";/);
+  assert.match(hh, /setProperty\("--header-h", \(fixed \? header\.offsetHeight : 0\) \+ "px"\)/);
+  assert.match(hh, /window\.addEventListener\("resize", set\)/, "画面の高さだけが変わって固定するかが替わったときに、--header-h を書き直していない");
+  // 言語を切り替えたときに読んでいた位置の基準は、ヘッダーに覆われていない所の上端（固定しないヘッダーが画面の外へ出たら 0）
+  assert.match(fnBody("readingTop"), /return Math\.max\(0, header\.getBoundingClientRect\(\)\.bottom\);/);
+  for (const fn of ["captureReadingAnchor", "restoreReadingAnchor"]) {
+    const body = fnBody(fn);
+    assert.match(body, /const hb = readingTop\(header\);/, `${fn} がヘッダーの下端をそのまま使っている（固定しない画面では、画面の外の位置になる）`);
+  }
+  // 480px 未満：JA・EN・? を題字の上の行へ回し（order: -1 と横幅いっぱい）、題字を少し小さくする
+  const narrow = mediaBlocks(/max-width:\s*479\.98px/);
+  assert.equal(narrow.length, 1, "@media (max-width: 479.98px) が1つでない");
+  assert.match(narrow[0].body, /\.header-inner\s*\{[^}]*flex-wrap:\s*wrap/);
+  assert.match(narrow[0].body, /\.header-controls\s*\{[^}]*order:\s*-1[^}]*width:\s*100%/);
+  const small = (narrow[0].body.match(/\.site-title\s*\{[^}]*font-size:\s*([\d.]+)rem/) || [])[1];
+  const normal = (bodyOf(".site-title").match(/font-size:\s*([\d.]+)rem/) || [])[1];
+  assert.ok(small && normal && Number(small) < Number(normal), "480px 未満で題字を小さくしていない");
+});

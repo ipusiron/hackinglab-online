@@ -496,20 +496,29 @@ function applyBooksAvailability() {
 
 // 固定ヘッダーの高さを CSS 変数 --header-h に書く。html の scroll-padding-top がこれを使い、
 // 章へ移動・Tab での移動・focus() のどれでも、ヘッダーの下に隠れない位置で止まるようにする。
+// ヘッダーを固定しない画面（css の「ヘッダーを固定しない画面」。狭い画面と低い画面）では 0 を書く（画面の上端から 0.5rem の所に止まる）。
+// ヘッダーの大きさが変わったとき（言語の切り替えなど）と、画面の大きさが変わったとき（高さだけが変わって、固定するかが替わる
+// こともある。そのときヘッダーの大きさは変わらない）に書き直す
 function applyHeaderHeightVar() {
   const header = document.getElementById("site-header");
   if (!header) return;
-  const set = () =>
-    document.documentElement.style.setProperty(
-      "--header-h",
-      header.offsetHeight + "px"
-    );
+  const set = () => {
+    const fixed = getComputedStyle(header).position === "sticky";
+    document.documentElement.style.setProperty("--header-h", (fixed ? header.offsetHeight : 0) + "px");
+  };
   set();
   try {
     new ResizeObserver(set).observe(header);
   } catch (e) {
-    window.addEventListener("resize", set);
+    /* ResizeObserver のないブラウザーでは、画面の大きさが変わったときだけ書き直す */
   }
+  window.addEventListener("resize", set);
+}
+
+// 一覧を読んでいる所の上端（画面のうち、ヘッダーに覆われていない所の上端）。ヘッダーを固定している画面ではヘッダーの下端、
+// 固定しない画面では、ヘッダーが画面の外へ出たあとは画面の上端（0）
+function readingTop(header) {
+  return Math.max(0, header.getBoundingClientRect().bottom);
 }
 
 // #book-group-<key> のハッシュがあればそこへスクロールし、見出しへフォーカスを移す。
@@ -538,15 +547,15 @@ function scrollByInstant(dy) {
   }
 }
 
-// 一覧の途中で表示を作り直す前に、ヘッダーのすぐ下で読んでいた項目（カードか章の見出し）を覚える。
-// 一覧の先頭が見えているときは null（何もしない）。
+// 一覧の途中で表示を作り直す前に、ヘッダーのすぐ下（ヘッダーを固定しない画面では、画面の上端）で読んでいた項目
+// （カードか章の見出し）を覚える。一覧の先頭が見えているときは null（何もしない）。
 // holdFrom は、作り直したあとに描くのを後回しにしない範囲の始め（restoreReadingAnchor を参照）。
 // 画面の上端から1画面分の高さだけ上までにかかる、最初の項目の順番
 function captureReadingAnchor() {
   const listEl = document.getElementById("tool-list");
   const header = document.getElementById("site-header");
   if (!listEl || !header || listEl.getClientRects().length === 0) return null;
-  const hb = header.getBoundingClientRect().bottom;
+  const hb = readingTop(header);
   if (listEl.getBoundingClientRect().top >= hb) return null;
   const items = listEl.children;
   let holdFrom = -1;
@@ -560,7 +569,7 @@ function captureReadingAnchor() {
   return null;
 }
 
-// 作り直したあと、同じ順番の項目がヘッダーの下の同じ高さに来るようにスクロールする。
+// 作り直したあと、同じ順番の項目がヘッダーの下（ヘッダーを固定しない画面では、画面の上端から）の同じ高さに来るようにスクロールする。
 // 言語を切り替えても絞り込みの結果と並び順は変わらないので、順番で同じ項目を引ける。
 function restoreReadingAnchor(anchor) {
   if (!anchor) return;
@@ -577,7 +586,7 @@ function restoreReadingAnchor(anchor) {
   const from = Math.max(0, Math.min(anchor.holdFrom, anchor.index));
   const held = Array.prototype.slice.call(listEl.children, from, anchor.index + 1);
   held.forEach((c) => c.classList.add("cv-hold"));
-  const hb = header.getBoundingClientRect().bottom;
+  const hb = readingTop(header);
   scrollByInstant(el.getBoundingClientRect().top - hb - anchor.offset);
   // 次の描画が終わってから外す（描いたときに、カードの高さが覚えられる）
   requestAnimationFrame(() =>
