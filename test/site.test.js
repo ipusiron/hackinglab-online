@@ -134,8 +134,10 @@ test("H3: ヘルプは role=dialog・aria-modal=true・見出しを指す aria-l
 test("H4: h1 がちょうど1つあり、サイト名（日英）を含む", () => {
   const h1s = html.match(/<h1\b[\s\S]*?<\/h1>/g) || [];
   assert.equal(h1s.length, 1);
-  assert.match(h1s[0], /ハッキング・ラボ・オンライン/);
-  assert.match(h1s[0], /Hacking Lab Online/);
+  // 折ってよい位置の <wbr> は字ではないので、除いてから調べる（H36）
+  const h1 = h1s[0].replace(/<wbr\s*\/?>/g, "");
+  assert.match(h1, /ハッキング・ラボ・オンライン/);
+  assert.match(h1, /Hacking Lab Online/);
 });
 
 test("H5: 言語切替で html の lang を切り替える", () => {
@@ -812,4 +814,23 @@ test("H35: 狭い画面（767px まで）と指で操作する端末では、ヘ
   const close = bodyOf(".modal-close");
   assert.match(close, /(?:^|[;\s])width:\s*2\.75rem/);
   assert.match(close, /(?:^|[;\s])height:\s*2\.75rem/);
+});
+
+test("H36: サイト名は「・」の後ろでだけ折り（<wbr>）、語の途中・小さい仮名や「ー」の前では折らない。タブの「学習ダッシュボード」とダッシュボードの数字も語の途中で折らない", () => {
+  const ja = html.match(/<span id="site-title-ja"[^>]*>([\s\S]*?)<\/span>/);
+  assert.ok(ja, "日本語のサイト名がない");
+  // <wbr> は「・」の直後だけに置く（「ハッキング・<wbr>ラボ・<wbr>オンライン」）
+  const parts = ja[1].split(/<wbr\s*\/?>/);
+  assert.ok(parts.length >= 2, "サイト名に折ってよい位置（<wbr>）がない（狭い画面で「オンライ｜ン」と語の途中で折れる）");
+  for (const s of parts.slice(0, -1)) assert.match(s, /・$/, `「・」の後ろでない所に <wbr> がある: ${ja[1]}`);
+  assert.equal(parts.join(""), "ハッキング・ラボ・オンライン");
+  // 区切りの間では折らない（keep-all）。小さい仮名や「ー」の前でも折らない（strict）
+  const title = bodyOf(".site-title");
+  assert.match(title, /word-break:\s*keep-all/);
+  assert.match(title, /line-break:\s*strict/);
+  // ダッシュボードの数字は「定着済み0」「（全44）」の中で折らない
+  assert.match(bodyOf(".category-progress-detail"), /word-break:\s*keep-all/);
+  // 360px より狭い画面ではタブの左右の余白を詰める（320px で「学習ダッシュボード」を1行に収める）
+  const narrow = mediaBlocks(/max-width:\s*359\.98px/).map((b) => b.body).join("\n");
+  assert.match(narrow, /\.tab-button\s*\{[^}]*padding-left:\s*0\.25rem[^}]*padding-right:\s*0\.25rem/, "360px より狭い画面で、タブの左右の余白を詰めていない");
 });

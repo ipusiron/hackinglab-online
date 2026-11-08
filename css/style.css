@@ -81,12 +81,18 @@ html[lang="en"] .label-ja {
   gap: 0.2rem;
 }
 
+/* サイト名は、語の区切り（index.html で「・」の後ろに置いた <wbr>）でだけ折る。日本語はどの字の間でも折れるので、
+   狭い画面では「オンライ｜ン」のように語の途中で折れていた。keep-all で語の途中では折らず、strict で小さい仮名や
+   「ー」の前でも折らない。overflow-wrap: anywhere は、区切りの間の1かたまりが横幅に入らないときだけ折る保険 */
 .site-title {
   margin: 0;
   font-size: 1.6rem;
   line-height: inherit;
   font-weight: 700;
   color: #111;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  line-break: strict;
 }
 
 .site-subtitle {
@@ -219,6 +225,15 @@ html[lang="en"] #lang-en {
   border-color: #2563eb;
   background-color: #e5efff;
   border-radius: 0.5rem 0.5rem 0 0;
+}
+
+/* 360px より狭い画面では、タブの左右の余白を詰める。320px では「学習ダッシュボード」が1つのタブの横幅に入らず、
+   「学習ダッシュボー｜ド」と語の途中で折れていた */
+@media (max-width: 359.98px) {
+  .tab-button {
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+  }
 }
 
 /* --------------------------------
@@ -976,11 +991,14 @@ html[lang="en"] #lang-en {
   background-color: #10b981; /* 緑: 定着済み */
 }
 
-/* 数値テキスト */
+/* 数値テキスト。「定着済み0」「（全44）」の中では折らず、「 / 」と「（全…）」の前の空白で折る（日本語はどの字の間でも
+   折れるので、狭い画面では「定着済｜み0」「（全｜44）」と折れていた）。overflow-wrap: anywhere は横幅に入らないときだけの保険 */
 .category-progress-detail {
   font-size: 0.75rem;
   color: #6b7280;
   line-height: 1.4;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 
 /* --------------------------------
