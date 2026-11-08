@@ -717,3 +717,17 @@ test("H32: 一覧・バナー・ダッシュボードの本の行を作り直し
   assert.match(fnBody("settleFocus"), /else if \(focused && !focused\.isConnected\) restoreRebuiltFocus\(focused, key\);/);
   assert.match(fnBody("refreshProgressViews"), /restoreRebuiltFocus\(focused, focusedKey\);/);
 });
+
+// ---- ヘッダーと押せる部品の大きさ ----
+
+test("H33: ヘルプの「?」は px の幅・高さで固定せず、rem の最小の大きさと縦横の比 1 で丸を保つ（文字を大きくしても横長にならない）", () => {
+  for (const r of rules.filter((x) => x.selector.split(",").some((s) => /\.help-button(?![\w-])/.test(s)))) {
+    assert.doesNotMatch(r.body, /(?:^|[;\s])(?:width|height)\s*:\s*[\d.]+px/, `${r.selector} に px の幅・高さがある（文字を大きくすると横長になる）`);
+  }
+  // .header-controls button（詳細度 0,1,1）の padding に勝つよう、.header-controls .help-button で書く
+  const help = bodyOf(".header-controls .help-button");
+  assert.match(help, /min-width:\s*[\d.]+rem/);
+  assert.match(help, /min-height:\s*[\d.]+rem/);
+  assert.match(help, /aspect-ratio:\s*1\s*(?:;|$)/);
+  assert.match(help, /(?:^|[;\s])padding:\s*0\s*(?:;|$)/);
+});

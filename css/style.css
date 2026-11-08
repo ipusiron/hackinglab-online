@@ -131,18 +131,24 @@ html[lang="en"] #lang-en {
   }
 }
 
+/* 枠・地の色・角丸は .header-controls button のものを使う */
 .help-button {
-  border: 1px solid #d1d5db;
-  background-color: #ffffff;
-  color: #111;
-  border-radius: 50%;
-  width: 28px;
-  height: 28px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-weight: bold;
   cursor: pointer;
+}
+
+/* 「?」は px で固定せず、最小の大きさを rem で決め、縦横を同じ長さにして丸を保つ（文字を大きくしても横長にならず、
+   丸のまま一緒に大きくなる）。.header-controls button（詳細度 0,1,1）の padding に勝つよう、.header-controls .help-button で書く。
+   指で押す画面の 44px の指定（下の「指で押す画面」）は、これより後ろに書く（前に書くと、この 1.75rem が勝つ） */
+.header-controls .help-button {
+  min-width: 1.75rem;
+  min-height: 1.75rem;
+  aspect-ratio: 1;
+  padding: 0;
+  line-height: 1;
 }
 
 .help-button:hover {
