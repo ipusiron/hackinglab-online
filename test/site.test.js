@@ -1,7 +1,9 @@
 // test/site.test.js
 // 依存なし（node:test / node:assert/strict / node:fs / node:zlib のみ）。
 // U1〜U2 は js/storage.js・js/tabs.js の純関数、H1〜H15 は index.html / js/main.js / css/style.css の静的な検査、
-// H16〜H20 はデータの読み込みの決まり（ハブの CLAUDE.md の Loading data）の検査、H21〜 は検索と絞り込み・一覧の表示の静的な検査。
+// H16〜H20 はデータの読み込みの決まり（ハブの CLAUDE.md の Loading data）の検査、H21〜H32 は検索と絞り込み・一覧の表示・
+// 戻る・進むの静的な検査、H33〜H38 はヘッダーと押せる部品の大きさ・サイト名などの折れ方・「はじめ方」の開閉・ダッシュボードの
+// ボタンの静的な検査（ハブの CLAUDE.md の Header and touch targets・Start here）。
 
 const fs = require("node:fs");
 const path = require("node:path");

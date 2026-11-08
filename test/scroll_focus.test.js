@@ -1,7 +1,8 @@
 // test/scroll_focus.test.js
 // 依存なし（node:test / node:assert/strict / node:fs のみ）。
-// SF1〜SF8 は、固定ヘッダーの下で止まる位置・フォーカスの移し方・言語の切り替え・絞り込みを変えたときの欄の位置の
-// 直し方が、あとの変更で外れていないかを見る静的な検査（index.html / js/main.js / css/style.css）。
+// SF1〜SF8 は、固定ヘッダーの下で止まる位置（ヘッダーを固定しない画面では --header-h が 0 で、画面の上端から 0.5rem。site.test.js の H34）・
+// フォーカスの移し方・言語の切り替え・絞り込みを変えたときの欄の位置の直し方が、あとの変更で外れていないかを見る静的な検査
+// （index.html / js/main.js / css/style.css）。
 
 const fs = require("node:fs");
 const path = require("node:path");
