@@ -1232,11 +1232,15 @@ html.help-open.keep-gutter {
     min-height: 2.75rem;
   }
 
-  /* ダッシュボードの本の行（種別の札と書名）。書名が折れたときも札は先頭に置く */
+  /* ダッシュボードの本の行（種別の札と書名）。inline-flex にすると、リンクの下線が種別の札にも付く（札が flex の項目になり、
+     inline-block でなくなる）ので、inline-block のまま上下の余白で 44px にする（文字は上下の中央）。
+     下の余白を足す分、行の下の margin は外す（inline-block にすると効き始めるため） */
   .book-progress-title {
-    display: inline-flex;
-    align-items: center;
+    display: inline-block;
     min-height: 2.75rem;
+    padding-top: 0.65rem;
+    padding-bottom: 0.65rem;
+    margin-bottom: 0;
   }
 }
 
