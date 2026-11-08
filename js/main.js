@@ -59,6 +59,8 @@ const progressStore =
 
 // 選んだ言語を保存するキー（js/lang.js が開いたときに読む）
 const LANG_KEY = typeof HLOLang !== "undefined" && HLOLang.KEY ? HLOLang.KEY : "hlo_lang";
+// 「はじめ方」の開閉を覚えるキー（"open" か "closed"。js/lang.js が開いたときに読み、描く前に開閉を決める）
+const START_KEY = typeof HLOLang !== "undefined" && HLOLang.START_KEY ? HLOLang.START_KEY : "hlo_start_here";
 
 const PROGRESS_LABELS = {
   ja: ["未着手", "学習中", "一周完了", "定着済み"],
@@ -154,6 +156,7 @@ function setupStaticUI() {
   // 本とカテゴリーを選んだときは履歴を積む（戻るで1つ前の一覧へ戻る）。選択欄を矢印キーで動かすと1段ごとに変わるので、
   // 同じ欄を続けて変えたときは1つにまとめる（commitUrl）
   bookSelect?.addEventListener("change", (e) => {
+    if (e.target.value) markStartSeen();
     keepInPlace(bookSelect, () => setBookFilter(e.target.value, { history: "push", source: "book" }));
   });
 
@@ -200,9 +203,11 @@ function setupStaticUI() {
   // 「はじめ方」の入口（ツール100・ツール200・すべて）：Ctrl などを押さない左クリックのときは、ページを読み直さずに
   // 書籍の選択と同じ処理で絞り、履歴を積む（読み直すと、開いた「はじめ方」と入れた条件が初めに戻り、回線がないと
   // サイトから出てしまうため）。Ctrl・⌘・Shift・Alt を押したクリック（新しいタブや窓で開く操作など）と、本のデータを
-  // 読めていないときは、これまでどおりのリンクとしてブラウザーに任せる
+  // 読めていないときは、これまでどおりのリンクとしてブラウザーに任せる。
+  // どのクリックでも、次からは「はじめ方」を閉じて始める（markStartSeen）
   document.querySelectorAll(".start-here-entries a").forEach((a) => {
     a.addEventListener("click", (e) => {
+      markStartSeen();
       if (e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
       if (!urlStateReady || !HB || !books.length) return;
       let target;
@@ -227,11 +232,19 @@ function setupStaticUI() {
   const resetBtn = document.getElementById("reset-all-progress");
   resetBtn?.addEventListener("click", handleResetAllProgress);
 
-  // はじめ方は既定で開く（HTML）。狭い画面では初期表示を圧迫しないよう畳む。
-  // CSS は js-ready が付くまで狭い画面で中身を隠しているので、ここで畳んでも下の部品は動かない
+  // 「はじめ方」の初めの開閉。HTML では開いている。描く前に js/lang.js が html の data-start に書いた形（?book= で来たときは
+  // closed、覚えた開閉があるときはその形）にし、書いていなければ画面の幅で決める（768px 以上は開き、狭い画面は畳む）。
+  // CSS は js-ready が付くまで同じ決め方で中身を隠しているので、ここで畳んでも下の部品は動かない
   const startHere = document.getElementById("start-here");
-  if (startHere && window.matchMedia && window.matchMedia(NARROW_MQ).matches) {
-    startHere.open = false;
+  if (startHere) {
+    const decided = document.documentElement.getAttribute("data-start");
+    const narrow = !!(window.matchMedia && window.matchMedia(NARROW_MQ).matches);
+    startHere.open = decided === "open" || (decided !== "closed" && !narrow);
+    // 利用者が開閉したら、その形を覚えて次から使う（js/lang.js が読む）。開閉は click の既定の動きで変わるので、そのあとで読む。
+    // toggle イベントは使わない（上のように JS で開閉を合わせたときにも出るため）
+    startHere.querySelector("summary")?.addEventListener("click", () => {
+      setTimeout(() => progressStore.setItem(START_KEY, startHere.open ? "open" : "closed"), 0);
+    });
   }
   document.documentElement.classList.add("js-ready");
   reserveBookBanner();
@@ -1073,6 +1086,13 @@ function restoreView(view, filtersTop) {
   }
 }
 
+// はじめて来た人が一覧を使い始めたら（「はじめ方」の入口を押す・本を選ぶ・進捗を付ける）、次からは「はじめ方」を閉じて始める
+// （js/lang.js が読む）。開いて見せたのが読む前に消えないよう、開いただけ・見ただけでは残さない。利用者が開閉したあと
+// （覚えた開閉があるとき）は変えない。保存できない環境では、このページを開いているあいだだけ覚える（js/storage.js）
+function markStartSeen() {
+  if (progressStore.getItem(START_KEY) === null) progressStore.setItem(START_KEY, "closed");
+}
+
 // 「はじめ方」の入口で本を選ぶ（slug が "" の「すべてのツール」は、カテゴリー・進捗・検索の条件も外す）。履歴を1つ積む
 function openStartEntry(slug) {
   if (slug) {
@@ -1577,6 +1597,7 @@ function createToolCard(tool, book) {
   progressBtn.addEventListener("click", () => {
     const level = (getProgress(tool.slug) + 1) % 4;
     setProgress(tool.slug, level);
+    markStartSeen();
     // 同じツールが複数の章に出ているときは、全部のボタンを同期する
     syncProgressButtons(tool.slug);
     renderDashboard();
@@ -1816,6 +1837,7 @@ function renderBookProgress() {
     title.appendChild(kind);
     title.appendChild(document.createTextNode(HB.bookLabel(s.book, currentLang)));
     title.addEventListener("click", (e) => {
+      markStartSeen(); // 本を選んだので、次からは「はじめ方」を閉じて始める
       // Ctrl・⌘・Shift・Alt を押したクリック（新しいタブや窓で開く操作など）は、ふつうのリンクとしてブラウザーに任せる
       if (e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
       e.preventDefault();

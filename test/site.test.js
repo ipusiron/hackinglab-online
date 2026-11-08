@@ -834,3 +834,35 @@ test("H36: サイト名は「・」の後ろでだけ折り（<wbr>）、語の�
   const narrow = mediaBlocks(/max-width:\s*359\.98px/).map((b) => b.body).join("\n");
   assert.match(narrow, /\.tab-button\s*\{[^}]*padding-left:\s*0\.25rem[^}]*padding-right:\s*0\.25rem/, "360px より狭い画面で、タブの左右の余白を詰めていない");
 });
+
+// ---- 「はじめ方」の初めの開閉 ----
+
+test("H37: 「はじめ方」の開閉は、利用者が開閉したらその形を、はじめて来た人が一覧を使い始めたら（入口・本を選ぶ・進捗を付ける）閉じた形を覚える（js/storage.js のラッパーを通す）。toggle イベントは使わない", () => {
+  // 覚えるキーは js/lang.js と同じ（lang.js が描く前に読む）
+  assert.match(mainJs, /const START_KEY = typeof HLOLang !== "undefined" && HLOLang\.START_KEY \? HLOLang\.START_KEY : "hlo_start_here";/);
+  const setup = fnBody("setupStaticUI");
+  // 開閉の見出しを押したら（キーボードの Enter・Space も click になる）、開閉が変わったあとに今の形を覚える
+  assert.match(
+    setup,
+    /startHere\.querySelector\("summary"\)\?\.addEventListener\("click", \(\) => \{\s*setTimeout\(\(\) => progressStore\.setItem\(START_KEY, startHere\.open \? "open" : "closed"\), 0\);\s*\}\);/,
+    "利用者が開閉した形を覚えていない（次に来たときに、閉じたのに開く・開いたのに閉じる）"
+  );
+  // toggle は JS で開閉を合わせたときにも出るので、覚えるのに使わない
+  assert.doesNotMatch(blankComments(mainJs), /addEventListener\("toggle"/);
+  // はじめて来た人が一覧を使い始めたら閉じた形を残す。利用者が開閉を選んだあと（覚えた形があるとき）は変えない
+  assert.match(
+    fnBody("markStartSeen"),
+    /if \(progressStore\.getItem\(START_KEY\) === null\) progressStore\.setItem\(START_KEY, "closed"\);/
+  );
+  const entries = setup.slice(setup.indexOf('document.querySelectorAll(".start-here-entries a")'));
+  assert.match(entries.slice(0, entries.indexOf("\n  });")), /a\.addEventListener\("click", \(e\) => \{\s*markStartSeen\(\);/, "入口を押しても残していない");
+  const book = setup.slice(setup.indexOf('bookSelect?.addEventListener("change"'));
+  assert.match(book.slice(0, book.indexOf("\n  });")), /if \(e\.target\.value\) markStartSeen\(\);/, "本を選んでも残していない");
+  assert.match(fnBody("renderBookProgress"), /title\.addEventListener\("click", \(e\) => \{\s*markStartSeen\(\);/, "ダッシュボードの本の行で本を選んでも残していない");
+  const card = fnBody("createToolCard");
+  const click = card.slice(card.indexOf('progressBtn.addEventListener("click"'));
+  assert.match(click.slice(0, click.indexOf("\n  });")), /setProgress\(tool\.slug, level\);\s*markStartSeen\(\);/, "進捗を付けても残していない");
+  // 開いただけ・見ただけでは残さない（開いて見せた「はじめ方」が、読む前に次から閉じてしまわない）
+  assert.equal((blankComments(mainJs).match(/markStartSeen\(\)/g) || []).length, 4 + 1, "markStartSeen を呼ぶ所は、入口・本の選択欄・ダッシュボードの本の行・進捗の4か所と、宣言の1か所");
+  assert.equal((blankComments(mainJs).match(/setItem\(START_KEY/g) || []).length, 2, "開閉を覚えるのは、開閉の見出しを押したときと markStartSeen の2か所だけ");
+});

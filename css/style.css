@@ -326,18 +326,35 @@ html[lang="en"] #lang-en {
   padding-top: 0.3rem;
 }
 
-/* JS が動く狭い画面では、main.js が「はじめ方」を畳んで html に js-ready を付けるまで、中身を出さない。
-   開いた形で一度描いてから畳むと、下の絞り込み欄とフッターが上へずれるため。
-   式は js/main.js の NARROW_MQ と同じにする。JS が動かない環境（scripting: none）では今までどおり開いて見せる。
-   開閉の印も閉じた形（▶）にそろえる。
+/* 「はじめ方」は HTML では開いた形（open）で、閉じて始めるときは、main.js が畳んで html に js-ready を付けるまで中身を出さない。
+   開いた形で一度描いてから畳むと、下の絞り込み欄とフッターが上へずれるため。開閉の印も閉じた形（▶）にそろえる。
+   閉じて始めるのは、描く前に js/lang.js が html に data-start="closed" を書いたとき（?book= で来たときと、閉じた形を覚えているとき）と、
+   data-start がなく（覚えた開閉がない、はじめて来た人など）画面が狭いとき（767px まで）。data-start="open"（開いた形を覚えている）
+   なら狭い画面でも開く。狭い画面の式は js/main.js の NARROW_MQ と同じにする。main.js も同じ決め方で開閉を合わせる。
+   JS が動かない環境（scripting: none）では今までどおり開いて見せる。
    main.js が届かず js-ready が付かないままのときは、25秒後に中身と印を開いた形に戻す（入口のリンクを隠したままにしない） */
-@media (scripting: enabled) and (max-width: 767.98px) {
-  html:not(.js-ready) #start-here > summary {
+@media (scripting: enabled) {
+  html[data-start="closed"]:not(.js-ready) #start-here > summary {
     list-style-type: disclosure-closed;
     animation: hlo-unhide-marker 0s linear 25s forwards;
   }
 
-  html:not(.js-ready) #start-here > .start-here-body {
+  html[data-start="closed"]:not(.js-ready) #start-here > .start-here-body {
+    max-height: 0;
+    padding-top: 0;
+    overflow: hidden;
+    visibility: hidden;
+    animation: hlo-unhide 0s linear 25s forwards;
+  }
+}
+
+@media (scripting: enabled) and (max-width: 767.98px) {
+  html:not([data-start]):not(.js-ready) #start-here > summary {
+    list-style-type: disclosure-closed;
+    animation: hlo-unhide-marker 0s linear 25s forwards;
+  }
+
+  html:not([data-start]):not(.js-ready) #start-here > .start-here-body {
     max-height: 0;
     padding-top: 0;
     overflow: hidden;

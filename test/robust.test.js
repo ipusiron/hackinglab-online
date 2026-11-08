@@ -80,18 +80,27 @@ test("RB1: 書籍・シリーズの欄は最初から場所を取り、一覧は
   assert.match(fnBody("setupStaticUI"), /history\.scrollRestoration = "manual"/);
 });
 
-test("RB2: 狭い画面の「はじめ方」は描く前に CSS で畳み、CSS と main.js は同じ式で幅を見る", () => {
+test("RB2: 閉じて始める「はじめ方」は描く前に CSS で畳み（js/lang.js が書いた data-start=\"closed\" と、data-start のない狭い画面）、CSS と main.js は同じ決め方・同じ式で幅を見る", () => {
   const m = mainJs.match(/const NARROW_MQ = "([^"]+)"/);
   assert.ok(m, "NARROW_MQ がない");
-  assert.ok(
-    css.includes(`@media (scripting: enabled) and ${m[1]}`),
-    "CSS の @media が NARROW_MQ と同じ式でない（境目の幅で一瞬開いて見えたり、畳んだまま開かなくなったりする）"
-  );
-  assert.match(cssNoComments, /html:not\(\.js-ready\) #start-here > \.start-here-body\s*\{[^}]*max-height:\s*0/);
-  // main.js は同じ式で畳み、html に js-ready を付ける
+  const narrow = cssNoComments.match(new RegExp(String.raw`@media \(scripting: enabled\) and ${m[1].replace(/[().]/g, "\\$&")}\s*\{([\s\S]*?)\n\}`));
+  assert.ok(narrow, "CSS の @media が NARROW_MQ と同じ式でない（境目の幅で一瞬開いて見えたり、畳んだまま開かなくなったりする）");
+  // data-start がない（覚えた開閉がない・?book= でない）狭い画面は畳む。data-start="open"（開いた形を覚えている）なら開く
+  assert.match(narrow[1], /html:not\(\[data-start\]\):not\(\.js-ready\) #start-here > \.start-here-body\s*\{[^}]*max-height:\s*0/);
+  assert.match(narrow[1], /html:not\(\[data-start\]\):not\(\.js-ready\) #start-here > summary\s*\{[^}]*list-style-type:\s*disclosure-closed/);
+  // data-start="closed"（?book= で来た・閉じた形を覚えている）は、幅にかかわらず畳む
+  const any = cssNoComments.match(/@media \(scripting: enabled\)\s*\{([\s\S]*?)\n\}/);
+  assert.ok(any, "@media (scripting: enabled) がない");
+  assert.match(any[1], /html\[data-start="closed"\]:not\(\.js-ready\) #start-here > \.start-here-body\s*\{[^}]*max-height:\s*0/);
+  assert.match(any[1], /html\[data-start="closed"\]:not\(\.js-ready\) #start-here > summary\s*\{[^}]*list-style-type:\s*disclosure-closed/);
+  // HTML では開いている（JS が動かない環境ではそのまま開いて見せる）
+  assert.match(openTag("start-here"), /\sopen[\s>]/);
+  // main.js は同じ決め方（data-start → 幅）・同じ式で開閉を合わせ、html に js-ready を付ける
   const s = fnBody("setupStaticUI");
-  assert.match(s, /matchMedia\(NARROW_MQ\)/);
-  assert.match(s, /classList\.add\("js-ready"\)/);
+  assert.match(s, /const decided = document\.documentElement\.getAttribute\("data-start"\);/);
+  assert.match(s, /const narrow = !!\(window\.matchMedia && window\.matchMedia\(NARROW_MQ\)\.matches\);/);
+  assert.match(s, /startHere\.open = decided === "open" \|\| \(decided !== "closed" && !narrow\);/);
+  assert.ok(s.indexOf("startHere.open =") < s.indexOf('classList.add("js-ready")'), "開閉を合わせる前に js-ready を付けている（開いた形が一瞬見える）");
   assert.doesNotMatch(s, /innerWidth\s*<\s*768/, "幅の判定が CSS と別の式になっている");
 });
 
