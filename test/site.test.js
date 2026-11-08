@@ -663,7 +663,7 @@ test("H31: 戻る・進むでタブが切り替わり、フォーカスしてい
   const settle = fnBody("settleFocus");
   assert.match(
     settle,
-    /if \(focusPanel && focusPanel\.hidden\) restoreFocus\(view\);\s*else if \(focused && !focused\.isConnected\) restoreRebuiltFocus\(focused, key\);\s*else focusSelectedTab\(\);/,
+    /if \(focusPanel && focusPanel\.hidden\) restoreFocus\(view\);\s*else if \(focused && !focused\.isConnected\) restoreRebuiltFocus\(focused, key, view && view\.focus\);\s*else focusSelectedTab\(\);/,
     "戻る・進むのあと、隠れたパネル・作り直して外れた部品・選ばれていないタブのボタンに残ったフォーカスを移していない"
   );
   // 移し先は、書いておいた部品が表に出ていればそれ、無ければ選ばれたタブのボタン。restoreView が戻した位置は動かさない
@@ -679,7 +679,7 @@ test("H31: 戻る・進むでタブが切り替わり、フォーカスしてい
   assert.match(tabFocus, /document\.querySelector\('\.tab-button\[aria-selected="true"\]'\)[\s\S]*\.focus\(\{ preventScroll: true \}\)/, "タブのボタンへ移すときにスクロールしている");
 });
 
-test("H32: 一覧・バナー・ダッシュボードの本の行を作り直して、フォーカスしていた部品が外れたときは、作り直した同じ部品へ（無ければ一覧かバナーの先頭の見出しへ）フォーカスを移す。スクロールはせず、フォーカスがページの中になかったときは何もしない", () => {
+test("H32: 一覧・バナー・ダッシュボードの本の行を作り直して、フォーカスしていた部品が外れたときは、戻る・進むなら来た履歴に書いておいた部品へ、無ければ作り直した同じ部品へ（無ければ一覧かバナーの先頭の見出しへ）フォーカスを移す。スクロールはせず、フォーカスがページの中になかったときは何もしない", () => {
   // 作り直す部品に目印を付ける：カードはツールの slug（章ごとに並べたときは章も）と部品の種類、バナーは部品の種類
   const card = fnBody("createToolCard");
   assert.match(card, /card\.dataset\.slug = tool\.slug/);
@@ -704,7 +704,13 @@ test("H32: 一覧・バナー・ダッシュボードの本の行を作り直し
   const restore = fnBody("restoreRebuiltFocus");
   assert.match(restore, /if \(!prev \|\| prev === document\.body \|\| prev\.isConnected\) return;/);
   assert.match(restore, /if \(active && active !== document\.body\) return;/);
-  assert.match(restore, /let target = elementForFocusKey\(key\);\s*if \(!isShown\(target\)\) target = fallbackFocusTarget\(key\);\s*if \(target\) target\.focus\(\{ preventScroll: true \}\);/);
+  // 来た履歴に書いておいた部品（savedKey）を先に、無ければ作り直した同じ部品、無ければ先頭の見出し。戻った一覧は、その履歴で
+  // 見ていた位置で出るので、作り直した同じ部品は画面の外にあることがある（次の Tab で画面が大きく飛ぶ）
+  assert.match(
+    restore,
+    /let target = savedKey \? elementForFocusKey\(savedKey\) : null;\s*if \(!isShown\(target\)\) target = elementForFocusKey\(key\);\s*if \(!isShown\(target\)\) target = fallbackFocusTarget\(key\);\s*if \(target\) target\.focus\(\{ preventScroll: true \}\);/,
+    "作り直したときに、来た履歴に書いておいた部品を先に使っていない"
+  );
   assert.match(fnBody("isShown"), /el\.isConnected && el\.getClientRects\(\)\.length > 0/);
   // 同じ部品が無いとき：バナーの部品ならバナーの書名、一覧の部品なら一覧の先頭の章の見出し（出ていなければもう一方、どちらも
   // 出ていなければ選ばれたタブのボタン）
@@ -715,8 +721,9 @@ test("H32: 一覧・バナー・ダッシュボードの本の行を作り直し
   // 見出しはフォーカスできる（tabIndex = -1）
   assert.match(banner, /h2\.id = "book-banner-title";[\s\S]*?h2\.tabIndex = -1;/);
   assert.match(fnBody("renderToolList"), /h\.className = "book-group-heading";[\s\S]*?h\.tabIndex = -1;/);
-  // 戻る・進む（settleFocus。H31）と別のタブの進捗（refreshProgressViews。H25）の両方から呼ぶ
-  assert.match(fnBody("settleFocus"), /else if \(focused && !focused\.isConnected\) restoreRebuiltFocus\(focused, key\);/);
+  // 戻る・進む（settleFocus。H31。来た履歴に書いておいた部品を渡す）と別のタブの進捗（refreshProgressViews。H25。履歴はないので渡さない）の
+  // 両方から呼ぶ
+  assert.match(fnBody("settleFocus"), /else if \(focused && !focused\.isConnected\) restoreRebuiltFocus\(focused, key, view && view\.focus\);/);
   assert.match(fnBody("refreshProgressViews"), /restoreRebuiltFocus\(focused, focusedKey\);/);
 });
 

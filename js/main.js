@@ -950,11 +950,11 @@ function applyHistoryState(view) {
 
 // 戻る・進むで描き直したあとのフォーカス（restoreView が戻したスクロールの位置は動かさない）。
 // タブが切り替わり、フォーカスしていた部品が隠れたパネルに残る → restoreFocus（履歴に書いておいた部品か、選ばれたタブのボタン）。
-// 一覧やバナーを作り直して、フォーカスしていた部品が文書から外れた → restoreRebuiltFocus（作り直した同じ部品か、先頭の見出し）。
-// フォーカスが選ばれていないタブのボタンに残る → focusSelectedTab
+// 一覧やバナーを作り直して、フォーカスしていた部品が文書から外れた → restoreRebuiltFocus（履歴に書いておいた部品か、
+// 作り直した同じ部品か、先頭の見出し）。フォーカスが選ばれていないタブのボタンに残る → focusSelectedTab
 function settleFocus(view, focused, focusPanel, key) {
   if (focusPanel && focusPanel.hidden) restoreFocus(view);
-  else if (focused && !focused.isConnected) restoreRebuiltFocus(focused, key);
+  else if (focused && !focused.isConnected) restoreRebuiltFocus(focused, key, view && view.focus);
   else focusSelectedTab();
 }
 
@@ -1019,14 +1019,18 @@ function isShown(el) {
 
 // 一覧・バナー・ダッシュボードの本の行を作り直して、フォーカスしていた部品 prev が文書から外れたときに、作り直した同じ部品へ
 // フォーカスを戻す（そのままでは body に落ち、キーボード・読み上げの利用者が位置を失う）。key は作り直す前に focusKey で取った目印。
-// 同じ部品が無ければ、一覧かバナーの先頭の見出しへ移す（fallbackFocusTarget）。スクロールはしない。
+// 戻る・進むのときは、来た履歴に書いておいた部品の目印 savedKey（その履歴から次の履歴を積む直前にフォーカスしていた部品。
+// saveViewInHistory）が表に出ていれば、そちらを先に使う。戻った一覧は、戻した位置（その履歴で見ていた所）で出るので、
+// 作り直した同じ部品は画面の外にあることがある（カテゴリーを選んでからカードにフォーカスして戻ると、カードは1画面以上下にある）。
+// どちらも無ければ、一覧かバナーの先頭の見出しへ移す（fallbackFocusTarget）。スクロールはしない。
 // フォーカスがページの部品になかったとき（ページの何もない所を押したあとなど）、prev が残っているとき、フォーカスがもうほかの
 // 部品へ移っているときは何もしない
-function restoreRebuiltFocus(prev, key) {
+function restoreRebuiltFocus(prev, key, savedKey) {
   if (!prev || prev === document.body || prev.isConnected) return;
   const active = document.activeElement;
   if (active && active !== document.body) return;
-  let target = elementForFocusKey(key);
+  let target = savedKey ? elementForFocusKey(savedKey) : null;
+  if (!isShown(target)) target = elementForFocusKey(key);
   if (!isShown(target)) target = fallbackFocusTarget(key);
   if (target) target.focus({ preventScroll: true });
 }
