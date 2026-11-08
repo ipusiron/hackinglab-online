@@ -328,17 +328,31 @@ function matchParen(src, pos) {
   return -1;
 }
 
-test("H16: script はすべて defer で async なし。books → search → storage → tabs → main の順に書き、main.js が最後", () => {
-  const tags = [...html.matchAll(/<script\b[^>]*>/g)].map((m) => m[0]);
-  const srcs = tags.map((t) => (t.match(/\ssrc="([^"]+)"/) || [])[1]);
+test("H16: 描く前に言語を決める js/lang.js だけは defer なしで head に置き、ほかの script はすべて defer（async なし）で books → search → storage → tabs → url → main の順に、lang.js より前に fetchpriority=\"high\" で置く", () => {
+  const headEnd = html.indexOf("</head>");
+  const tags = [...html.matchAll(/<script\b[^>]*>/g)].map((m) => ({ tag: m[0], at: m.index, src: (m[0].match(/\ssrc="([^"]+)"/) || [])[1] }));
   for (const t of tags) {
-    assert.match(t, /\sdefer[\s>]/, `defer がない（meta の CSP で Chromium の先読みが止まり、1本ずつ取りに行くことがある）: ${t}`);
-    assert.doesNotMatch(t, /\sasync[\s>=]/, `async は実行の順番を保たない（main.js が books.js より先に動くと書籍の絞り込みが消える）: ${t}`);
+    assert.doesNotMatch(t.tag, /\sasync[\s>=]/, `async は実行の順番を保たない（main.js が books.js より先に動くと書籍の絞り込みが消える）: ${t.tag}`);
+    assert.ok(t.at < headEnd, `script が head の外にある: ${t.tag}`);
   }
-  const order = ["./js/books.js", "./js/search.js", "./js/storage.js", "./js/tabs.js", "./js/main.js"].map((s) => srcs.indexOf(s));
+  // 例外は lang.js の1本だけ：描く前に <html lang> を決めるので defer を付けない。CSP の meta と CSS のあとに置く
+  const blocking = tags.filter((t) => !/\sdefer[\s>]/.test(t.tag));
+  assert.deepEqual(blocking.map((t) => t.src), ["./js/lang.js"], "defer のない script は js/lang.js だけにする（ほかは、meta の CSP で Chromium の先読みが止まり、1本ずつ取りに行くことがある）");
+  const lang = blocking[0];
+  assert.ok(lang.at > html.indexOf('http-equiv="Content-Security-Policy"'), "lang.js が CSP の meta より前にある");
+  assert.ok(lang.at > html.indexOf('rel="stylesheet"'), "lang.js が CSS より前にある（CSS を取り始めるのが lang.js を待つ分だけ遅れる）");
+  // defer の script は lang.js より前に書き、fetchpriority="high" を付ける。後ろに書くと lang.js を待つあいだに見つけられず、
+  // 付けないと Chromium は head の中の defer の script を後回しにするので、どちらでも遅い回線でカードが1往復遅れる
+  const deferred = tags.filter((t) => t !== lang);
+  for (const t of deferred) {
+    assert.ok(t.at < lang.at, `defer の script が lang.js より後ろにある: ${t.tag}`);
+    assert.match(t.tag, /\sfetchpriority="high"[\s>]/, `fetchpriority="high" がない: ${t.tag}`);
+  }
+  const srcs = deferred.map((t) => t.src);
+  const order = ["./js/books.js", "./js/search.js", "./js/storage.js", "./js/tabs.js", "./js/url.js", "./js/main.js"].map((x) => srcs.indexOf(x));
   assert.ok(order.every((i) => i >= 0), `読み込む script が足りない: ${srcs.join(", ")}`);
-  assert.deepEqual([...order].sort((a, b) => a - b), order, "script の順番が books → search → storage → tabs → main でない");
-  assert.equal(srcs[srcs.length - 1], "./js/main.js", "main.js が最後の script でない");
+  assert.deepEqual([...order].sort((a, b) => a - b), order, "script の順番が books → search → storage → tabs → url → main でない");
+  assert.equal(srcs[srcs.length - 1], "./js/main.js", "main.js が defer の script の最後でない");
 });
 
 test("H17: 最初の表示に使う data/*.json は、loadData の最初の await が終わる前に全部取り始める", () => {
@@ -461,4 +475,245 @@ test("H24: PC幅の一覧は auto-fill で列を作り（結果が1件でもカ�
   // 0件の文（#tool-list の中の p）は、狭い列に入って折れないよう、すべての列にまたがる
   assert.match(bodyOf("#tool-list > p"), /grid-column:\s*1\s*\/\s*-1/);
   assert.match(fnBody("appendEmptyState"), /document\.createElement\("p"\)/, "0件の文が p でない（CSS の #tool-list > p が当たらない）");
+});
+
+// ---- 進捗の記録 ----
+
+test("H25: 別のタブで進捗が変わったら（storage イベント）、進捗ボタンとダッシュボードを描き直す。続けて届く知らせは1回にまとめ、一覧は作り直さない", () => {
+  const setup = fnBody("setupProgressSync");
+  const i = setup.indexOf('addEventListener("storage"');
+  assert.ok(i >= 0, "storage イベントを受けていない（別のタブの変更を知らないまま押すと、1段飛んだり、別のタブの記録を消したりする）");
+  const handler = setup.slice(i, setup.indexOf("\n  });", i));
+  // 進捗のキー（progress_…）と、まとめて消されたとき（key が null）だけを見る
+  assert.match(handler, /e\.key !== null && String\(e\.key\)\.indexOf\("progress_"\) !== 0\) return;/);
+  // 全体のリセットで本数分届く知らせは、止まってから1回だけ描き直す（前の予約を取り消してから予約し直す）
+  assert.match(handler, /clearTimeout\(progressSyncTimer\);\s*progressSyncTimer = setTimeout\(refreshProgressViews,/);
+  assert.match(fnBody("setupStaticUI") + fnBody("setupHelpModal") + mainJs.match(/document\.addEventListener\("DOMContentLoaded"[\s\S]*?\n\}\);/)[0], /setupProgressSync\(\)/);
+  const refresh = fnBody("refreshProgressViews");
+  assert.match(refresh, /querySelectorAll\("\.tool-progress-button"\)[\s\S]*updateProgressButton\(/, "進捗ボタンを描き直していない");
+  assert.match(refresh, /renderDashboard\(\)/, "ダッシュボードを描き直していない");
+  assert.doesNotMatch(refresh, /renderToolList\(|renderAll\(/, "一覧を作り直している（フォーカスとスクロールの位置が動く）");
+  // ダッシュボードの本の行は作り直すので、作り直す前にフォーカスしている部品の目印を取り、作り直したあとに同じ行へ戻す（H32）
+  assert.match(
+    refresh,
+    /const focused = document\.activeElement;\s*const focusedKey = focusKey\(focused\);\s*renderDashboard\(\);\s*restoreRebuiltFocus\(focused, focusedKey\);/,
+    "別のタブの進捗で本の行を作り直すと、その行にあったフォーカスが body に落ちる"
+  );
+});
+
+// ---- 一覧の条件と URL ----
+
+test("H26: 一覧の条件（本・カテゴリー・検索・タブ）は URL から読んで一覧を出し、変えたら URL に書く。進捗の条件と canonical は URL に入れない・変えない", () => {
+  const load = loadDataBody();
+  const iRead = load.indexOf("readUrlState()");
+  assert.ok(iRead >= 0 && iRead < load.indexOf("renderAll()"), "一覧を描く前に URL の条件を読んでいない");
+  assert.match(load, /filters\.book = urlState\.book;/);
+  assert.match(load, /filters\.categoryId = urlState\.cat;/);
+  // ?q= は開いたときに（データを待たずに）検索欄へ入れる。欄に同じ語があるとき（ブラウザーが戻した文字）と、欄にフォーカスが
+  // あって文字が入っているとき（main.js が動く前に打ち始めていたとき）はそのまま。違う語があるときは、URL に ?q= がなくても
+  // URL に合わせる（Firefox が同じページの別の履歴から戻した語を消す）。データが届いたときは欄を書き換えず、欄の値で絞る
+  // （読み込み中に打った文字の末尾の空白や、変換中の文字を消さない。欄の値で絞るのは H22）
+  assert.match(
+    fnBody("setupStaticUI"),
+    /const q = HU\.readState\(window\.location\.search, \{\}\)\.q;\s*const typing = document\.activeElement === searchInput && searchInput\.value !== "";\s*if \(searchInput\.value\.trim\(\) !== q && !typing\) searchInput\.value = q;/,
+    "開いたときに検索欄を URL の ?q= に合わせていない（?q= がないときに、ブラウザーが戻した別の履歴の語が残る）"
+  );
+  assert.doesNotMatch(load, /searchInput\.value\s*=(?!=)/, "データが届いたときに検索欄を書き換えている（読み込み中に打った文字の末尾の空白や、変換中の文字が消える）");
+  assert.match(load, /if \(searchInput\) setSearchQuery\(searchInput\.value\);/);
+  // 変えたら URL に書く（js/url.js の buildUrl。変える前に呼ぶ）
+  assert.match(fnBody("setBookFilter"), /commitUrl\(\{ book:/, "本を変えても ?book= を書いていない");
+  assert.match(fnBody("applySearch"), /commitUrl\(\{ q: raw \}/, "検索しても ?q= を書いていない");
+  const setup = fnBody("setupStaticUI");
+  const cat = setup.slice(setup.indexOf('categorySelect?.addEventListener("change"'));
+  assert.match(cat.slice(0, cat.indexOf("\n  });")), /commitUrl\(\{ cat: e\.target\.value \}/, "カテゴリーを変えても ?cat= を書いていない");
+  const prog = setup.slice(setup.indexOf('progressSelect?.addEventListener("change"'));
+  assert.doesNotMatch(prog.slice(0, prog.indexOf("\n  });")), /commitUrl\(/, "進捗の条件を URL に書いている（記録はこの端末だけのもの）");
+  assert.equal((setup.match(/commitUrl\(\{ tab: tabName\(targetId\) \}/g) || []).length, 2, "タブを押したとき・キーで切り替えたときに ?tab= を書いていない");
+  assert.match(fnBody("switchTab"), /currentTab = tabName\(targetId\);/);
+  // URL の書き方は js/url.js にまとめ、main.js は buildUrl を通す
+  assert.match(fnBody("commitUrl"), /HU\.buildUrl\(window\.location\.href, state\)/);
+  assert.match(fnBody("readUrlState"), /HU\.readState\(window\.location\.search,/);
+  // canonical はトップのまま（main.js は書き換えない。index.html に書くなら、トップを指す）
+  assert.doesNotMatch(blankComments(mainJs), /canonical/);
+  for (const m of html.matchAll(/<link[^>]*rel="canonical"[^>]*>/g)) {
+    assert.match(m[0], /href="https:\/\/hackinglab\.online\/"/, `canonical がトップを指していない: ${m[0]}`);
+  }
+});
+
+test("H27: 本・カテゴリー・タブを選んで切り替えたら履歴を積み、戻る・進むで URL から一覧を戻す。検索の入力・キーでのタブの切り替え・章へ移動・開いたときは積まない", () => {
+  const commit = fnBody("commitUrl");
+  // 積むのは how が "push" のときだけ。積む前に、今の履歴へ見ていた位置を書く
+  assert.match(commit, /let push = how === "push";/);
+  assert.match(commit, /if \(push\) \{\s*saveViewInHistory\(\);\s*window\.history\.pushState\(/);
+  assert.match(commit, /window\.history\.replaceState\(window\.history\.state, "", next\)/);
+  // 同じ欄の続けた変更（選択欄を矢印キーで動かしたとき）は、1つの履歴にまとめる。まとめた変更で積む前の URL に戻ったら、
+  // 積んだ履歴を外す（残すと、戻るを1回押しても URL も一覧も変わらない）
+  assert.match(
+    commit,
+    /lastPush\.source === source && now - lastPush\.time < MERGE_PUSH_MS\) \{\s*if \(next === lastPush\.from\) \{\s*dropPushedEntry\(\);\s*return;\s*\}\s*push = false;\s*\}/
+  );
+  assert.match(commit, /const from = window\.location\.href;[\s\S]*if \(push\) lastPush = \{ source: source \|\| "", time: now, from \};/, "積む前の URL を覚えていない");
+  assert.equal((mainJs.match(/pushState\(/g) || []).length, 1, "pushState は commitUrl の1か所だけ");
+  // 外すのは history.back()。届くまでは URL を書かずに覚え（まだ外す履歴にいる）、その popstate では描き直さない。
+  // 届いたら（届かなければ1秒で）、画面の条件を書く
+  const drop = fnBody("dropPushedEntry");
+  assert.match(drop, /droppingPush = \{[^}]*timer: setTimeout\(finishDropPush, MERGE_PUSH_MS\) \};\s*try \{\s*window\.history\.back\(\);/);
+  assert.match(commit, /if \(droppingPush\) \{[\s\S]*?return;\s*\}\s*const state =/, "外している途中に URL を書いている（外す履歴を書き換える）");
+  assert.match(fnBody("finishDropPush"), /droppingPush = null;\s*clearTimeout\(d\.timer\);\s*syncLangParam\(\);\s*commitUrl\(\{\}, d\.how === "push" \? "push" : undefined, d\.source \|\| undefined\);/);
+  const setup = fnBody("setupStaticUI");
+  assert.match(setup, /setBookFilter\(e\.target\.value, \{ history: "push", source: "book" \}\)/, "プルダウンで本を選んでも履歴を積んでいない");
+  assert.match(setup, /commitUrl\(\{ cat: e\.target\.value \}, "push", "category"\)/, "カテゴリーを選んでも履歴を積んでいない");
+  const click = setup.slice(setup.indexOf('btn.addEventListener("click"'));
+  assert.match(click.slice(0, click.indexOf("\n    });")), /commitUrl\(\{ tab: tabName\(targetId\) \}, "push"\)/, "タブを押しても履歴を積んでいない");
+  const key = setup.slice(setup.indexOf('btn.addEventListener("keydown"'));
+  assert.doesNotMatch(key.slice(0, key.indexOf("\n    });")), /"push"/, "キーでのタブの切り替えで履歴を積んでいる");
+  assert.doesNotMatch(fnBody("applySearch"), /"push"/, "検索の入力で履歴を積んでいる");
+  assert.match(fnBody("renderBookBanner"), /setBookFilter\("", \{ cleared: true, history: "push" \}\)/, "解除で履歴を積んでいない");
+  // 章へ移動は積まずに書き換える（履歴に書いた位置などの state は残す）
+  assert.match(fnBody("renderBookBanner"), /window\.history\.replaceState\(window\.history\.state, "", "#book-group-" \+ g\.key\)/);
+  // 開いたときは積まない（何も操作しなければ、戻る1回でハブに来る前のページへ帰る）
+  assert.doesNotMatch(loadDataBody(), /"push"/);
+  // 戻る・進むでは URL から条件を読み直して描き直す。一覧の条件は URL に書かない（?lang= だけは今の言語に合わせる。H30）
+  assert.match(fnBody("setupHistory"), /addEventListener\("popstate", \(e\) => \(droppingPush \? finishDropPush\(\) : applyHistoryState\(e\.state\)\)\)/);
+  const apply = fnBody("applyHistoryState");
+  assert.match(apply, /const next = readUrlState\(\);/);
+  assert.match(apply, /setBookFilter\(next\.book, \{ history: false, cleared: !next\.book \}\)/);
+  assert.match(apply, /restoreView\(view, filtersTop\)/);
+  assert.doesNotMatch(apply, /commitUrl\(/, "戻る・進むで一覧の条件を URL に書いている（戻る・進むの行き先がずれる）");
+  // データが届く前に戻る・進むを押したときも、タブと検索欄は URL に合わせる（本・カテゴリーはデータが届いてから URL で読む）
+  assert.match(apply, /if \(searchInput && searchInput\.value\.trim\(\) !== st\.q\) searchInput\.value = st\.q;/, "読み込み中に戻る・進むを押したとき、検索欄を URL に合わせていない");
+  // ダッシュボードの本の行は、ふつうの左クリックだけ止めて一覧へ移り、履歴を積む
+  const row = fnBody("renderBookProgress");
+  assert.match(row, /e\.button !== 0 \|\| e\.ctrlKey \|\| e\.metaKey \|\| e\.shiftKey \|\| e\.altKey\) return;\s*e\.preventDefault\(\);/);
+  assert.match(row, /commitUrl\(\{ book: s\.book\.slug, tab: "tools" \}, "push"\)/);
+});
+
+test("H28: 「はじめ方」の入口は、ふつうの左クリックだけ読み直しを止めて書籍の選択と同じ処理で絞り、履歴を積む（「すべて」はほかの条件も外す）。Ctrl などを押したクリックはリンクのまま", () => {
+  const setup = fnBody("setupStaticUI");
+  const i = setup.indexOf('document.querySelectorAll(".start-here-entries a")');
+  assert.ok(i >= 0, "はじめ方の入口の処理がない（押すとページを読み直し、開いた「はじめ方」が閉じる）");
+  const h = setup.slice(i, setup.indexOf("\n  });", i));
+  // Ctrl・⌘・Shift・Alt・左以外のボタンは止めない（新しいタブで開く）。本のデータがないときと、books.json にない本も止めない
+  const iGuard = h.search(/if \(e\.defaultPrevented \|\| e\.button !== 0 \|\| e\.ctrlKey \|\| e\.metaKey \|\| e\.shiftKey \|\| e\.altKey\) return;/);
+  const iPrevent = h.indexOf("e.preventDefault()");
+  assert.ok(iGuard >= 0 && iPrevent > iGuard, "Ctrl などを押したクリック（新しいタブで開く操作など）まで止めている");
+  assert.match(h, /if \(!urlStateReady \|\| !HB \|\| !books\.length\) return;/);
+  assert.match(h, /if \(raw && !slug\) return;/);
+  assert.match(h, /keepInPlace\(a, \(\) => openStartEntry\(slug\)\)/);
+  const open = fnBody("openStartEntry");
+  assert.match(open, /setBookFilter\(slug, \{ history: "push" \}\)/);
+  assert.match(open, /commitUrl\(\{ book: "", cat: "", q: "" \}, "push"\);\s*clearOtherFilters\(\);/);
+  const clear = fnBody("clearOtherFilters");
+  for (const re of [/filters\.categoryId = "";/, /filters\.progress = "all";/, /setSearchQuery\(""\);/]) assert.match(clear, re);
+  // href は残す（新しいタブ・JavaScript が動かないときの入口）
+  const nav = html.match(/<nav[^>]*class="start-here-entries"[\s\S]*?<\/nav>/);
+  assert.ok(nav, "はじめ方の入口がない");
+  assert.deepEqual([...nav[0].matchAll(/href="([^"]+)"/g)].map((m) => m[1]), ["?book=security-tools-100", "?book=security-tools-200", "./"]);
+});
+
+test("H29: カードの「GitHub」「デモ」のリンクは、英語表示のときだけ英語の README と ?lang=en にする（js/url.js の関数で作り、日本語表示は変えない）", () => {
+  const card = fnBody("createToolCard");
+  assert.match(card, /demoBtn\.href = HU \? HU\.demoLink\(tool\.demo_url, currentLang\) : tool\.demo_url;/);
+  assert.match(card, /repoBtn\.href = \(HU \? HU\.repoLink\(tool\.repo_url, currentLang\) : tool\.repo_url\) \|\| "#";/);
+  // 言語を切り替えたら一覧を作り直すので、リンクも新しい言語になる（作り直しの省略の鍵に言語が入っている。RB6）
+  assert.match(fnBody("renderToolList"), /const listKey = \[\s*currentLang,/);
+});
+
+test("H30: 選んだ言語を覚える。JA・EN で選んだ言語を保存し（js/storage.js のラッパーを通す）、URL の ?lang= を合わせ、戻る・進むでも変えない", () => {
+  // 最初の言語は、描く前に js/lang.js が書いた <html lang> から取る
+  assert.match(mainJs, /let currentLang = document\.documentElement\.lang === "en" \? "en" : "ja";/);
+  const set = mainJs.match(/const setLanguage = \(lang\) => \{[\s\S]*?\n {2}\};/);
+  assert.ok(set, "setLanguage がない");
+  const iSave = set[0].indexOf("progressStore.setItem(LANG_KEY, lang)");
+  assert.ok(iSave > set[0].indexOf("currentLang = lang;"), "選んだ言語を保存していない（再読み込みや「はじめ方」の入口で日本語に戻る）");
+  assert.ok(set[0].indexOf("syncLangParam()") > iSave, "言語を切り替えても URL の ?lang= を合わせていない");
+  assert.match(mainJs, /const LANG_KEY = typeof HLOLang !== "undefined" && HLOLang\.KEY \? HLOLang\.KEY : "hlo_lang";/);
+  // ?lang= は今の履歴を書き換えて合わせる（言語のほかの条件は書かない）。開いたときと、戻る・進むのときも合わせる
+  const sync = fnBody("syncLangParam");
+  assert.match(sync, /HU\.buildUrl\(window\.location\.href, \{ lang: currentLang \}\)/);
+  assert.match(sync, /window\.history\.replaceState\(/);
+  assert.doesNotMatch(sync, /pushState/);
+  assert.match(fnBody("setupStaticUI"), /syncLangParam\(\);/);
+  assert.match(fnBody("applyHistoryState"), /lastPush = null;[^\n]*\n[^\n]*\n\s*syncLangParam\(\);/);
+  // 英語のときは「はじめ方」の入口・ダッシュボードの本の行・Xで共有する URL に ?lang=en を付ける
+  assert.match(fnBody("updateLanguageUI"), /HU\.withLang\(new URL\(base, window\.location\.href\)\.toString\(\), "en"\)/);
+  assert.match(fnBody("renderBookProgress"), /HU\.withLang\(new URL\(rowHref, window\.location\.href\)\.toString\(\), "en"\)/);
+  assert.match(fnBody("handleShareOnX"), /const url = HU \? HU\.withLang\(base, currentLang\) : base;/);
+  // 検索欄の案内文は index.html に書かない（英語で開いたとき、main.js が動く前に日本語の文が出ないように）
+  assert.doesNotMatch(openTag("filter-search-input"), /\splaceholder=/);
+  assert.match(fnBody("updateLanguageUI"), /searchInput\.placeholder = isJa/);
+});
+
+test("H31: 戻る・進むでタブが切り替わり、フォーカスしていた部品が隠れたパネルに残るときは、履歴に書いておいた部品か選ばれたタブのボタンへ、選ばれていないタブのボタンに残るときは選ばれたタブのボタンへフォーカスを移す（スクロールはしない）", () => {
+  // 積む前（とスクロールが止まったとき）に、フォーカスしている部品を履歴に書く
+  assert.match(fnBody("saveViewInHistory"), /focus: focusKey\(document\.activeElement\)/, "フォーカスしている部品を履歴に書いていない");
+  // ダッシュボードの本の行は作り直されるので、同じ行を引けるように本の slug を持たせ、書くときはそれを使う
+  assert.match(fnBody("renderBookProgress"), /title\.dataset\.book = s\.book\.slug;/);
+  assert.match(fnBody("focusKey"), /"book:" \+ el\.dataset\.book/);
+  // タブを切り替える前に、フォーカスしている部品とそのパネル・目印を覚え、描き直したあとに settleFocus で移す
+  // （データが届く前の戻る・進むも同じ）
+  const apply = fnBody("applyHistoryState");
+  const iPanel = apply.search(/const focused = document\.activeElement;\s*const focusPanel = panelOf\(focused\);\s*const focusedKey = focusKey\(focused\);/);
+  assert.ok(iPanel >= 0 && iPanel < apply.indexOf("switchTab("), "タブを切り替える前に、フォーカスしている部品のパネルを覚えていない（切り替えたあとでは、隠れた部品から body に移っていることがある）");
+  assert.equal((apply.match(/settleFocus\(view, focused, focusPanel, focusedKey\);/g) || []).length, 2, "戻る・進むで描き直したあとに、フォーカスを移していない");
+  assert.match(apply, /restoreView\(view, filtersTop\);\s*settleFocus\(view, focused, focusPanel, focusedKey\);/, "スクロールの位置を戻す前にフォーカスを移している");
+  // 隠れたパネルに残る → restoreFocus、作り直して外れた → restoreRebuiltFocus（H32）、タブのボタンに残る → focusSelectedTab
+  const settle = fnBody("settleFocus");
+  assert.match(
+    settle,
+    /if \(focusPanel && focusPanel\.hidden\) restoreFocus\(view\);\s*else if \(focused && !focused\.isConnected\) restoreRebuiltFocus\(focused, key\);\s*else focusSelectedTab\(\);/,
+    "戻る・進むのあと、隠れたパネル・作り直して外れた部品・選ばれていないタブのボタンに残ったフォーカスを移していない"
+  );
+  // 移し先は、書いておいた部品が表に出ていればそれ、無ければ選ばれたタブのボタン。restoreView が戻した位置は動かさない
+  const restore = fnBody("restoreFocus");
+  assert.match(restore, /elementForFocusKey\(view && view\.focus\)/);
+  assert.match(restore, /document\.querySelector\('\.tab-button\[aria-selected="true"\]'\)/);
+  assert.match(restore, /\.focus\(\{ preventScroll: true \}\)/, "フォーカスを移すときにスクロールしている");
+  // タブのボタンを押して切り替えてから戻ったときなど、フォーカスがタブのボタンにあれば、選ばれたタブのボタンへ移す
+  // （選ばれていないタブのボタンに残すと、読み上げではタブが替わったことが伝わらない）
+  const tabFocus = fnBody("focusSelectedTab");
+  assert.match(tabFocus, /active\.classList\.contains\("tab-button"\)/);
+  assert.match(tabFocus, /if \(active\.getAttribute\("aria-selected"\) === "true"\) return;/);
+  assert.match(tabFocus, /document\.querySelector\('\.tab-button\[aria-selected="true"\]'\)[\s\S]*\.focus\(\{ preventScroll: true \}\)/, "タブのボタンへ移すときにスクロールしている");
+});
+
+test("H32: 一覧・バナー・ダッシュボードの本の行を作り直して、フォーカスしていた部品が外れたときは、作り直した同じ部品へ（無ければ一覧かバナーの先頭の見出しへ）フォーカスを移す。スクロールはせず、フォーカスがページの中になかったときは何もしない", () => {
+  // 作り直す部品に目印を付ける：カードはツールの slug（章ごとに並べたときは章も）と部品の種類、バナーは部品の種類
+  const card = fnBody("createToolCard");
+  assert.match(card, /card\.dataset\.slug = tool\.slug/);
+  for (const part of ["demo", "repo", "progress"]) {
+    assert.match(card, new RegExp(String.raw`\.dataset\.part = "${part}";`), `カードの ${part} に目印がない`);
+  }
+  assert.match(fnBody("renderToolList"), /card\.dataset\.group = g\.key;/, "同じツールが複数の章に出るとき、同じ章のカードを引けない");
+  const banner = fnBody("renderBookBanner");
+  for (const re of [/link\.dataset\.part = "link";/, /clearBtn\.dataset\.part = "clear";/, /summary\.dataset\.part = "jump";/, /a\.dataset\.part = "jump:" \+ g\.key;/]) {
+    assert.match(banner, re, "バナーの部品に目印がない");
+  }
+  // 目印：カードは "tool:<種類>:<章>:<slug>"、バナーは本の slug を入れた "banner:<本>:<種類>"（本が替わったら同じ部品とみなさない）
+  const key = fnBody("focusKey");
+  assert.match(key, /`tool:\$\{part\}:\$\{card\.dataset\.group \|\| ""\}:\$\{card\.dataset\.slug\}`/);
+  assert.match(key, /`banner:\$\{filters\.book\}:\$\{part\}`/);
+  // 引くときは、同じ章のカードを先に、無ければ一覧で最初に出る同じツールの同じ部品。章へ移動のリンクが畳んだ中なら開閉の見出し
+  const find = fnBody("elementForFocusKey");
+  assert.match(find, /if \(\(card\.dataset\.group \|\| ""\) === group\) return el;\s*if \(!other\) other = el;/);
+  assert.match(find, /return details && !details\.open \? details\.querySelector\("summary"\) : el;/);
+  // 戻すのは、作り直す前の部品が文書から外れ、フォーカスが body に落ちたときだけ（作り直す前からフォーカスがページの部品に
+  // なかったとき、部品が残っているとき、ほかの部品へ移っているときは何もしない）。スクロールはしない
+  const restore = fnBody("restoreRebuiltFocus");
+  assert.match(restore, /if \(!prev \|\| prev === document\.body \|\| prev\.isConnected\) return;/);
+  assert.match(restore, /if \(active && active !== document\.body\) return;/);
+  assert.match(restore, /let target = elementForFocusKey\(key\);\s*if \(!isShown\(target\)\) target = fallbackFocusTarget\(key\);\s*if \(target\) target\.focus\(\{ preventScroll: true \}\);/);
+  assert.match(fnBody("isShown"), /el\.isConnected && el\.getClientRects\(\)\.length > 0/);
+  // 同じ部品が無いとき：バナーの部品ならバナーの書名、一覧の部品なら一覧の先頭の章の見出し（出ていなければもう一方、どちらも
+  // 出ていなければ選ばれたタブのボタン）
+  const fallback = fnBody("fallbackFocusTarget");
+  assert.match(fallback, /document\.getElementById\("book-banner-title"\)/);
+  assert.match(fallback, /document\.querySelector\("#tool-list \.book-group-heading"\)/);
+  assert.match(fallback, /const order = inBanner \? \[title, heading\] : \[heading, title\];\s*return order\.find\(isShown\) \|\| document\.querySelector\('\.tab-button\[aria-selected="true"\]'\);/);
+  // 見出しはフォーカスできる（tabIndex = -1）
+  assert.match(banner, /h2\.id = "book-banner-title";[\s\S]*?h2\.tabIndex = -1;/);
+  assert.match(fnBody("renderToolList"), /h\.className = "book-group-heading";[\s\S]*?h\.tabIndex = -1;/);
+  // 戻る・進む（settleFocus。H31）と別のタブの進捗（refreshProgressViews。H25）の両方から呼ぶ
+  assert.match(fnBody("settleFocus"), /else if \(focused && !focused\.isConnected\) restoreRebuiltFocus\(focused, key\);/);
+  assert.match(fnBody("refreshProgressViews"), /restoreRebuiltFocus\(focused, focusedKey\);/);
 });

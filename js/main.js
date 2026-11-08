@@ -1,7 +1,8 @@
 // js/main.js
 
 // グローバル状態
-let currentLang = "ja"; // "ja" | "en"
+// 表示の言語。js/lang.js が描く前に決めて <html lang> に書いている（?lang= → 保存した言語 → 日本語）
+let currentLang = document.documentElement.lang === "en" ? "en" : "ja"; // "ja" | "en"
 let tools = [];
 let categories = [];
 let books = [];
@@ -23,6 +24,11 @@ const HS = typeof HLOSearch !== "undefined" ? HLOSearch : null;
 let searchTerms = [];
 // ツール -> 検索用の項目。データは読み込んだあとに変わらないので、初めて検索したときに1回だけ作る
 let searchEntries = null;
+
+// URL を読む・作る純関数（js/url.js）。読み込めていなければ null とし、URL に条件を書かない（?book= だけは books.js で読む）
+const HU = typeof HLOUrl !== "undefined" ? HLOUrl : null;
+// いま開いているタブ（"tools" | "dashboard"）。URL の ?tab= と合わせる
+let currentTab = "tools";
 
 // localStorage を安全に使うラッパー（js/storage.js）。読み込めていなければ同等の最小実装で代える。
 const progressStore =
@@ -51,6 +57,9 @@ const progressStore =
         };
       })();
 
+// 選んだ言語を保存するキー（js/lang.js が開いたときに読む）
+const LANG_KEY = typeof HLOLang !== "undefined" && HLOLang.KEY ? HLOLang.KEY : "hlo_lang";
+
 const PROGRESS_LABELS = {
   ja: ["未着手", "学習中", "一周完了", "定着済み"],
   en: ["Not started", "In progress", "First pass", "Mastered"]
@@ -66,6 +75,8 @@ let progressVersion = 0;
 document.addEventListener("DOMContentLoaded", () => {
   setupStaticUI();
   setupHelpModal();
+  setupProgressSync();
+  setupHistory();
   // 固定ヘッダーの高さは、データを読み込む前に書く（読み込み中と読み込みに失敗したときも、
   // Tab・Shift+Tab で移った部品がヘッダーの下に隠れないように）
   applyHeaderHeightVar();
@@ -89,6 +100,10 @@ function setupStaticUI() {
     if (lang === currentLang) return; // 今の言語のボタンは押しても何もしない
     const anchor = captureReadingAnchor(); // 作り直す前に、読んでいたカードと高さを覚える
     currentLang = lang;
+    // 選んだ言語を覚え（再読み込みや、新しいタブで開いたときも同じ言語で始める）、URL の ?lang= も合わせる。
+    // 保存は進捗と同じ安全なラッパー（js/storage.js）を通すので、保存できない環境でも、このページの中では切り替わる
+    progressStore.setItem(LANG_KEY, lang);
+    syncLangParam();
     updateLanguageUI();
     setupFilterOptions(); // ラベルが変わるのでフィルターも再生成
     renderAll();
@@ -97,11 +112,13 @@ function setupStaticUI() {
   langJaBtn?.addEventListener("click", () => setLanguage("ja"));
   langEnBtn?.addEventListener("click", () => setLanguage("en"));
 
-  // タブ切替（クリック、および ←/→/Home/End のキーボード操作）
+  // タブ切替（クリック、および ←/→/Home/End のキーボード操作）。開いたタブは URL の ?tab= に残す。
+  // 押して切り替えたときは履歴を積み（戻るで前のタブへ戻る）、キーで切り替えたときは積まずに書き換える
   const tabButtons = Array.from(document.querySelectorAll(".tab-button"));
   tabButtons.forEach((btn, i) => {
     btn.addEventListener("click", () => {
       const targetId = btn.getAttribute("data-tab-target");
+      commitUrl({ tab: tabName(targetId) }, "push");
       switchTab(targetId);
     });
     btn.addEventListener("keydown", (e) => {
@@ -109,10 +126,14 @@ function setupStaticUI() {
       if (next < 0) return;
       e.preventDefault();
       const nextBtn = tabButtons[next];
-      switchTab(nextBtn.getAttribute("data-tab-target"));
+      const targetId = nextBtn.getAttribute("data-tab-target");
+      commitUrl({ tab: tabName(targetId) });
+      switchTab(targetId);
       nextBtn.focus();
     });
   });
+  // ?tab=dashboard で開いたときは、データを待たずにダッシュボードのタブを開く（中身はデータが届いてから描く）
+  if (HU && HU.readState(window.location.search, {}).tab === "dashboard") switchTab("tab-dashboard");
 
   // フィルター
   const bookSelect = document.getElementById("filter-book");
@@ -130,17 +151,21 @@ function setupStaticUI() {
     scrollByInstant(el.getBoundingClientRect().top - before);
   };
 
+  // 本とカテゴリーを選んだときは履歴を積む（戻るで1つ前の一覧へ戻る）。選択欄を矢印キーで動かすと1段ごとに変わるので、
+  // 同じ欄を続けて変えたときは1つにまとめる（commitUrl）
   bookSelect?.addEventListener("change", (e) => {
-    keepInPlace(bookSelect, () => setBookFilter(e.target.value));
+    keepInPlace(bookSelect, () => setBookFilter(e.target.value, { history: "push", source: "book" }));
   });
 
   categorySelect?.addEventListener("change", (e) => {
     keepInPlace(categorySelect, () => {
+      commitUrl({ cat: e.target.value }, "push", "category");
       filters.categoryId = e.target.value;
       renderToolList();
     });
   });
 
+  // 進捗の条件はこの端末の記録で決まるので、URL に残さない
   progressSelect?.addEventListener("change", (e) => {
     keepInPlace(progressSelect, () => {
       filters.progress = e.target.value;
@@ -161,6 +186,39 @@ function setupStaticUI() {
     keepInPlace(searchInput, () => applySearch(searchInput.value));
   });
 
+  // URL の ?q= は、開いたときに検索欄へ入れる（データを待たずに、読み込み中から欄に語を出す）。データが届いたときは
+  // 欄を書き換えずに欄の値で絞る（読み込み中に打った文字の末尾の空白や、変換中の文字を消さない）。
+  // 欄にすでに同じ語があるとき（戻るボタンなどでブラウザーが戻した文字。末尾の空白も残す）はそのままにする。違う語があるときは
+  // URL の語にし、URL に ?q= がなければ欄を空にする（Firefox は、同じページの別の履歴で打った語を欄に戻すことがある）。
+  // ただし、欄にフォーカスがあって文字が入っているとき（main.js が動く前に打ち始めていたとき）は、打った文字を残す
+  if (searchInput && HU) {
+    const q = HU.readState(window.location.search, {}).q;
+    const typing = document.activeElement === searchInput && searchInput.value !== "";
+    if (searchInput.value.trim() !== q && !typing) searchInput.value = q;
+  }
+
+  // 「はじめ方」の入口（ツール100・ツール200・すべて）：Ctrl などを押さない左クリックのときは、ページを読み直さずに
+  // 書籍の選択と同じ処理で絞り、履歴を積む（読み直すと、開いた「はじめ方」と入れた条件が初めに戻り、回線がないと
+  // サイトから出てしまうため）。Ctrl・⌘・Shift・Alt を押したクリック（新しいタブや窓で開く操作など）と、本のデータを
+  // 読めていないときは、これまでどおりのリンクとしてブラウザーに任せる
+  document.querySelectorAll(".start-here-entries a").forEach((a) => {
+    a.addEventListener("click", (e) => {
+      if (e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+      if (!urlStateReady || !HB || !books.length) return;
+      let target;
+      try {
+        target = new URL(a.href);
+      } catch (err) {
+        return;
+      }
+      const raw = target.searchParams.get("book");
+      const slug = raw ? HB.resolveBookParam(target.search, books) : "";
+      if (raw && !slug) return; // books.json にない本は、リンクのまま開く
+      e.preventDefault();
+      keepInPlace(a, () => openStartEntry(slug));
+    });
+  });
+
   // X共有ボタン
   const shareBtn = document.getElementById("share-on-x");
   shareBtn?.addEventListener("click", handleShareOnX);
@@ -177,6 +235,9 @@ function setupStaticUI() {
   }
   document.documentElement.classList.add("js-ready");
   reserveBookBanner();
+
+  // URL の ?lang= を、描く前に決めた言語に合わせる（保存した言語が英語なら lang=en を付ける。履歴は増やさない）
+  syncLangParam();
 
   // 再読み込みや「戻る」で開き直したときは、いつも先頭から始める。一覧はデータが届いてから描くので、
   // ブラウザーがスクロール位置を戻そうとすると、読み込み中に取っている高さ（一覧の1画面分）の所で止まり、
@@ -369,35 +430,25 @@ async function loadData() {
     if (!HB) console.warn("books.js not loaded; book filter disabled");
     applyBooksAvailability();
 
-    // ?book= の解決（存在しない slug は無視。表記違いのときだけ正規形へ直す）
-    if (HB && books.length) {
-      const slug = HB.resolveBookParam(window.location.search, books);
-      if (slug) {
-        filters.book = slug;
-        let rawBook = null;
-        try {
-          rawBook = new URLSearchParams(window.location.search).get("book");
-        } catch (e) {
-          /* 無視 */
-        }
-        if (rawBook !== slug) {
-          try {
-            window.history.replaceState(
-              null,
-              "",
-              HB.buildUrlWithBook(window.location.href, slug)
-            );
-          } catch (e) {
-            /* file:// などでは無視 */
-          }
-        }
-      }
-    }
+    // URL の条件（?book=・?cat=・?q=・?tab=）で一覧を出す。存在しない本・カテゴリーは無視する
+    const urlState = readUrlState();
+    filters.book = urlState.book;
+    filters.categoryId = urlState.cat;
 
-    // 戻るボタンや Firefox の再読み込みで開き直すと、ブラウザーが検索欄の文字だけを戻すことがある（input は起きない）。
-    // 描く前に欄の値を読み、残っていた文字で絞る（欄に文字があるのに一覧が絞られていない、という食い違いを出さない）
+    // 検索欄：描く前に欄の値で絞り、欄の文字と一覧を食い違わせない。URL の ?q= は開いたときに欄へ入れてあり（setupStaticUI）、
+    // ここでは欄を書き換えない（読み込み中に打った文字を消さない）。戻るボタンや Firefox の再読み込みで開き直すと、ブラウザーが
+    // 欄の文字を戻すことがあり、input は起きないので、その文字もここで読む
     const searchInput = document.getElementById("filter-search-input");
     if (searchInput) setSearchQuery(searchInput.value);
+
+    // 読めた条件だけを、URL に正規の形で書き直す（大文字や前後の空白・並びをそろえる。履歴は増やさない）。
+    // 存在しない本・カテゴリー・タブの値は書き換えずに残す（絞り込みを変えると、画面の条件で書き直すので外れる）
+    const tidy = { q: searchInput ? searchInput.value : "" };
+    if (urlState.book) tidy.book = urlState.book;
+    if (urlState.cat) tidy.cat = urlState.cat;
+    if (urlState.tab === "dashboard") tidy.tab = urlState.tab;
+    commitUrl(tidy);
+    urlStateReady = true;
 
     setupFilterOptions();
     setListBusy(false);
@@ -564,18 +615,32 @@ function updateLanguageUI() {
     langEnBtn.setAttribute("aria-pressed", isJa ? "false" : "true");
   }
 
-  // 検索プレースホルダ
+  // 検索プレースホルダ（index.html には書かない。英語で開いたときに、main.js が動く前の日本語の文を出さないため）
   const searchInput = document.getElementById("filter-search-input");
   if (searchInput) {
     searchInput.placeholder = isJa
       ? "タイトル・説明・タグで検索"
       : "Search by title / description / tags";
   }
+
+  // 「はじめ方」の入口は、英語のときは ?lang=en を付けた href にする（新しいタブで開いたときや、リンクを写したときも英語で開く）。
+  // もとの href は data-href に取っておき、日本語に戻したらそれに戻す
+  document.querySelectorAll(".start-here-entries a").forEach((a) => {
+    if (!a.dataset.href) a.dataset.href = a.getAttribute("href");
+    const base = a.dataset.href;
+    a.setAttribute("href", isJa || !HU ? base : HU.withLang(new URL(base, window.location.href).toString(), "en"));
+  });
 }
 
 // ---- タブ切替 ----
 
+// タブのパネルの id と、URL の ?tab= の値（"tools" | "dashboard"）の対応
+function tabName(targetId) {
+  return targetId === "tab-dashboard" ? "dashboard" : "tools";
+}
+
 function switchTab(targetId) {
+  currentTab = tabName(targetId);
   const panels = document.querySelectorAll(".tab-panel");
   panels.forEach((panel) => {
     panel.hidden = panel.id !== targetId;
@@ -665,6 +730,365 @@ function setupFilterOptions() {
   }
 }
 
+// ---- 一覧の条件と URL ----
+
+// データを読み込み、URL の条件を一覧に入れたあとは true。そのあと URL に書くときは、画面の条件をすべて書く
+let urlStateReady = false;
+
+// URL の条件を、読み込んだデータで確かめて読む（js/url.js）。url.js を読めないときは、?book= だけを books.js で読む
+function readUrlState() {
+  const haveBooks = !!(HB && Array.isArray(books) && books.length);
+  if (HU) {
+    return HU.readState(window.location.search, {
+      books: haveBooks ? books.map((b) => b.slug) : [],
+      categories: Array.isArray(categories) ? categories.map((c) => c.id) : []
+    });
+  }
+  return {
+    book: haveBooks ? HB.resolveBookParam(window.location.search, books) : "",
+    cat: "",
+    q: "",
+    tab: "tools"
+  };
+}
+
+// 画面に出している一覧の条件（URL に書く形）
+function currentUrlState() {
+  const searchInput = document.getElementById("filter-search-input");
+  return {
+    book: filters.book,
+    cat: filters.categoryId,
+    q: searchInput ? searchInput.value : "",
+    tab: currentTab
+  };
+}
+
+// 同じ欄を続けて変えたときに、履歴を1つにまとめる長さ（選択欄を矢印キーで動かすと、1段ごとに変わるため）
+const MERGE_PUSH_MS = 1000;
+// 最後に積んだ履歴（source は欄の名前、time は最後に変えた時刻、from は積む前の URL）
+let lastPush = null;
+// 積んだ履歴を外している途中（history.back() の popstate が届くまで）の印。dropPushedEntry を参照
+let droppingPush = null;
+
+// 一覧の条件を URL に書く（js/url.js）。partial に変えた条件を入れて、画面を変える前に呼ぶ。
+// how が "push" のときは履歴を1つ積む（戻るで1つ前の一覧へ戻る）。積む前に、今の履歴へ見ていた位置を書いておく。
+// それ以外は今の履歴を書き換え、履歴は増やさない（検索の入力・キーでのタブの切り替え・開いたときの表記の直し）。
+// source を渡すと、同じ欄の続けた変更（前の変更から1秒以内）は積まずに書き換え、1つの履歴にまとめる。まとめた変更で
+// 積む前の URL に戻ったときは、積んだ履歴を外す（残すと、戻るを1回押しても URL も一覧も変わらない）。
+// データが届く前は、変えた条件だけを書く（本・カテゴリーはまだ URL から読んでいないので、上書きしない）
+function commitUrl(partial, how, source) {
+  if (!HU) return;
+  if (droppingPush) {
+    // 積んだ履歴を外している途中は、まだその履歴にいるので書かない。外し終えてから、画面の条件で書く（finishDropPush）
+    if (how === "push" || !droppingPush.how) droppingPush.how = how === "push" ? "push" : "replace";
+    if (source) droppingPush.source = source;
+    return;
+  }
+  const state = urlStateReady ? Object.assign(currentUrlState(), partial) : partial;
+  let next;
+  try {
+    next = HU.buildUrl(window.location.href, state);
+  } catch (e) {
+    return;
+  }
+  if (next === window.location.href) return;
+  const now = Date.now();
+  let push = how === "push";
+  if (push && source && lastPush && lastPush.source === source && now - lastPush.time < MERGE_PUSH_MS) {
+    if (next === lastPush.from) {
+      dropPushedEntry();
+      return;
+    }
+    push = false;
+  }
+  const from = window.location.href;
+  try {
+    if (push) {
+      saveViewInHistory();
+      window.history.pushState({}, "", next);
+    } else {
+      window.history.replaceState(window.history.state, "", next);
+    }
+  } catch (e) {
+    return; /* file:// などでは無視 */
+  }
+  if (push) lastPush = { source: source || "", time: now, from };
+  else if (source && lastPush && lastPush.source === source) lastPush.time = now;
+}
+
+// まとめた変更で積む前の URL に戻ったときに、積んだ履歴を外す（1つ前の履歴へ戻る。外した履歴は「進む」の先に残る）。
+// 画面はもう1つ前の履歴の条件なので、その popstate では描き直さない。届くまでに変えた条件は、届いてから URL に書く。
+// popstate が届かないときは1秒で待つのをやめ、今の履歴を画面の条件に書き換える（同じ URL の履歴が2つ並ぶ）
+function dropPushedEntry() {
+  lastPush = null;
+  droppingPush = { how: "", source: "", timer: setTimeout(finishDropPush, MERGE_PUSH_MS) };
+  try {
+    window.history.back();
+  } catch (e) {
+    finishDropPush();
+  }
+}
+
+function finishDropPush() {
+  const d = droppingPush;
+  if (!d) return;
+  droppingPush = null;
+  clearTimeout(d.timer);
+  // 外しているあいだに言語を切り替えていたら ?lang= を合わせ、条件を変えていたら書く（どちらもなければ何もしない）
+  syncLangParam();
+  commitUrl({}, d.how === "push" ? "push" : undefined, d.source || undefined);
+}
+
+// URL の ?lang= を今の言語に合わせる（英語なら lang=en、日本語なら付けない。?lang=ja で開いたときは残す。js/url.js）。
+// 言語のほかの条件は書き換えず、履歴は増やさない
+function syncLangParam() {
+  if (!HU) return;
+  let next;
+  try {
+    next = HU.buildUrl(window.location.href, { lang: currentLang });
+  } catch (e) {
+    return;
+  }
+  if (next === window.location.href) return;
+  try {
+    window.history.replaceState(window.history.state, "", next);
+  } catch (e) {
+    /* file:// などでは無視 */
+  }
+}
+
+// 今の履歴に、見ている位置（スクロールの位置と、一覧でヘッダーのすぐ下にある項目）と、フォーカスしている部品を書いておく。
+// 戻る・進むでこの履歴へ戻ってきたときに、同じ所を出す（restoreView・restoreFocus）
+function saveViewInHistory() {
+  try {
+    const view = { y: Math.round(window.scrollY), anchor: captureReadingAnchor(), focus: focusKey(document.activeElement) };
+    window.history.replaceState(Object.assign({}, window.history.state, view), "");
+  } catch (e) {
+    /* 無視 */
+  }
+}
+
+// ---- 戻る・進む ----
+
+function setupHistory() {
+  // commitUrl が積んだ履歴を外したとき（dropPushedEntry）の popstate では、画面がもう着いた履歴の条件なので描き直さない
+  window.addEventListener("popstate", (e) => (droppingPush ? finishDropPush() : applyHistoryState(e.state)));
+  // スクロールが止まったら、今の履歴に位置を書く（進むで戻ってきたときも、離れたときの位置を出すため）
+  let timer = 0;
+  window.addEventListener(
+    "scroll",
+    () => {
+      clearTimeout(timer);
+      timer = setTimeout(saveViewInHistory, 300);
+    },
+    { passive: true }
+  );
+}
+
+// 戻る・進むで来た履歴の URL から、一覧の条件（本・カテゴリー・検索・タブ）を戻して描き直し、その履歴で見ていた位置を出す。
+// 条件が今と同じとき（章の位置の # だけが違うときなど）は何もせず、ブラウザーに任せる
+function applyHistoryState(view) {
+  lastPush = null; // 戻ったあとの変更は、まとめずに積む
+  // 言語は戻る・進むで変えない。前の言語のときに積んだ履歴へ来たら、URL の ?lang= を今の言語に直す
+  syncLangParam();
+  // 描き直す前に、フォーカスしている部品と、そのパネルと目印を覚える（タブを切り替えたり、一覧・バナーを作り直したりしたあとでは、
+  // フォーカスが body に移っていることがある）。描き直したあとに settleFocus で移す
+  const focused = document.activeElement;
+  const focusPanel = panelOf(focused);
+  const focusedKey = focusKey(focused);
+  const searchInput = document.getElementById("filter-search-input");
+  if (!urlStateReady) {
+    // データが届く前はタブと検索欄だけを合わせる（本・カテゴリーは、データが届いたときに URL から読む）
+    if (!HU) return;
+    const st = HU.readState(window.location.search, {});
+    if (st.tab !== currentTab) switchTab(st.tab === "dashboard" ? "tab-dashboard" : "tab-tools");
+    if (searchInput && searchInput.value.trim() !== st.q) searchInput.value = st.q;
+    settleFocus(view, focused, focusPanel, focusedKey);
+    return;
+  }
+  const next = readUrlState();
+  const searchChanged = !!searchInput && searchInput.value.trim() !== next.q;
+  if (next.book === filters.book && next.cat === filters.categoryId && next.tab === currentTab && !searchChanged) return;
+
+  const filtersEl = document.getElementById("tool-filters");
+  const filtersTop = currentTab === "tools" && filtersEl ? filtersEl.getBoundingClientRect().top : null;
+  if (next.tab !== currentTab) switchTab(next.tab === "dashboard" ? "tab-dashboard" : "tab-tools");
+  filters.categoryId = next.cat;
+  const categorySelect = document.getElementById("filter-category");
+  if (categorySelect) categorySelect.value = next.cat;
+  if (searchChanged) {
+    searchInput.value = next.q;
+    setSearchQuery(next.q);
+  }
+  if (next.book !== filters.book) setBookFilter(next.book, { history: false, cleared: !next.book });
+  else renderToolList();
+  restoreView(view, filtersTop);
+  settleFocus(view, focused, focusPanel, focusedKey);
+}
+
+// 戻る・進むで描き直したあとのフォーカス（restoreView が戻したスクロールの位置は動かさない）。
+// タブが切り替わり、フォーカスしていた部品が隠れたパネルに残る → restoreFocus（履歴に書いておいた部品か、選ばれたタブのボタン）。
+// 一覧やバナーを作り直して、フォーカスしていた部品が文書から外れた → restoreRebuiltFocus（作り直した同じ部品か、先頭の見出し）。
+// フォーカスが選ばれていないタブのボタンに残る → focusSelectedTab
+function settleFocus(view, focused, focusPanel, key) {
+  if (focusPanel && focusPanel.hidden) restoreFocus(view);
+  else if (focused && !focused.isConnected) restoreRebuiltFocus(focused, key);
+  else focusSelectedTab();
+}
+
+// 部品が入っているタブのパネル（無ければ null）
+function panelOf(el) {
+  return el && el.closest ? el.closest(".tab-panel") : null;
+}
+
+// フォーカスしている部品の目印。作り直した一覧・バナー・ダッシュボードの中から、同じ部品を引くのに使い（elementForFocusKey）、
+// 履歴にも書く（restoreFocus）。タブのパネルの中の部品だけを書く（パネルの外の部品は作り直さず、タブを切り替えても隠れない）。
+//   "#<id>"                       id のある部品（絞り込みの欄、バナーの書名、章の見出しなど）
+//   "book:<本の slug>"            ダッシュボードの本の行
+//   "tool:<種類>:<章>:<slug>"     カードの部品（種類は data-part の progress・demo・repo。章は、章ごとに並べたときの章の key）
+//   "banner:<本の slug>:<種類>"   本のバナーの部品（種類は data-part の link・clear・jump・jump:<章の key>）
+function focusKey(el) {
+  if (!panelOf(el)) return null;
+  if (el.classList.contains("book-progress-title") && el.dataset.book) return "book:" + el.dataset.book;
+  const part = el.dataset.part;
+  if (part) {
+    const card = el.closest(".tool-card");
+    if (card) return card.dataset.slug ? `tool:${part}:${card.dataset.group || ""}:${card.dataset.slug}` : null;
+    if (el.closest("#book-banner")) return filters.book ? `banner:${filters.book}:${part}` : null;
+  }
+  return el.id ? "#" + el.id : null;
+}
+
+function elementForFocusKey(key) {
+  if (typeof key !== "string") return null;
+  if (key.indexOf("book:") === 0) {
+    const slug = key.slice(5);
+    return Array.from(document.querySelectorAll(".book-progress-title")).find((a) => a.dataset.book === slug) || null;
+  }
+  if (key.indexOf("tool:") === 0) {
+    // 同じツールの同じ種類の部品。同じツールが複数の章に出るときは同じ章のものを、無ければ（本や章ごとの並びが変わったときなど）
+    // 一覧で最初に出るものを返す
+    const [, part, group, ...rest] = key.split(":");
+    const slug = rest.join(":");
+    let other = null;
+    for (const card of document.querySelectorAll("#tool-list .tool-card")) {
+      if (card.dataset.slug !== slug) continue;
+      const el = Array.from(card.querySelectorAll("[data-part]")).find((x) => x.dataset.part === part);
+      if (!el) continue;
+      if ((card.dataset.group || "") === group) return el;
+      if (!other) other = el;
+    }
+    return other;
+  }
+  if (key.indexOf("banner:") === 0) {
+    // 同じ本のバナーの同じ部品（本が替わったときは無い）。章へ移動のリンクが畳んだ中にあるときは（狭い画面では、作り直すと
+    // 畳む）、開閉の見出しを返す
+    const el = Array.from(document.querySelectorAll("#book-banner [data-part]")).find((x) => focusKey(x) === key) || null;
+    const details = el && el.closest("details");
+    return details && !details.open ? details.querySelector("summary") : el;
+  }
+  return key.charAt(0) === "#" ? document.getElementById(key.slice(1)) : null;
+}
+
+// 要素が文書の中にあり、画面に出ているか（隠れたパネル・隠れたバナー・畳んだ中の部品は出ていない）
+function isShown(el) {
+  return !!el && el.isConnected && el.getClientRects().length > 0;
+}
+
+// 一覧・バナー・ダッシュボードの本の行を作り直して、フォーカスしていた部品 prev が文書から外れたときに、作り直した同じ部品へ
+// フォーカスを戻す（そのままでは body に落ち、キーボード・読み上げの利用者が位置を失う）。key は作り直す前に focusKey で取った目印。
+// 同じ部品が無ければ、一覧かバナーの先頭の見出しへ移す（fallbackFocusTarget）。スクロールはしない。
+// フォーカスがページの部品になかったとき（ページの何もない所を押したあとなど）、prev が残っているとき、フォーカスがもうほかの
+// 部品へ移っているときは何もしない
+function restoreRebuiltFocus(prev, key) {
+  if (!prev || prev === document.body || prev.isConnected) return;
+  const active = document.activeElement;
+  if (active && active !== document.body) return;
+  let target = elementForFocusKey(key);
+  if (!isShown(target)) target = fallbackFocusTarget(key);
+  if (target) target.focus({ preventScroll: true });
+}
+
+// 作り直したあとに同じ部品が無いときの移し先。バナーの部品だったらバナーの書名、一覧の部品だったら一覧の先頭の章の見出し
+// （出ていなければもう一方）。どちらも出ていなければ（本を選んでいない一覧や、ダッシュボードなど）選ばれたタブのボタン
+function fallbackFocusTarget(key) {
+  const title = document.getElementById("book-banner-title");
+  const heading = document.querySelector("#tool-list .book-group-heading");
+  const inBanner = typeof key === "string" && (key.indexOf("banner:") === 0 || key === "#book-banner-title");
+  const order = inBanner ? [title, heading] : [heading, title];
+  return order.find(isShown) || document.querySelector('.tab-button[aria-selected="true"]');
+}
+
+// 戻る・進むでタブが切り替わり、フォーカスしていた部品が隠れたパネルに残ったときに呼ぶ（そのままでは body にフォーカスが落ち、
+// キーボード・読み上げの利用者が位置を失う。ダッシュボードの本の行から一覧へ移って戻ったときなど）。履歴に書いておいた部品
+// （積む前にフォーカスしていた本の行やカードのボタンなど）が表に出ていればそこへ、無ければ選ばれたタブのボタンへ移す。
+// restoreView が戻したスクロールの位置は動かさない
+function restoreFocus(view) {
+  let target = elementForFocusKey(view && view.focus);
+  if (!target || !panelOf(target) || panelOf(target).hidden || !target.getClientRects().length) {
+    target = document.querySelector('.tab-button[aria-selected="true"]');
+  }
+  if (target) target.focus({ preventScroll: true });
+}
+
+// 戻る・進むでタブが切り替わったときに、フォーカスがタブのボタンに残っていれば、選ばれたタブのボタンへ移す（タブのボタンを
+// 押して切り替えてから戻ると、押したボタンにフォーカスが残る。そのボタンはもう選ばれておらず、読み上げではタブが替わった
+// ことが伝わらない）。restoreView が戻したスクロールの位置は動かさない
+function focusSelectedTab() {
+  const active = document.activeElement;
+  if (!active || !active.classList || !active.classList.contains("tab-button")) return;
+  if (active.getAttribute("aria-selected") === "true") return;
+  const selected = document.querySelector('.tab-button[aria-selected="true"]');
+  if (selected) selected.focus({ preventScroll: true });
+}
+
+// 履歴に書いておいた位置を出す。一覧の途中なら、読んでいた項目を同じ高さに戻す（作り直したカードの仮の高さに惑わされない）。
+// 位置が書かれていない履歴（積んですぐに離れた履歴を、進むで開いたときなど）は、絞り込み欄を画面の同じ高さに保つ
+function restoreView(view, filtersTop) {
+  const listEl = document.getElementById("tool-list");
+  if (view && view.anchor && currentTab === "tools" && listEl && listEl.children[view.anchor.index]) {
+    restoreReadingAnchor(view.anchor);
+    return;
+  }
+  if (view && typeof view.y === "number") {
+    try {
+      window.scrollTo({ top: view.y, left: 0, behavior: "instant" });
+    } catch (e) {
+      window.scrollTo(0, view.y);
+    }
+    return;
+  }
+  const filtersEl = document.getElementById("tool-filters");
+  if (filtersTop !== null && currentTab === "tools" && filtersEl) {
+    scrollByInstant(filtersEl.getBoundingClientRect().top - filtersTop);
+  }
+}
+
+// 「はじめ方」の入口で本を選ぶ（slug が "" の「すべてのツール」は、カテゴリー・進捗・検索の条件も外す）。履歴を1つ積む
+function openStartEntry(slug) {
+  if (slug) {
+    setBookFilter(slug, { history: "push" });
+    return;
+  }
+  const hadBook = !!filters.book;
+  commitUrl({ book: "", cat: "", q: "" }, "push");
+  clearOtherFilters();
+  setBookFilter("", { history: false, cleared: hadBook });
+}
+
+// カテゴリー・進捗・検索の条件と欄を空にする（描き直しはしない）
+function clearOtherFilters() {
+  filters.categoryId = "";
+  filters.progress = "all";
+  const c = document.getElementById("filter-category");
+  const p = document.getElementById("filter-progress");
+  const s = document.getElementById("filter-search-input");
+  if (c) c.value = "";
+  if (p) p.value = "all";
+  if (s) s.value = "";
+  setSearchQuery("");
+}
+
 // ---- 書籍フィルターの操作 ----
 
 function currentBook() {
@@ -698,20 +1122,15 @@ function countSuffix(n) {
 }
 
 // 本を選ぶ/外す。URL・select・読み上げを更新して再描画する。
+// URL の ?book= も書く（本を切り替え/解除したら、前の本の章へ移動の # は外す。js/url.js）。
+// opts.history："push" は履歴を積む（選択欄・解除・「はじめ方」の入口）。false は URL に書かない（戻る・進む、
+// 呼ぶ側で書いたとき）。既定は今の履歴を書き換える。opts.source は commitUrl の同じ欄の変更をまとめるための名前
 function setBookFilter(slug, opts) {
+  const o = opts || {};
+  if (o.history !== false) commitUrl({ book: slug || "" }, o.history, o.source);
   filters.book = slug || "";
   const sel = document.getElementById("filter-book");
   if (sel) sel.value = filters.book;
-  // URL を更新する。本を切り替え/解除したら、前の本の章ジャンプのハッシュは外す。
-  try {
-    const u = new URL(window.location.href);
-    if (filters.book) u.searchParams.set("book", filters.book);
-    else u.searchParams.delete("book");
-    if (u.hash.indexOf("#book-group-") === 0) u.hash = "";
-    window.history.replaceState(null, "", u.toString());
-  } catch (e) {
-    /* 無視 */
-  }
   refreshBookTarget();
   updateBookStatus(filters.book, opts && opts.cleared);
   renderToolList();
@@ -805,7 +1224,12 @@ function renderToolList() {
       const label = currentLang === "ja" ? g.label_ja : g.label_en;
       h.textContent = `${label}${countSuffix(g.items.length)}`;
       listEl.appendChild(h);
-      g.items.forEach((tool) => listEl.appendChild(createToolCard(tool, book)));
+      g.items.forEach((tool) => {
+        const card = createToolCard(tool, book);
+        // 同じツールが複数の章に出るとき、作り直したあとに同じ章のカードへフォーカスを戻すため（focusKey）
+        card.dataset.group = g.key;
+        listEl.appendChild(card);
+      });
     });
     return;
   }
@@ -890,9 +1314,11 @@ function renderBookBanner(book, shownCount, displayGroups) {
       : hit;
   meta.appendChild(count);
 
+  // リンク・解除・章へ移動の data-part は、バナーを作り直したあとに同じ部品へフォーカスを戻すための目印（focusKey）
   if (isHttpUrl(book.url)) {
     const link = document.createElement("a");
     link.className = "book-banner-link";
+    link.dataset.part = "link";
     link.href = book.url;
     link.rel = "noopener";
     link.textContent = isJa
@@ -904,10 +1330,11 @@ function renderBookBanner(book, shownCount, displayGroups) {
   const clearBtn = document.createElement("button");
   clearBtn.type = "button";
   clearBtn.className = "book-banner-clear";
+  clearBtn.dataset.part = "clear";
   clearBtn.textContent = isJa ? "解除" : "Clear";
   clearBtn.setAttribute("aria-label", isJa ? "書籍の絞り込みを解除" : "Clear book filter");
   clearBtn.addEventListener("click", () => {
-    setBookFilter("", { cleared: true });
+    setBookFilter("", { cleared: true, history: "push" });
     const sel = document.getElementById("filter-book");
     if (sel) sel.focus();
   });
@@ -944,6 +1371,7 @@ function renderBookBanner(book, shownCount, displayGroups) {
       details.open = true;
     }
     const summary = document.createElement("summary");
+    summary.dataset.part = "jump";
     summary.textContent = isJa
       ? `章へ移動${countSuffix(displayGroups.length)}`
       : `Jump to section${countSuffix(displayGroups.length)}`;
@@ -951,6 +1379,7 @@ function renderBookBanner(book, shownCount, displayGroups) {
     displayGroups.forEach((g) => {
       const a = document.createElement("a");
       a.className = "book-jump-link";
+      a.dataset.part = "jump:" + g.key;
       a.href = `#book-group-${g.key}`;
       const label = isJa ? g.label_ja : g.label_en;
       a.textContent = `${label}${countSuffix(g.items.length)}`;
@@ -962,8 +1391,10 @@ function renderBookBanner(book, shownCount, displayGroups) {
           // なめらかなスクロールの途中で focus() が位置を計算し直さないようにする
           target.focus({ preventScroll: true });
         }
+        // 章へ移動は履歴を積まずに書き換える（積んでも、戻ったときに前の章の見出しの位置には戻らず、ずれるため）。
+        // 履歴に書いておいた見ていた位置（state）は消さない
         try {
-          window.history.replaceState(null, "", "#book-group-" + g.key);
+          window.history.replaceState(window.history.state, "", "#book-group-" + g.key);
         } catch (err) {
           /* 無視 */
         }
@@ -1030,7 +1461,9 @@ function setSearchQuery(raw) {
 }
 
 // 検索欄の値で絞り込む。正規化した検索語が前と同じとき（後ろに空白を足しただけなど）は描き直さない。
+// URL の ?q= は欄の文字に合わせる（打つたびに履歴を増やさないよう、今の履歴を書き換える）
 function applySearch(raw) {
+  commitUrl({ q: raw });
   const before = filters.search;
   setSearchQuery(raw);
   if (filters.search === before) return;
@@ -1040,6 +1473,8 @@ function applySearch(raw) {
 function createToolCard(tool, book) {
   const card = document.createElement("article");
   card.className = "tool-card";
+  // ツールの slug と、下のボタン・リンクの data-part は、一覧を作り直したあとに同じ部品へフォーカスを戻すための目印（focusKey）
+  card.dataset.slug = tool.slug || "";
 
   const header = document.createElement("div");
   header.className = "tool-card-header";
@@ -1103,26 +1538,30 @@ function createToolCard(tool, book) {
   // デモ URL があるツールだけ「デモ」ボタンを出す。
   // ハードウェア／バックエンド系など、ブラウザーで動かないツールは demo_url が空で、
   // その場合はボタンを出さず GitHub への導線だけにする（404 のデモボタンを避ける）。
+  // 英語表示のときは、デモに ?lang=en を付け、GitHub は英語の README を開く（js/url.js。日本語表示のリンクは変えない）
   let demoBtn = null;
   if (tool.demo_url) {
     demoBtn = document.createElement("a");
-    demoBtn.href = tool.demo_url;
+    demoBtn.href = HU ? HU.demoLink(tool.demo_url, currentLang) : tool.demo_url;
     demoBtn.target = "_blank";
     demoBtn.rel = "noopener";
     demoBtn.className = "tool-button";
+    demoBtn.dataset.part = "demo";
     demoBtn.textContent = currentLang === "ja" ? "デモ" : "Demo";
   }
 
   const repoBtn = document.createElement("a");
-  repoBtn.href = tool.repo_url || "#";
+  repoBtn.href = (HU ? HU.repoLink(tool.repo_url, currentLang) : tool.repo_url) || "#";
   repoBtn.target = "_blank";
   repoBtn.rel = "noopener";
   repoBtn.className = "tool-button secondary";
+  repoBtn.dataset.part = "repo";
   repoBtn.textContent = "GitHub";
 
   const progressBtn = document.createElement("button");
   progressBtn.type = "button";
   progressBtn.className = "tool-progress-button";
+  progressBtn.dataset.part = "progress";
   progressBtn.dataset.slug = tool.slug;
   updateProgressButton(progressBtn, tool.slug);
 
@@ -1214,6 +1653,48 @@ function syncProgressButtons(slug) {
   document.querySelectorAll(sel).forEach((b) => {
     if (b.dataset.slug === slug) updateProgressButton(b, slug);
   });
+}
+
+// ---- 別のタブの進捗 ----
+
+// 同じブラウザーの別のタブで進捗が変わったら（storage イベント）、このタブの進捗ボタンとダッシュボードを描き直す。
+// 押したときの次の段階は保存した値から決めるので、描き直さないと、古い表示のまま押したときに1段飛んだように見えたり、
+// 別のタブで付けた「定着済み」を消したりする。全体のリセットでは本数分の知らせが続けて届くので、知らせが止まってから
+// 1回だけ描き直す。一覧は作り直さない（このタブで押したときと同じく、フォーカスとスクロールの位置を動かさない）。
+// ダッシュボードの本の行は作り直すので、フォーカスしていた行は、作り直した同じ行へ戻す
+const PROGRESS_SYNC_DELAY_MS = 100;
+let progressSyncTimer = 0;
+
+function setupProgressSync() {
+  window.addEventListener("storage", (e) => {
+    // key が null のときは、別のタブで保存した値がまとめて消された
+    if (e.key !== null && String(e.key).indexOf("progress_") !== 0) return;
+    clearTimeout(progressSyncTimer);
+    progressSyncTimer = setTimeout(refreshProgressViews, PROGRESS_SYNC_DELAY_MS);
+  });
+  // 隠れていたタブでは、知らせのあとの描き直しが遅れることがある。表に出たときは待たずに描き直す
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && progressSyncTimer) refreshProgressViews();
+  });
+  // 戻る・進むでページがそのまま戻ったとき（bfcache）は、離れていたあいだの知らせが届かないので描き直す
+  window.addEventListener("pageshow", (e) => {
+    if (e.persisted) refreshProgressViews();
+  });
+}
+
+function refreshProgressViews() {
+  clearTimeout(progressSyncTimer);
+  progressSyncTimer = 0;
+  if (!tools.length) return; // データが届く前は描くものがない（届いたときに、保存された値で描く）
+  // 一覧にあるボタンは、ここで全部今の値に合わせる（作り直しの省略で残したカードも、表示は新しい値になる）
+  document.querySelectorAll(".tool-progress-button").forEach((b) => {
+    if (b.dataset.slug) updateProgressButton(b, b.dataset.slug);
+  });
+  // 作り直す前にフォーカスしている部品と目印を覚え、作り直したあとに同じ部品へ戻す（スクロールはしない）
+  const focused = document.activeElement;
+  const focusedKey = focusKey(focused);
+  renderDashboard();
+  restoreRebuiltFocus(focused, focusedKey);
 }
 
 // ---- ダッシュボード描画 ----
@@ -1317,16 +1798,22 @@ function renderBookProgress() {
 
     const title = document.createElement("a");
     title.className = "category-progress-title book-progress-title";
-    title.href = `?book=${encodeURIComponent(s.book.slug)}`;
+    title.dataset.book = s.book.slug; // 戻ってきたときに、同じ本の行へフォーカスを戻すため（focusKey）
+    const rowHref = `?book=${encodeURIComponent(s.book.slug)}`;
+    title.href = HU && currentLang === "en" ? HU.withLang(new URL(rowHref, window.location.href).toString(), "en") : rowHref;
     const kind = document.createElement("span");
     kind.className = "book-progress-kind";
     kind.textContent = bookKindLabel(s.book);
     title.appendChild(kind);
     title.appendChild(document.createTextNode(HB.bookLabel(s.book, currentLang)));
     title.addEventListener("click", (e) => {
+      // Ctrl・⌘・Shift・Alt を押したクリック（新しいタブや窓で開く操作など）は、ふつうのリンクとしてブラウザーに任せる
+      if (e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
       e.preventDefault();
+      // 一覧のタブへ移って本で絞る。履歴を1つ積み、戻るでダッシュボードへ戻れるようにする
+      commitUrl({ book: s.book.slug, tab: "tools" }, "push");
       switchTab("tab-tools");
-      setBookFilter(s.book.slug);
+      setBookFilter(s.book.slug, { history: false });
       const h2 = document.getElementById("book-banner-title");
       if (h2) h2.focus();
     });
@@ -1551,7 +2038,9 @@ function handleShareOnX() {
       else if (lvl === 3) n3++;
     });
 
-  const url = window.location.origin + window.location.pathname;
+  // 英語表示のときは ?lang=en を付ける（共有されたリンクを開いた人も英語で始まる）
+  const base = window.location.origin + window.location.pathname;
+  const url = HU ? HU.withLang(base, currentLang) : base;
 
   let text;
   if (currentLang === "ja") {

@@ -47,7 +47,7 @@ test("SF3: ヘルプを閉じて固定ヘッダーの ? へフォーカスを戻
   assert.match(mainJs, /target\?\.focus\(\{\s*preventScroll:\s*true\s*\}\)/);
 });
 
-test("SF4: JA／EN は disabled にせず、aria-pressed で今の言語を示す（押してもフォーカスが外れない）", () => {
+test("SF4: JA／EN は disabled にせず、aria-pressed で今の言語を示す（押してもフォーカスが外れない）。押された見た目は <html lang> で決める", () => {
   for (const id of ["lang-ja", "lang-en"]) {
     const tag = html.match(new RegExp(`<button[^>]*\\sid="${id}"[^>]*>`));
     assert.ok(tag, `#${id} がない`);
@@ -56,9 +56,17 @@ test("SF4: JA／EN は disabled にせず、aria-pressed で今の言語を示�
   assert.doesNotMatch(mainJs, /lang(Ja|En)Btn\.disabled\s*=/);
   assert.match(mainJs, /setAttribute\("aria-pressed"/);
   assert.doesNotMatch(cssNoComments, /\.header-controls button\[disabled\]/);
-  assert.match(cssNoComments, /\.header-controls button\[aria-pressed="true"\]/);
+  // 押された見た目は、描く前に js/lang.js が決める <html lang> で出す（保存した言語が英語のときも、最初の描画から EN が押されて見える）
+  assert.match(
+    cssNoComments,
+    /html:not\(\[lang="en"\]\) #lang-ja,\s*html\[lang="en"\] #lang-en\s*\{[^}]*background-color:\s*#222/,
+    "今の言語のボタンの見た目が <html lang> で決まっていない"
+  );
   // 強制カラーでも今の言語がわかる
-  assert.match(cssNoComments, /@media \(forced-colors: active\)[\s\S]*aria-pressed="true"/);
+  assert.match(
+    cssNoComments,
+    /@media \(forced-colors: active\)\s*\{\s*html:not\(\[lang="en"\]\) #lang-ja,\s*html\[lang="en"\] #lang-en\s*\{[^}]*Highlight/
+  );
 });
 
 test("SF5: 言語を切り替えるとき、読んでいたカードを覚えて同じ高さに戻す（今の言語なら何もしない）", () => {

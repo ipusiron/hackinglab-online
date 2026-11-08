@@ -1,7 +1,7 @@
 // test/robust.test.js
 // 依存なし（node:test / node:assert/strict / node:fs のみ）。
-// RB1〜 は、遅い回線や遅い端末で開いたときに、読み込みの途中で画面がずれたり固まったりしないための直し方が、
-// あとの変更で外れていないかを見る静的な検査（index.html / js/main.js / css/style.css）。
+// RB1〜 は、遅い回線や遅い端末で開いたときに、読み込みの途中で画面がずれたり固まったりしないための直し方と、
+// 結果が少ないときのフッターの位置が、あとの変更で外れていないかを見る静的な検査（index.html / js/main.js / css/style.css）。
 
 const fs = require("node:fs");
 const path = require("node:path");
@@ -208,5 +208,17 @@ test("RB7: JavaScript が動かないときは、押しても動かない部品�
   assert.match(html, /<div class="header-controls">/);
   assert.match(openTag("tab-nav"), /role="tablist"/);
   assert.match(openTag("tool-filters"), /^<div\b/);
-  assert.match(m[1], /#tool-list\[aria-busy="true"\]\s*\{[^}]*min-height:\s*0/);
+  assert.match(m[1], /#tool-list\[aria-busy="true"\][^{]*\{[^}]*min-height:\s*0/);
+});
+
+test("RB8: 絞り込みの結果が少ないときもフッターが画面の途中に上がってこないよう、main は固定ヘッダーを除いた1画面分の高さを取る（JavaScript が動かないときは取らない）", () => {
+  const main = cssNoComments.match(/(?:^|\n)#main-content\s*\{([^}]*)\}/);
+  assert.ok(main, "#main-content の規則がない");
+  assert.match(main[1], /min-height:\s*calc\(100vh\s*-\s*var\(--header-h,\s*\d+px\)\)/, "main が1画面分の高さを取っていない（結果が0〜1件のとき、フッターが画面の途中に出る）");
+  // JavaScript が動かないときは一覧を描かないので、高さを取らない（フッターを「はじめ方」のすぐ下に出す）
+  const nojs = cssNoComments.match(/@media \(scripting: none\)\s*\{([\s\S]*?)\n\}/);
+  assert.ok(nojs, "@media (scripting: none) がない");
+  assert.match(nojs[1], /#main-content\s*\{[^}]*min-height:\s*0/, "JavaScript が動かないときも main が1画面分の高さを取っている");
+  // 高さの計算に使う --header-h は、データを読み込む前に main.js が書く（SF7）
+  assert.match(mainJs, /setProperty\(\s*"--header-h"/);
 });

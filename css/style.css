@@ -110,7 +110,10 @@ html[lang="en"] .label-ja {
   cursor: pointer;
 }
 
-.header-controls button[aria-pressed="true"] {
+/* 今の言語のボタン。押された見た目は <html lang> で決める（描く前に js/lang.js が lang を書くので、保存した言語が英語でも、
+   最初の描画から EN が押された見た目になる）。読み上げソフトには、main.js が aria-pressed で今の言語を伝える */
+html:not([lang="en"]) #lang-ja,
+html[lang="en"] #lang-en {
   background-color: #222;
   color: #fff;
   border-color: #222;
@@ -119,7 +122,8 @@ html[lang="en"] .label-ja {
 
 /* 強制カラー（Windows のハイコントラスト）でも今の言語がわかるようにする */
 @media (forced-colors: active) {
-  .header-controls button[aria-pressed="true"] {
+  html:not([lang="en"]) #lang-ja,
+  html[lang="en"] #lang-en {
     forced-color-adjust: none;
     background-color: Highlight;
     color: HighlightText;
@@ -183,6 +187,9 @@ html[lang="en"] .label-ja {
   max-width: 960px;
   margin: 0 auto;
   padding: 0.75rem 1rem 2.5rem;
+  /* 絞り込みの結果が少ないときも、フッターが画面の途中に上がってこないように、固定ヘッダーを除いた1画面分の高さを取る
+     （フッターは画面の下端のすぐ外に来る）。JavaScript が動かないときは取らない（下の @media (scripting: none)） */
+  min-height: calc(100vh - var(--header-h, 64px));
 }
 
 /* --------------------------------
@@ -1148,7 +1155,7 @@ html.help-open.keep-gutter {
  * ================================ */
 
 /* 押しても動かない部品を出さない：言語の切り替え（JA・EN）とヘルプ（?）、タブ（ツール一覧・学習ダッシュボード）、
-   絞り込み欄。一覧も JS が描くので、読み込み中のための高さも取らない */
+   絞り込み欄。一覧も JS が描くので、読み込み中のための高さも、一覧のための1画面分の高さも取らない */
 @media (scripting: none) {
   .header-controls,
   #tab-nav,
@@ -1156,7 +1163,8 @@ html.help-open.keep-gutter {
     display: none;
   }
 
-  #tool-list[aria-busy="true"] {
+  #tool-list[aria-busy="true"],
+  #main-content {
     min-height: 0;
   }
 }

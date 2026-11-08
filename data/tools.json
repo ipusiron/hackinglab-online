@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-11-01T12:18:12Z",
+  "generated_at": "2026-11-07T23:33:39Z",
   "tools": [
     {
       "id": "day001",
@@ -45,8 +45,8 @@
         "Hash Function"
       ],
       "category_ids": [
-        "clamodernsic-crypto",
-        "hash-function"
+        "hash-function",
+        "modern-crypto"
       ],
       "difficulty": 1,
       "tags": [
@@ -793,8 +793,8 @@
       "title": "MorseTree Visualizer",
       "subtitle_ja": "モールス信号を視覚化する学習ツール",
       "subtitle_en": "Interactive Morse Code Learning Tool with Tree and Chart Visualization",
-      "description_ja": "モールス信号を二分木とチャートで視覚化し、変換・学習・打鍵・出所つきの雑学を通じて学べるWebツール",
-      "description_en": "An interactive Morse code learning tool with tree and chart views, encoding, decoding, quizzes, keying, and sourced trivia",
+      "description_ja": "モールス信号を二分木・チャート・Hツリーで視覚化し、変換・学習・打鍵・出所つきの雑学を通じて学べるWebツール",
+      "description_en": "An interactive Morse code learning tool with binary-tree, chart, and H-tree views, encoding, decoding, quizzes, keying, and sourced trivia",
       "category_ja": [
         "モールス信号",
         "符号化"
@@ -927,8 +927,8 @@
         "Modern Cryptography"
       ],
       "category_ids": [
-        "clamodernsic-crypto",
-        "classic-crypto"
+        "classic-crypto",
+        "modern-crypto"
       ],
       "difficulty": 2,
       "tags": [
@@ -1187,8 +1187,8 @@
         "Encoding"
       ],
       "category_ids": [
-        "clamodernsic-crypto",
-        "encoding"
+        "encoding",
+        "modern-crypto"
       ],
       "difficulty": 1,
       "tags": [
@@ -1657,8 +1657,8 @@
         "Modern Cryptography"
       ],
       "category_ids": [
-        "clamodernsic-crypto",
-        "classic-crypto"
+        "classic-crypto",
+        "modern-crypto"
       ],
       "difficulty": 2,
       "tags": [
@@ -1830,8 +1830,8 @@
         "Hash Function"
       ],
       "category_ids": [
-        "clamodernsic-crypto",
-        "hash-function"
+        "hash-function",
+        "modern-crypto"
       ],
       "difficulty": 3,
       "tags": [
@@ -1867,7 +1867,7 @@
         "Modern Cryptography"
       ],
       "category_ids": [
-        "clamodernsic-crypto"
+        "modern-crypto"
       ],
       "difficulty": 3,
       "tags": [
@@ -3095,7 +3095,7 @@
         "Block Cipher"
       ],
       "category_ids": [
-        "clamodernsic-crypto"
+        "modern-crypto"
       ],
       "difficulty": 4,
       "tags": [
@@ -3133,8 +3133,8 @@
         "Block Cipher"
       ],
       "category_ids": [
-        "clamodernsic-crypto",
         "classic-crypto",
+        "modern-crypto",
         "transposition-cipher"
       ],
       "difficulty": 4,
@@ -3912,8 +3912,8 @@
         "Modern Cryptography"
       ],
       "category_ids": [
-        "clamodernsic-crypto",
-        "hash-function"
+        "hash-function",
+        "modern-crypto"
       ],
       "difficulty": 3,
       "tags": [
@@ -4075,8 +4075,8 @@
         "Information Theory"
       ],
       "category_ids": [
-        "clamodernsic-crypto",
-        "information-theory"
+        "information-theory",
+        "modern-crypto"
       ],
       "difficulty": 3,
       "tags": [
@@ -4108,7 +4108,7 @@
         "Physical Security"
       ],
       "category_ids": [
-        "clamodernsic-crypto",
+        "modern-crypto",
         "physical-security",
         "prepper"
       ],
@@ -4173,8 +4173,8 @@
         "Information Theory"
       ],
       "category_ids": [
-        "clamodernsic-crypto",
-        "information-theory"
+        "information-theory",
+        "modern-crypto"
       ],
       "difficulty": 3,
       "tags": [
