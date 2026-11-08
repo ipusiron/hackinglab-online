@@ -542,7 +542,7 @@ test("H26: 一覧の条件（本・カテゴリー・検索・タブ）は URL �
   }
 });
 
-test("H27: 本・カテゴリー・タブを選んで切り替えたら履歴を積み、戻る・進むで URL から一覧を戻す。検索の入力・キーでのタブの切り替え・章へ移動・開いたときは積まない", () => {
+test("H27: 本・カテゴリー・タブを選んで切り替えたら履歴を積み、戻る・進むで URL から一覧の条件（本・カテゴリー・タブ・検索欄）を戻す。検索の入力・キーでのタブの切り替え・章へ移動・開いたときは積まない", () => {
   const commit = fnBody("commitUrl");
   // 積むのは how が "push" のときだけ。積む前に、今の履歴へ見ていた位置を書く
   assert.match(commit, /let push = how === "push";/);
@@ -582,7 +582,28 @@ test("H27: 本・カテゴリー・タブを選んで切り替えたら履歴を
   assert.match(apply, /setBookFilter\(next\.book, \{ history: false, cleared: !next\.book \}\)/);
   assert.match(apply, /restoreView\(view, filtersTop\)/);
   assert.doesNotMatch(apply, /commitUrl\(/, "戻る・進むで一覧の条件を URL に書いている（戻る・進むの行き先がずれる）");
+  // 本のほかに、カテゴリー・タブ・検索欄も URL に合わせる（どれか1つでも合わせないと、戻ったあと URL は / なのに一覧が絞られたまま、
+  // またはダッシュボードが出たままになる）。4つとも今と同じときだけ何もしない
+  assert.match(apply, /const searchChanged = !!searchInput && searchInput\.value\.trim\(\) !== next\.q;/);
+  assert.match(
+    apply,
+    /if \(next\.book === filters\.book && next\.cat === filters\.categoryId && next\.tab === currentTab && !searchChanged\) return;/,
+    "本・カテゴリー・タブ・検索欄のどれかが違うのに、戻る・進むで描き直さないことがある"
+  );
+  const iTab = apply.search(/\n\s*if \(next\.tab !== currentTab\) switchTab\(next\.tab === "dashboard" \? "tab-dashboard" : "tab-tools"\);/);
+  const iCat = apply.indexOf("filters.categoryId = next.cat;");
+  const iCatSel = apply.search(/const categorySelect = document\.getElementById\("filter-category"\);\s*if \(categorySelect\) categorySelect\.value = next\.cat;/);
+  const iSearch = apply.search(/if \(searchChanged\) \{\s*searchInput\.value = next\.q;\s*setSearchQuery\(next\.q\);\s*\}/);
+  assert.ok(iTab >= 0, "戻る・進むでタブを URL に合わせていない（ダッシュボードが出たまま、または一覧に戻らない）");
+  assert.ok(iCat >= 0, "戻る・進むでカテゴリーの条件を URL に合わせていない（一覧が絞られたまま残る）");
+  assert.ok(iCatSel >= 0, "戻る・進むでカテゴリーの欄を URL に合わせていない（欄と一覧が食い違う）");
+  assert.ok(iSearch >= 0, "戻る・進むで検索欄と検索語を URL に合わせていない（欄の文字と一覧が食い違う）");
+  // 合わせてから一覧を描く（本が同じときも、カテゴリー・検索が変わったら描き直す）
+  const iDraw = apply.search(/if \(next\.book !== filters\.book\) setBookFilter\(next\.book, \{ history: false, cleared: !next\.book \}\);\s*else renderToolList\(\);/);
+  assert.ok(iDraw >= 0, "本が同じときに一覧を描き直していない（カテゴリー・検索だけ変わった履歴へ戻っても一覧が変わらない）");
+  assert.ok(Math.max(iTab, iCat, iCatSel, iSearch) < iDraw, "URL に合わせる前に一覧を描いている");
   // データが届く前に戻る・進むを押したときも、タブと検索欄は URL に合わせる（本・カテゴリーはデータが届いてから URL で読む）
+  assert.match(apply, /if \(st\.tab !== currentTab\) switchTab\(st\.tab === "dashboard" \? "tab-dashboard" : "tab-tools"\);/, "読み込み中に戻る・進むを押したとき、タブを URL に合わせていない");
   assert.match(apply, /if \(searchInput && searchInput\.value\.trim\(\) !== st\.q\) searchInput\.value = st\.q;/, "読み込み中に戻る・進むを押したとき、検索欄を URL に合わせていない");
   // ダッシュボードの本の行は、ふつうの左クリックだけ止めて一覧へ移り、履歴を積む
   const row = fnBody("renderBookProgress");
