@@ -466,12 +466,23 @@ async function loadData() {
     setupFilterOptions();
     setListBusy(false);
     renderAll();
+    enableDashboardActions();
     maybeScrollToHash();
     markCardsPainted();
   } catch (err) {
     console.error("Error loading data:", err);
     releaseReservedSpace();
   }
+}
+
+// ダッシュボードの「Xで進捗をシェア」「すべて未着手にリセット」を押せるようにする（index.html では disabled）。
+// データが届いてダッシュボードを描いたあとに呼ぶ。届く前（?tab=dashboard で開いたときや、読み込み中にタブを押したとき）に
+// シェアを押すと、0本の数で投稿の文を作ってしまうため。読み込みに失敗したときは押せないまま
+function enableDashboardActions() {
+  ["share-on-x", "reset-all-progress"].forEach((id) => {
+    const btn = document.getElementById(id);
+    if (btn) btn.disabled = false;
+  });
 }
 
 // 最初に一覧を描いた時刻に印を付ける（DevTools の Performance で見るため。1回だけ付け、外へは送らない）

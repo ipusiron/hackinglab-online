@@ -953,6 +953,22 @@ html[lang="en"] #lang-en {
   background-color: #fef2f2;
 }
 
+/* データが届くまで（main.js が disabled を外すまで）は押せない見た目にする。ホバーの見た目も出さない
+   （ホバーの規則と同じ詳細度なので、その後ろに書く） */
+#share-on-x:disabled,
+#reset-all-progress:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+#share-on-x:disabled:hover {
+  filter: none;
+}
+
+#reset-all-progress:disabled:hover {
+  background-color: #ffffff;
+}
+
 /* ================================
  * カテゴリ別進捗（進捗バー付きカード）
  * ================================ */

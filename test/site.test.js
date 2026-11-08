@@ -863,6 +863,25 @@ test("H36: サイト名は「・」の後ろでだけ折り（<wbr>）、語の�
   assert.match(narrow, /\.tab-button\s*\{[^}]*padding-left:\s*0\.25rem[^}]*padding-right:\s*0\.25rem/, "360px より狭い画面で、タブの左右の余白を詰めていない");
 });
 
+test("H38: ダッシュボードの「Xで進捗をシェア」「すべて未着手にリセット」は、データが届くまで押せない（index.html で disabled、届いてダッシュボードを描いたあとに外す）", () => {
+  // ?tab=dashboard で開いたときや、読み込み中にタブを押したとき、データが届く前にシェアを押すと 0 本の数で投稿の文を作ってしまう
+  for (const id of ["share-on-x", "reset-all-progress"]) {
+    assert.match(openTag(id), /^<button\b[^>]*\sdisabled[\s>]/, `#${id} がデータの届く前から押せる`);
+  }
+  const enable = fnBody("enableDashboardActions");
+  assert.match(enable, /\["share-on-x", "reset-all-progress"\]/);
+  assert.match(enable, /btn\.disabled = false;/);
+  // 外すのは、データが届いて描いたあと（読み込みに失敗したときは外さない）
+  const load = loadDataBody();
+  const iEnable = load.indexOf("enableDashboardActions()");
+  assert.ok(iEnable > load.indexOf("renderAll()"), "データを描く前に押せるようにしている");
+  assert.ok(iEnable < load.indexOf("catch (err)"), "読み込みに失敗したときにも押せるようにしている");
+  assert.equal((blankComments(mainJs).match(/enableDashboardActions\(\)/g) || []).length, 2, "押せるようにするのは loadData の1か所だけ（と宣言）");
+  // 押せないあいだの見た目
+  assert.match(bodyOf("#share-on-x:disabled"), /cursor:\s*not-allowed/);
+  assert.match(bodyOf("#reset-all-progress:disabled"), /cursor:\s*not-allowed/);
+});
+
 // ---- 「はじめ方」の初めの開閉 ----
 
 test("H37: 「はじめ方」の開閉は、利用者が開閉したらその形を、はじめて来た人が一覧を使い始めたら（入口・本を選ぶ・進捗を付ける）閉じた形を覚える（js/storage.js のラッパーを通す）。toggle イベントは使わない", () => {

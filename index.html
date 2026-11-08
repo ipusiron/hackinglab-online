@@ -242,9 +242,9 @@
             <!-- JSでグラフ表示を追加予定 -->
           </div>
 
-          <!-- X共有ボタン -->
+          <!-- X共有ボタン（下のリセットと同じく、データが届くまでは押せない。main.js が届いたときに disabled を外す） -->
           <div id="share-controls">
-            <button type="button" id="share-on-x">
+            <button type="button" id="share-on-x" disabled>
               <span class="label-ja">Xで進捗をシェア</span>
               <span class="label-en"
                 >Share progress on X</span
@@ -283,7 +283,7 @@
 
         <!-- 全体リセット -->
         <section id="dashboard-reset">
-          <button type="button" id="reset-all-progress">
+          <button type="button" id="reset-all-progress" disabled>
             <span class="label-ja">すべて未着手にリセット</span>
             <span class="label-en"
               >Reset all to "Not started"</span
