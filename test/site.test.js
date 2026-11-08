@@ -766,3 +766,50 @@ test("H34: ヘッダーを固定するのは広くて高い画面だけ。狭い
   const normal = (bodyOf(".site-title").match(/font-size:\s*([\d.]+)rem/) || [])[1];
   assert.ok(small && normal && Number(small) < Number(normal), "480px 未満で題字を小さくしていない");
 });
+
+test("H35: 狭い画面（767px まで）と指で操作する端末では、ヘッダー・タブ・カード・ダッシュボード・フッターの押せる部品を 44px（2.75rem）以上にし、「?」の丸の指定より後ろに書く。ヘルプの「×」はどの幅でも 44px", () => {
+  const blocks = mediaBlocks(/max-width:\s*767\.98px\),\s*\(pointer:\s*coarse/);
+  assert.equal(blocks.length, 1, "@media (max-width: 767.98px), (pointer: coarse) が1つでない（マウスで使う 768px 以上の画面は今の大きさのまま）");
+  const b = blocks[0];
+  const inner = cssRules(b.body);
+  const minHeightOf = (sel) =>
+    inner.filter((r) => r.selector.split(",").map((s) => s.trim()).includes(sel)).some((r) => /min-height:\s*2\.75rem/.test(r.body));
+  for (const sel of [
+    ".header-controls button",
+    ".header-controls .help-button",
+    ".tab-button",
+    "#share-on-x",
+    "#reset-all-progress",
+    ".tool-footer .tool-button",
+    ".tool-progress-button",
+    ".footer-inner a",
+    ".book-banner-link",
+    ".book-progress-title"
+  ]) {
+    assert.ok(minHeightOf(sel), `${sel} の高さが 2.75rem（44px）以上になっていない`);
+  }
+  // ヘッダーの3つとカード・リンクは幅も 44px（「?」は .header-controls .help-button で書き、丸の指定に勝たせる。
+  // 768px 以上の指で操作する端末では、PC幅でのボタンコンパクト化で「デモ」が 40px 幅になる）
+  for (const sel of [".header-controls button", ".header-controls .help-button", ".tool-footer .tool-button", ".tool-progress-button"]) {
+    assert.ok(
+      inner.some((r) => r.selector.split(",").map((s) => s.trim()).includes(sel) && /min-width:\s*2\.75rem/.test(r.body)),
+      `${sel} の幅が 2.75rem になっていない`
+    );
+  }
+  // 「?」の丸の指定（1.75rem）より後ろにある。前にあると、同じ詳細度の丸の指定が勝って 1.75rem（28px）のまま
+  const round = cssNoComments.search(/(?:^|\n)\.header-controls \.help-button\s*\{[^}]*min-width:\s*1\.75rem/);
+  assert.ok(round >= 0, "「?」の丸の指定がない");
+  assert.ok(b.index > round, "44px の指定が「?」の丸の指定より前にある（指で押す画面でも「?」が 28px のまま）");
+  // <a> は inline-flex にして、高さを取っても文字を上下の中央に置く
+  assert.ok(
+    inner.some((r) => r.selector.split(",").map((s) => s.trim()).includes(".tool-footer .tool-button") && /display:\s*inline-flex/.test(r.body)),
+    "カードのボタン（<a>）が inline-flex でない（文字が上に寄る）"
+  );
+  // マウスで使う PC 幅のカードのボタンは今の大きさのまま（PC幅でのボタンコンパクト化を残す）
+  const wide = mediaBlocks(/min-width:\s*768px/).map((x) => x.body).join("\n");
+  assert.match(wide, /\.tool-footer \.tool-button\s*\{[^}]*padding:\s*0\.3rem 0\.6rem/);
+  // ヘルプの「×」は画面の幅にかかわらず 44px（2.75rem）
+  const close = bodyOf(".modal-close");
+  assert.match(close, /(?:^|[;\s])width:\s*2\.75rem/);
+  assert.match(close, /(?:^|[;\s])height:\s*2\.75rem/);
+});

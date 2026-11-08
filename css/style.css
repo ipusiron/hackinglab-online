@@ -1057,15 +1057,16 @@ html.help-open.keep-gutter {
   outline: none;
 }
 
-/* 「×」は本文と一緒に流れないよう、右上に残す（sticky）。押せる大きさは44px。
+/* 「×」は本文と一緒に流れないよう、右上に残す（sticky）。押せる大きさは、画面の幅にかかわらず 44px（2.75rem。
+   文字を大きくしたときは一緒に大きくなる）。
    sticky の基準は本文の余白（1.5rem）の内側なので、top と margin を -1rem にして、角から8pxの位置に置く */
 .modal-close {
   position: sticky;
   top: -1rem;
   float: right;
   z-index: 1;
-  width: 44px;
-  height: 44px;
+  width: 2.75rem;
+  height: 2.75rem;
   margin: -1rem -1rem 0 0.5rem;
   background: #fff;
   border: none;
@@ -1142,6 +1143,49 @@ html.help-open.keep-gutter {
 
   #tool-filters.no-books {
     grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr) minmax(0, 1.4fr);
+  }
+}
+
+/* ================================
+ * 指で押す画面：押せる部品を 44px 以上に
+ * ================================ */
+
+/* 狭い画面（767px まで）と指で操作する端末では、ヘッダー・タブ・カード・ダッシュボード・フッターの押せる部品を
+   44px（2.75rem）以上にする。rem で書くので、文字を大きくしたときも一緒に大きくなる。
+   マウスで使う 768px 以上の画面は今の大きさのまま（上の「PC幅でのボタンコンパクト化」）。
+   ヘッダーの「?」の丸の指定（.header-controls .help-button の 1.75rem）より後ろに書く（前に書くと、指で押す画面でも 1.75rem のまま）。
+   <a> は display を変えないと、高さを取っても文字が上に寄るので inline-flex にする */
+@media (max-width: 767.98px), (pointer: coarse) {
+  .header-controls button,
+  .tab-button,
+  #share-on-x,
+  #reset-all-progress {
+    min-height: 2.75rem;
+  }
+
+  .header-controls button,
+  .header-controls .help-button {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+  }
+
+  /* 幅も 44px 以上にする（768px 以上の指で操作する端末では、PC幅でのボタンコンパクト化で「デモ」が 40px 幅になる） */
+  .tool-footer .tool-button,
+  .tool-progress-button,
+  .footer-inner a,
+  .book-banner-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+  }
+
+  /* ダッシュボードの本の行（種別の札と書名）。書名が折れたときも札は先頭に置く */
+  .book-progress-title {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
   }
 }
 
