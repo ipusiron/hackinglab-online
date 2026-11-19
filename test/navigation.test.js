@@ -368,3 +368,36 @@ test("N25: post-layout correction yields to newer navigation, focus or user scro
     if(action==="focus") assert.equal(p.document.activeElement.id,"filter-search-input");
   }
 });
+
+test("N26: manual filters leave empty or unknown sets and clear their all-tools notice",async()=>{
+  for(const query of ["?tools=", "?tools=999", "?tools=%3Cunknown%3E#book-group-ch01"]){
+    for(const action of ["category","search","progress"]){
+      const p=await runPage({search:query});
+      assert.equal(cards(p).length,visible.length);
+      assert.match(status(p),/すべてのツールを表示/);
+      if(action==="category") selected(p,"filter-category","authentication");
+      if(action==="search"){
+        const input=p.document.getElementById("filter-search-input");
+        input.value="unmatchable";input.dispatch("input");
+      }
+      if(action==="progress") selected(p,"filter-progress","1");
+      assert.equal(status(p),"",`${query}: stale notice after ${action}`);
+      assert.equal(p.document.getElementById("link-status").hidden,true);
+      assert.equal(p.context.location.search.includes("tools="),false);
+      assert.equal(p.context.location.hash,new URL("https://hackinglab.online/"+query).hash,"Chapter hash stays unchanged");
+      assert.equal(cards(p).length,action==="category" ? visible.filter((t)=>t.category_ids.includes("authentication")).length : 0);
+      p.document.getElementById("lang-en").dispatch("click");
+      assert.equal(status(p),"","Redraw must not revive the empty-set notice");
+    }
+  }
+});
+
+test("N27: empty-set cleanup does not discard a valid ordered set",async()=>{
+  const p=await runPage({search:"?tools=8,3,999"});
+  const before=status(p);
+  assert.match(before,/見つからない/);
+  selected(p,"filter-category","authentication");
+  assert.deepEqual(ids(p),["day008","day003"]);
+  assert.equal(status(p),before);
+  assert.equal(p.document.getElementById("set-banner").hidden,false);
+});

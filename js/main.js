@@ -1304,12 +1304,17 @@ function leaveToolSet() {
   copyGeneration++;
 }
 
-// 手動の条件変更は単体リンクから離れる操作。章の位置は既存どおり維持する。
+// 手動の条件変更は単体リンクや空のセットから離れる操作。章の位置と有効なセットは維持する。
 function clearToolHashForFilter() {
   if (!HU || !HU.readToolHash) return;
   const hash = HU.readToolHash(window.location.hash, tools.filter((t) => t.hub !== false).map((t) => t.id));
-  if (hash.kind !== "known" && hash.kind !== "unknown") return;
-  commitUrl({ hash: "" });
+  const clearHash = hash.kind === "known" || hash.kind === "unknown";
+  const emptySet = toolSet.present && !toolSet.ids.length;
+  if (!clearHash && !emptySet) return;
+  const change = {};
+  if (emptySet) { leaveToolSet(); change.tools = null; }
+  if (clearHash) change.hash = "";
+  commitUrl(change);
   linkedToolId = "";
   linkNotices = [];
   renderLinkStatus();
