@@ -103,6 +103,7 @@ html[lang="en"] .label-ja {
 
 .header-controls {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.4rem;
 }
@@ -577,7 +578,7 @@ html[lang="en"] #lang-en {
 
 #tool-list {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1rem;
 }
 
@@ -664,6 +665,7 @@ html[lang="en"] #lang-en {
 
 /* --- カード本体 --- */
 .tool-card {
+  min-width: 0;
   background-color: #ffffff;
   border-radius: 0.875rem;
   border: 1px solid #e5e7eb;
@@ -700,6 +702,8 @@ html[lang="en"] #lang-en {
 }
 
 .tool-title {
+  min-width: 0;
+  overflow-wrap: anywhere;
   font-size: 1.1rem;
   font-weight: 700;
   color: #111827;
@@ -976,12 +980,13 @@ html[lang="en"] #lang-en {
 #category-progress-list,
 #book-progress-list {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.75rem;
 }
 
 /* カテゴリカード */
 .category-progress-item {
+  min-width: 0;
   background-color: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 0.625rem;
@@ -991,6 +996,7 @@ html[lang="en"] #lang-en {
 
 /* カテゴリ名 */
 .category-progress-title {
+  overflow-wrap: anywhere;
   font-weight: 600;
   font-size: 0.9rem;
   color: #111827;
@@ -1158,10 +1164,7 @@ html.help-open.keep-gutter {
     font-size: 1.15rem;
   }
 
-  /* PC幅でのフッターボタン配置 */
-  .tool-footer {
-    flex-wrap: nowrap;
-  }
+  /* ボタンは、文字を拡大して横幅が足りなくなったときも折り返す。 */
 
   /* PC幅でのボタンコンパクト化 */
   .tool-footer .tool-button {
@@ -1177,7 +1180,7 @@ html.help-open.keep-gutter {
   /* カテゴリ別・書籍別進捗：PC幅では2列 */
   #category-progress-list,
   #book-progress-list {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1rem;
   }
 }
