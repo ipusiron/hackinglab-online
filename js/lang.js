@@ -82,6 +82,18 @@
     }
   }
 
+  // A set or a single-tool hash takes priority over a book arrival.
+  function isBookArrival(search, hash) {
+    if (!hasBookParam(search)) return false;
+    try {
+      if (new URLSearchParams(search || "").has("tools")) return false;
+      var fragment;
+      try { fragment = decodeURIComponent(String(hash || "").replace(/^#/, "")); }
+      catch (_) { fragment = String(hash || "").replace(/^#/, ""); }
+      return !/^day/i.test(fragment);
+    } catch (_) { return false; }
+  }
+
   var api = {
     KEY: KEY,
     START_KEY: START_KEY,
@@ -90,6 +102,7 @@
     resolveLang: resolveLang,
     normalizeStart: normalizeStart,
     hasBookParam: hasBookParam,
+    isBookArrival: isBookArrival,
     resolveStart: resolveStart,
     readSaved: readSaved
   };
@@ -108,6 +121,7 @@
     /* 決められないときは index.html の lang="ja" のまま */
   }
   try {
+    if (isBookArrival(root.location.search, root.location.hash)) root.document.documentElement.setAttribute("data-book-arrival", "true");
     var start = resolveStart(root.location.search, readSaved(getStorage, START_KEY));
     if (start) root.document.documentElement.setAttribute("data-start", start);
   } catch (e) {

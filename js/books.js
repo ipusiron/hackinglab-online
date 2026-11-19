@@ -1,6 +1,6 @@
 // js/books.js
 //
-// 書籍・シリーズフィルターの純関数（DOM 非依存）。
+// 書籍・プロジェクトフィルターの純関数（DOM 非依存）。
 // ブラウザーでは IIFE で globalThis.HLOBooks に公開し、Node のテストでは module.exports から読む。
 // ここにはロジックだけを置き、画面の描画は js/main.js が行う。
 
@@ -99,6 +99,12 @@
     return "";
   }
 
+  // Headings may use full chapter titles; card references keep the short labels.
+  function chapterTitle(book, key, lang) {
+    var chapter = book && Array.isArray(book.chapters) && book.chapters.find(function (ch) { return ch.key === key; });
+    return chapter && chapter[lang === "en" ? "title_en" : "title_ja"] || chapterLabel(book, key, lang);
+  }
+
   // ページ配列を "p.123" / "pp.123-125" に整える。複数は言語ごとの区切りでつなぐ。
   function formatPages(pages, lang) {
     if (!Array.isArray(pages) || !pages.length) return "";
@@ -127,7 +133,7 @@
       var text = label;
       var pg = formatPages(ref.pages, lang);
       if (pg) text += " " + pg;
-      if (book.relation === "related") text = (lang === "en" ? "Related: " : "関連: ") + text;
+      if (book.relation === "related") text = (lang === "en" ? "Related: " : "関連：") + text;
       out.push(text);
     }
     return out;
@@ -324,6 +330,10 @@
           if (kSeen[ch.key]) e("D11: " + where + " chapters の key が重複: " + ch.key);
           kSeen[ch.key] = true;
           chapterKeys[ch.key] = true;
+          pairCheck(ch, "title", where + ".chapters[" + ch.key + "]", e);
+          ["title_ja", "title_en"].forEach(function (name) {
+            if (ch[name] != null && (typeof ch[name] !== "string" || !ch[name].trim())) e("D11: " + where + " chapter title is empty or invalid");
+          });
           if (!ch.label_ja || !ch.label_en) e("D11: " + where + " chapters[" + ch.key + "] の label が空");
         }
       }
@@ -400,6 +410,7 @@
     bookTitle: bookTitle,
     bookLabel: bookLabel,
     chapterLabel: chapterLabel,
+    chapterTitle: chapterTitle,
     formatPages: formatPages,
     formatRef: formatRef,
     buildGroups: buildGroups,

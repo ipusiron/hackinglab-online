@@ -168,19 +168,27 @@
           </div>
         </details>
 
-        <!-- 選択中の書籍・シリーズのバナー（JSで中身を挿入） -->
+        <!-- 選択中の書籍・プロジェクトのバナー（JSで中身を挿入） -->
         <section id="book-banner" aria-labelledby="book-banner-title" hidden></section>
         <p id="book-status" class="visually-hidden" role="status"></p>
         <p id="link-status" role="status" hidden></p>
         <section id="set-banner" aria-labelledby="set-banner-title" hidden></section>
 
+        <section id="book-notice" aria-labelledby="book-notice-title" hidden>
+          <h2 id="book-notice-title"></h2>
+          <p id="book-notice-text"></p>
+        </section>
+
         <!-- フィルターバー -->
+        <button id="filter-toggle" type="button" aria-controls="tool-filters" aria-expanded="false" disabled hidden>
+          <span class="label-ja">絞り込みの条件</span><span class="label-en">Filters</span>
+        </button>
         <div id="tool-filters">
-          <!-- 書籍・シリーズフィルター（最初から場所を取る。books.json か一覧のデータを読めなかったときは JS が隠す） -->
+          <!-- 書籍・プロジェクトフィルター（最初から場所を取る。books.json か一覧のデータを読めなかったときは JS が隠す） -->
           <div class="filter-group" id="filter-book-group">
             <label for="filter-book">
-              <span class="label-ja">書籍・シリーズ</span>
-              <span class="label-en">Books &amp; series</span>
+              <span class="label-ja">書籍・プロジェクト</span>
+              <span class="label-en">Books &amp; projects</span>
             </label>
             <select id="filter-book" disabled>
               <!-- JSで "すべて / All" + books.json から選択肢を生成 -->
@@ -234,6 +242,7 @@
         <div id="tool-list" aria-busy="true">
           <!-- JSでツールカードを追加 -->
         </div>
+        <button id="back-to-filters" type="button" hidden><span aria-hidden="true">▲</span><span class="label-ja">絞り込みへ戻る</span><span class="label-en"> Back to filters</span></button>
       </section>
 
       <!-- タブ2：学習ダッシュボード -->
@@ -304,17 +313,17 @@
           </div>
         </section>
 
-        <!-- 書籍・シリーズ別進捗 -->
+        <!-- 書籍・プロジェクト別進捗 -->
         <section id="dashboard-books" hidden>
           <h2>
-            <span class="label-ja">書籍・シリーズ別進捗</span>
+            <span class="label-ja">書籍・プロジェクト別進捗</span>
             <span class="label-en"
-              >Progress by book &amp; series</span
+              >Progress by book &amp; project</span
             >
           </h2>
 
           <div id="book-progress-list">
-            <!-- JSで書籍・シリーズ別パネルを追加 -->
+            <!-- JSで書籍・プロジェクト別パネルを追加 -->
           </div>
         </section>
 
@@ -430,7 +439,7 @@
               ツール一覧：カテゴリー・進捗・検索から学習するツールを探せます。
             </li>
             <li>
-              書籍・シリーズ：本やシリーズに関係するツールだけに絞り込めます。本のサポートページからのリンク（?book=）で自動的に絞り込まれます。Day番号でも検索できます。
+              書籍・プロジェクト：本やプロジェクトに関係するツールだけに絞り込めます。本のサポートページのリンクから来ると、その本のツールが章・節ごとに並び、カードにその章・節が出ます。1本のツールが複数の章・節に関係するときは、それぞれに出ます。
             </li>
             <li>ツール1本を指すリンクは、アドレスの後ろに「#day」とDay番号の3桁を付けて作れます（例：https://hackinglab.online/#day045）。</li>
             <li>学習ダッシュボード：学習進度を可視化し、Xで共有できます。</li>
@@ -486,7 +495,7 @@
               tools.
             </li>
             <li>
-              It also links back and forth with the author's books and series:
+              It also links back and forth with the author's books and projects:
               try a technique from a book here, and jump from a tool back to the
               relevant chapter.
             </li>
@@ -499,9 +508,7 @@
               Tools tab: browse tools by category, progress status, and search.
             </li>
             <li>
-              Books &amp; series: narrow the list to tools related to a book or
-              series. Links from a book's support page (?book=) apply the filter
-              automatically. You can also search by Day number.
+              Books &amp; projects: show only the tools related to a book or project. If you come from a link on a book's support page, that book's tools are listed by chapter or section, and each card shows which one. A tool related to several chapters or sections appears under each of them.
             </li>
             <li>
               Dashboard tab: track your learning progress and share snapshots on
@@ -524,7 +531,7 @@
           <p>Notable titles include:</p>
           <ul>
             <li>
-              <i>The Complete Guide to Cryptography</i> <span lang="ja">(暗号技術のすべて)</span>
+              <i>Ango Gijutsu no Subete (All About Cryptographic Technology)</i> <span lang="ja">(暗号技術のすべて)</span>
             </li>
             <li>
               <i>How to Build a Hacking Lab – Complete Edition</i>

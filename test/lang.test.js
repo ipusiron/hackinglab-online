@@ -159,3 +159,20 @@ test("LG5: セットURLは保存した開閉にかかわらず最初から閉じ
   }
   assert.equal(L.resolveStart("?q=tools", "open"), "open");
 });
+
+test("LG6: meaningful book arrivals receive a prepaint marker independently of stored Start here", () => {
+  for (const query of ["?book=genai-crypto", "?book=%20UNKNOWN%20"]) {
+    const ctx = runInPage(query, () => ({ getItem: () => "open" }));
+    assert.equal(ctx.document.documentElement.getAttribute("data-book-arrival"), "true");
+  }
+  for (const query of ["", "?book=", "?book=%20", "?book=ALL", "?book=&book=genai-crypto", "?book=x&tools="]) {
+    const ctx = runInPage(query, () => ({ getItem: () => "closed" }));
+    assert.equal(ctx.document.documentElement.getAttribute("data-book-arrival"), null);
+  }
+});
+
+test("LG7: set and all day-like hashes suppress book arrival before paint, including encoded/malformed hashes", () => {
+  for (const hash of ["#day003", "#DAY999", "#dayoops", "#%64ay003", "#day%GG"]) assert.equal(L.isBookArrival("?book=genai-crypto", hash), false, hash);
+  for (const hash of ["", "#book-group-ch01", "#elsewhere"]) assert.equal(L.isBookArrival("?book=genai-crypto", hash), true, hash);
+  for (const search of ["?book=x&tools=", "?book=x&tools=unknown", "?book=x&tools=day003"]) assert.equal(L.isBookArrival(search, ""), false);
+});

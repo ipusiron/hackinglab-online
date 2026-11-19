@@ -72,42 +72,58 @@
         {
           "key": "ch01",
           "label_ja": "第1章",
-          "label_en": "Ch. 1"
+          "label_en": "Ch. 1",
+          "title_ja": "第1章　古典暗号の概観",
+          "title_en": "Ch. 1: Overview of classical ciphers"
         },
         {
           "key": "ch02",
           "label_ja": "第2章",
-          "label_en": "Ch. 2"
+          "label_en": "Ch. 2",
+          "title_ja": "第2章　換字式暗号",
+          "title_en": "Ch. 2: Substitution ciphers"
         },
         {
           "key": "ch03",
           "label_ja": "第3章",
-          "label_en": "Ch. 3"
+          "label_en": "Ch. 3",
+          "title_ja": "第3章　転置式暗号",
+          "title_en": "Ch. 3: Transposition ciphers"
         },
         {
           "key": "ch04",
           "label_ja": "第4章",
-          "label_en": "Ch. 4"
+          "label_en": "Ch. 4",
+          "title_ja": "第4章　古典暗号の構造",
+          "title_en": "Ch. 4: The structure of classical ciphers"
         },
         {
           "key": "ch05",
           "label_ja": "第5章",
-          "label_en": "Ch. 5"
+          "label_en": "Ch. 5",
+          "title_ja": "第5章　積暗号",
+          "title_en": "Ch. 5: Product ciphers"
         },
         {
           "key": "ch07",
           "label_ja": "第7章",
-          "label_en": "Ch. 7"
+          "label_en": "Ch. 7",
+          "title_ja": "第7章　暗号解読の道具箱",
+          "title_en": "Ch. 7: The cryptanalysis toolbox"
         },
         {
           "key": "ch08",
           "label_ja": "第8章",
-          "label_en": "Ch. 8"
+          "label_en": "Ch. 8",
+          "title_ja": "第8章　人間による暗号解読",
+          "title_en": "Ch. 8: Human-led cryptanalysis"
         },
         {
           "key": "ch10",
           "label_ja": "第10章",
-          "label_en": "Ch. 10"
+          "label_en": "Ch. 10",
+          "title_ja": "第10章　Agent Teamsによる暗号解読",
+          "title_en": "Ch. 10: Cryptanalysis with Agent Teams"
         },
         {
           "key": "app-b-enc",
@@ -523,17 +539,23 @@
         {
           "key": "ch02",
           "label_ja": "第2章",
-          "label_en": "Ch. 2"
+          "label_en": "Ch. 2",
+          "title_ja": "第2章　速習古典暗号",
+          "title_en": "Ch. 2: A crash course in classical ciphers"
         },
         {
           "key": "ch04",
           "label_ja": "第4章",
-          "label_en": "Ch. 4"
+          "label_en": "Ch. 4",
+          "title_ja": "第4章　暗号解読の道具箱",
+          "title_en": "Ch. 4: The cryptanalysis toolbox"
         },
         {
           "key": "ch05",
           "label_ja": "第5章",
-          "label_en": "Ch. 5"
+          "label_en": "Ch. 5",
+          "title_ja": "第5章　ミジンコによる暗号解読",
+          "title_en": "Ch. 5: Cryptanalysis by Mijinko"
         },
         {
           "key": "app-b-enc",
@@ -839,7 +861,7 @@
       "title_ja": "生成AIで作るセキュリティツール100",
       "title_en": "100 Security Tools with Generative AI",
       "label_ja": "ツール100（同人誌）",
-      "label_en": "Security Tools 100 (book)",
+      "label_en": "Tools 100 (book)",
       "url": "https://akademeia.info/?page_id=44531",
       "url_label_ja": "紹介ページを開く",
       "url_label_en": "Open book page",
@@ -855,27 +877,37 @@
         {
           "key": "ch03",
           "label_ja": "第3章",
-          "label_en": "Ch. 3"
+          "label_en": "Ch. 3",
+          "title_ja": "第3章　100本のセキュリティツールを作る方法",
+          "title_en": "Ch. 3: How to build 100 security tools"
         },
         {
           "key": "ch04",
           "label_ja": "第4章",
-          "label_en": "Ch. 4"
+          "label_en": "Ch. 4",
+          "title_ja": "第4章　自作セキュリティツールの紹介",
+          "title_en": "Ch. 4: Introducing the security tools I built"
         },
         {
           "key": "ch05",
           "label_ja": "第5章",
-          "label_en": "Ch. 5"
+          "label_en": "Ch. 5",
+          "title_ja": "第5章　生成AI開発における現場で役立つ実践ノウハウ集",
+          "title_en": "Ch. 5: Practical know-how for building with generative AI"
         },
         {
           "key": "ch06",
           "label_ja": "第6章",
-          "label_en": "Ch. 6"
+          "label_en": "Ch. 6",
+          "title_ja": "第6章　本プロジェクトの活用と今後の展望",
+          "title_en": "Ch. 6: Using this project and what comes next"
         },
         {
           "key": "app-a",
           "label_ja": "付録A　ツール一覧",
-          "label_en": "Appendix A: Tool list"
+          "label_en": "Appendix A: Tool list",
+          "title_ja": "付録A　セキュリティツール100一覧表",
+          "title_en": "Appendix A: The full tool list"
         }
       ],
       "common_ref": "app-a",
@@ -1036,18 +1068,18 @@
     {
       "slug": "cyber-ninja",
       "kind": "book",
-      "title_ja": "サイバー忍者入門 ハッカーのための現代版・忍術秘伝",
-      "title_en": "Introduction to Cyber Ninja: Modern Ninjutsu Secrets for Hackers",
+      "title_ja": "サイバー忍者入門 忍者・スパイ・軍隊・ハッカーに学ぶフルスタック・ハッキング",
+      "title_en": "Introduction to Cyber Ninja: Full-Stack Hacking Learned from Ninjas, Spies, the Military, and Hackers",
       "label_ja": "サイバー忍者入門",
       "label_en": "Cyber Ninja Primer",
       "url": "https://akademeia.info/?page_id=44656",
       "url_label_ja": "紹介ページを開く",
       "url_label_en": "Open book page",
       "relation": "related",
-      "note_ja": "本書にツールは登場しません。各節の話題を手を動かして試せるツールを著者が選び、節を添えています。",
-      "note_en": "This book does not mention any of these tools. The author picked tools for trying out each section's topic; the section is shown on each card.",
-      "pages_note_ja": "ページ番号は紙版（翔泳社、2025年4月）のものです。",
-      "pages_note_en": "Page numbers refer to the print edition (Shoeisha, April 2025).",
+      "note_ja": "本書にツールは登場しません。各節の話題を手を動かして試せるツールを著者が選びました。カードには、関係する節を示しています。",
+      "note_en": "These tools do not appear in the book. The author chose them so you can try each section's topic hands-on; each card shows the related section.",
+      "pages_note_ja": "ページ番号は紙版（翔泳社、2026年1月）のものです。",
+      "pages_note_en": "Page numbers refer to the print edition (Shoeisha, January 2026).",
       "ids": [
         "day007",
         "day011",
@@ -1089,7 +1121,9 @@
         {
           "key": "tools-peep",
           "label_ja": "道具の章　盗み見を実現する忍具",
-          "label_en": "Tools: Peeping devices"
+          "label_en": "Tools: Peeping devices",
+          "title_ja": "道具の章　盗み見を実現する忍具",
+          "title_en": "Tools: Covert viewing devices"
         },
         {
           "key": "tools-nightvision",
@@ -1129,7 +1163,9 @@
         {
           "key": "arts-codes",
           "label_ja": "術の章　隠匿術と忍びの暗号",
-          "label_en": "Arts: Hiding and ninja ciphers"
+          "label_en": "Arts: Hiding and ninja ciphers",
+          "title_ja": "術の章　隠匿術と忍びの暗号",
+          "title_en": "Arts: Concealment and ninja ciphers"
         },
         {
           "key": "world-team",
@@ -1301,7 +1337,9 @@
         {
           "key": "ch05",
           "label_ja": "第5章　QRコード入力の実験",
-          "label_en": "Ch. 5: QR code input"
+          "label_en": "Ch. 5: QR code input",
+          "title_ja": "第5章　QRコード入力の実験",
+          "title_en": "Ch. 5: QR code input experiments"
         },
         {
           "key": "ch07",
@@ -1353,8 +1391,8 @@
       "url_label_ja": "紹介ページを開く",
       "url_label_en": "Open book page",
       "relation": "related",
-      "note_ja": "本書にツールは登場しません。各章の話題を手を動かして試せるツールを著者が選び、章を添えています。",
-      "note_en": "This book does not mention any of these tools. The author picked tools for trying out each chapter's topic; the chapter is shown on each card.",
+      "note_ja": "本書にツールは登場しません。各章の話題を手を動かして試せるツールを著者が選びました。カードには、関係する章を示しています。",
+      "note_en": "These tools do not appear in the book. The author chose them so you can try each chapter's topic hands-on; each card shows the related chapter.",
       "dashboard": true,
       "ids": [
         "day021",
@@ -1368,7 +1406,9 @@
         {
           "key": "ch02",
           "label_ja": "第2章　エアギャップとは何か",
-          "label_en": "Ch. 2: What is an air gap"
+          "label_en": "Ch. 2: What is an air gap",
+          "title_ja": "第2章　エアギャップとは何か",
+          "title_en": "Ch. 2: What is an air gap?"
         },
         {
           "key": "ch05",
@@ -1383,7 +1423,9 @@
         {
           "key": "ch08",
           "label_ja": "第8章　省コンテキスト監視システム",
-          "label_en": "Ch. 8: Low-context monitoring"
+          "label_en": "Ch. 8: Low-context monitoring",
+          "title_ja": "第8章　セキュアな省コンテキスト監視システムの理論と実践",
+          "title_en": "Ch. 8: Secure context-saving monitoring in theory and practice"
         }
       ],
       "refs": {
@@ -1430,8 +1472,8 @@
       "url_label_ja": "紹介ページを開く",
       "url_label_en": "Open book page",
       "relation": "related",
-      "note_ja": "本書にツールは登場しません。各節の話題を手を動かして試せるツールを著者が選び、節を添えています。",
-      "note_en": "This book does not mention any of these tools. The author picked tools for trying out each section's topic; the section is shown on each card.",
+      "note_ja": "本書にツールは登場しません。各節の話題を手を動かして試せるツールを著者が選びました。カードには、関係する節を示しています。",
+      "note_en": "These tools do not appear in the book. The author chose them so you can try each section's topic hands-on; each card shows the related section.",
       "pages_note_ja": "ページ番号は紙版（翔泳社、2017年8月）のものです。",
       "pages_note_en": "Page numbers refer to the print edition (Shoeisha, August 2017).",
       "ids": [
@@ -1460,30 +1502,34 @@
       "kind": "series",
       "title_ja": "「生成AIで作るセキュリティツール100」プロジェクト",
       "title_en": "\"100 Security Tools with Generative AI\" project",
-      "label_ja": "ツール100（プロジェクト）",
-      "label_en": "Security Tools 100",
+      "label_ja": "ツール100",
+      "label_en": "Tools 100",
       "url": "https://akademeia.info/?page_id=42163",
       "url_label_ja": "プロジェクトページを開く",
       "url_label_en": "Open project page",
       "id_range": [
         "day001",
         "day100"
-      ]
+      ],
+      "note_ja": "Day001〜Day100で完結したプロジェクトです。",
+      "note_en": "A completed project covering Day001 through Day100."
     },
     {
       "slug": "security-tools-200",
       "kind": "series",
       "title_ja": "「生成AIで作るセキュリティツール200」プロジェクト",
       "title_en": "\"200 Security Tools with Generative AI\" project",
-      "label_ja": "ツール200（プロジェクト）",
-      "label_en": "Security Tools 200",
+      "label_ja": "ツール200",
+      "label_en": "Tools 200",
       "url": "https://akademeia.info/?page_id=44607",
       "url_label_ja": "プロジェクトページを開く",
       "url_label_en": "Open project page",
       "id_range": [
         "day101",
         "day200"
-      ]
+      ],
+      "note_ja": "Day101〜Day200を作っている途中のプロジェクトです。新しいツールは、公開するたびにこの一覧に加わります。",
+      "note_en": "An ongoing project building Day101 through Day200. Each new tool is added here when it is published."
     }
   ]
 }
