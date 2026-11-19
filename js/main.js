@@ -610,7 +610,8 @@ function restoreReadingAnchor(anchor) {
   const from = Math.max(0, Math.min(anchor.holdFrom, anchor.index));
   const held = Array.prototype.slice.call(listEl.children, from, anchor.index + 1);
   held.forEach((c) => c.classList.add("cv-hold"));
-  const hb = readingTop(header);
+  // 固定しないヘッダーは復元先で画面外へ流れるため、スクロール前の可視高さを引かない。
+  const hb = getComputedStyle(header).position === "sticky" ? readingTop(header) : 0;
   scrollByInstant(el.getBoundingClientRect().top - hb - anchor.offset);
   // 次の描画が終わってから外す（描いたときに、カードの高さが覚えられる）
   requestAnimationFrame(() =>

@@ -785,10 +785,8 @@ test("H34: ヘッダーを固定するのは広くて高い画面だけ。狭い
   assert.match(hh, /window\.addEventListener\("resize", set\)/, "画面の高さだけが変わって固定するかが替わったときに、--header-h を書き直していない");
   // 言語を切り替えたときに読んでいた位置の基準は、ヘッダーに覆われていない所の上端（固定しないヘッダーが画面の外へ出たら 0）
   assert.match(fnBody("readingTop"), /return Math\.max\(0, header\.getBoundingClientRect\(\)\.bottom\);/);
-  for (const fn of ["captureReadingAnchor", "restoreReadingAnchor"]) {
-    const body = fnBody(fn);
-    assert.match(body, /const hb = readingTop\(header\);/, `${fn} がヘッダーの下端をそのまま使っている（固定しない画面では、画面の外の位置になる）`);
-  }
+  assert.match(fnBody("captureReadingAnchor"), /const hb = readingTop\(header\);/);
+  // 復元時は、移動後に画面外へ流れるヘッダーを差し引かない。実際の位置は scroll_focus.test.js の SF9 で検査する。
   // 480px 未満：JA・EN・? を題字の上の行へ回し（order: -1 と横幅いっぱい）、題字を少し小さくする
   const narrow = mediaBlocks(/max-width:\s*479\.98px/);
   assert.equal(narrow.length, 1, "@media (max-width: 479.98px) が1つでない");

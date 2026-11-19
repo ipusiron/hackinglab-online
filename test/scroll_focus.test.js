@@ -114,3 +114,36 @@ test("SF8: 絞り込み（本・カテゴリー・進捗・検索）を変えた
   // すぐに動かす（html の scroll-behavior: smooth のままだと、欄がいったん下がってから戻って見える）
   assert.match(mainJs, /function scrollByInstant\(dy\)\s*\{[\s\S]*?behavior:\s*"instant"/);
 });
+
+
+test("SF9: 履歴の読書位置は、復元後に残る固定ヘッダーだけを差し引く", () => {
+  const vm = require("node:vm");
+  const source = mainJs.match(/function restoreReadingAnchor\(anchor\)\s*\{[\s\S]*?\n\}/);
+  assert.ok(source, "restoreReadingAnchor がない");
+  for (const position of ["static", "sticky"]) {
+    for (const initialHeaderBottom of [160, -300]) {
+      let scrollY = 0;
+      const documentTop = 1950;
+      const offset = -50;
+      const header = {
+        getBoundingClientRect: () => ({ bottom: position === "sticky"
+          ? Math.max(0, initialHeaderBottom) : initialHeaderBottom - scrollY })
+      };
+      const card = {
+        classList: { add() {}, remove() {} },
+        getBoundingClientRect: () => ({ top: documentTop - scrollY })
+      };
+      const context = {
+        document: { getElementById: (id) => id === "site-header" ? header : { children: [card] } },
+        getComputedStyle: () => ({ position }),
+        readingTop: (el) => Math.max(0, el.getBoundingClientRect().bottom),
+        scrollByInstant: (dy) => { scrollY += dy; },
+        requestAnimationFrame() {},
+      };
+      vm.runInNewContext(source[0] + "\nrestoreReadingAnchor({ index: 0, holdFrom: 0, offset: -50 });", context);
+      const readingEdge = Math.max(0, header.getBoundingClientRect().bottom);
+      assert.equal(card.getBoundingClientRect().top - readingEdge, offset,
+        `position=${position}, initialHeaderBottom=${initialHeaderBottom}`);
+    }
+  }
+});
