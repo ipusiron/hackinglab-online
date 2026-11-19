@@ -73,7 +73,7 @@ for (const language of ["ja", "en"]) {
     assert.equal(document.documentElement.lang, language);
     checkCards(document, language);
     assert.ok(document.getElementById("overall-total").textContent.includes(String(visible.length)), "Dashboard total");
-    assert.deepEqual([...new Set(fetched)].sort(), ["data/books.json", "data/categories.json", "data/tools.json"]);
+    assert.deepEqual([...new Set(fetched)].sort(), ["data/books.json", "data/categories.json", "data/category_groups.json", "data/tools.json"]);
   });
   for (const book of books) {
     test(`R2: ${book.slug} renders its real cards/chapters in ${language}`, async () => {

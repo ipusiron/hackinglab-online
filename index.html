@@ -41,6 +41,7 @@
     <script src="./js/records.js" defer fetchpriority="high"></script>
     <script src="./js/tabs.js" defer fetchpriority="high"></script>
     <script src="./js/url.js" defer fetchpriority="high"></script>
+    <script src="./js/category_groups.js" defer fetchpriority="high"></script>
     <script src="./js/main.js" defer fetchpriority="high"></script>
     <script src="./js/lang.js"></script>
   </head>
@@ -242,6 +243,8 @@
           <p id="list-count"></p>
           <p id="list-count-space" aria-hidden="true"></p>
         </div>
+
+        <p id="category-guidance" hidden></p>
 
         <!-- ツール一覧（カードをJSで挿入）。データが届くまでは aria-busy="true" で、CSS が1画面分の高さを取る -->
         <div id="tool-list" aria-busy="true">

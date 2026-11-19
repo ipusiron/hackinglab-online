@@ -544,7 +544,7 @@ test("H26: 一覧の条件（本・カテゴリー・検索・タブ）は URL �
   assert.match(fnBody("applySearch"), /commitUrl\(\{ q: raw \}/, "検索しても ?q= を書いていない");
   const setup = fnBody("setupStaticUI");
   const cat = setup.slice(setup.indexOf('categorySelect?.addEventListener("change"'));
-  assert.match(cat.slice(0, cat.indexOf("\n  });")), /commitUrl\(\{ cat: e\.target\.value \}/, "カテゴリーを変えても ?cat= を書いていない");
+  assert.match(cat.slice(0, cat.indexOf("\n  });")), /commitUrl\(\{ cat: nextCategory, field: nextField \}/, "カテゴリーを変えても ?cat= を書いていない");
   const prog = setup.slice(setup.indexOf('progressSelect?.addEventListener("change"'));
   assert.doesNotMatch(prog.slice(0, prog.indexOf("\n  });")), /commitUrl\(/, "進捗の条件を URL に書いている（記録はこの端末だけのもの）");
   assert.equal((setup.match(/commitUrl\(\{ tab: tabName\(targetId\) \}/g) || []).length, 2, "タブを押したとき・キーで切り替えたときに ?tab= を書いていない");
@@ -581,7 +581,7 @@ test("H27: 本・カテゴリー・タブを選んで切り替えたら履歴を
   assert.match(fnBody("finishDropPush"), /droppingPush = null;\s*clearTimeout\(d\.timer\);\s*syncLangParam\(\);\s*commitUrl\(\{\}, d\.how === "push" \? "push" : undefined, d\.source \|\| undefined\);/);
   const setup = fnBody("setupStaticUI");
   assert.match(setup, /setBookFilter\(e\.target\.value, \{ history: "push", source: "book" \}\)/, "プルダウンで本を選んでも履歴を積んでいない");
-  assert.match(setup, /commitUrl\(\{ cat: e\.target\.value \}, "push", "category"\)/, "カテゴリーを選んでも履歴を積んでいない");
+  assert.match(setup, /commitUrl\(\{ cat: nextCategory, field: nextField \}, "push", "category"\)/, "カテゴリーを選んでも履歴を積んでいない");
   const click = setup.slice(setup.indexOf('btn.addEventListener("click"'));
   assert.match(click.slice(0, click.indexOf("\n    });")), /commitUrl\(\{ tab: tabName\(targetId\) \}, "push"\)/, "タブを押しても履歴を積んでいない");
   const key = setup.slice(setup.indexOf('btn.addEventListener("keydown"'));
@@ -626,7 +626,7 @@ test("H28: Start panels use native controls and book links preserve modified cli
   assert.match(setup, /keepInPlace\(all, \(\) => openStartEntry\(""\)\)/);
   const open = fnBody("openStartEntry");
   assert.match(open, /setBookFilter\(slug, \{ history: "push" \}\)/);
-  assert.match(open, /commitUrl\(\{ book: "", cat: "", q: "", tools: null, hash: "" \}, "push"\);\s*leaveToolSet\(\);\s*clearOtherFilters\(\);/);
+  assert.match(open, /commitUrl\(\{ book: "", cat: "", field: "", q: "", tools: null, hash: "" \}, "push"\);\s*leaveToolSet\(\);\s*clearOtherFilters\(\);/);
   for (const name of ["first", "books", "all"]) assert.match(html, new RegExp('<button id="start-' + name + '-button"[^>]*type="button"[^>]*disabled'));
   assert.match(fnBody("updateStartEntries"), /HU\.withLang\(url\.toString\(\), currentLang\)/);
 });

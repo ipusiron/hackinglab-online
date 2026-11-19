@@ -37,7 +37,7 @@ function clock() {
 test("LF1: HTML starts loading with disabled filters; all JSON starts in parallel and language changes do not render empty data", async () => {
   const p = await runPage({ deferData: true });
   assert.equal(state(p), "loading");
-  assert.deepEqual([...p.fetched].sort(), ["data/books.json", "data/categories.json", "data/tools.json"]);
+  assert.deepEqual([...p.fetched].sort(), ["data/books.json", "data/categories.json", "data/category_groups.json", "data/tools.json"]);
   for (const id of ["filter-book", "filter-category", "filter-progress", "filter-search-input", "share-on-x", "reset-all-progress"]) assert.equal(el(p, id).disabled, true);
   assert.equal(el(p, "catalog-loading").hidden, false);
   el(p, "lang-en").dispatch("click");
@@ -64,7 +64,7 @@ test("LF2: the required 20s deadline aborts stalled fetch even if abort is ignor
   assert.equal(el(p, "load-fallback").hidden, false);
   const retry = el(p, "retry-data"); retry.focus(); retry.dispatch("click"); retry.dispatch("click");
   await p.flush();
-  assert.equal(p.fetched.length, 6, "Double-click started another attempt");
+  assert.equal(p.fetched.length, 8, "Double-click started another attempt");
   assert.equal(state(p), "ready");
   assert.equal(p.document.activeElement, el(p, "filter-search-input"));
   const readyDate = el(p, "last-updated-value").textContent;

@@ -1772,3 +1772,6 @@ body { padding-bottom: var(--storage-notice-h, 0px); }
 .recovery-section nav { display: grid; gap: .75rem; }
 .recovery-section a { display: flex; align-items: center; min-height: 44px; padding: .5rem .75rem; color: var(--control-text); background: var(--control-bg); border: 1px solid var(--control-border); border-radius: .5rem; }
 .recovery-section a:hover { background: var(--control-hover-bg); }
+
+/* Selected category/field guidance shares the existing text palette. */
+#category-guidance { margin: 0 0 1rem; overflow-wrap: anywhere; line-height: 1.6; }

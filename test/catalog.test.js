@@ -13,6 +13,8 @@ const json = (file) => JSON.parse(fs.readFileSync(path.join(ROOT, file), "utf8")
 const data = json("data/tools.json");
 const tools = data.tools;
 const categories = json("data/categories.json");
+const CG = require("../js/category_groups.js");
+const ignoredNames = CG.validateGroups(json("data/category_groups.json"), categories).ignored;
 const AFTER_REGEN = process.env.AFTER_REGEN === "1";
 const BASE = process.env.HLO_BASE_COMMIT;
 const nonempty = (s) => typeof s === "string" && s.trim() !== "" && s === s.trim();
@@ -24,6 +26,7 @@ function report(t, result) {
 }
 function categoryMaps(definitions) {
   const result = issues();
+  try { CG.validateCategories(definitions); } catch (error) { result.errors.push(error.message); }
   const maps = { ja: new Map(), en: new Map() };
   const ids = new Set();
   assert.ok(Array.isArray(definitions) && definitions.length > 0, "categories.json must be a nonempty array");
@@ -82,7 +85,7 @@ function validateTools(entries, definitions, regeneration) {
         if (!nonempty(name)) { result.errors.push(`${who}: invalid raw category_${lang} ${JSON.stringify(name)}`); continue; }
         const id = maps[lang].get(name);
         if (id) derived.add(id);
-        else result.warnings.push(`${who}: unknown ${lang} category ${JSON.stringify(name)}`);
+        else if (!ignoredNames[lang].has(name)) result.warnings.push(`${who}: unknown ${lang} category ${JSON.stringify(name)}`);
       }
     }
     if (!Array.isArray(tool.category_ids)) { result.errors.push(`${who}: category_ids is not an array`); continue; }

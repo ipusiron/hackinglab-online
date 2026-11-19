@@ -17,12 +17,13 @@ test("UR1: readState は ?book=・?cat=・?q=・?tab= を読み、知ってい�
   assert.deepEqual(U.readState("?book=genai-crypto&cat=forensics&q=caesar&tab=dashboard", KNOWN), {
     book: "genai-crypto",
     cat: "forensics",
+    field: "",
     q: "caesar",
     tab: "dashboard"
   });
   // 何もなければ、条件なしの一覧
-  assert.deepEqual(U.readState("", KNOWN), { book: "", cat: "", q: "", tab: "tools" });
-  assert.deepEqual(U.readState(undefined, undefined), { book: "", cat: "", q: "", tab: "tools" });
+  assert.deepEqual(U.readState("", KNOWN), { book: "", cat: "", field: "", q: "", tab: "tools" });
+  assert.deepEqual(U.readState(undefined, undefined), { book: "", cat: "", field: "", q: "", tab: "tools" });
 });
 
 test("UR1: 大文字・小文字と前後の空白は直し、存在しない値と all は無視する", () => {
@@ -36,7 +37,7 @@ test("UR1: 大文字・小文字と前後の空白は直し、存在しない値
   assert.equal(U.readState("?tab=help", KNOWN).tab, "tools");
   assert.equal(U.readState("?tab=tools", KNOWN).tab, "tools");
   // データを読み込む前（知っている本・カテゴリーがない）は、本とカテゴリーを採らない
-  assert.deepEqual(U.readState("?book=genai-crypto&cat=forensics&tab=dashboard", {}), { book: "", cat: "", q: "", tab: "dashboard" });
+  assert.deepEqual(U.readState("?book=genai-crypto&cat=forensics&tab=dashboard", {}), { book: "", cat: "", field: "", q: "", tab: "dashboard" });
 });
 
 test("UR1: ?q= は検索欄の文字として読む（前後の空白だけを除き、+ と %20 は空白、全角はそのまま）", () => {
@@ -54,7 +55,7 @@ test("UR2: buildUrl は渡した条件だけを書き、book・cat・q・tab の
   assert.equal(U.buildUrl(BASE + "?q=aes", { book: "genai-crypto" }), BASE + "?book=genai-crypto&q=aes");
   assert.equal(U.buildUrl(BASE + "?tab=dashboard&q=aes&cat=forensics", { book: "genai-crypto" }), BASE + "?book=genai-crypto&cat=forensics&q=aes&tab=dashboard");
   assert.equal(U.buildUrl(BASE + "?book=genai-crypto", { book: "" }), BASE);
-  assert.equal(U.buildUrl(BASE + "?book=genai-crypto&cat=forensics&q=aes", { book: "", cat: "", q: "" }), BASE);
+  assert.equal(U.buildUrl(BASE + "?book=genai-crypto&cat=forensics&q=aes", { book: "", cat: "", field: "", q: "" }), BASE);
   assert.equal(U.buildUrl(BASE + "?cat=forensics", { cat: "classic-crypto" }), BASE + "?cat=classic-crypto");
   assert.equal(U.buildUrl(BASE, { tab: "dashboard" }), BASE + "?tab=dashboard");
   assert.equal(U.buildUrl(BASE + "?tab=dashboard", { tab: "tools" }), BASE);
@@ -92,9 +93,9 @@ test("UR2: 本を変えるときだけ、前の本の章の位置（#book-group-
 
 test("UR2: パスと、読み直すと同じ条件になること（書いて読むと、渡した条件に戻る）", () => {
   const states = [
-    { book: "genai-crypto", cat: "", q: "", tab: "tools" },
-    { book: "", cat: "forensics", q: "Day50", tab: "tools" },
-    { book: "security-tools-100", cat: "classic-crypto", q: "暗号 解読", tab: "dashboard" }
+    { book: "genai-crypto", cat: "", field: "", q: "", tab: "tools" },
+    { book: "", cat: "forensics", field: "", q: "Day50", tab: "tools" },
+    { book: "security-tools-100", cat: "classic-crypto", field: "", q: "暗号 解読", tab: "dashboard" }
   ];
   for (const st of states) {
     const url = U.buildUrl("https://hackinglab.online/index.html?x=1", st);
@@ -147,7 +148,7 @@ test("UR4: buildUrl の lang は、英語なら lang=en を最後の条件とし
   assert.equal(U.buildUrl(BASE + "?lang=fr", { lang: "ja" }), BASE);
   // lang を渡さなければ、もとの値をそのまま残す（本などを変えても言語の指定は変わらない）
   assert.equal(U.buildUrl(BASE + "?lang=en", { book: "genai-crypto" }), BASE + "?book=genai-crypto&lang=en");
-  assert.equal(U.buildUrl(BASE + "?lang=ja", { book: "genai-crypto", cat: "", q: "", tab: "tools" }), BASE + "?book=genai-crypto&lang=ja");
+  assert.equal(U.buildUrl(BASE + "?lang=ja", { book: "genai-crypto", cat: "", field: "", q: "", tab: "tools" }), BASE + "?book=genai-crypto&lang=ja");
 });
 
 test("UR4: withLang は英語のときだけ絶対 URL に ?lang=en を付ける（ほかのパラメーターと # は残す）", () => {
@@ -227,13 +228,13 @@ test("UR7: Day対象でも非表示・不正・壊れたエスケープならunk
 
 test("UR8: tools未指定なら全パラメーターの値を保ち、検索・言語・本だけを変えられる", () => {
   const original = BASE + "?ref=first&tools=Day3,001&tools=&tools=999,2&ref=second&lang=ja#day003";
-  const url = new URL(U.buildUrl(original, { book: "genai-crypto", cat: "forensics", q: "暗号", lang: "ja" }));
+  const url = new URL(U.buildUrl(original, { book: "genai-crypto", cat: "forensics", field: "", q: "暗号", lang: "ja" }));
   assert.deepEqual(url.searchParams.getAll("tools"), ["Day3,001", "", "999,2"]);
   assert.deepEqual(url.searchParams.getAll("ref"), ["first", "second"]);
   assert.equal(url.hash, "#day003");
   assert.equal(url.searchParams.get("lang"), "ja");
   assert.deepEqual(U.readTools(url.search, VISIBLE_IDS), U.readTools(new URL(original).search, VISIBLE_IDS));
-  assert.deepEqual(U.readState(url.search, KNOWN), { book: "genai-crypto", cat: "forensics", q: "暗号", tab: "tools" });
+  assert.deepEqual(U.readState(url.search, KNOWN), { book: "genai-crypto", cat: "forensics", field: "", q: "暗号", tab: "tools" });
   assert.equal(new URL(U.buildUrl(original, { lang: "en" })).searchParams.get("lang"), "en");
 });
 
