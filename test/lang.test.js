@@ -1,7 +1,8 @@
 // test/lang.test.js
 // 依存なし（node:test / node:assert/strict / node:fs / node:vm のみ）。
-// js/lang.js（描く前に表示の言語を決める）の検査。LG1・LG2 は純関数、LG3 はブラウザーで読んだときと同じように
-// 作ったページの入れ物の中で動かし、<html lang> を書くこと（保存できない環境でも止まらないこと）を確かめる。
+// js/lang.js（描く前に表示の言語と「はじめ方」の開閉を決める）の検査。LG1・LG2 は純関数、LG3 はブラウザーで読んだときと
+// 同じように作ったページの入れ物の中で動かし、<html lang> を書くこと（保存できない環境でも止まらないこと）を確かめる。
+// LG4 は「はじめ方」の開閉の決め方と、<html data-start> を書くこと。
 
 const fs = require("node:fs");
 const path = require("node:path");
@@ -65,7 +66,15 @@ test("LG2: 保存した言語を読む。localStorage が使えない・例外�
 // ブラウザーで読んだときと同じように、ページの入れ物（location・localStorage・document）の中で lang.js を動かす
 function runInPage(search, storageGetter) {
   // URLSearchParams はブラウザーにはあるが、vm の入れ物には入っていないので渡す
-  const ctx = { location: { search }, document: { documentElement: { lang: "ja" } }, URLSearchParams };
+  const attrs = {};
+  const documentElement = {
+    lang: "ja",
+    setAttribute: (k, v) => {
+      attrs[k] = String(v);
+    },
+    getAttribute: (k) => (k in attrs ? attrs[k] : null)
+  };
+  const ctx = { location: { search }, document: { documentElement }, URLSearchParams };
   Object.defineProperty(ctx, "localStorage", { get: storageGetter, configurable: true });
   vm.createContext(ctx);
   vm.runInContext(SRC, ctx);
@@ -88,4 +97,53 @@ test("LG3: localStorage を取り出すだけで例外を投げる環境（保�
   };
   assert.equal(runInPage("", blocked).document.documentElement.lang, "ja");
   assert.equal(runInPage("?lang=en", blocked).document.documentElement.lang, "en");
+});
+
+test("LG4: 「はじめ方」は ?book= で来たら閉じ、なければ覚えた開閉（open か closed）。どちらもなければ決めない（画面の幅で決める）", () => {
+  assert.equal(L.resolveStart("?book=genai-crypto", null), "closed");
+  assert.equal(L.resolveStart("?book=genai-crypto", "open"), "closed", "覚えた開閉より ?book= を先にする（本のツールを先に見せる）");
+  assert.equal(L.resolveStart("?lang=en&book=%20Security-Tools-100%20", "open"), "closed");
+  assert.equal(L.resolveStart("", "closed"), "closed");
+  assert.equal(L.resolveStart("", "open"), "open");
+  assert.equal(L.resolveStart("?cat=classic-crypto", " OPEN "), "open");
+  assert.equal(L.resolveStart("", null), "", "はじめて来た人は決めない（css と main.js が幅で決める）");
+  assert.equal(L.resolveStart("", "yes"), "");
+  // 本の指定が空と all のときは、指定なしと同じ
+  assert.equal(L.resolveStart("?book=", "open"), "open");
+  assert.equal(L.resolveStart("?book=all", null), "");
+  assert.equal(L.resolveStart("?book=ALL", "closed"), "closed");
+  assert.equal(L.hasBookParam("?book=x"), true);
+  assert.equal(L.hasBookParam("?q=book"), false);
+  assert.equal(L.normalizeStart(null), "");
+  // 開閉を覚えるキーは言語と別。読むときはキーを渡す（渡さなければ言語）
+  assert.equal(L.START_KEY, "hlo_start_here");
+  assert.notEqual(L.START_KEY, L.KEY);
+  const store = { getItem: (k) => ({ hlo_lang: "en", hlo_start_here: "closed" })[k] ?? null };
+  assert.equal(L.readSaved(() => store, L.START_KEY), "closed");
+  assert.equal(L.readSaved(() => store), "en");
+  // 引数は search と覚えた値だけ（画面の幅は見ない。幅は css と main.js が同じ式で見る）
+  assert.equal(L.resolveStart.length, 2);
+  assert.doesNotMatch(SRC, /matchMedia|innerWidth/);
+});
+
+test("LG4: 読んだその場で <html data-start> を書く。決まらないとき・保存できない環境では書かず、言語は決める", () => {
+  const saved = (map) => () => ({ getItem: (k) => (k in map ? map[k] : null) });
+  const attr = (ctx) => ctx.document.documentElement.getAttribute("data-start");
+  assert.equal(attr(runInPage("?book=genai-crypto", saved({}))), "closed");
+  assert.equal(attr(runInPage("", saved({ hlo_start_here: "closed" }))), "closed");
+  assert.equal(attr(runInPage("", saved({ hlo_start_here: "open" }))), "open");
+  assert.equal(attr(runInPage("", saved({}))), null);
+  assert.equal(attr(runInPage("", saved({ hlo_start_here: "maybe" }))), null);
+  const both = runInPage("", saved({ hlo_lang: "en", hlo_start_here: "open" }));
+  assert.equal(both.document.documentElement.lang, "en");
+  assert.equal(attr(both), "open");
+  const blocked = () => {
+    throw new Error("SecurityError");
+  };
+  const b1 = runInPage("", blocked);
+  assert.equal(attr(b1), null);
+  assert.equal(b1.document.documentElement.lang, "ja");
+  const b2 = runInPage("?book=genai-crypto&lang=en", blocked);
+  assert.equal(attr(b2), "closed", "保存できない環境でも ?book= で来たら閉じる");
+  assert.equal(b2.document.documentElement.lang, "en");
 });

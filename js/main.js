@@ -59,6 +59,8 @@ const progressStore =
 
 // 選んだ言語を保存するキー（js/lang.js が開いたときに読む）
 const LANG_KEY = typeof HLOLang !== "undefined" && HLOLang.KEY ? HLOLang.KEY : "hlo_lang";
+// 「はじめ方」の開閉を覚えるキー（"open" か "closed"。js/lang.js が開いたときに読み、描く前に開閉を決める）
+const START_KEY = typeof HLOLang !== "undefined" && HLOLang.START_KEY ? HLOLang.START_KEY : "hlo_start_here";
 
 const PROGRESS_LABELS = {
   ja: ["未着手", "学習中", "一周完了", "定着済み"],
@@ -154,6 +156,7 @@ function setupStaticUI() {
   // 本とカテゴリーを選んだときは履歴を積む（戻るで1つ前の一覧へ戻る）。選択欄を矢印キーで動かすと1段ごとに変わるので、
   // 同じ欄を続けて変えたときは1つにまとめる（commitUrl）
   bookSelect?.addEventListener("change", (e) => {
+    if (e.target.value) markStartSeen();
     keepInPlace(bookSelect, () => setBookFilter(e.target.value, { history: "push", source: "book" }));
   });
 
@@ -200,9 +203,11 @@ function setupStaticUI() {
   // 「はじめ方」の入口（ツール100・ツール200・すべて）：Ctrl などを押さない左クリックのときは、ページを読み直さずに
   // 書籍の選択と同じ処理で絞り、履歴を積む（読み直すと、開いた「はじめ方」と入れた条件が初めに戻り、回線がないと
   // サイトから出てしまうため）。Ctrl・⌘・Shift・Alt を押したクリック（新しいタブや窓で開く操作など）と、本のデータを
-  // 読めていないときは、これまでどおりのリンクとしてブラウザーに任せる
+  // 読めていないときは、これまでどおりのリンクとしてブラウザーに任せる。
+  // どのクリックでも、次からは「はじめ方」を閉じて始める（markStartSeen）
   document.querySelectorAll(".start-here-entries a").forEach((a) => {
     a.addEventListener("click", (e) => {
+      markStartSeen();
       if (e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
       if (!urlStateReady || !HB || !books.length) return;
       let target;
@@ -227,11 +232,19 @@ function setupStaticUI() {
   const resetBtn = document.getElementById("reset-all-progress");
   resetBtn?.addEventListener("click", handleResetAllProgress);
 
-  // はじめ方は既定で開く（HTML）。狭い画面では初期表示を圧迫しないよう畳む。
-  // CSS は js-ready が付くまで狭い画面で中身を隠しているので、ここで畳んでも下の部品は動かない
+  // 「はじめ方」の初めの開閉。HTML では開いている。描く前に js/lang.js が html の data-start に書いた形（?book= で来たときは
+  // closed、覚えた開閉があるときはその形）にし、書いていなければ画面の幅で決める（768px 以上は開き、狭い画面は畳む）。
+  // CSS は js-ready が付くまで同じ決め方で中身を隠しているので、ここで畳んでも下の部品は動かない
   const startHere = document.getElementById("start-here");
-  if (startHere && window.matchMedia && window.matchMedia(NARROW_MQ).matches) {
-    startHere.open = false;
+  if (startHere) {
+    const decided = document.documentElement.getAttribute("data-start");
+    const narrow = !!(window.matchMedia && window.matchMedia(NARROW_MQ).matches);
+    startHere.open = decided === "open" || (decided !== "closed" && !narrow);
+    // 利用者が開閉したら、その形を覚えて次から使う（js/lang.js が読む）。開閉は click の既定の動きで変わるので、そのあとで読む。
+    // toggle イベントは使わない（上のように JS で開閉を合わせたときにも出るため）
+    startHere.querySelector("summary")?.addEventListener("click", () => {
+      setTimeout(() => progressStore.setItem(START_KEY, startHere.open ? "open" : "closed"), 0);
+    });
   }
   document.documentElement.classList.add("js-ready");
   reserveBookBanner();
@@ -453,12 +466,23 @@ async function loadData() {
     setupFilterOptions();
     setListBusy(false);
     renderAll();
+    enableDashboardActions();
     maybeScrollToHash();
     markCardsPainted();
   } catch (err) {
     console.error("Error loading data:", err);
     releaseReservedSpace();
   }
+}
+
+// ダッシュボードの「Xで進捗をシェア」「すべて未着手にリセット」を押せるようにする（index.html では disabled）。
+// データが届いてダッシュボードを描いたあとに呼ぶ。届く前（?tab=dashboard で開いたときや、読み込み中にタブを押したとき）に
+// シェアを押すと、0本の数で投稿の文を作ってしまうため。読み込みに失敗したときは押せないまま
+function enableDashboardActions() {
+  ["share-on-x", "reset-all-progress"].forEach((id) => {
+    const btn = document.getElementById(id);
+    if (btn) btn.disabled = false;
+  });
 }
 
 // 最初に一覧を描いた時刻に印を付ける（DevTools の Performance で見るため。1回だけ付け、外へは送らない）
@@ -496,20 +520,29 @@ function applyBooksAvailability() {
 
 // 固定ヘッダーの高さを CSS 変数 --header-h に書く。html の scroll-padding-top がこれを使い、
 // 章へ移動・Tab での移動・focus() のどれでも、ヘッダーの下に隠れない位置で止まるようにする。
+// ヘッダーを固定しない画面（css の「ヘッダーを固定しない画面」。狭い画面と低い画面）では 0 を書く（画面の上端から 0.5rem の所に止まる）。
+// ヘッダーの大きさが変わったとき（言語の切り替えなど）と、画面の大きさが変わったとき（高さだけが変わって、固定するかが替わる
+// こともある。そのときヘッダーの大きさは変わらない）に書き直す
 function applyHeaderHeightVar() {
   const header = document.getElementById("site-header");
   if (!header) return;
-  const set = () =>
-    document.documentElement.style.setProperty(
-      "--header-h",
-      header.offsetHeight + "px"
-    );
+  const set = () => {
+    const fixed = getComputedStyle(header).position === "sticky";
+    document.documentElement.style.setProperty("--header-h", (fixed ? header.offsetHeight : 0) + "px");
+  };
   set();
   try {
     new ResizeObserver(set).observe(header);
   } catch (e) {
-    window.addEventListener("resize", set);
+    /* ResizeObserver のないブラウザーでは、画面の大きさが変わったときだけ書き直す */
   }
+  window.addEventListener("resize", set);
+}
+
+// 一覧を読んでいる所の上端（画面のうち、ヘッダーに覆われていない所の上端）。ヘッダーを固定している画面ではヘッダーの下端、
+// 固定しない画面では、ヘッダーが画面の外へ出たあとは画面の上端（0）
+function readingTop(header) {
+  return Math.max(0, header.getBoundingClientRect().bottom);
 }
 
 // #book-group-<key> のハッシュがあればそこへスクロールし、見出しへフォーカスを移す。
@@ -538,15 +571,15 @@ function scrollByInstant(dy) {
   }
 }
 
-// 一覧の途中で表示を作り直す前に、ヘッダーのすぐ下で読んでいた項目（カードか章の見出し）を覚える。
-// 一覧の先頭が見えているときは null（何もしない）。
+// 一覧の途中で表示を作り直す前に、ヘッダーのすぐ下（ヘッダーを固定しない画面では、画面の上端）で読んでいた項目
+// （カードか章の見出し）を覚える。一覧の先頭が見えているときは null（何もしない）。
 // holdFrom は、作り直したあとに描くのを後回しにしない範囲の始め（restoreReadingAnchor を参照）。
 // 画面の上端から1画面分の高さだけ上までにかかる、最初の項目の順番
 function captureReadingAnchor() {
   const listEl = document.getElementById("tool-list");
   const header = document.getElementById("site-header");
   if (!listEl || !header || listEl.getClientRects().length === 0) return null;
-  const hb = header.getBoundingClientRect().bottom;
+  const hb = readingTop(header);
   if (listEl.getBoundingClientRect().top >= hb) return null;
   const items = listEl.children;
   let holdFrom = -1;
@@ -560,7 +593,7 @@ function captureReadingAnchor() {
   return null;
 }
 
-// 作り直したあと、同じ順番の項目がヘッダーの下の同じ高さに来るようにスクロールする。
+// 作り直したあと、同じ順番の項目がヘッダーの下（ヘッダーを固定しない画面では、画面の上端から）の同じ高さに来るようにスクロールする。
 // 言語を切り替えても絞り込みの結果と並び順は変わらないので、順番で同じ項目を引ける。
 function restoreReadingAnchor(anchor) {
   if (!anchor) return;
@@ -577,7 +610,8 @@ function restoreReadingAnchor(anchor) {
   const from = Math.max(0, Math.min(anchor.holdFrom, anchor.index));
   const held = Array.prototype.slice.call(listEl.children, from, anchor.index + 1);
   held.forEach((c) => c.classList.add("cv-hold"));
-  const hb = header.getBoundingClientRect().bottom;
+  // 固定しないヘッダーは復元先で画面外へ流れるため、スクロール前の可視高さを引かない。
+  const hb = getComputedStyle(header).position === "sticky" ? readingTop(header) : 0;
   scrollByInstant(el.getBoundingClientRect().top - hb - anchor.offset);
   // 次の描画が終わってから外す（描いたときに、カードの高さが覚えられる）
   requestAnimationFrame(() =>
@@ -928,11 +962,11 @@ function applyHistoryState(view) {
 
 // 戻る・進むで描き直したあとのフォーカス（restoreView が戻したスクロールの位置は動かさない）。
 // タブが切り替わり、フォーカスしていた部品が隠れたパネルに残る → restoreFocus（履歴に書いておいた部品か、選ばれたタブのボタン）。
-// 一覧やバナーを作り直して、フォーカスしていた部品が文書から外れた → restoreRebuiltFocus（作り直した同じ部品か、先頭の見出し）。
-// フォーカスが選ばれていないタブのボタンに残る → focusSelectedTab
+// 一覧やバナーを作り直して、フォーカスしていた部品が文書から外れた → restoreRebuiltFocus（履歴に書いておいた部品か、
+// 作り直した同じ部品か、先頭の見出し）。フォーカスが選ばれていないタブのボタンに残る → focusSelectedTab
 function settleFocus(view, focused, focusPanel, key) {
   if (focusPanel && focusPanel.hidden) restoreFocus(view);
-  else if (focused && !focused.isConnected) restoreRebuiltFocus(focused, key);
+  else if (focused && !focused.isConnected) restoreRebuiltFocus(focused, key, view && view.focus);
   else focusSelectedTab();
 }
 
@@ -997,14 +1031,18 @@ function isShown(el) {
 
 // 一覧・バナー・ダッシュボードの本の行を作り直して、フォーカスしていた部品 prev が文書から外れたときに、作り直した同じ部品へ
 // フォーカスを戻す（そのままでは body に落ち、キーボード・読み上げの利用者が位置を失う）。key は作り直す前に focusKey で取った目印。
-// 同じ部品が無ければ、一覧かバナーの先頭の見出しへ移す（fallbackFocusTarget）。スクロールはしない。
+// 戻る・進むのときは、来た履歴に書いておいた部品の目印 savedKey（その履歴から次の履歴を積む直前にフォーカスしていた部品。
+// saveViewInHistory）が表に出ていれば、そちらを先に使う。戻った一覧は、戻した位置（その履歴で見ていた所）で出るので、
+// 作り直した同じ部品は画面の外にあることがある（カテゴリーを選んでからカードにフォーカスして戻ると、カードは1画面以上下にある）。
+// どちらも無ければ、一覧かバナーの先頭の見出しへ移す（fallbackFocusTarget）。スクロールはしない。
 // フォーカスがページの部品になかったとき（ページの何もない所を押したあとなど）、prev が残っているとき、フォーカスがもうほかの
 // 部品へ移っているときは何もしない
-function restoreRebuiltFocus(prev, key) {
+function restoreRebuiltFocus(prev, key, savedKey) {
   if (!prev || prev === document.body || prev.isConnected) return;
   const active = document.activeElement;
   if (active && active !== document.body) return;
-  let target = elementForFocusKey(key);
+  let target = savedKey ? elementForFocusKey(savedKey) : null;
+  if (!isShown(target)) target = elementForFocusKey(key);
   if (!isShown(target)) target = fallbackFocusTarget(key);
   if (target) target.focus({ preventScroll: true });
 }
@@ -1062,6 +1100,13 @@ function restoreView(view, filtersTop) {
   if (filtersTop !== null && currentTab === "tools" && filtersEl) {
     scrollByInstant(filtersEl.getBoundingClientRect().top - filtersTop);
   }
+}
+
+// はじめて来た人が一覧を使い始めたら（「はじめ方」の入口を押す・本を選ぶ・進捗を付ける）、次からは「はじめ方」を閉じて始める
+// （js/lang.js が読む）。開いて見せたのが読む前に消えないよう、開いただけ・見ただけでは残さない。利用者が開閉したあと
+// （覚えた開閉があるとき）は変えない。保存できない環境では、このページを開いているあいだだけ覚える（js/storage.js）
+function markStartSeen() {
+  if (progressStore.getItem(START_KEY) === null) progressStore.setItem(START_KEY, "closed");
 }
 
 // 「はじめ方」の入口で本を選ぶ（slug が "" の「すべてのツール」は、カテゴリー・進捗・検索の条件も外す）。履歴を1つ積む
@@ -1568,6 +1613,7 @@ function createToolCard(tool, book) {
   progressBtn.addEventListener("click", () => {
     const level = (getProgress(tool.slug) + 1) % 4;
     setProgress(tool.slug, level);
+    markStartSeen();
     // 同じツールが複数の章に出ているときは、全部のボタンを同期する
     syncProgressButtons(tool.slug);
     renderDashboard();
@@ -1807,6 +1853,7 @@ function renderBookProgress() {
     title.appendChild(kind);
     title.appendChild(document.createTextNode(HB.bookLabel(s.book, currentLang)));
     title.addEventListener("click", (e) => {
+      markStartSeen(); // 本を選んだので、次からは「はじめ方」を閉じて始める
       // Ctrl・⌘・Shift・Alt を押したクリック（新しいタブや窓で開く操作など）は、ふつうのリンクとしてブラウザーに任せる
       if (e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
       e.preventDefault();

@@ -1,7 +1,9 @@
 // test/site.test.js
 // 依存なし（node:test / node:assert/strict / node:fs / node:zlib のみ）。
 // U1〜U2 は js/storage.js・js/tabs.js の純関数、H1〜H15 は index.html / js/main.js / css/style.css の静的な検査、
-// H16〜H20 はデータの読み込みの決まり（ハブの CLAUDE.md の Loading data）の検査、H21〜 は検索と絞り込み・一覧の表示の静的な検査。
+// H16〜H20 はデータの読み込みの決まり（ハブの CLAUDE.md の Loading data）の検査、H21〜H32 は検索と絞り込み・一覧の表示・
+// 戻る・進むの静的な検査、H33〜H38 はヘッダーと押せる部品の大きさ・サイト名などの折れ方・「はじめ方」の開閉・ダッシュボードの
+// ボタンの静的な検査（ハブの CLAUDE.md の Header and touch targets・Start here）。
 
 const fs = require("node:fs");
 const path = require("node:path");
@@ -134,8 +136,10 @@ test("H3: ヘルプは role=dialog・aria-modal=true・見出しを指す aria-l
 test("H4: h1 がちょうど1つあり、サイト名（日英）を含む", () => {
   const h1s = html.match(/<h1\b[\s\S]*?<\/h1>/g) || [];
   assert.equal(h1s.length, 1);
-  assert.match(h1s[0], /ハッキング・ラボ・オンライン/);
-  assert.match(h1s[0], /Hacking Lab Online/);
+  // 折ってよい位置の <wbr> は字ではないので、除いてから調べる（H36）
+  const h1 = h1s[0].replace(/<wbr\s*\/?>/g, "");
+  assert.match(h1, /ハッキング・ラボ・オンライン/);
+  assert.match(h1, /Hacking Lab Online/);
 });
 
 test("H5: 言語切替で html の lang を切り替える", () => {
@@ -540,7 +544,7 @@ test("H26: 一覧の条件（本・カテゴリー・検索・タブ）は URL �
   }
 });
 
-test("H27: 本・カテゴリー・タブを選んで切り替えたら履歴を積み、戻る・進むで URL から一覧を戻す。検索の入力・キーでのタブの切り替え・章へ移動・開いたときは積まない", () => {
+test("H27: 本・カテゴリー・タブを選んで切り替えたら履歴を積み、戻る・進むで URL から一覧の条件（本・カテゴリー・タブ・検索欄）を戻す。検索の入力・キーでのタブの切り替え・章へ移動・開いたときは積まない", () => {
   const commit = fnBody("commitUrl");
   // 積むのは how が "push" のときだけ。積む前に、今の履歴へ見ていた位置を書く
   assert.match(commit, /let push = how === "push";/);
@@ -580,7 +584,28 @@ test("H27: 本・カテゴリー・タブを選んで切り替えたら履歴を
   assert.match(apply, /setBookFilter\(next\.book, \{ history: false, cleared: !next\.book \}\)/);
   assert.match(apply, /restoreView\(view, filtersTop\)/);
   assert.doesNotMatch(apply, /commitUrl\(/, "戻る・進むで一覧の条件を URL に書いている（戻る・進むの行き先がずれる）");
+  // 本のほかに、カテゴリー・タブ・検索欄も URL に合わせる（どれか1つでも合わせないと、戻ったあと URL は / なのに一覧が絞られたまま、
+  // またはダッシュボードが出たままになる）。4つとも今と同じときだけ何もしない
+  assert.match(apply, /const searchChanged = !!searchInput && searchInput\.value\.trim\(\) !== next\.q;/);
+  assert.match(
+    apply,
+    /if \(next\.book === filters\.book && next\.cat === filters\.categoryId && next\.tab === currentTab && !searchChanged\) return;/,
+    "本・カテゴリー・タブ・検索欄のどれかが違うのに、戻る・進むで描き直さないことがある"
+  );
+  const iTab = apply.search(/\n\s*if \(next\.tab !== currentTab\) switchTab\(next\.tab === "dashboard" \? "tab-dashboard" : "tab-tools"\);/);
+  const iCat = apply.indexOf("filters.categoryId = next.cat;");
+  const iCatSel = apply.search(/const categorySelect = document\.getElementById\("filter-category"\);\s*if \(categorySelect\) categorySelect\.value = next\.cat;/);
+  const iSearch = apply.search(/if \(searchChanged\) \{\s*searchInput\.value = next\.q;\s*setSearchQuery\(next\.q\);\s*\}/);
+  assert.ok(iTab >= 0, "戻る・進むでタブを URL に合わせていない（ダッシュボードが出たまま、または一覧に戻らない）");
+  assert.ok(iCat >= 0, "戻る・進むでカテゴリーの条件を URL に合わせていない（一覧が絞られたまま残る）");
+  assert.ok(iCatSel >= 0, "戻る・進むでカテゴリーの欄を URL に合わせていない（欄と一覧が食い違う）");
+  assert.ok(iSearch >= 0, "戻る・進むで検索欄と検索語を URL に合わせていない（欄の文字と一覧が食い違う）");
+  // 合わせてから一覧を描く（本が同じときも、カテゴリー・検索が変わったら描き直す）
+  const iDraw = apply.search(/if \(next\.book !== filters\.book\) setBookFilter\(next\.book, \{ history: false, cleared: !next\.book \}\);\s*else renderToolList\(\);/);
+  assert.ok(iDraw >= 0, "本が同じときに一覧を描き直していない（カテゴリー・検索だけ変わった履歴へ戻っても一覧が変わらない）");
+  assert.ok(Math.max(iTab, iCat, iCatSel, iSearch) < iDraw, "URL に合わせる前に一覧を描いている");
   // データが届く前に戻る・進むを押したときも、タブと検索欄は URL に合わせる（本・カテゴリーはデータが届いてから URL で読む）
+  assert.match(apply, /if \(st\.tab !== currentTab\) switchTab\(st\.tab === "dashboard" \? "tab-dashboard" : "tab-tools"\);/, "読み込み中に戻る・進むを押したとき、タブを URL に合わせていない");
   assert.match(apply, /if \(searchInput && searchInput\.value\.trim\(\) !== st\.q\) searchInput\.value = st\.q;/, "読み込み中に戻る・進むを押したとき、検索欄を URL に合わせていない");
   // ダッシュボードの本の行は、ふつうの左クリックだけ止めて一覧へ移り、履歴を積む
   const row = fnBody("renderBookProgress");
@@ -661,7 +686,7 @@ test("H31: 戻る・進むでタブが切り替わり、フォーカスしてい
   const settle = fnBody("settleFocus");
   assert.match(
     settle,
-    /if \(focusPanel && focusPanel\.hidden\) restoreFocus\(view\);\s*else if \(focused && !focused\.isConnected\) restoreRebuiltFocus\(focused, key\);\s*else focusSelectedTab\(\);/,
+    /if \(focusPanel && focusPanel\.hidden\) restoreFocus\(view\);\s*else if \(focused && !focused\.isConnected\) restoreRebuiltFocus\(focused, key, view && view\.focus\);\s*else focusSelectedTab\(\);/,
     "戻る・進むのあと、隠れたパネル・作り直して外れた部品・選ばれていないタブのボタンに残ったフォーカスを移していない"
   );
   // 移し先は、書いておいた部品が表に出ていればそれ、無ければ選ばれたタブのボタン。restoreView が戻した位置は動かさない
@@ -677,7 +702,7 @@ test("H31: 戻る・進むでタブが切り替わり、フォーカスしてい
   assert.match(tabFocus, /document\.querySelector\('\.tab-button\[aria-selected="true"\]'\)[\s\S]*\.focus\(\{ preventScroll: true \}\)/, "タブのボタンへ移すときにスクロールしている");
 });
 
-test("H32: 一覧・バナー・ダッシュボードの本の行を作り直して、フォーカスしていた部品が外れたときは、作り直した同じ部品へ（無ければ一覧かバナーの先頭の見出しへ）フォーカスを移す。スクロールはせず、フォーカスがページの中になかったときは何もしない", () => {
+test("H32: 一覧・バナー・ダッシュボードの本の行を作り直して、フォーカスしていた部品が外れたときは、戻る・進むなら来た履歴に書いておいた部品へ、無ければ作り直した同じ部品へ（無ければ一覧かバナーの先頭の見出しへ）フォーカスを移す。スクロールはせず、フォーカスがページの中になかったときは何もしない", () => {
   // 作り直す部品に目印を付ける：カードはツールの slug（章ごとに並べたときは章も）と部品の種類、バナーは部品の種類
   const card = fnBody("createToolCard");
   assert.match(card, /card\.dataset\.slug = tool\.slug/);
@@ -702,7 +727,13 @@ test("H32: 一覧・バナー・ダッシュボードの本の行を作り直し
   const restore = fnBody("restoreRebuiltFocus");
   assert.match(restore, /if \(!prev \|\| prev === document\.body \|\| prev\.isConnected\) return;/);
   assert.match(restore, /if \(active && active !== document\.body\) return;/);
-  assert.match(restore, /let target = elementForFocusKey\(key\);\s*if \(!isShown\(target\)\) target = fallbackFocusTarget\(key\);\s*if \(target\) target\.focus\(\{ preventScroll: true \}\);/);
+  // 来た履歴に書いておいた部品（savedKey）を先に、無ければ作り直した同じ部品、無ければ先頭の見出し。戻った一覧は、その履歴で
+  // 見ていた位置で出るので、作り直した同じ部品は画面の外にあることがある（次の Tab で画面が大きく飛ぶ）
+  assert.match(
+    restore,
+    /let target = savedKey \? elementForFocusKey\(savedKey\) : null;\s*if \(!isShown\(target\)\) target = elementForFocusKey\(key\);\s*if \(!isShown\(target\)\) target = fallbackFocusTarget\(key\);\s*if \(target\) target\.focus\(\{ preventScroll: true \}\);/,
+    "作り直したときに、来た履歴に書いておいた部品を先に使っていない"
+  );
   assert.match(fnBody("isShown"), /el\.isConnected && el\.getClientRects\(\)\.length > 0/);
   // 同じ部品が無いとき：バナーの部品ならバナーの書名、一覧の部品なら一覧の先頭の章の見出し（出ていなければもう一方、どちらも
   // 出ていなければ選ばれたタブのボタン）
@@ -713,7 +744,172 @@ test("H32: 一覧・バナー・ダッシュボードの本の行を作り直し
   // 見出しはフォーカスできる（tabIndex = -1）
   assert.match(banner, /h2\.id = "book-banner-title";[\s\S]*?h2\.tabIndex = -1;/);
   assert.match(fnBody("renderToolList"), /h\.className = "book-group-heading";[\s\S]*?h\.tabIndex = -1;/);
-  // 戻る・進む（settleFocus。H31）と別のタブの進捗（refreshProgressViews。H25）の両方から呼ぶ
-  assert.match(fnBody("settleFocus"), /else if \(focused && !focused\.isConnected\) restoreRebuiltFocus\(focused, key\);/);
+  // 戻る・進む（settleFocus。H31。来た履歴に書いておいた部品を渡す）と別のタブの進捗（refreshProgressViews。H25。履歴はないので渡さない）の
+  // 両方から呼ぶ
+  assert.match(fnBody("settleFocus"), /else if \(focused && !focused\.isConnected\) restoreRebuiltFocus\(focused, key, view && view\.focus\);/);
   assert.match(fnBody("refreshProgressViews"), /restoreRebuiltFocus\(focused, focusedKey\);/);
+});
+
+// ---- ヘッダーと押せる部品の大きさ ----
+
+test("H33: ヘルプの「?」は px の幅・高さで固定せず、rem の最小の大きさと縦横の比 1 で丸を保つ（文字を大きくしても横長にならない）", () => {
+  for (const r of rules.filter((x) => x.selector.split(",").some((s) => /\.help-button(?![\w-])/.test(s)))) {
+    assert.doesNotMatch(r.body, /(?:^|[;\s])(?:width|height)\s*:\s*[\d.]+px/, `${r.selector} に px の幅・高さがある（文字を大きくすると横長になる）`);
+  }
+  // .header-controls button（詳細度 0,1,1）の padding に勝つよう、.header-controls .help-button で書く
+  const help = bodyOf(".header-controls .help-button");
+  assert.match(help, /min-width:\s*[\d.]+rem/);
+  assert.match(help, /min-height:\s*[\d.]+rem/);
+  assert.match(help, /aspect-ratio:\s*1\s*(?:;|$)/);
+  assert.match(help, /(?:^|[;\s])padding:\s*0\s*(?:;|$)/);
+});
+
+test("H34: ヘッダーを固定するのは広くて高い画面だけ。狭い画面（767px まで）と低い画面（高さ 500px まで）では固定せず、止まる位置の余白（--header-h）を 0 にする。480px 未満では JA・EN・? を題字の上の行へ回す", () => {
+  // 固定は #site-header の規則に書き、固定しない画面の @media がそれより後ろで static にする
+  const base = cssNoComments.search(/(?:^|\n)#site-header\s*\{[^}]*position:\s*sticky/);
+  assert.ok(base >= 0, "#site-header の固定（sticky）の規則がない");
+  const blocks = mediaBlocks(/max-width:\s*767\.98px\),\s*\(max-height:\s*500px/);
+  assert.equal(blocks.length, 1, "狭い画面と低い画面の @media (max-width: 767.98px), (max-height: 500px) が1つでない");
+  const b = blocks[0];
+  assert.ok(b.index > base, "固定しない画面の規則が、固定の規則より前にある（固定が勝つ）");
+  assert.match(b.body, /#site-header\s*\{[^}]*position:\s*static/, "狭い画面・低い画面でヘッダーを固定したまま（一覧の見える所が2〜3割狭くなる）");
+  // 止まる位置の余白は 0 にする（残すと、固定しないヘッダーの高さの分だけ、章の見出しが画面の上端から下に止まる）
+  assert.match(b.body, /(?:^|\n)\s*html\s*\{[^}]*--header-h:\s*0(?:px)?\s*(?:;|\})/, "固定しない画面で --header-h を 0 にしていない");
+  // ほかの所で #site-header の position を変えない
+  const positions = rules.filter((r) => r.selector.split(",").map((s) => s.trim()).includes("#site-header") && /position\s*:/.test(r.body));
+  assert.equal(positions.length, 2, "#site-header の position を決める規則は、固定と、固定しない画面の2つだけにする");
+  // main.js も、固定していないときは 0 を書く（書いた値は CSS の @media より勝つ）。高さだけが変わって固定するかが替わったときも書き直す
+  const hh = fnBody("applyHeaderHeightVar");
+  assert.match(hh, /const fixed = getComputedStyle\(header\)\.position === "sticky";/);
+  assert.match(hh, /setProperty\("--header-h", \(fixed \? header\.offsetHeight : 0\) \+ "px"\)/);
+  assert.match(hh, /window\.addEventListener\("resize", set\)/, "画面の高さだけが変わって固定するかが替わったときに、--header-h を書き直していない");
+  // 言語を切り替えたときに読んでいた位置の基準は、ヘッダーに覆われていない所の上端（固定しないヘッダーが画面の外へ出たら 0）
+  assert.match(fnBody("readingTop"), /return Math\.max\(0, header\.getBoundingClientRect\(\)\.bottom\);/);
+  assert.match(fnBody("captureReadingAnchor"), /const hb = readingTop\(header\);/);
+  // 復元時は、移動後に画面外へ流れるヘッダーを差し引かない。実際の位置は scroll_focus.test.js の SF9 で検査する。
+  // 480px 未満：JA・EN・? を題字の上の行へ回し（order: -1 と横幅いっぱい）、題字を少し小さくする
+  const narrow = mediaBlocks(/max-width:\s*479\.98px/);
+  assert.equal(narrow.length, 1, "@media (max-width: 479.98px) が1つでない");
+  assert.match(narrow[0].body, /\.header-inner\s*\{[^}]*flex-wrap:\s*wrap/);
+  assert.match(narrow[0].body, /\.header-controls\s*\{[^}]*order:\s*-1[^}]*width:\s*100%/);
+  const small = (narrow[0].body.match(/\.site-title\s*\{[^}]*font-size:\s*([\d.]+)rem/) || [])[1];
+  const normal = (bodyOf(".site-title").match(/font-size:\s*([\d.]+)rem/) || [])[1];
+  assert.ok(small && normal && Number(small) < Number(normal), "480px 未満で題字を小さくしていない");
+});
+
+test("H35: 狭い画面（767px まで）と指で操作する端末では、ヘッダー・タブ・カード・ダッシュボード・フッターの押せる部品を 44px（2.75rem）以上にし、「?」の丸の指定より後ろに書く。ヘルプの「×」はどの幅でも 44px", () => {
+  const blocks = mediaBlocks(/max-width:\s*767\.98px\),\s*\(pointer:\s*coarse/);
+  assert.equal(blocks.length, 1, "@media (max-width: 767.98px), (pointer: coarse) が1つでない（マウスで使う 768px 以上の画面は今の大きさのまま）");
+  const b = blocks[0];
+  const inner = cssRules(b.body);
+  const minHeightOf = (sel) =>
+    inner.filter((r) => r.selector.split(",").map((s) => s.trim()).includes(sel)).some((r) => /min-height:\s*2\.75rem/.test(r.body));
+  for (const sel of [
+    ".header-controls button",
+    ".header-controls .help-button",
+    ".tab-button",
+    "#share-on-x",
+    "#reset-all-progress",
+    ".tool-footer .tool-button",
+    ".tool-progress-button",
+    ".footer-inner a",
+    ".book-banner-link",
+    ".book-progress-title"
+  ]) {
+    assert.ok(minHeightOf(sel), `${sel} の高さが 2.75rem（44px）以上になっていない`);
+  }
+  // ヘッダーの3つとカード・リンクは幅も 44px（「?」は .header-controls .help-button で書き、丸の指定に勝たせる。
+  // 768px 以上の指で操作する端末では、PC幅でのボタンコンパクト化で「デモ」が 40px 幅になる）
+  for (const sel of [".header-controls button", ".header-controls .help-button", ".tool-footer .tool-button", ".tool-progress-button"]) {
+    assert.ok(
+      inner.some((r) => r.selector.split(",").map((s) => s.trim()).includes(sel) && /min-width:\s*2\.75rem/.test(r.body)),
+      `${sel} の幅が 2.75rem になっていない`
+    );
+  }
+  // 「?」の丸の指定（1.75rem）より後ろにある。前にあると、同じ詳細度の丸の指定が勝って 1.75rem（28px）のまま
+  const round = cssNoComments.search(/(?:^|\n)\.header-controls \.help-button\s*\{[^}]*min-width:\s*1\.75rem/);
+  assert.ok(round >= 0, "「?」の丸の指定がない");
+  assert.ok(b.index > round, "44px の指定が「?」の丸の指定より前にある（指で押す画面でも「?」が 28px のまま）");
+  // <a> は inline-flex にして、高さを取っても文字を上下の中央に置く
+  assert.ok(
+    inner.some((r) => r.selector.split(",").map((s) => s.trim()).includes(".tool-footer .tool-button") && /display:\s*inline-flex/.test(r.body)),
+    "カードのボタン（<a>）が inline-flex でない（文字が上に寄る）"
+  );
+  // マウスで使う PC 幅のカードのボタンは今の大きさのまま（PC幅でのボタンコンパクト化を残す）
+  const wide = mediaBlocks(/min-width:\s*768px/).map((x) => x.body).join("\n");
+  assert.match(wide, /\.tool-footer \.tool-button\s*\{[^}]*padding:\s*0\.3rem 0\.6rem/);
+  // ヘルプの「×」は画面の幅にかかわらず 44px（2.75rem）
+  const close = bodyOf(".modal-close");
+  assert.match(close, /(?:^|[;\s])width:\s*2\.75rem/);
+  assert.match(close, /(?:^|[;\s])height:\s*2\.75rem/);
+});
+
+test("H36: サイト名は「・」の後ろでだけ折り（<wbr>）、語の途中・小さい仮名や「ー」の前では折らない。タブの「学習ダッシュボード」とダッシュボードの数字も語の途中で折らない", () => {
+  const ja = html.match(/<span id="site-title-ja"[^>]*>([\s\S]*?)<\/span>/);
+  assert.ok(ja, "日本語のサイト名がない");
+  // <wbr> は「・」の直後だけに置く（「ハッキング・<wbr>ラボ・<wbr>オンライン」）
+  const parts = ja[1].split(/<wbr\s*\/?>/);
+  assert.ok(parts.length >= 2, "サイト名に折ってよい位置（<wbr>）がない（狭い画面で「オンライ｜ン」と語の途中で折れる）");
+  for (const s of parts.slice(0, -1)) assert.match(s, /・$/, `「・」の後ろでない所に <wbr> がある: ${ja[1]}`);
+  assert.equal(parts.join(""), "ハッキング・ラボ・オンライン");
+  // 区切りの間では折らない（keep-all）。小さい仮名や「ー」の前でも折らない（strict）
+  const title = bodyOf(".site-title");
+  assert.match(title, /word-break:\s*keep-all/);
+  assert.match(title, /line-break:\s*strict/);
+  // ダッシュボードの数字は「定着済み0」「（全44）」の中で折らない
+  assert.match(bodyOf(".category-progress-detail"), /word-break:\s*keep-all/);
+  // 360px より狭い画面ではタブの左右の余白を詰める（320px で「学習ダッシュボード」を1行に収める）
+  const narrow = mediaBlocks(/max-width:\s*359\.98px/).map((b) => b.body).join("\n");
+  assert.match(narrow, /\.tab-button\s*\{[^}]*padding-left:\s*0\.25rem[^}]*padding-right:\s*0\.25rem/, "360px より狭い画面で、タブの左右の余白を詰めていない");
+});
+
+test("H38: ダッシュボードの「Xで進捗をシェア」「すべて未着手にリセット」は、データが届くまで押せない（index.html で disabled、届いてダッシュボードを描いたあとに外す）", () => {
+  // ?tab=dashboard で開いたときや、読み込み中にタブを押したとき、データが届く前にシェアを押すと 0 本の数で投稿の文を作ってしまう
+  for (const id of ["share-on-x", "reset-all-progress"]) {
+    assert.match(openTag(id), /^<button\b[^>]*\sdisabled[\s>]/, `#${id} がデータの届く前から押せる`);
+  }
+  const enable = fnBody("enableDashboardActions");
+  assert.match(enable, /\["share-on-x", "reset-all-progress"\]/);
+  assert.match(enable, /btn\.disabled = false;/);
+  // 外すのは、データが届いて描いたあと（読み込みに失敗したときは外さない）
+  const load = loadDataBody();
+  const iEnable = load.indexOf("enableDashboardActions()");
+  assert.ok(iEnable > load.indexOf("renderAll()"), "データを描く前に押せるようにしている");
+  assert.ok(iEnable < load.indexOf("catch (err)"), "読み込みに失敗したときにも押せるようにしている");
+  assert.equal((blankComments(mainJs).match(/enableDashboardActions\(\)/g) || []).length, 2, "押せるようにするのは loadData の1か所だけ（と宣言）");
+  // 押せないあいだの見た目
+  assert.match(bodyOf("#share-on-x:disabled"), /cursor:\s*not-allowed/);
+  assert.match(bodyOf("#reset-all-progress:disabled"), /cursor:\s*not-allowed/);
+});
+
+// ---- 「はじめ方」の初めの開閉 ----
+
+test("H37: 「はじめ方」の開閉は、利用者が開閉したらその形を、はじめて来た人が一覧を使い始めたら（入口・本を選ぶ・進捗を付ける）閉じた形を覚える（js/storage.js のラッパーを通す）。toggle イベントは使わない", () => {
+  // 覚えるキーは js/lang.js と同じ（lang.js が描く前に読む）
+  assert.match(mainJs, /const START_KEY = typeof HLOLang !== "undefined" && HLOLang\.START_KEY \? HLOLang\.START_KEY : "hlo_start_here";/);
+  const setup = fnBody("setupStaticUI");
+  // 開閉の見出しを押したら（キーボードの Enter・Space も click になる）、開閉が変わったあとに今の形を覚える
+  assert.match(
+    setup,
+    /startHere\.querySelector\("summary"\)\?\.addEventListener\("click", \(\) => \{\s*setTimeout\(\(\) => progressStore\.setItem\(START_KEY, startHere\.open \? "open" : "closed"\), 0\);\s*\}\);/,
+    "利用者が開閉した形を覚えていない（次に来たときに、閉じたのに開く・開いたのに閉じる）"
+  );
+  // toggle は JS で開閉を合わせたときにも出るので、覚えるのに使わない
+  assert.doesNotMatch(blankComments(mainJs), /addEventListener\("toggle"/);
+  // はじめて来た人が一覧を使い始めたら閉じた形を残す。利用者が開閉を選んだあと（覚えた形があるとき）は変えない
+  assert.match(
+    fnBody("markStartSeen"),
+    /if \(progressStore\.getItem\(START_KEY\) === null\) progressStore\.setItem\(START_KEY, "closed"\);/
+  );
+  const entries = setup.slice(setup.indexOf('document.querySelectorAll(".start-here-entries a")'));
+  assert.match(entries.slice(0, entries.indexOf("\n  });")), /a\.addEventListener\("click", \(e\) => \{\s*markStartSeen\(\);/, "入口を押しても残していない");
+  const book = setup.slice(setup.indexOf('bookSelect?.addEventListener("change"'));
+  assert.match(book.slice(0, book.indexOf("\n  });")), /if \(e\.target\.value\) markStartSeen\(\);/, "本を選んでも残していない");
+  assert.match(fnBody("renderBookProgress"), /title\.addEventListener\("click", \(e\) => \{\s*markStartSeen\(\);/, "ダッシュボードの本の行で本を選んでも残していない");
+  const card = fnBody("createToolCard");
+  const click = card.slice(card.indexOf('progressBtn.addEventListener("click"'));
+  assert.match(click.slice(0, click.indexOf("\n  });")), /setProgress\(tool\.slug, level\);\s*markStartSeen\(\);/, "進捗を付けても残していない");
+  // 開いただけ・見ただけでは残さない（開いて見せた「はじめ方」が、読む前に次から閉じてしまわない）
+  assert.equal((blankComments(mainJs).match(/markStartSeen\(\)/g) || []).length, 4 + 1, "markStartSeen を呼ぶ所は、入口・本の選択欄・ダッシュボードの本の行・進捗の4か所と、宣言の1か所");
+  assert.equal((blankComments(mainJs).match(/setItem\(START_KEY/g) || []).length, 2, "開閉を覚えるのは、開閉の見出しを押したときと markStartSeen の2か所だけ");
 });

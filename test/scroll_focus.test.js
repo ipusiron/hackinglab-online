@@ -1,7 +1,8 @@
 // test/scroll_focus.test.js
 // 依存なし（node:test / node:assert/strict / node:fs のみ）。
-// SF1〜SF8 は、固定ヘッダーの下で止まる位置・フォーカスの移し方・言語の切り替え・絞り込みを変えたときの欄の位置の
-// 直し方が、あとの変更で外れていないかを見る静的な検査（index.html / js/main.js / css/style.css）。
+// SF1〜SF8 は、固定ヘッダーの下で止まる位置（ヘッダーを固定しない画面では --header-h が 0 で、画面の上端から 0.5rem。site.test.js の H34）・
+// フォーカスの移し方・言語の切り替え・絞り込みを変えたときの欄の位置の直し方が、あとの変更で外れていないかを見る静的な検査
+// （index.html / js/main.js / css/style.css）。
 
 const fs = require("node:fs");
 const path = require("node:path");
@@ -112,4 +113,37 @@ test("SF8: 絞り込み（本・カテゴリー・進捗・検索）を変えた
   assert.equal((body.match(/keepInPlace\(searchInput,/g) || []).length, 2, "検索欄の2つの処理の両方で保っていない");
   // すぐに動かす（html の scroll-behavior: smooth のままだと、欄がいったん下がってから戻って見える）
   assert.match(mainJs, /function scrollByInstant\(dy\)\s*\{[\s\S]*?behavior:\s*"instant"/);
+});
+
+
+test("SF9: 履歴の読書位置は、復元後に残る固定ヘッダーだけを差し引く", () => {
+  const vm = require("node:vm");
+  const source = mainJs.match(/function restoreReadingAnchor\(anchor\)\s*\{[\s\S]*?\n\}/);
+  assert.ok(source, "restoreReadingAnchor がない");
+  for (const position of ["static", "sticky"]) {
+    for (const initialHeaderBottom of [160, -300]) {
+      let scrollY = 0;
+      const documentTop = 1950;
+      const offset = -50;
+      const header = {
+        getBoundingClientRect: () => ({ bottom: position === "sticky"
+          ? Math.max(0, initialHeaderBottom) : initialHeaderBottom - scrollY })
+      };
+      const card = {
+        classList: { add() {}, remove() {} },
+        getBoundingClientRect: () => ({ top: documentTop - scrollY })
+      };
+      const context = {
+        document: { getElementById: (id) => id === "site-header" ? header : { children: [card] } },
+        getComputedStyle: () => ({ position }),
+        readingTop: (el) => Math.max(0, el.getBoundingClientRect().bottom),
+        scrollByInstant: (dy) => { scrollY += dy; },
+        requestAnimationFrame() {},
+      };
+      vm.runInNewContext(source[0] + "\nrestoreReadingAnchor({ index: 0, holdFrom: 0, offset: -50 });", context);
+      const readingEdge = Math.max(0, header.getBoundingClientRect().bottom);
+      assert.equal(card.getBoundingClientRect().top - readingEdge, offset,
+        `position=${position}, initialHeaderBottom=${initialHeaderBottom}`);
+    }
+  }
 });

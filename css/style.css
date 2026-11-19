@@ -10,7 +10,8 @@
 
 html {
   scroll-behavior: smooth;
-  /* 固定ヘッダーの下に隠れない位置までスクロールする（Tab・Shift+Tab・focus()・#リンク・scrollIntoView） */
+  /* 固定ヘッダーの下に隠れない位置までスクロールする（Tab・Shift+Tab・focus()・#リンク・scrollIntoView）。
+     ヘッダーを固定しない画面（下の「ヘッダーを固定しない画面」）では --header-h が 0 なので、画面の上端から 0.5rem の所に止まる */
   scroll-padding-top: calc(var(--header-h, 64px) + 0.5rem);
 }
 
@@ -80,12 +81,18 @@ html[lang="en"] .label-ja {
   gap: 0.2rem;
 }
 
+/* サイト名は、語の区切り（index.html で「・」の後ろに置いた <wbr>）でだけ折る。日本語はどの字の間でも折れるので、
+   狭い画面では「オンライ｜ン」のように語の途中で折れていた。keep-all で語の途中では折らず、strict で小さい仮名や
+   「ー」の前でも折らない。overflow-wrap: anywhere は、区切りの間の1かたまりが横幅に入らないときだけ折る保険 */
 .site-title {
   margin: 0;
   font-size: 1.6rem;
   line-height: inherit;
   font-weight: 700;
   color: #111;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  line-break: strict;
 }
 
 .site-subtitle {
@@ -96,6 +103,7 @@ html[lang="en"] .label-ja {
 
 .header-controls {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.4rem;
 }
@@ -131,13 +139,8 @@ html[lang="en"] #lang-en {
   }
 }
 
+/* 枠・地の色・角丸は .header-controls button のものを使う */
 .help-button {
-  border: 1px solid #d1d5db;
-  background-color: #ffffff;
-  color: #111;
-  border-radius: 50%;
-  width: 28px;
-  height: 28px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -145,8 +148,54 @@ html[lang="en"] #lang-en {
   cursor: pointer;
 }
 
+/* 「?」は px で固定せず、最小の大きさを rem で決め、縦横を同じ長さにして丸を保つ（文字を大きくしても横長にならず、
+   丸のまま一緒に大きくなる）。.header-controls button（詳細度 0,1,1）の padding に勝つよう、.header-controls .help-button で書く。
+   指で押す画面の 44px の指定（下の「指で押す画面」）は、これより後ろに書く（前に書くと、この 1.75rem が勝つ） */
+.header-controls .help-button {
+  min-width: 1.75rem;
+  min-height: 1.75rem;
+  aspect-ratio: 1;
+  padding: 0;
+  line-height: 1;
+}
+
 .help-button:hover {
   background-color: #f3f4f6;
+}
+
+/* ヘッダーを固定しない画面：狭い画面（767px まで）と低い画面（高さ 500px まで。スマホを横にしたときや拡大したとき）。
+   固定したままだと、スクロールしてもヘッダーが上に残って一覧の見える所が2〜3割狭くなり、400% に拡大するとほぼ全面を覆う。
+   固定しないあいだは止まる位置の余白（--header-h）も 0 にする（章の見出しなどは画面の上端から 0.5rem の所に止まる）。
+   main.js（applyHeaderHeightVar）も、固定していないときは 0 を書く */
+@media (max-width: 767.98px), (max-height: 500px) {
+  html {
+    --header-h: 0px;
+  }
+
+  #site-header {
+    position: static;
+  }
+}
+
+/* 480px より狭い画面では、JA・EN・? を題字の上の行へ回して題字に横幅を空け、題字を少し小さくする
+   （題字と副題がボタンの横の狭い幅に押し込まれて何行にも折れ、最初の画面のヘッダーが高くなるため） */
+@media (max-width: 479.98px) {
+  .header-inner {
+    flex-wrap: wrap;
+    row-gap: 0.25rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .header-controls {
+    order: -1;
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .site-title {
+    font-size: 1.25rem;
+  }
 }
 
 /* --------------------------------
@@ -179,6 +228,15 @@ html[lang="en"] #lang-en {
   border-radius: 0.5rem 0.5rem 0 0;
 }
 
+/* 360px より狭い画面では、タブの左右の余白を詰める。320px では「学習ダッシュボード」が1つのタブの横幅に入らず、
+   「学習ダッシュボー｜ド」と語の途中で折れていた */
+@media (max-width: 359.98px) {
+  .tab-button {
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+  }
+}
+
 /* --------------------------------
  * メイン
  * -------------------------------- */
@@ -188,7 +246,8 @@ html[lang="en"] #lang-en {
   margin: 0 auto;
   padding: 0.75rem 1rem 2.5rem;
   /* 絞り込みの結果が少ないときも、フッターが画面の途中に上がってこないように、固定ヘッダーを除いた1画面分の高さを取る
-     （フッターは画面の下端のすぐ外に来る）。JavaScript が動かないときは取らない（下の @media (scripting: none)） */
+     （フッターは画面の下端のすぐ外に来る。ヘッダーを固定しない画面では --header-h が 0 なので、1画面分）。
+     JavaScript が動かないときは取らない（下の @media (scripting: none)） */
   min-height: calc(100vh - var(--header-h, 64px));
 }
 
@@ -268,18 +327,35 @@ html[lang="en"] #lang-en {
   padding-top: 0.3rem;
 }
 
-/* JS が動く狭い画面では、main.js が「はじめ方」を畳んで html に js-ready を付けるまで、中身を出さない。
-   開いた形で一度描いてから畳むと、下の絞り込み欄とフッターが上へずれるため。
-   式は js/main.js の NARROW_MQ と同じにする。JS が動かない環境（scripting: none）では今までどおり開いて見せる。
-   開閉の印も閉じた形（▶）にそろえる。
+/* 「はじめ方」は HTML では開いた形（open）で、閉じて始めるときは、main.js が畳んで html に js-ready を付けるまで中身を出さない。
+   開いた形で一度描いてから畳むと、下の絞り込み欄とフッターが上へずれるため。開閉の印も閉じた形（▶）にそろえる。
+   閉じて始めるのは、描く前に js/lang.js が html に data-start="closed" を書いたとき（?book= で来たときと、閉じた形を覚えているとき）と、
+   data-start がなく（覚えた開閉がない、はじめて来た人など）画面が狭いとき（767px まで）。data-start="open"（開いた形を覚えている）
+   なら狭い画面でも開く。狭い画面の式は js/main.js の NARROW_MQ と同じにする。main.js も同じ決め方で開閉を合わせる。
+   JS が動かない環境（scripting: none）では今までどおり開いて見せる。
    main.js が届かず js-ready が付かないままのときは、25秒後に中身と印を開いた形に戻す（入口のリンクを隠したままにしない） */
-@media (scripting: enabled) and (max-width: 767.98px) {
-  html:not(.js-ready) #start-here > summary {
+@media (scripting: enabled) {
+  html[data-start="closed"]:not(.js-ready) #start-here > summary {
     list-style-type: disclosure-closed;
     animation: hlo-unhide-marker 0s linear 25s forwards;
   }
 
-  html:not(.js-ready) #start-here > .start-here-body {
+  html[data-start="closed"]:not(.js-ready) #start-here > .start-here-body {
+    max-height: 0;
+    padding-top: 0;
+    overflow: hidden;
+    visibility: hidden;
+    animation: hlo-unhide 0s linear 25s forwards;
+  }
+}
+
+@media (scripting: enabled) and (max-width: 767.98px) {
+  html:not([data-start]):not(.js-ready) #start-here > summary {
+    list-style-type: disclosure-closed;
+    animation: hlo-unhide-marker 0s linear 25s forwards;
+  }
+
+  html:not([data-start]):not(.js-ready) #start-here > .start-here-body {
     max-height: 0;
     padding-top: 0;
     overflow: hidden;
@@ -502,7 +578,7 @@ html[lang="en"] #lang-en {
 
 #tool-list {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1rem;
 }
 
@@ -589,6 +665,7 @@ html[lang="en"] #lang-en {
 
 /* --- カード本体 --- */
 .tool-card {
+  min-width: 0;
   background-color: #ffffff;
   border-radius: 0.875rem;
   border: 1px solid #e5e7eb;
@@ -625,6 +702,8 @@ html[lang="en"] #lang-en {
 }
 
 .tool-title {
+  min-width: 0;
+  overflow-wrap: anywhere;
   font-size: 1.1rem;
   font-weight: 700;
   color: #111827;
@@ -878,6 +957,22 @@ html[lang="en"] #lang-en {
   background-color: #fef2f2;
 }
 
+/* データが届くまで（main.js が disabled を外すまで）は押せない見た目にする。ホバーの見た目も出さない
+   （ホバーの規則と同じ詳細度なので、その後ろに書く） */
+#share-on-x:disabled,
+#reset-all-progress:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+#share-on-x:disabled:hover {
+  filter: none;
+}
+
+#reset-all-progress:disabled:hover {
+  background-color: #ffffff;
+}
+
 /* ================================
  * カテゴリ別進捗（進捗バー付きカード）
  * ================================ */
@@ -885,12 +980,13 @@ html[lang="en"] #lang-en {
 #category-progress-list,
 #book-progress-list {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.75rem;
 }
 
 /* カテゴリカード */
 .category-progress-item {
+  min-width: 0;
   background-color: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 0.625rem;
@@ -900,6 +996,7 @@ html[lang="en"] #lang-en {
 
 /* カテゴリ名 */
 .category-progress-title {
+  overflow-wrap: anywhere;
   font-weight: 600;
   font-size: 0.9rem;
   color: #111827;
@@ -933,11 +1030,14 @@ html[lang="en"] #lang-en {
   background-color: #10b981; /* 緑: 定着済み */
 }
 
-/* 数値テキスト */
+/* 数値テキスト。「定着済み0」「（全44）」の中では折らず、「 / 」と「（全…）」の前の空白で折る（日本語はどの字の間でも
+   折れるので、狭い画面では「定着済｜み0」「（全｜44）」と折れていた）。overflow-wrap: anywhere は横幅に入らないときだけの保険 */
 .category-progress-detail {
   font-size: 0.75rem;
   color: #6b7280;
   line-height: 1.4;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 
 /* --------------------------------
@@ -1014,15 +1114,16 @@ html.help-open.keep-gutter {
   outline: none;
 }
 
-/* 「×」は本文と一緒に流れないよう、右上に残す（sticky）。押せる大きさは44px。
+/* 「×」は本文と一緒に流れないよう、右上に残す（sticky）。押せる大きさは、画面の幅にかかわらず 44px（2.75rem。
+   文字を大きくしたときは一緒に大きくなる）。
    sticky の基準は本文の余白（1.5rem）の内側なので、top と margin を -1rem にして、角から8pxの位置に置く */
 .modal-close {
   position: sticky;
   top: -1rem;
   float: right;
   z-index: 1;
-  width: 44px;
-  height: 44px;
+  width: 2.75rem;
+  height: 2.75rem;
   margin: -1rem -1rem 0 0.5rem;
   background: #fff;
   border: none;
@@ -1063,10 +1164,7 @@ html.help-open.keep-gutter {
     font-size: 1.15rem;
   }
 
-  /* PC幅でのフッターボタン配置 */
-  .tool-footer {
-    flex-wrap: nowrap;
-  }
+  /* ボタンは、文字を拡大して横幅が足りなくなったときも折り返す。 */
 
   /* PC幅でのボタンコンパクト化 */
   .tool-footer .tool-button {
@@ -1082,7 +1180,7 @@ html.help-open.keep-gutter {
   /* カテゴリ別・書籍別進捗：PC幅では2列 */
   #category-progress-list,
   #book-progress-list {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1rem;
   }
 }
@@ -1099,6 +1197,53 @@ html.help-open.keep-gutter {
 
   #tool-filters.no-books {
     grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr) minmax(0, 1.4fr);
+  }
+}
+
+/* ================================
+ * 指で押す画面：押せる部品を 44px 以上に
+ * ================================ */
+
+/* 狭い画面（767px まで）と指で操作する端末では、ヘッダー・タブ・カード・ダッシュボード・フッターの押せる部品を
+   44px（2.75rem）以上にする。rem で書くので、文字を大きくしたときも一緒に大きくなる。
+   マウスで使う 768px 以上の画面は今の大きさのまま（上の「PC幅でのボタンコンパクト化」）。
+   ヘッダーの「?」の丸の指定（.header-controls .help-button の 1.75rem）より後ろに書く（前に書くと、指で押す画面でも 1.75rem のまま）。
+   <a> は display を変えないと、高さを取っても文字が上に寄るので inline-flex にする */
+@media (max-width: 767.98px), (pointer: coarse) {
+  .header-controls button,
+  .tab-button,
+  #share-on-x,
+  #reset-all-progress {
+    min-height: 2.75rem;
+  }
+
+  .header-controls button,
+  .header-controls .help-button {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+  }
+
+  /* 幅も 44px 以上にする（768px 以上の指で操作する端末では、PC幅でのボタンコンパクト化で「デモ」が 40px 幅になる） */
+  .tool-footer .tool-button,
+  .tool-progress-button,
+  .footer-inner a,
+  .book-banner-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+  }
+
+  /* ダッシュボードの本の行（種別の札と書名）。inline-flex にすると、リンクの下線が種別の札にも付く（札が flex の項目になり、
+     inline-block でなくなる）ので、inline-block のまま上下の余白で 44px にする（文字は上下の中央）。
+     下の余白を足す分、行の下の margin は外す（inline-block にすると効き始めるため） */
+  .book-progress-title {
+    display: inline-block;
+    min-height: 2.75rem;
+    padding-top: 0.65rem;
+    padding-bottom: 0.65rem;
+    margin-bottom: 0;
   }
 }
 
