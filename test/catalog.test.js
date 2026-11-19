@@ -63,6 +63,7 @@ function validateTools(entries, definitions, regeneration) {
   for (const tool of entries) {
     if (!tool || typeof tool !== "object" || Array.isArray(tool)) { result.errors.push("Invalid tool object"); continue; }
     const who = tool.id || "(missing id)";
+    if (tool.readme_usage !== undefined && !require("../js/url.js").validReadmeUsage(tool.readme_usage)) result.errors.push(`${who}: invalid optional README usage metadata`);
     if (!/^day\d{3}$/.test(tool.id || "")) result.errors.push(`Invalid/empty id: ${who}`);
     if (ids.has(tool.id)) result.errors.push(`Duplicate id: ${who}`);
     ids.add(tool.id);

@@ -104,17 +104,16 @@ test("UR2: パスと、読み直すと同じ条件になること（書いて読
   }
 });
 
-test("UR3: repoLink は英語表示のときだけ、リポジトリーのトップを英語の README（blob/HEAD/README.en.md）へ向ける", () => {
+test("UR3: repoLink は検証済みrepoから言語に対応するHEADのREADMEを作る", () => {
   const repo = "https://github.com/ipusiron/password-checker";
   assert.equal(U.repoLink(repo, "en"), repo + "/blob/HEAD/README.en.md");
   assert.equal(U.repoLink(repo + "/", "en"), repo + "/blob/HEAD/README.en.md");
   assert.equal(U.repoLink(repo + ".git", "en"), repo + "/blob/HEAD/README.en.md");
-  // 日本語表示は変えない
-  assert.equal(U.repoLink(repo, "ja"), repo);
-  assert.equal(U.repoLink(repo, undefined), repo);
-  // リポジトリーのトップ以外の形と、github.com 以外はそのまま
+  assert.equal(U.repoLink(repo, "ja"), repo + "/blob/HEAD/README.md");
+  assert.equal(U.repoLink(repo, undefined), repo + "/blob/HEAD/README.md");
+  // 検証済みrepo以外からはREADMEの宛先を作らない。
   for (const u of [repo + "/tree/main/docs", "https://gitlab.com/ipusiron/x", "http://github.com/ipusiron/x", "https://github.com/ipusiron", ""]) {
-    assert.equal(U.repoLink(u, "en"), u, u);
+    assert.equal(U.repoLink(u, "en"), "", u);
   }
   assert.equal(U.repoLink(undefined, "en"), "");
 });

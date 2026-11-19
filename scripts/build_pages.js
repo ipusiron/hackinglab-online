@@ -5,6 +5,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const HB = require("../js/books.js");
+const HU = require("../js/url.js");
 const ROOT = path.resolve(__dirname, "..");
 
 const COPY = Object.freeze({
@@ -51,7 +52,7 @@ function external(url, kind, label) {
 function toolRow(tool, id, book) {
   const links = [];
   if (tool.demo_url) links.push(external(tool.demo_url, "demo", bilingual("デモ", "Demo")));
-  links.push(external(tool.repo_url, "repo", "GitHub README"));
+  links.push(external(HU.repoLink(tool.repo_url, "ja", tool.readme_usage), "repo", "GitHub README"));
   const subtitle = tool.subtitle_ja || tool.subtitle_en
     ? `<div class="sl-subtitle">${bilingual(tool.subtitle_ja, tool.subtitle_en)}</div>` : "";
   const refs = book ? [HB.formatRef(book, tool.id, "ja"), HB.formatRef(book, tool.id, "en")] : [[], []];
