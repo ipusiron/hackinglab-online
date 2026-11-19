@@ -422,7 +422,7 @@ test("H21: 検索欄は日本語の変換中（isComposing の input）に絞ら
   // Chromium は確定の input も isComposing=true で出すので、compositionend で絞る処理が要る
   assert.match(handler("compositionend"), /applySearch\(searchInput\.value\)/, "確定したときに絞っていない");
   // 「変換中」の印を自分で持たない（compositionend を取りこぼすと、検索が止まったままになる）
-  assert.match(s, /addEventListener\("compositionstart", cancelListStatus\)/, "Composition start cancels delayed announcements without keeping a composition flag");
+  assert.match(s, /addEventListener\("compositionstart", \(\) => \{\s*searchEscapeComposing = true;\s*cancelListStatus\(\);/, "Composition start cancels announcements; the session flag is restricted to Escape");
   // Firefox は compositionend のあとにも input を出すので、同じ語なら描き直さない
   assert.match(fnBody("applySearch"), /if \(filters\.search === before\) return;/, "同じ語でも描き直している");
 });
@@ -619,27 +619,16 @@ test("H27: 本・カテゴリー・タブを選んで切り替えたら履歴を
   assert.match(row, /commitUrl\(\{ book: s\.book\.slug, tab: "tools", tools: null, hash: "" \}, "push"\)/);
 });
 
-test("H28: 「はじめ方」の入口は、ふつうの左クリックだけ読み直しを止めて書籍の選択と同じ処理で絞り、履歴を積む（「すべて」はほかの条件も外す）。Ctrl などを押したクリックはリンクのまま", () => {
-  const setup = fnBody("setupStaticUI");
-  const i = setup.indexOf('document.querySelectorAll(".start-here-entries a")');
-  assert.ok(i >= 0, "はじめ方の入口の処理がない（押すとページを読み直し、開いた「はじめ方」が閉じる）");
-  const h = setup.slice(i, setup.indexOf("\n  });", i));
-  // Ctrl・⌘・Shift・Alt・左以外のボタンは止めない（新しいタブで開く）。本のデータがないときと、books.json にない本も止めない
-  const iGuard = h.search(/if \(e\.defaultPrevented \|\| e\.button !== 0 \|\| e\.ctrlKey \|\| e\.metaKey \|\| e\.shiftKey \|\| e\.altKey\) return;/);
-  const iPrevent = h.indexOf("e.preventDefault()");
-  assert.ok(iGuard >= 0 && iPrevent > iGuard, "Ctrl などを押したクリック（新しいタブで開く操作など）まで止めている");
-  assert.match(h, /if \(!urlStateReady \|\| !HB \|\| !books\.length\) return;/);
-  assert.match(h, /if \(raw && !slug\) return;/);
-  assert.match(h, /keepInPlace\(a, \(\) => openStartEntry\(slug\)\)/);
+test("H28: Start panels use native controls and book links preserve modified clicks; all clears filters through one history entry", () => {
+  const setup = fnBody("setupStartEntries");
+  assert.match(setup, /e\.button !== 0 \|\| e\.ctrlKey \|\| e\.metaKey \|\| e\.shiftKey \|\| e\.altKey\) return;/);
+  assert.match(setup, /keepInPlace\(link, \(\) => openStartEntry\(link\.dataset\.book\)\)/);
+  assert.match(setup, /keepInPlace\(all, \(\) => openStartEntry\(""\)\)/);
   const open = fnBody("openStartEntry");
   assert.match(open, /setBookFilter\(slug, \{ history: "push" \}\)/);
   assert.match(open, /commitUrl\(\{ book: "", cat: "", q: "", tools: null, hash: "" \}, "push"\);\s*leaveToolSet\(\);\s*clearOtherFilters\(\);/);
-  const clear = fnBody("clearOtherFilters");
-  for (const re of [/filters\.categoryId = "";/, /filters\.progress = "all";/, /setSearchQuery\(""\);/]) assert.match(clear, re);
-  // href は残す（新しいタブ・JavaScript が動かないときの入口）
-  const nav = html.match(/<nav[^>]*class="start-here-entries"[\s\S]*?<\/nav>/);
-  assert.ok(nav, "はじめ方の入口がない");
-  assert.deepEqual([...nav[0].matchAll(/href="([^"]+)"/g)].map((m) => m[1]), ["?book=security-tools-100", "?book=security-tools-200", "./"]);
+  for (const name of ["first", "books", "all"]) assert.match(html, new RegExp('<button id="start-' + name + '-button"[^>]*type="button"[^>]*disabled'));
+  assert.match(fnBody("updateStartEntries"), /HU\.withLang\(url\.toString\(\), currentLang\)/);
 });
 
 test("H29: カードの「GitHub」「デモ」のリンクは、英語表示のときだけ英語の README と ?lang=en にする（js/url.js の関数で作り、日本語表示は変えない）", () => {
@@ -667,7 +656,8 @@ test("H30: 選んだ言語を覚える。JA・EN で選んだ言語を保存し�
   assert.match(fnBody("setupStaticUI"), /syncLangParam\(\);/);
   assert.match(fnBody("applyHistoryState"), /lastPush = null;[^\n]*\n[^\n]*\n\s*syncLangParam\(\);/);
   // 英語のときは「はじめ方」の入口・ダッシュボードの本の行・Xで共有する URL に ?lang=en を付ける
-  assert.match(fnBody("updateLanguageUI"), /HU\.withLang\(new URL\(base, window\.location\.href\)\.toString\(\), "en"\)/);
+  assert.match(fnBody("updateLanguageUI"), /updateStartEntries\(\)/);
+  assert.match(fnBody("updateStartEntries"), /HU\.withLang\(url\.toString\(\), currentLang\)/);
   assert.match(fnBody("renderBookProgress"), /HU\.withLang\(new URL\(rowHref, window\.location\.href\)\.toString\(\), "en"\)/);
   assert.match(fnBody("handleShareOnX"), /const url = HU \? HU\.withLang\(base, currentLang\) : base;/);
   // 検索欄の案内文は index.html に書かない（英語で開いたとき、main.js が動く前に日本語の文が出ないように）
@@ -911,8 +901,7 @@ test("H37: 「はじめ方」の開閉は、利用者が開閉したらその形
     fnBody("markStartSeen"),
     /if \(progressStore\.getItem\(START_KEY\) === null\) progressStore\.setItem\(START_KEY, "closed"\);/
   );
-  const entries = setup.slice(setup.indexOf('document.querySelectorAll(".start-here-entries a")'));
-  assert.match(entries.slice(0, entries.indexOf("\n  });")), /a\.addEventListener\("click", \(e\) => \{\s*markStartSeen\(\);/, "入口を押しても残していない");
+  assert.match(fnBody("setupStartEntries"), /markStartSeen\(\)/, "Start actions remember first use");
   const book = setup.slice(setup.indexOf('bookSelect?.addEventListener("change"'));
   assert.match(book.slice(0, book.indexOf("\n  });")), /if \(e\.target\.value\) markStartSeen\(\);/, "本を選んでも残していない");
   assert.match(fnBody("renderBookProgress"), /title\.addEventListener\("click", \(e\) => \{\s*markStartSeen\(\);/, "ダッシュボードの本の行で本を選んでも残していない");
@@ -920,6 +909,6 @@ test("H37: 「はじめ方」の開閉は、利用者が開閉したらその形
   const click = card.slice(card.indexOf('progressSelect.addEventListener("change"'));
   assert.match(click.slice(0, click.indexOf("\n  });")), /setProgress\(tool\.slug, level\);\s*markStartSeen\(\);/, "進捗を付けても残していない");
   // 開いただけ・見ただけでは残さない（開いて見せた「はじめ方」が、読む前に次から閉じてしまわない）
-  assert.equal((blankComments(mainJs).match(/markStartSeen\(\)/g) || []).length, 4 + 1, "markStartSeen を呼ぶ所は、入口・本の選択欄・ダッシュボードの本の行・進捗の4か所と、宣言の1か所");
+  assert.equal((blankComments(mainJs).match(/markStartSeen\(\)/g) || []).length, 7 + 1, "Panel, all, demo and book entries plus existing book/dashboard/progress actions and declaration");
   assert.equal((blankComments(mainJs).match(/setItem\(START_KEY/g) || []).length, 2, "開閉を覚えるのは、開閉の見出しを押したときと markStartSeen の2か所だけ");
 });

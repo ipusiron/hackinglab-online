@@ -634,10 +634,25 @@ function setupStaticUI() {
   // Chromium は確定の input も isComposing=true で出し、そのあとに compositionend を出す（後ろに input は来ない）。
   // Firefox は compositionend のあとに isComposing=false の input を出す。どちらの順でも、同じ語なら
   // applySearch が描き直さないので、絞るのは1回だけ。変換を通らない英字は、今までどおり1文字ごとに絞る。
-  // 「変換中」の印は自分では持たない（compositionend を取りこぼすと、検索が止まったままになるため）
-  searchInput?.addEventListener("compositionstart", cancelListStatus);
+  // Only Escape needs a composition-session guard. Ordinary input still uses the event's
+  // isComposing value, so a missed compositionend cannot leave filtering disabled.
+  let searchEscapeComposing = false;
+  searchInput?.addEventListener("compositionstart", () => {
+    searchEscapeComposing = true;
+    cancelListStatus();
+  });
   searchInput?.addEventListener("compositionend", () => {
+    searchEscapeComposing = false;
     keepInPlace(searchInput, () => applySearch(searchInput.value));
+  });
+  searchInput?.addEventListener("blur", () => { searchEscapeComposing = false; });
+  searchInput?.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    if (e.isComposing || e.keyCode === 229 || searchEscapeComposing) { e.preventDefault(); return; }
+    e.preventDefault(); // Avoid a second native search-clear input event.
+    if (!searchInput.value) return;
+    searchInput.value = "";
+    keepInPlace(searchInput, () => applySearch(""));
   });
   searchInput?.addEventListener("input", (e) => {
     if (e.isComposing) { cancelListStatus(); return; }
@@ -655,29 +670,7 @@ function setupStaticUI() {
     if (searchInput.value.trim() !== q && !typing) searchInput.value = q;
   }
 
-  // 「はじめ方」の入口（ツール100・ツール200・すべて）：Ctrl などを押さない左クリックのときは、ページを読み直さずに
-  // 書籍の選択と同じ処理で絞り、履歴を積む（読み直すと、開いた「はじめ方」と入れた条件が初めに戻り、回線がないと
-  // サイトから出てしまうため）。Ctrl・⌘・Shift・Alt を押したクリック（新しいタブや窓で開く操作など）と、本のデータを
-  // 読めていないときは、これまでどおりのリンクとしてブラウザーに任せる。
-  // どのクリックでも、次からは「はじめ方」を閉じて始める（markStartSeen）
-  document.querySelectorAll(".start-here-entries a").forEach((a) => {
-    a.addEventListener("click", (e) => {
-      markStartSeen();
-      if (e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
-      if (!urlStateReady || !HB || !books.length) return;
-      let target;
-      try {
-        target = new URL(a.href);
-      } catch (err) {
-        return;
-      }
-      const raw = target.searchParams.get("book");
-      const slug = raw ? HB.resolveBookParam(target.search, books) : "";
-      if (raw && !slug) return; // books.json にない本は、リンクのまま開く
-      e.preventDefault();
-      keepInPlace(a, () => openStartEntry(slug));
-    });
-  });
+  setupStartEntries(keepInPlace);
 
   document.getElementById("retry-data")?.addEventListener("click", loadData);
 
@@ -719,6 +712,95 @@ function setupStaticUI() {
   }
 
   updateLanguageUI();
+}
+
+// Start panels are visit-local. Keep their controls and focused links across language changes.
+let startBooksSource = null;
+
+function setupStartEntries(keepInPlace) {
+  const choose = (panel, button) => {
+    if (loadState !== "ready") return;
+    markStartSeen();
+    keepInPlace(button, () => {
+      ["first", "books"].forEach((name) => {
+        document.getElementById(`start-${name}-panel`).hidden = name !== panel;
+        document.getElementById(`start-${name}-button`).setAttribute("aria-expanded", String(name === panel));
+      });
+    });
+  };
+  ["first", "books"].forEach((name) => {
+    const button = document.getElementById(`start-${name}-button`);
+    button.addEventListener("click", () => {
+      if (!button.disabled) choose(name, button);
+    });
+  });
+  const all = document.getElementById("start-all-button");
+  all.addEventListener("click", () => {
+    if (loadState !== "ready") return;
+    markStartSeen();
+    keepInPlace(all, () => openStartEntry(""));
+    // The pushed entry needs the cleared, non-URL progress condition even if no scroll follows.
+    saveViewInHistory();
+  });
+  document.querySelectorAll(".start-demo").forEach((link) => {
+    link.addEventListener("click", (e) => {
+      if (link.getAttribute("aria-disabled") === "true") e.preventDefault();
+      else markStartSeen();
+    });
+  });
+  // Book links keep the browser's modified-click behavior and use one in-page history entry.
+  const list = document.getElementById("start-book-links");
+  list.addEventListener("click", (e) => {
+    const link = e.target.closest("a[data-book]");
+    if (!link || !list.contains(link)) return;
+    markStartSeen();
+    if (e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+    if (loadState !== "ready" || !books.some((book) => book.slug === link.dataset.book)) return;
+    e.preventDefault();
+    keepInPlace(link, () => openStartEntry(link.dataset.book));
+  });
+}
+
+function updateStartEntries() {
+  const ready = loadState === "ready";
+  document.getElementById("start-first-button").disabled = !ready;
+  document.getElementById("start-all-button").disabled = !ready;
+  document.getElementById("start-books-button").disabled = !ready || !HB || !books.length;
+  document.querySelectorAll(".start-demo").forEach((link) => {
+    const tool = ready && tools.find((item) => item.hub !== false && item.id === link.dataset.toolId);
+    const url = tool && tool.demo_url && (HU ? HU.demoLink(tool.demo_url, currentLang) : tool.demo_url);
+    if (url) {
+      link.href = url;
+      link.removeAttribute("aria-disabled");
+      link.removeAttribute("tabindex");
+      link.setAttribute("aria-label", currentLang === "ja"
+        ? `デモを開く（${tool.title}、新しいタブ）`
+        : `Open demo (${tool.title}, new tab)`);
+    } else {
+      link.removeAttribute("href");
+      link.setAttribute("aria-disabled", "true");
+      link.setAttribute("tabindex", "-1");
+    }
+  });
+  const list = document.getElementById("start-book-links");
+  if (startBooksSource !== books) {
+    startBooksSource = books;
+    list.innerHTML = "";
+    if (HB) books.forEach((book) => {
+      const item = document.createElement("li");
+      const link = document.createElement("a");
+      link.dataset.book = book.slug;
+      item.appendChild(link);
+      list.appendChild(item);
+    });
+  }
+  list.querySelectorAll("a[data-book]").forEach((link) => {
+    const book = books.find((item) => item.slug === link.dataset.book);
+    link.textContent = HB.bookLabel(book, currentLang);
+    const url = new URL(window.location.pathname, window.location.origin);
+    url.searchParams.set("book", book.slug);
+    link.href = HU ? HU.withLang(url.toString(), currentLang) : url.toString();
+  });
 }
 
 // Disclosure preference belongs to this visit, independently of a set hiding all filters.
@@ -895,19 +977,14 @@ function setupHelpModal() {
       helpDialog.focus();
       return;
     }
-    const first = focusables[0];
-    const last = focusables[focusables.length - 1];
-    const active = document.activeElement;
-    if (!helpDialog.contains(active)) {
-      e.preventDefault();
-      first.focus();
-    } else if (e.shiftKey && (active === first || active === helpDialog)) {
-      e.preventDefault();
-      last.focus();
-    } else if (!e.shiftKey && active === last) {
-      e.preventDefault();
-      first.focus();
-    }
+    // Native Tab can skip links depending on browser/OS settings. Move every
+    // step explicitly so it cannot leave the dialog before reaching our last item.
+    e.preventDefault();
+    const current = focusables.indexOf(document.activeElement);
+    const next = current < 0
+      ? (e.shiftKey ? focusables.length - 1 : 0)
+      : (current + (e.shiftKey ? -1 : 1) + focusables.length) % focusables.length;
+    focusables[next].focus();
   });
 }
 
@@ -996,6 +1073,7 @@ function setLoadState(state) {
   document.getElementById("retry-data").disabled = state !== "error";
   if (state !== "ready") ["share-on-x", "reset-all-progress"].forEach((id) => { document.getElementById(id).disabled = true; });
   updateRecordsUI();
+  updateStartEntries();
 }
 
 async function loadData() {
@@ -1307,13 +1385,7 @@ function updateLanguageUI() {
       : LIST_TEXT.search_placeholder[1];
   }
 
-  // 「はじめ方」の入口は、英語のときは ?lang=en を付けた href にする（新しいタブで開いたときや、リンクを写したときも英語で開く）。
-  // もとの href は data-href に取っておき、日本語に戻したらそれに戻す
-  document.querySelectorAll(".start-here-entries a").forEach((a) => {
-    if (!a.dataset.href) a.dataset.href = a.getAttribute("href");
-    const base = a.dataset.href;
-    a.setAttribute("href", isJa || !HU ? base : HU.withLang(new URL(base, window.location.href).toString(), "en"));
-  });
+  updateStartEntries();
   updateRecordsUI();
 }
 
