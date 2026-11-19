@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <title>ハッキング・ラボ・オンライン | Hacking Lab Online</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="canonical" href="https://hackinglab.online/" />
     <meta
       http-equiv="Content-Security-Policy"
       content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'"
@@ -107,6 +108,14 @@
     </nav>
 
     <main id="main-content">
+      <noscript>
+        <p class="static-list-fallback">
+          <a href="./list.html"><span lang="ja">JavaScriptなしで読めるツール一覧</span> / <span lang="en">Tool list without JavaScript</span></a>
+        </p>
+      </noscript>
+      <p id="load-fallback" class="static-list-fallback" hidden>
+        <a href="./list.html"><span class="label-ja">JavaScriptなしで読めるツール一覧</span><span class="label-en">Tool list without JavaScript</span></a>
+      </p>
       <!-- タブ1：ツール一覧 -->
       <section
         id="tab-tools"
@@ -154,6 +163,8 @@
         <!-- 選択中の書籍・シリーズのバナー（JSで中身を挿入） -->
         <section id="book-banner" aria-labelledby="book-banner-title" hidden></section>
         <p id="book-status" class="visually-hidden" role="status"></p>
+        <p id="link-status" role="status" hidden></p>
+        <section id="set-banner" aria-labelledby="set-banner-title" hidden></section>
 
         <!-- フィルターバー -->
         <div id="tool-filters">
@@ -313,6 +324,10 @@
           </a>
         </div>
 
+        <div>
+          <a href="./list.html"><span class="label-ja">JavaScriptなしで読めるツール一覧</span><span class="label-en">Tool list without JavaScript</span></a>
+        </div>
+
         <div id="copyright">
           © <span id="current-year"></span> Hacking Lab Online
         </div>
@@ -369,6 +384,7 @@
             <li>
               書籍・シリーズ：本やシリーズに関係するツールだけに絞り込めます。本のサポートページからのリンク（?book=）で自動的に絞り込まれます。Day番号でも検索できます。
             </li>
+            <li>ツール1本を指すリンクは、アドレスの後ろに「#day」とDay番号の3桁を付けて作れます（例：https://hackinglab.online/#day045）。</li>
             <li>学習ダッシュボード：学習進度を可視化し、Xで共有できます。</li>
             <li>進捗はブラウザーごとに localStorage に保存されます。</li>
           </ul>
@@ -429,6 +445,7 @@
 
           <h3>How to use this site</h3>
           <ul>
+            <li>To link to a single tool, add “#day” and its three-digit Day number to the address (for example, https://hackinglab.online/#day045).</li>
             <li>
               Tools tab: browse tools by category, progress status, and search.
             </li>

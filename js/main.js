@@ -29,6 +29,27 @@ let searchEntries = null;
 const HU = typeof HLOUrl !== "undefined" ? HLOUrl : null;
 // いま開いているタブ（"tools" | "dashboard"）。URL の ?tab= と合わせる
 let currentTab = "tools";
+// URL のセットと通知は、実在する公開ツールを読んでから決める。
+let toolSet = { present: false, ids: [], unknown: false, truncated: false };
+let linkNotices = [];
+let linkedToolId = "";
+let pendingNavigation = null;
+let lastNavigationHref = "";
+let copyGeneration = 0;
+let navigationVersion = 0;
+let interactionVersion = 0;
+let historyScrollTimer = 0;
+const ordinaryTitle = document.title;
+const LINK_TEXT = {
+  partial: ["このリンクのツールのうち、見つからないものがありました。", "Some tools in this link could not be found."],
+  empty: ["このリンクのツールが見つからないため、すべてのツールを表示しています。", "None of the tools in this link were found, so all tools are shown."],
+  truncated: ["最初の12本だけを表示しています。", "Showing only the first 12 tools."],
+  book: ["このツールは選んだ本に入っていないため、本の絞り込みを外して表示しています。", "This tool isn't in the selected book, so the book filter has been cleared to show it."],
+  filters: ["リンクのツールが今の絞り込みに入っていないため、条件を外して表示しています。", "The linked tool didn't match the current filters, so the filters have been cleared to show it."],
+  unknown: ["リンクで指定されたツールが見つからないため、すべてのツールを表示しています。", "The linked tool was not found, so all tools are shown."],
+  copied: ["リンクをコピーしました。", "Link copied."],
+  copyFailed: ["コピーできませんでした。下のリンクを選んでコピーしてください。", "Couldn't copy the link. Select the link below and copy it."]
+};
 
 // localStorage を安全に使うラッパー（js/storage.js）。読み込めていなければ同等の最小実装で代える。
 const progressStore =
@@ -101,6 +122,8 @@ function setupStaticUI() {
   const setLanguage = (lang) => {
     if (lang === currentLang) return; // 今の言語のボタンは押しても何もしない
     const anchor = captureReadingAnchor(); // 作り直す前に、読んでいたカードと高さを覚える
+    const focused = document.activeElement;
+    const focusedKey = focusKey(focused);
     currentLang = lang;
     // 選んだ言語を覚え（再読み込みや、新しいタブで開いたときも同じ言語で始める）、URL の ?lang= も合わせる。
     // 保存は進捗と同じ安全なラッパー（js/storage.js）を通すので、保存できない環境でも、このページの中では切り替わる
@@ -110,6 +133,7 @@ function setupStaticUI() {
     setupFilterOptions(); // ラベルが変わるのでフィルターも再生成
     renderAll();
     restoreReadingAnchor(anchor);
+    restoreRebuiltFocus(focused, focusedKey);
   };
   langJaBtn?.addEventListener("click", () => setLanguage("ja"));
   langEnBtn?.addEventListener("click", () => setLanguage("en"));
@@ -162,6 +186,7 @@ function setupStaticUI() {
 
   categorySelect?.addEventListener("change", (e) => {
     keepInPlace(categorySelect, () => {
+      clearToolHashForFilter();
       commitUrl({ cat: e.target.value }, "push", "category");
       filters.categoryId = e.target.value;
       renderToolList();
@@ -171,6 +196,7 @@ function setupStaticUI() {
   // 進捗の条件はこの端末の記録で決まるので、URL に残さない
   progressSelect?.addEventListener("change", (e) => {
     keepInPlace(progressSelect, () => {
+      clearToolHashForFilter();
       filters.progress = e.target.value;
       renderToolList();
     });
@@ -274,7 +300,7 @@ function reserveBookBanner() {
     raw = null;
   }
   const v = raw ? raw.trim().toLowerCase() : "";
-  if (!v || v === "all") return;
+  if (!v || v === "all" || new URLSearchParams(window.location.search).has("tools")) return;
   const banner = document.getElementById("book-banner");
   if (!banner) return;
   banner.classList.add("is-pending");
@@ -292,6 +318,8 @@ function setListBusy(busy) {
 // 最初から置いている書籍・シリーズの欄も、選択肢がないまま残さないよう、books.json を読めなかったときと同じく隠す
 function releaseReservedSpace() {
   setListBusy(false);
+  const fallback = document.getElementById("load-fallback");
+  if (fallback) fallback.hidden = false;
   const banner = document.getElementById("book-banner");
   if (banner && banner.classList.contains("is-pending")) {
     banner.classList.remove("is-pending");
@@ -454,12 +482,20 @@ async function loadData() {
     const searchInput = document.getElementById("filter-search-input");
     if (searchInput) setSearchQuery(searchInput.value);
 
+    // 初回または読み込み中に届いた最新の URL だけを解決する。
+    const queuedNavigation = pendingNavigation;
+    pendingNavigation = null;
+    if (queuedNavigation && queuedNavigation.view && ["all", "0", "1", "2", "3"].includes(queuedNavigation.view.progress)) filters.progress = queuedNavigation.view.progress;
+    applyToolLinks(queuedNavigation && hasSavedView(queuedNavigation.view));
+
     // 読めた条件だけを、URL に正規の形で書き直す（大文字や前後の空白・並びをそろえる。履歴は増やさない）。
     // 存在しない本・カテゴリー・タブの値は書き換えずに残す（絞り込みを変えると、画面の条件で書き直すので外れる）
     const tidy = { q: searchInput ? searchInput.value : "" };
-    if (urlState.book) tidy.book = urlState.book;
-    if (urlState.cat) tidy.cat = urlState.cat;
-    if (urlState.tab === "dashboard") tidy.tab = urlState.tab;
+    if (urlState.book) tidy.book = filters.book;
+    if (urlState.cat) tidy.cat = filters.categoryId;
+    if (urlState.tab === "dashboard") tidy.tab = currentTab;
+    if (toolSet.present) Object.assign(tidy, { book: filters.book, cat: filters.categoryId, q: filters.search });
+    if (linkedToolId || linkNotices.includes("unknown")) Object.assign(tidy, { book: filters.book, cat: filters.categoryId, q: filters.search, tab: currentTab, tools: toolSet.ids.length ? toolSet.ids : null });
     commitUrl(tidy);
     urlStateReady = true;
 
@@ -467,7 +503,11 @@ async function loadData() {
     setListBusy(false);
     renderAll();
     enableDashboardActions();
-    maybeScrollToHash();
+    lastNavigationHref = window.location.href;
+    if (queuedNavigation && hasSavedView(queuedNavigation.view)) {
+      restoreView(queuedNavigation.view, null);
+      restoreFocus(queuedNavigation.view);
+    } else maybeScrollToHash();
     markCardsPainted();
   } catch (err) {
     console.error("Error loading data:", err);
@@ -545,16 +585,42 @@ function readingTop(header) {
   return Math.max(0, header.getBoundingClientRect().bottom);
 }
 
-// #book-group-<key> のハッシュがあればそこへスクロールし、見出しへフォーカスを移す。
+// 初回・URL 移動の #day / #book-group を、描いた見出しへ一度だけ移す。
 function maybeScrollToHash() {
   const h = window.location.hash;
-  if (!h || h.indexOf("#book-group-") !== 0) return;
-  const el = document.getElementById(h.slice(1));
+  if (!h) return;
+  const card = linkedToolId && document.getElementById(linkedToolId);
+  const el = card ? card.querySelector(".tool-title") : h.indexOf("#book-group-") === 0 ? document.getElementById(h.slice(1)) : null;
   if (el) {
     try {
-      el.scrollIntoView();
+      // 遠いカードと直前の項目を先に描き、content-visibility の仮の高さに着地しないようにする。
+      const list = document.getElementById("tool-list");
+      const items = list ? Array.from(list.children) : [];
+      const index = items.indexOf(card || el);
+      const held = index < 0 ? [] : items.slice(Math.max(0, index - 1), index + 1);
+      held.forEach((item) => { item.classList.add("cv-hold"); item.getBoundingClientRect(); });
+      el.scrollIntoView({ behavior: "instant", block: "start" });
       // 次の Tab がこの章から始まるように、見出しへフォーカスを移す（スクロールはし直さない）
       el.focus({ preventScroll: true });
+      const href = window.location.href;
+      const version = navigationVersion;
+      const interaction = interactionVersion;
+      const correct = () => {
+        const active = document.activeElement;
+        if (href === window.location.href && version === navigationVersion && interaction === interactionVersion && isShown(el) && (active === el || active === document.body)) {
+          const padding = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
+          scrollByInstant(el.getBoundingClientRect().top - padding);
+          // native fragment の既定処理が、popstate 内の focus のあとで body に戻すブラウザーがある。
+          // 利用者がほかを操作していない場合だけ、同じ見出しへ戻す（URL の再解決はしない）。
+          if (active === document.body) el.focus({ preventScroll: true });
+        }
+      };
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        correct();
+        held.forEach((item) => item.classList.remove("cv-hold"));
+        // 固定解除後にブラウザーがスクロールアンカーを補正する場合があるため、描画後に一度だけ位置を確かめる。
+        requestAnimationFrame(() => requestAnimationFrame(correct));
+      }));
     } catch (e) {
       /* 無視 */
     }
@@ -793,7 +859,8 @@ function currentUrlState() {
     book: filters.book,
     cat: filters.categoryId,
     q: searchInput ? searchInput.value : "",
-    tab: currentTab
+    tab: currentTab,
+    tools: toolSet.ids.length ? toolSet.ids : null
   };
 }
 
@@ -894,8 +961,9 @@ function syncLangParam() {
 // 今の履歴に、見ている位置（スクロールの位置と、一覧でヘッダーのすぐ下にある項目）と、フォーカスしている部品を書いておく。
 // 戻る・進むでこの履歴へ戻ってきたときに、同じ所を出す（restoreView・restoreFocus）
 function saveViewInHistory() {
+  if (!urlStateReady) return;
   try {
-    const view = { y: Math.round(window.scrollY), anchor: captureReadingAnchor(), focus: focusKey(document.activeElement) };
+    const view = { y: Math.round(window.scrollY), anchor: captureReadingAnchor(), focus: focusKey(document.activeElement), progress: filters.progress };
     window.history.replaceState(Object.assign({}, window.history.state, view), "");
   } catch (e) {
     /* 無視 */
@@ -905,26 +973,43 @@ function saveViewInHistory() {
 // ---- 戻る・進む ----
 
 function setupHistory() {
+  // 遅延したスクロール・フォーカス補正で、その間に始まった利用者の操作を奪わない。
+  ["pointerdown", "keydown", "wheel"].forEach((type) => {
+    window.addEventListener(type, () => { interactionVersion++; }, { capture: true, passive: true });
+  });
   // commitUrl が積んだ履歴を外したとき（dropPushedEntry）の popstate では、画面がもう着いた履歴の条件なので描き直さない
-  window.addEventListener("popstate", (e) => (droppingPush ? finishDropPush() : applyHistoryState(e.state)));
+  window.addEventListener("popstate", (e) => {
+    if (droppingPush) { finishDropPush(); lastNavigationHref = window.location.href; }
+    else applyHistoryState(e.state);
+  });
+  // 履歴移動は popstate のあとに hashchange も出る。1回だけ解決し、保存位置を上書きしない。
+  window.addEventListener("hashchange", () => {
+    if (window.location.href !== lastNavigationHref) applyHistoryState(null);
+  });
   // スクロールが止まったら、今の履歴に位置を書く（進むで戻ってきたときも、離れたときの位置を出すため）
-  let timer = 0;
   window.addEventListener(
     "scroll",
     () => {
-      clearTimeout(timer);
-      timer = setTimeout(saveViewInHistory, 300);
+      clearTimeout(historyScrollTimer);
+      if (!urlStateReady) return;
+      const href = window.location.href;
+      const version = navigationVersion;
+      historyScrollTimer = setTimeout(() => {
+        if (href === window.location.href && version === navigationVersion) saveViewInHistory();
+      }, 300);
     },
     { passive: true }
   );
 }
 
 // 戻る・進むで来た履歴の URL から、一覧の条件（本・カテゴリー・検索・タブ）を戻して描き直し、その履歴で見ていた位置を出す。
-// 条件が今と同じとき（章の位置の # だけが違うときなど）は何もせず、ブラウザーに任せる
+// 条件が同じでも hash を解決する。保存位置があれば、hash への移動よりそちらを優先する。
 function applyHistoryState(view) {
   lastPush = null; // 戻ったあとの変更は、まとめずに積む
   // 言語は戻る・進むで変えない。前の言語のときに積んだ履歴へ来たら、URL の ?lang= を今の言語に直す
   syncLangParam();
+  navigationVersion++;
+  clearTimeout(historyScrollTimer);
   // 描き直す前に、フォーカスしている部品と、そのパネルと目印を覚える（タブを切り替えたり、一覧・バナーを作り直したりしたあとでは、
   // フォーカスが body に移っていることがある）。描き直したあとに settleFocus で移す
   const focused = document.activeElement;
@@ -932,6 +1017,8 @@ function applyHistoryState(view) {
   const focusedKey = focusKey(focused);
   const searchInput = document.getElementById("filter-search-input");
   if (!urlStateReady) {
+    pendingNavigation = { view };
+    lastNavigationHref = window.location.href;
     // データが届く前はタブと検索欄だけを合わせる（本・カテゴリーは、データが届いたときに URL から読む）
     if (!HU) return;
     const st = HU.readState(window.location.search, {});
@@ -941,23 +1028,28 @@ function applyHistoryState(view) {
     return;
   }
   const next = readUrlState();
-  const searchChanged = !!searchInput && searchInput.value.trim() !== next.q;
-  if (next.book === filters.book && next.cat === filters.categoryId && next.tab === currentTab && !searchChanged) return;
-
   const filtersEl = document.getElementById("tool-filters");
   const filtersTop = currentTab === "tools" && filtersEl ? filtersEl.getBoundingClientRect().top : null;
   if (next.tab !== currentTab) switchTab(next.tab === "dashboard" ? "tab-dashboard" : "tab-tools");
+  filters.book = next.book;
   filters.categoryId = next.cat;
-  const categorySelect = document.getElementById("filter-category");
-  if (categorySelect) categorySelect.value = next.cat;
-  if (searchChanged) {
-    searchInput.value = next.q;
-    setSearchQuery(next.q);
+  if (view && ["all", "0", "1", "2", "3"].includes(view.progress)) filters.progress = view.progress;
+  if (searchInput && searchInput.value.trim() !== next.q) searchInput.value = next.q;
+  setSearchQuery(next.q);
+  applyToolLinks(hasSavedView(view));
+  setupFilterOptions();
+  refreshBookTarget();
+  updateBookStatus(filters.book, false);
+  renderToolList();
+  lastNavigationHref = window.location.href;
+  if (hasSavedView(view)) {
+    restoreView(view, filtersTop);
+    restoreFocus(view);
+  } else {
+    restoreView(view, filtersTop);
+    settleFocus(view, focused, focusPanel, focusedKey);
+    maybeScrollToHash();
   }
-  if (next.book !== filters.book) setBookFilter(next.book, { history: false, cleared: !next.book });
-  else renderToolList();
-  restoreView(view, filtersTop);
-  settleFocus(view, focused, focusPanel, focusedKey);
 }
 
 // 戻る・進むで描き直したあとのフォーカス（restoreView が戻したスクロールの位置は動かさない）。
@@ -1116,7 +1208,8 @@ function openStartEntry(slug) {
     return;
   }
   const hadBook = !!filters.book;
-  commitUrl({ book: "", cat: "", q: "" }, "push");
+  commitUrl({ book: "", cat: "", q: "", tools: null, hash: "" }, "push");
+  leaveToolSet();
   clearOtherFilters();
   setBookFilter("", { history: false, cleared: hadBook });
 }
@@ -1132,6 +1225,215 @@ function clearOtherFilters() {
   if (p) p.value = "all";
   if (s) s.value = "";
   setSearchQuery("");
+}
+
+
+// ---- 固有リンク・セット ----
+
+function hasSavedView(view) {
+  return !!view && (typeof view.y === "number" || !!view.anchor);
+}
+
+function applyToolLinks(preserveView) {
+  if (!HU || !HU.readTools || !HU.readToolHash) return;
+  copyGeneration++;
+  const visibleIds = tools.filter((t) => t.hub !== false).map((t) => t.id);
+  toolSet = HU.readTools(window.location.search, visibleIds);
+  linkNotices = [];
+  linkedToolId = "";
+  if (toolSet.present) {
+    if (!preserveView) switchTab("tab-tools");
+    filters.book = "";
+    clearOtherFilters();
+    if (!toolSet.ids.length) linkNotices.push("empty");
+    else if (toolSet.unknown) linkNotices.push("partial");
+    if (toolSet.truncated) linkNotices.push("truncated");
+  }
+  const hash = HU.readToolHash(window.location.hash, visibleIds);
+  // 利用者が絞り込みやタブを変更して離れた履歴では、その状態と保存位置を優先する。
+  if (preserveView && hash.kind === "known") {
+    refreshBookTarget();
+    const target = tools.find((tool) => tool.id === hash.id);
+    if (toolSet.ids.length ? toolSet.ids.includes(hash.id) : filterByBook(target) && filterByCategory(target) && filterByProgress(target) && filterBySearch(target)) linkedToolId = hash.id;
+    return;
+  }
+  if (toolSet.ids.length) {
+    if (hash.kind === "known" && toolSet.ids.includes(hash.id)) {
+      linkedToolId = hash.id;
+      switchTab("tab-tools");
+      return;
+    }
+    if (hash.kind !== "known" && hash.kind !== "unknown") return;
+    toolSet = { present: false, ids: [], unknown: false, truncated: false };
+    linkNotices = hash.kind === "known" ? ["filters"] : [];
+  }
+  if (toolSet.present && hash.kind !== "known" && hash.kind !== "unknown") return;
+  if (toolSet.present) {
+    toolSet = { present: false, ids: [], unknown: false, truncated: false };
+    linkNotices = [];
+  }
+  if (hash.kind === "unknown") {
+    filters.book = "";
+    clearOtherFilters();
+    switchTab("tab-tools");
+    linkNotices.push("unknown");
+    return;
+  }
+  if (hash.kind !== "known") return;
+  linkedToolId = hash.id;
+  const tool = tools.find((t) => t.id === hash.id && t.hub !== false);
+  refreshBookTarget();
+  if (!filterByBook(tool)) { filters.book = ""; linkNotices.push("book"); }
+  let cleared = false;
+  if (!filterByCategory(tool)) { filters.categoryId = ""; cleared = true; }
+  if (!filterByProgress(tool)) { filters.progress = "all"; cleared = true; }
+  if (!filterBySearch(tool)) {
+    const input = document.getElementById("filter-search-input");
+    if (input) input.value = "";
+    setSearchQuery("");
+    cleared = true;
+  }
+  if (cleared && !linkNotices.includes("filters")) linkNotices.push("filters");
+  switchTab("tab-tools");
+}
+
+function leaveToolSet() {
+  toolSet = { present: false, ids: [], unknown: false, truncated: false };
+  linkNotices = [];
+  linkedToolId = "";
+  copyGeneration++;
+}
+
+// 手動の条件変更は単体リンクから離れる操作。章の位置は既存どおり維持する。
+function clearToolHashForFilter() {
+  if (!HU || !HU.readToolHash) return;
+  const hash = HU.readToolHash(window.location.hash, tools.filter((t) => t.hub !== false).map((t) => t.id));
+  if (hash.kind !== "known" && hash.kind !== "unknown") return;
+  commitUrl({ hash: "" });
+  linkedToolId = "";
+  linkNotices = [];
+  renderLinkStatus();
+  updateLinkedTitle();
+}
+
+function renderLinkStatus() {
+  const status = document.getElementById("link-status");
+  if (!status) return;
+  const text = linkNotices.map((key) => LINK_TEXT[key][currentLang === "ja" ? 0 : 1]).join(" ");
+  status.hidden = !text;
+  if (status.textContent !== text) status.textContent = text;
+}
+
+function setTitle(n) {
+  return currentLang === "ja" ? `このリンクのツール（${n}本）` : `Tools in this link (${n})`;
+}
+
+function updateLinkedTitle() {
+  const isJa = currentLang === "ja";
+  let title = toolSet.ids.length ? setTitle(toolSet.ids.length) : "";
+  if (!title && linkedToolId) {
+    const tool = tools.find((t) => t.id === linkedToolId && t.hub !== false);
+    if (tool) title = isJa ? `${tool.title}（Day${tool.id.slice(3)}）` : `${tool.title} (Day${tool.id.slice(3)})`;
+  }
+  document.title = title ? title + (isJa ? "｜ハッキング・ラボ・オンライン" : " | Hacking Lab Online") : ordinaryTitle;
+}
+
+function renderSetBanner() {
+  const banner = document.getElementById("set-banner");
+  const controls = document.getElementById("tool-filters");
+  const active = toolSet.ids.length > 0;
+  if (controls) controls.hidden = active;
+  if (!banner) return;
+  banner.hidden = !active;
+  const key = currentLang + ":" + toolSet.ids.join(",");
+  if (banner.dataset.key === key) return;
+  copyGeneration++;
+  linkNotices = linkNotices.filter((notice) => notice !== "copied" && notice !== "copyFailed");
+  banner.dataset.key = key;
+  banner.innerHTML = "";
+  if (!active) return;
+  const isJa = currentLang === "ja";
+  const header = document.createElement("div");
+  header.className = "set-banner-header";
+  const badge = document.createElement("span");
+  badge.className = "book-banner-badge";
+  badge.textContent = isJa ? "セット" : "Set";
+  const title = document.createElement("h2");
+  title.id = "set-banner-title";
+  title.tabIndex = -1;
+  title.textContent = setTitle(toolSet.ids.length);
+  header.appendChild(badge);
+  header.appendChild(title);
+  banner.appendChild(header);
+  const actions = document.createElement("div");
+  actions.className = "set-banner-actions";
+  const clear = document.createElement("button");
+  clear.type = "button";
+  clear.id = "set-banner-clear";
+  clear.textContent = isJa ? "解除" : "Clear";
+  clear.setAttribute("aria-label", isJa ? "セットを解除して、すべてのツールを表示" : "Clear the set and show all tools");
+  clear.addEventListener("click", () => {
+    commitUrl({ tools: null, book: "", cat: "", q: "", hash: "" }, "push");
+    leaveToolSet();
+    filters.book = "";
+    clearOtherFilters();
+    setupFilterOptions();
+    renderToolList();
+    document.getElementById("filter-book")?.focus({ preventScroll: true });
+  });
+  const copy = document.createElement("button");
+  copy.type = "button";
+  copy.id = "set-banner-copy";
+  copy.textContent = isJa ? "リンクをコピー" : "Copy link";
+  copy.addEventListener("click", copySetLink);
+  actions.appendChild(clear);
+  actions.appendChild(copy);
+  banner.appendChild(actions);
+  const details = document.createElement("details");
+  details.className = "set-banner-details";
+  const summary = document.createElement("summary");
+  summary.id = "set-banner-details-summary";
+  summary.textContent = isJa ? "このリンクについて" : "About this link";
+  const text = document.createElement("p");
+  text.textContent = isJa
+    ? "リンクを作った人が選んだツールを、選んだ順に並べています。進捗は、開いたブラウザーごとに別々に残ります。"
+    : "These are the tools chosen by the person who made this link, in the order they chose. Progress is saved separately in each browser that opens it.";
+  details.appendChild(summary);
+  details.appendChild(text);
+  banner.appendChild(details);
+}
+
+async function copySetLink() {
+  if (!toolSet.ids.length) return;
+  // 共有する URL は公開先・検証済みの番号・言語だけ。現在の未知 query や # はコピーしない。
+  const url = new URL(window.location.pathname, window.location.origin);
+  url.searchParams.set("tools", toolSet.ids.join(","));
+  url.searchParams.set("lang", currentLang);
+  const value = url.toString();
+  const generation = ++copyGeneration;
+  let copied = false;
+  try {
+    await navigator.clipboard.writeText(value);
+    copied = true;
+  } catch (e) { /* 読み取り専用の欄からコピーできる */ }
+  if (generation !== copyGeneration || !toolSet.ids.length) return;
+  linkNotices = linkNotices.filter((key) => key !== "copied" && key !== "copyFailed");
+  linkNotices.push(copied ? "copied" : "copyFailed");
+  renderLinkStatus();
+  let field = document.getElementById("set-banner-copy-url");
+  if (copied) { if (field) field.hidden = true; return; }
+  if (!field) {
+    field = document.createElement("input");
+    field.id = "set-banner-copy-url";
+    field.type = "text";
+    field.readOnly = true;
+    document.getElementById("set-banner")?.appendChild(field);
+  }
+  field.hidden = false;
+  field.setAttribute("aria-label", currentLang === "ja" ? "リンクをコピー" : "Copy link");
+  field.value = value;
+  field.focus({ preventScroll: true });
+  field.select();
 }
 
 // ---- 書籍フィルターの操作 ----
@@ -1172,7 +1474,8 @@ function countSuffix(n) {
 // 呼ぶ側で書いたとき）。既定は今の履歴を書き換える。opts.source は commitUrl の同じ欄の変更をまとめるための名前
 function setBookFilter(slug, opts) {
   const o = opts || {};
-  if (o.history !== false) commitUrl({ book: slug || "" }, o.history, o.source);
+  if (o.history !== false) commitUrl({ book: slug || "", tools: null, hash: "" }, o.history, o.source);
+  leaveToolSet();
   filters.book = slug || "";
   const sel = document.getElementById("filter-book");
   if (sel) sel.value = filters.book;
@@ -1214,7 +1517,10 @@ function renderToolList() {
   if (listEl.getAttribute("aria-busy") === "true") return;
 
   refreshBookTarget();
-  const book = currentBook();
+  const book = toolSet.ids.length ? null : currentBook();
+  renderSetBanner();
+  renderLinkStatus();
+  updateLinkedTitle();
 
   const baseMatch = (t) =>
     t.hub !== false &&
@@ -1223,13 +1529,15 @@ function renderToolList() {
     filterByProgress(t) &&
     filterBySearch(t);
 
-  const matched = tools.filter(baseMatch);
+  const byId = new Map(tools.filter((t) => t.hub !== false).map((t) => [t.id, t]));
+  const matched = toolSet.ids.length ? toolSet.ids.map((id) => byId.get(id)).filter(Boolean) : tools.filter(baseMatch);
 
   // 出すものが前回と同じなら作り直さない（検索の1文字ごとに全部のカードを作り直すと、遅い端末で固まる）。
   // 言語・本・進捗が変わったときは、同じツールの並びでも文字・掲載箇所・進捗の表示が変わるので作り直す
   const listKey = [
     currentLang,
     filters.book,
+    toolSet.ids.join(","),
     progressVersion,
     matched.map((t) => t.id).join(",")
   ].join("|");
@@ -1237,6 +1545,13 @@ function renderToolList() {
   lastListKey = listKey;
 
   listEl.innerHTML = "";
+  // 章の重複掲載でも同じ id は最初のカードだけに付ける。
+  const renderedIds = new Set();
+  const makeCard = (tool) => {
+    const card = createToolCard(tool, book);
+    if (!renderedIds.has(tool.id)) { card.id = tool.id; renderedIds.add(tool.id); }
+    return card;
+  };
   const matchedIds = new Set(matched.map((t) => t.id));
 
   // chapters を持つ本は、章の順にグループ分けして見出しを挟む
@@ -1270,7 +1585,7 @@ function renderToolList() {
       h.textContent = `${label}${countSuffix(g.items.length)}`;
       listEl.appendChild(h);
       g.items.forEach((tool) => {
-        const card = createToolCard(tool, book);
+        const card = makeCard(tool);
         // 同じツールが複数の章に出るとき、作り直したあとに同じ章のカードへフォーカスを戻すため（focusKey）
         card.dataset.group = g.key;
         listEl.appendChild(card);
@@ -1285,7 +1600,7 @@ function renderToolList() {
   }
 
   matched.forEach((tool) => {
-    listEl.appendChild(createToolCard(tool, book));
+    listEl.appendChild(makeCard(tool));
   });
 }
 
@@ -1440,6 +1755,8 @@ function renderBookBanner(book, shownCount, displayGroups) {
         // 履歴に書いておいた見ていた位置（state）は消さない
         try {
           window.history.replaceState(window.history.state, "", "#book-group-" + g.key);
+          linkedToolId = "";
+          updateLinkedTitle();
         } catch (err) {
           /* 無視 */
         }
@@ -1508,6 +1825,7 @@ function setSearchQuery(raw) {
 // 検索欄の値で絞り込む。正規化した検索語が前と同じとき（後ろに空白を足しただけなど）は描き直さない。
 // URL の ?q= は欄の文字に合わせる（打つたびに履歴を増やさないよう、今の履歴を書き換える）
 function applySearch(raw) {
+  clearToolHashForFilter();
   commitUrl({ q: raw });
   const before = filters.search;
   setSearchQuery(raw);
@@ -1531,10 +1849,20 @@ function createToolCard(tool, book) {
     : tool.id || "";
   daySpan.textContent = `Day${dayNumber}`;
 
-  const titleSpan = document.createElement("span");
+  const titleSpan = document.createElement("h3");
   titleSpan.className = "tool-title";
+  titleSpan.tabIndex = -1;
+  titleSpan.dataset.part = "title";
   titleSpan.textContent = tool.title || "";
 
+  if (toolSet.ids.length) {
+    const position = document.createElement("span");
+    position.className = "tool-set-position";
+    const i = toolSet.ids.indexOf(tool.id) + 1;
+    position.textContent = `${i} / ${toolSet.ids.length}`;
+    position.setAttribute("aria-label", currentLang === "ja" ? `${toolSet.ids.length}本中${i}本目` : `${i} of ${toolSet.ids.length}`);
+    header.appendChild(position);
+  }
   header.appendChild(daySpan);
   header.appendChild(titleSpan);
 
@@ -1857,7 +2185,7 @@ function renderBookProgress() {
       if (e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
       e.preventDefault();
       // 一覧のタブへ移って本で絞る。履歴を1つ積み、戻るでダッシュボードへ戻れるようにする
-      commitUrl({ book: s.book.slug, tab: "tools" }, "push");
+      commitUrl({ book: s.book.slug, tab: "tools", tools: null, hash: "" }, "push");
       switchTab("tab-tools");
       setBookFilter(s.book.slug, { history: false });
       const h2 = document.getElementById("book-banner-title");

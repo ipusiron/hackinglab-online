@@ -868,6 +868,7 @@ html[lang="en"] #lang-en {
 }
 
 .tool-title {
+  margin: 0;
   min-width: 0;
   overflow-wrap: anywhere;
   font-size: 1.1rem;
@@ -1490,4 +1491,80 @@ html.help-open.keep-gutter {
   #main-content {
     min-height: 0;
   }
+}
+
+/* URLで選んだツールと、静的一覧への入口 */
+[hidden] { display: none !important; }
+
+#set-banner {
+  margin-bottom: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  background: var(--book-bg);
+  border: 1px solid var(--book-border);
+  border-radius: 0.75rem;
+  overflow-wrap: anywhere;
+}
+.set-banner-header, .set-banner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.75rem;
+}
+#set-banner-title {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--heading);
+}
+.set-banner-actions { margin-top: 0.4rem; }
+#set-banner button {
+  min-width: 44px;
+  min-height: 44px;
+  max-width: 100%;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--book-accent-border);
+  border-radius: 0.5rem;
+  color: var(--book-text);
+  background: var(--surface-bg);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+#set-banner button:hover { background: var(--book-subtle-bg); }
+.set-banner-details { font-size: 0.8rem; }
+.set-banner-details > summary {
+  min-height: 44px;
+  padding: 0.6rem 0;
+  color: var(--book-text);
+  cursor: pointer;
+}
+.set-banner-details p { margin: 0.25rem 0; line-height: 1.5; }
+#set-banner-copy-url {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 0.4rem;
+  padding: 0.5rem;
+  border: 1px solid var(--field-border);
+  border-radius: 0.4rem;
+  color: var(--text);
+  background: var(--field-bg);
+  font: inherit;
+}
+.tool-set-position { color: var(--book-text); font-size: 0.8rem; font-weight: 700; }
+#link-status {
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid var(--book-accent-border);
+  color: var(--text-secondary);
+  background: var(--surface-bg);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.static-list-fallback a {
+  display: inline-block;
+  min-height: 44px;
+  padding: 0.6rem 0;
+  overflow-wrap: anywhere;
 }

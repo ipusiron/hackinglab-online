@@ -5,14 +5,15 @@
 // 履歴（pushState・replaceState・popstate）の扱いと画面の描き直しは js/main.js が行う。
 //
 // 一覧の条件の URL の形（いつもこの順に並べ、値が空の条件は書かない）：
-//   ?book=<本の slug>（books.json）&cat=<カテゴリーの id>（categories.json）&q=<検索欄の文字>&tab=dashboard&lang=en
+//   ?book=<本の slug>（books.json）&cat=<カテゴリーの id>（categories.json）&q=<検索欄の文字>&tools=day001,day002&tab=dashboard&lang=en
 // 進捗の条件はこの端末の記録で決まるので、URL に入れない。表示の言語は英語のときだけ lang=en を書く（決めるのは js/lang.js）。
 
 (function (root) {
   "use strict";
 
   // URL に書く条件の名前（この順に並べる）
-  var KEYS = ["book", "cat", "q", "tab", "lang"];
+  var KEYS = ["book", "cat", "q", "tools", "tab", "lang"];
+  var MAX_TOOLS = 12;
 
   function lower(v) {
     return String(v == null ? "" : v).trim().toLowerCase();
@@ -53,9 +54,79 @@
     };
   }
 
+  // 数字または Day 付きの数字を dayNNN にそろえる。URL の ID は半角数字の 1〜999。
+  // 前後と Day の直後の空白は除くが、小数・符号・末尾の文字などは採らない。
+  function normalizeToolId(value) {
+    if (typeof value !== "string" && typeof value !== "number") return "";
+    var match = /^(?:day\s*)?([0-9]{1,3})$/i.exec(String(value).trim());
+    if (!match || Number(match[1]) === 0) return "";
+    return "day" + String(Number(match[1])).padStart(3, "0");
+  }
+
+  // visibleIds は表示対象だけの ID 配列または Set。元の配列・Set は変更しない。
+  function visibleToolIds(visibleIds) {
+    var values = Array.isArray(visibleIds) ? visibleIds : visibleIds instanceof Set ? Array.from(visibleIds) : [];
+    return new Set(values.map(normalizeToolId).filter(Boolean));
+  }
+
+  // 書くときも読むときも、表記をそろえてから重複を除き、最初の12本を採る。
+  // allowed があるときは表示対象だけを採る。不明な入力そのものは返さない。
+  function collectTools(values, allowed) {
+    var result = { ids: [], unknown: false, truncated: false };
+    var seen = new Set();
+    values.forEach(function (value) {
+      if (value == null || (typeof value === "string" && !value.trim())) return;
+      var id = normalizeToolId(value);
+      if (!id || (allowed && !allowed.has(id))) {
+        result.unknown = true;
+      } else if (!seen.has(id)) {
+        seen.add(id);
+        if (result.ids.length < MAX_TOOLS) result.ids.push(id);
+        else result.truncated = true;
+      }
+    });
+    return result;
+  }
+
+  // 複数の ?tools= を URL 順に読み、それぞれのカンマ区切りをつなぐ。
+  // 空指定と指定なしは present で区別する。不明値や重複は12本の枠を使わない。
+  function readTools(search, visibleIds) {
+    var params;
+    try {
+      params = new URLSearchParams(search || "");
+    } catch (e) {
+      params = new URLSearchParams("");
+    }
+    if (!params.has("tools")) return { present: false, ids: [], unknown: false, truncated: false };
+    var values = [];
+    params.getAll("tools").forEach(function (value) {
+      values = values.concat(value.split(","));
+    });
+    var result = collectTools(values, visibleToolIds(visibleIds));
+    return { present: true, ids: result.ids, unknown: result.unknown, truncated: result.truncated };
+  }
+
+  // #day… だけをカードの位置として扱う。本の章など、ほかの # はそのまま別の処理へ渡す。
+  // エスケープは一度だけ解き、既知の表示対象と確認できた場合だけ ID を返す。
+  function readToolHash(hash, visibleIds) {
+    if (hash == null || hash === "" || hash === "#") return { kind: "none", id: "" };
+    if (typeof hash !== "string" || hash.charAt(0) !== "#") return { kind: "other", id: "" };
+    var value;
+    try {
+      value = decodeURIComponent(hash.slice(1));
+    } catch (e) {
+      return { kind: /^#day/i.test(hash) ? "unknown" : "other", id: "" };
+    }
+    if (!/^day/i.test(value)) return { kind: "other", id: "" };
+    var id = normalizeToolId(value);
+    return id && visibleToolIds(visibleIds).has(id) ? { kind: "known", id: id } : { kind: "unknown", id: "" };
+  }
+
   // href に一覧の条件を書いた URL を返す。state に入れた条件だけを書き換え、入れなかった条件とほかのパラメーターは残す。
   // 条件は KEYS の順に並べ、ほかのパラメーターはその後ろに元の順で置く。空の値は書かず、何も残らなければ "?" も付けない。
-  // 本を変えるときは、前の本の章の位置（#book-group-…）を外す。ほかの # はそのまま残す。
+  // tools を渡さなければ、複数ある値も空の値も残す。配列を渡したときだけ正規化して1つにまとめ、空配列・空値なら外す。
+  // 書く tools の実在確認は呼び出し元で行う（readTools の ids などを渡す）。
+  // hash を渡したときはその値を最優先する（空なら外す）。渡さず本を変えたときは、前の本の章の位置（#book-group-…）を外す。
   // lang は "en" なら lang=en を書く。"ja" なら書かない（ただし、もとの URL が ?lang=ja ならそのまま残す。?lang=ja のリンクで
   // 開いた人が、再読み込みや絞り込みのあとも日本語のままになるように）。
   function buildUrl(href, state) {
@@ -64,18 +135,28 @@
     var cur = url.searchParams;
     var values = {};
     var i;
-    for (i = 0; i < KEYS.length; i++) values[KEYS[i]] = cur.get(KEYS[i]);
+    for (i = 0; i < KEYS.length; i++) {
+      values[KEYS[i]] = KEYS[i] === "tools" ? cur.getAll("tools") : cur.get(KEYS[i]);
+    }
     if (has(s, "book")) values.book = s.book ? String(s.book) : null;
     if (has(s, "cat")) values.cat = s.cat ? String(s.cat) : null;
     if (has(s, "q")) values.q = String(s.q == null ? "" : s.q).trim() || null;
+    if (has(s, "tools")) {
+      var ids = collectTools(Array.isArray(s.tools) ? s.tools : [], null).ids;
+      values.tools = ids.length ? [ids.join(",")] : [];
+    }
     if (has(s, "tab")) values.tab = s.tab === "dashboard" ? "dashboard" : null;
     if (has(s, "lang")) values.lang = s.lang === "en" ? "en" : lower(cur.get("lang")) === "ja" ? "ja" : null;
-    if (has(s, "book") && lower(cur.get("book")) !== lower(values.book) && url.hash.indexOf("#book-group-") === 0) {
+    if (has(s, "hash")) {
+      url.hash = s.hash == null ? "" : String(s.hash);
+    } else if (has(s, "book") && lower(cur.get("book")) !== lower(values.book) && url.hash.indexOf("#book-group-") === 0) {
       url.hash = "";
     }
     var out = new URLSearchParams();
     for (i = 0; i < KEYS.length; i++) {
-      if (values[KEYS[i]]) out.append(KEYS[i], values[KEYS[i]]);
+      if (KEYS[i] === "tools") {
+        values.tools.forEach(function (value) { out.append("tools", value); });
+      } else if (values[KEYS[i]]) out.append(KEYS[i], values[KEYS[i]]);
     }
     cur.forEach(function (v, key) {
       if (KEYS.indexOf(key) < 0) out.append(key, v);
@@ -131,6 +212,9 @@
   var api = {
     KEYS: KEYS,
     readState: readState,
+    normalizeToolId: normalizeToolId,
+    readTools: readTools,
+    readToolHash: readToolHash,
     buildUrl: buildUrl,
     withLang: withLang,
     repoLink: repoLink,

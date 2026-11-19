@@ -19,6 +19,9 @@
 - 🔍 ツールをカテゴリ・進捗・キーワードで検索  
 - 📖 書籍・シリーズで絞り込み（本のサポートページからの `?book=` リンクで自動的に絞り込み）  
 - 🧭 絞り込みの条件（書籍・カテゴリ・キーワード）と開いたタブをURLに残す（`?book=`・`?cat=`・`?q=`・`?tab=`。進捗の条件は残さない）。書籍・カテゴリ・タブを選んだあとは、ブラウザーの戻るで1つ前の一覧に戻れる  
+- 🔗 `#day045`でツール1本のカードへ移動
+- 🧩 `?tools=day003,day001,day045`で、選んだ順のツールを最大12本まで共有
+- 📄 [JavaScriptなしで読めるツール一覧](https://hackinglab.online/list.html)で、全ツールと書籍ごとの一覧を日英併記
 - 📚 学習状況をlocalStorageを使って記録  
 - 📊 ダッシュボードで全体進捗＋カテゴリ別・書籍別進捗を可視化  
 - 🔗 X（旧Twitter）で進捗をワンクリック共有  
@@ -45,8 +48,8 @@
 2. 登録済みツールの取得やYAML解析に失敗した場合は、前回の有効なデータを残して報告する。前回値のない新規ツールの失敗、IDやslugの重複、不正なURLなどは生成を中止する。
 3. カテゴリを日本語、英語の記載順で対応付け、重複するIDを除く。
 4. はじめて掲載するIDに日本時間の日付を付け、`data/added.json`と`tools.json`に記録する。以前の日付は書き換えず、非掲載になっても履歴を残す。
-5. データと全カードの描画を検査する。内容が変わった場合だけ、生成日時を更新してコミットする。
-6. 最新のmainを取り込んだあとに再検査し、成功した場合だけpushする。
+5. 静的一覧を作り直し、データ・全カードの描画・静的一覧とデータの一致を検査する。カタログの内容が変わった場合だけ生成日時を更新し、変更のある生成ファイルをコミットする。
+6. 最新のmainを取り込んだあとに静的一覧を作り直して再検査し、成功した場合だけpushする。
 
 HTTP 401を受けた場合は、代替ブランチや次のURLへ進まず中止し、生成ファイルも更新しません。
 `repos.txt`からの削除や有効な`hub: false`は、意図的な非掲載として反映します。
@@ -65,11 +68,13 @@ GitHub ActionsのStep Summaryには、件数、前回値を保持したツール
 ```text
 /
 ├ index.html                # メインHTML（ヘッダー・タブ・モーダル）
+├ list.html                 # JavaScript不要の一覧（自動生成・手動編集禁止）
 ├ css/
-│   └ style.css             # 全体スタイル（モバイルファースト）
+│   ├ style.css             # 全体スタイル（モバイルファースト）
+│   └ list.css              # 静的一覧のスタイル
 ├ js/
 │   ├ main.js               # フロントロジック（一覧・進捗管理・ダッシュボード）
-│   ├ lang.js               # 表示の言語（?lang=・保存した言語・日本語の順）と「はじめ方」の開閉（?book= なら閉じる・覚えた開閉・画面の幅の順）を描く前に決める（head で defer なしに読む）
+│   ├ lang.js               # 表示の言語（?lang=・保存した言語・日本語の順）と「はじめ方」の開閉（?book=・?tools= なら閉じる・覚えた開閉・画面の幅の順）を描く前に決める（head で defer なしに読む）
 │   ├ books.js              # 書籍フィルターの純関数（DOM非依存・テスト対象）
 │   ├ search.js             # キーワード検索の純関数（DOM非依存・テスト対象）
 │   ├ storage.js            # localStorage の安全なラッパー（使えない環境ではメモリーに退避）
@@ -91,9 +96,12 @@ GitHub ActionsのStep Summaryには、件数、前回値を保持したツール
 │   ├ url.test.js           # url.js の検査（絞り込みの条件を URL から読む・URL へ書く・英語表示のときのカードのリンク・?lang=）
 │   ├ catalog.test.js       # カタログとカテゴリ対応、初掲載日の検査
 │   ├ render.test.js        # 依存を足さずに実データで全カードと各書籍を描画
+│   ├ navigation.test.js    # 固有URL・セット・戻る/進む・コピーの画面動作
+│   ├ static_list.test.js   # 静的一覧の内容・安全なリンク・生成結果の一致
 │   ├ test_update_tools.py  # 通信失敗、401、初掲載日と生成結果の保全
 │   └ lang.test.js          # lang.js の検査（言語と「はじめ方」の開閉を決める順・保存できない環境）
 ├ scripts/
+│   ├ build_pages.js        # tools.json・books.jsonから静的一覧を生成
 │   ├ init_added.py         # 初掲載日をmainのGit履歴から一度だけ復元
 │   └ update_tools.py       # READMEからカタログを生成（取得失敗時は前回値を保持）
 └ .github/
@@ -236,7 +244,7 @@ GitHub ActionsのStep Summaryには、件数、前回値を保持したツール
 }
 ```
 
-本を1件足す手順＝①対象の `dayNNN` を調べる ②`ids`（または `id_range`）と、章があれば `chapters`・`refs` を書く ③`npm test` で検証 ④PR。`npm test` が `data/books.json` の構文・`ids` の存在・`refs` の整合などを失敗で止めるので、CI のログだけで直せます。
+本を1件足す手順＝①対象の `dayNNN` を調べる ②`ids`（または `id_range`）と、章があれば `chapters`・`refs` を書く ③`npm run build:pages`で静的一覧を作り直す ④`npm test`で検証 ⑤`books.json`と`list.html`を同じPRへ含める。`npm test` が `data/books.json` の構文・`ids` の存在・`refs` の整合などを失敗で止めるので、CI のログだけで直せます。
 
 なお共有 URL（Xシェアのボタン）には書籍の絞り込みは含まれません。
 
@@ -403,12 +411,22 @@ npm run test:generator
 python scripts/update_tools.py --check-demos --summary catalog-summary.md
 ```
 
-再生成後は`AFTER_REGEN=1`を設定して`npm test`を実行します。
+再生成後は`npm run build:pages`で静的一覧を作り直し、`AFTER_REGEN=1`を設定して`npm test`を実行します。
 `HLO_BASE_COMMIT`に比較元のコミットを指定すると、既存の初掲載日が変更、削除されていないことも確認できます。
 GitHub Actionsはこれらの検査をコミット前に実行します。
 `init_added.py`は履歴からの初期復元専用で、既存の`added.json`を上書きしません。
 
 画面の配色はOSのライト・ダーク設定に合わせて変わります。手動の切り替えは設けていません。
+
+## 🔗 ツールを指すURL
+
+`https://hackinglab.online/#day045`で、Day045のカードへ移動します。本の中のツールは`?book=genai-crypto#day045`のようにも指定できます。指定したツールが絞り込みで隠れる場合は、必要な条件を解除して表示します。
+
+`https://hackinglab.online/?tools=day003,day001,day045`は、この順の3本を表示するセットです。同じ番号は1回だけ表示し、見つからない番号は除きます。既知の番号が13本以上ある場合は最初の12本を表示し、1本も見つからない場合はすべてのツールを表示します。いずれも画面で知らせます。セットのコピーには番号と表示言語だけを含め、進捗は開いたブラウザーごとに記録します。
+
+`?lang=en`を併せると英語で開けます。セットを解除すると、すべてのツールへ戻ります。セットと`#day`を併用してセット外のツールを指定した場合は、セットを解除して指定したカードを表示します。
+
+静的一覧の`list.html`はJavaScriptなしで読めます。リンク先のデモ自体にはJavaScriptが必要なものがあります。生成は依存追加なしの`npm run build:pages`で行い、`tools.json`・`books.json`をもとに日英併記で書き出します。`books.json`だけを変更するPRでは、この生成と検査を行い、全ツールのREADMEは取り直しません。
 
 ## 🚀 今後の改善予定
 

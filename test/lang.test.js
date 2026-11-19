@@ -147,3 +147,15 @@ test("LG4: 読んだその場で <html data-start> を書く。決まらない�
   assert.equal(attr(b2), "closed", "保存できない環境でも ?book= で来たら閉じる");
   assert.equal(b2.document.documentElement.lang, "en");
 });
+
+
+test("LG5: セットURLは保存した開閉にかかわらず最初から閉じ、英語と保存拒否も扱う", () => {
+  const blocked = () => { throw new Error("SecurityError"); };
+  for (const search of ["?tools=day003,day001", "?tools=", "?tools=missing&tools=day002"]) {
+    assert.equal(L.resolveStart(search, "open"), "closed");
+    const ctx = runInPage(search + "&lang=en", blocked);
+    assert.equal(ctx.document.documentElement.getAttribute("data-start"), "closed");
+    assert.equal(ctx.document.documentElement.lang, "en");
+  }
+  assert.equal(L.resolveStart("?q=tools", "open"), "open");
+});

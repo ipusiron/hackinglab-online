@@ -7,7 +7,7 @@
 // 決める順は、URL の ?lang=（ja か en。大文字・前後の空白は直し、ほかの値は無視）→ この端末に保存した言語 → 日本語。
 // ブラウザーの言語では切り替えない。保存するのは JA・EN を押したときだけ（js/main.js）で、?lang= で開いただけでは保存しない。
 //
-// 「はじめ方」：?book= で来たときは閉じる（本のツールを先に見せる）→ この端末に覚えた開閉（"open" か "closed"）→
+// 「はじめ方」：?book= または ?tools= で来たときは閉じる（本のツールを先に見せる）→ この端末に覚えた開閉（"open" か "closed"）→
 // どちらもなければ書かない（css と js/main.js が画面の幅で決める。768px 以上は開き、狭い画面は閉じる）。
 // 覚えるのは js/main.js で、利用者が開閉したときはその形を、覚えた開閉のない人が一覧を使い始めたとき（入口・本を選ぶ・
 // 進捗を付ける）は "closed" を残す（次に開いたときからは閉じて始める。開いただけ・見ただけでは残さない）。
@@ -63,6 +63,11 @@
   // 「はじめ方」を開いて始めるか（?book= → 覚えた開閉）。"open" / "closed"、決まらなければ ""（画面の幅で決める）
   function resolveStart(search, saved) {
     if (hasBookParam(search)) return "closed";
+    try {
+      if (new URLSearchParams(search || "").has("tools")) return "closed";
+    } catch (e) {
+      /* URLを読めないときは、覚えた開閉を使う */
+    }
     return normalizeStart(saved);
   }
 

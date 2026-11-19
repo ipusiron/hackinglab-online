@@ -593,39 +593,30 @@ test("H27: 本・カテゴリー・タブを選んで切り替えたら履歴を
   // 開いたときは積まない（何も操作しなければ、戻る1回でハブに来る前のページへ帰る）
   assert.doesNotMatch(loadDataBody(), /"push"/);
   // 戻る・進むでは URL から条件を読み直して描き直す。一覧の条件は URL に書かない（?lang= だけは今の言語に合わせる。H30）
-  assert.match(fnBody("setupHistory"), /addEventListener\("popstate", \(e\) => \(droppingPush \? finishDropPush\(\) : applyHistoryState\(e\.state\)\)\)/);
+  assert.match(fnBody("setupHistory"), /addEventListener\("popstate",[\s\S]*finishDropPush\(\)[\s\S]*applyHistoryState\(e\.state\)/);
   const apply = fnBody("applyHistoryState");
   assert.match(apply, /const next = readUrlState\(\);/);
-  assert.match(apply, /setBookFilter\(next\.book, \{ history: false, cleared: !next\.book \}\)/);
+  assert.match(apply, /filters\.book = next\.book;/);
   assert.match(apply, /restoreView\(view, filtersTop\)/);
   assert.doesNotMatch(apply, /commitUrl\(/, "戻る・進むで一覧の条件を URL に書いている（戻る・進むの行き先がずれる）");
-  // 本のほかに、カテゴリー・タブ・検索欄も URL に合わせる（どれか1つでも合わせないと、戻ったあと URL は / なのに一覧が絞られたまま、
-  // またはダッシュボードが出たままになる）。4つとも今と同じときだけ何もしない
-  assert.match(apply, /const searchChanged = !!searchInput && searchInput\.value\.trim\(\) !== next\.q;/);
-  assert.match(
-    apply,
-    /if \(next\.book === filters\.book && next\.cat === filters\.categoryId && next\.tab === currentTab && !searchChanged\) return;/,
-    "本・カテゴリー・タブ・検索欄のどれかが違うのに、戻る・進むで描き直さないことがある"
-  );
-  const iTab = apply.search(/\n\s*if \(next\.tab !== currentTab\) switchTab\(next\.tab === "dashboard" \? "tab-dashboard" : "tab-tools"\);/);
+  // 条件の一致だけでは early return しない。#day/hash-only の移動も同じ入口で処理する。
+  const iTab = apply.indexOf('if (next.tab !== currentTab) switchTab(');
   const iCat = apply.indexOf("filters.categoryId = next.cat;");
-  const iCatSel = apply.search(/const categorySelect = document\.getElementById\("filter-category"\);\s*if \(categorySelect\) categorySelect\.value = next\.cat;/);
-  const iSearch = apply.search(/if \(searchChanged\) \{\s*searchInput\.value = next\.q;\s*setSearchQuery\(next\.q\);\s*\}/);
-  assert.ok(iTab >= 0, "戻る・進むでタブを URL に合わせていない（ダッシュボードが出たまま、または一覧に戻らない）");
-  assert.ok(iCat >= 0, "戻る・進むでカテゴリーの条件を URL に合わせていない（一覧が絞られたまま残る）");
-  assert.ok(iCatSel >= 0, "戻る・進むでカテゴリーの欄を URL に合わせていない（欄と一覧が食い違う）");
-  assert.ok(iSearch >= 0, "戻る・進むで検索欄と検索語を URL に合わせていない（欄の文字と一覧が食い違う）");
-  // 合わせてから一覧を描く（本が同じときも、カテゴリー・検索が変わったら描き直す）
-  const iDraw = apply.search(/if \(next\.book !== filters\.book\) setBookFilter\(next\.book, \{ history: false, cleared: !next\.book \}\);\s*else renderToolList\(\);/);
-  assert.ok(iDraw >= 0, "本が同じときに一覧を描き直していない（カテゴリー・検索だけ変わった履歴へ戻っても一覧が変わらない）");
-  assert.ok(Math.max(iTab, iCat, iCatSel, iSearch) < iDraw, "URL に合わせる前に一覧を描いている");
+  const iSearch = apply.indexOf("setSearchQuery(next.q);");
+  const iControls = apply.indexOf("setupFilterOptions();");
+  const iDraw = apply.indexOf("renderToolList();");
+  assert.ok(iTab >= 0 && iCat >= 0 && iSearch >= 0 && iControls >= 0);
+  assert.ok(Math.max(iTab, iCat, iSearch, iControls) < iDraw, "URL と欄を合わせてから描く");
+  assert.match(apply, /searchInput\.value = next\.q/);
+  assert.match(apply, /applyToolLinks\(hasSavedView\(view\)\)/);
+  assert.match(apply, /hasSavedView\(view\)[\s\S]*restoreView\(view, filtersTop\)/);
   // データが届く前に戻る・進むを押したときも、タブと検索欄は URL に合わせる（本・カテゴリーはデータが届いてから URL で読む）
   assert.match(apply, /if \(st\.tab !== currentTab\) switchTab\(st\.tab === "dashboard" \? "tab-dashboard" : "tab-tools"\);/, "読み込み中に戻る・進むを押したとき、タブを URL に合わせていない");
   assert.match(apply, /if \(searchInput && searchInput\.value\.trim\(\) !== st\.q\) searchInput\.value = st\.q;/, "読み込み中に戻る・進むを押したとき、検索欄を URL に合わせていない");
   // ダッシュボードの本の行は、ふつうの左クリックだけ止めて一覧へ移り、履歴を積む
   const row = fnBody("renderBookProgress");
   assert.match(row, /e\.button !== 0 \|\| e\.ctrlKey \|\| e\.metaKey \|\| e\.shiftKey \|\| e\.altKey\) return;\s*e\.preventDefault\(\);/);
-  assert.match(row, /commitUrl\(\{ book: s\.book\.slug, tab: "tools" \}, "push"\)/);
+  assert.match(row, /commitUrl\(\{ book: s\.book\.slug, tab: "tools", tools: null, hash: "" \}, "push"\)/);
 });
 
 test("H28: 「はじめ方」の入口は、ふつうの左クリックだけ読み直しを止めて書籍の選択と同じ処理で絞り、履歴を積む（「すべて」はほかの条件も外す）。Ctrl などを押したクリックはリンクのまま", () => {
@@ -642,7 +633,7 @@ test("H28: 「はじめ方」の入口は、ふつうの左クリックだけ読
   assert.match(h, /keepInPlace\(a, \(\) => openStartEntry\(slug\)\)/);
   const open = fnBody("openStartEntry");
   assert.match(open, /setBookFilter\(slug, \{ history: "push" \}\)/);
-  assert.match(open, /commitUrl\(\{ book: "", cat: "", q: "" \}, "push"\);\s*clearOtherFilters\(\);/);
+  assert.match(open, /commitUrl\(\{ book: "", cat: "", q: "", tools: null, hash: "" \}, "push"\);\s*leaveToolSet\(\);\s*clearOtherFilters\(\);/);
   const clear = fnBody("clearOtherFilters");
   for (const re of [/filters\.categoryId = "";/, /filters\.progress = "all";/, /setSearchQuery\(""\);/]) assert.match(clear, re);
   // href は残す（新しいタブ・JavaScript が動かないときの入口）

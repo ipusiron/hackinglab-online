@@ -27,9 +27,14 @@ function checkCards(document, language, book = null) {
     assert.ok(heading.textContent.includes(groups[i]["label_" + language]), "Wrong chapter language");
     assert.ok(heading.textContent.includes(String(groups[i].items.length)), "Chapter count is absent");
   });
+  const assignedIds = cards.map((card) => card.id).filter(Boolean);
+  assert.equal(new Set(assignedIds).size, assignedIds.length, "Card IDs must stay unique even in multiple chapters");
+  assert.deepEqual([...new Set(cards.map((card) => bySlug.get(card.dataset.slug).id))].sort(), [...assignedIds].sort());
   for (const card of cards) {
     const tool = bySlug.get(card.dataset.slug);
     assert.equal(card.querySelector(".tool-title")?.textContent, tool.title);
+    assert.equal(card.querySelector(".tool-title").tagName, "H3");
+    assert.equal(card.querySelector(".tool-title").getAttribute("tabindex"), "-1");
     assert.equal(card.querySelector(".tool-subtitle")?.textContent, tool["subtitle_" + language]);
     const description = card.querySelector(".tool-description")?.textContent;
     assert.ok(description && tool["description_" + language].startsWith(description.replace(/…$/, "")), `${tool.id}: wrong/empty description`);
