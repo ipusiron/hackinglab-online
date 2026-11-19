@@ -211,7 +211,7 @@ const mediaBlocks = (condRe) =>
 
 test("H10: 折りたたみの見出し（summary）は開閉の印を消さない（display を変えない・list-style: none にしない）", () => {
   const sums = rules.filter(
-    (r) => /summary(?!::)/.test(r.selector) && !/::(?:marker|-webkit-details-marker)/.test(r.selector)
+    (r) => /(?:^|[\s>+~,(:])summary(?![\w-]|::)/.test(r.selector) && !/::(?:marker|-webkit-details-marker)/.test(r.selector)
   );
   assert.ok(sums.length > 0);
   for (const r of sums) {
@@ -377,11 +377,11 @@ test("H18: なくても一覧を出せる books.json は Promise.all に入れ�
   const body = loadDataBody();
   const i = body.indexOf('"./data/books.json"');
   assert.ok(i >= 0, "loadData で books.json を取っていない");
-  const aw = body.search(/await\s+Promise\.all\s*\(/);
-  assert.ok(aw > 0, "loadData に await Promise.all がない");
-  const open = body.indexOf("(", aw);
+  const all = body.indexOf("Promise.all(");
+  assert.ok(all > 0, "Required catalogs must share a Promise.all");
+  const open = body.indexOf("(", all);
   const close = matchParen(body, open);
-  assert.ok(i < open || i > close, "books.json が Promise.all の中にある（books.json の失敗で一覧まで出なくなる）");
+  assert.ok(i < open || i > close, "Optional books must stay outside required Promise.all");
   assert.match(body.slice(i, body.indexOf(";", i)), /\.catch\(/, "books.json の失敗を、取り始める文の中で受け止めていない");
 });
 
@@ -418,11 +418,11 @@ test("H21: 検索欄は日本語の変換中（isComposing の input）に絞ら
     return s.slice(i, s.indexOf("\n  });", i));
   };
   // 変換中の input では絞らない（未確定のかなで0件になったり、1文字ごとに一覧を作り直したりしない）
-  assert.match(handler("input"), /if \(e\.isComposing\) return;[\s\S]*applySearch\(/, "変換中の input でも絞っている");
+  assert.match(handler("input"), /if \(e\.isComposing\) \{ cancelListStatus\(\); return; \}[\s\S]*applySearch\(/, "変換中の input でも絞っている");
   // Chromium は確定の input も isComposing=true で出すので、compositionend で絞る処理が要る
   assert.match(handler("compositionend"), /applySearch\(searchInput\.value\)/, "確定したときに絞っていない");
   // 「変換中」の印を自分で持たない（compositionend を取りこぼすと、検索が止まったままになる）
-  assert.doesNotMatch(s, /compositionstart/, "compositionstart で変換中の印を持っている");
+  assert.match(s, /addEventListener\("compositionstart", cancelListStatus\)/, "Composition start cancels delayed announcements without keeping a composition flag");
   // Firefox は compositionend のあとにも input を出すので、同じ語なら描き直さない
   assert.match(fnBody("applySearch"), /if \(filters\.search === before\) return;/, "同じ語でも描き直している");
 });

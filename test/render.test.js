@@ -33,7 +33,7 @@ function checkCards(document, language, book = null) {
   for (const card of cards) {
     const tool = bySlug.get(card.dataset.slug);
     assert.equal(card.querySelector(".tool-title")?.textContent, tool.title);
-    assert.equal(card.querySelector(".tool-title").tagName, "H3");
+    assert.equal(card.querySelector(".tool-title").tagName, groups ? "H4" : "H3");
     assert.equal(card.querySelector(".tool-title").getAttribute("tabindex"), "-1");
     assert.equal(card.querySelector(".tool-subtitle")?.textContent, tool["subtitle_" + language]);
     const description = card.querySelector(".tool-description")?.textContent;
@@ -45,7 +45,10 @@ function checkCards(document, language, book = null) {
     if (demo) assert.equal(demo.href, U.demoLink(tool.demo_url, language));
     const progress = card.querySelector('[data-part="progress"]');
     assert.equal(progress?.tagName, "BUTTON", `${tool.id}: no progress control`);
-    assert.ok(progress.textContent.length > 0);
+    const expectedStage = language === "ja" ? "進捗: 未着手" : "Progress: Not started";
+    assert.equal(progress.querySelector(".tool-progress-label")?.textContent, expectedStage);
+    assert.equal(progress.querySelectorAll(".tool-progress-space").length, 4);
+    for (const space of progress.querySelectorAll(".tool-progress-space")) assert.equal(space.getAttribute("aria-hidden"), "true");
     assert.deepEqual(card.querySelectorAll(".tool-book-ref").map((n) => n.textContent),
       book ? B.formatRef(book, tool.id, language) : [], `${tool.id}: book references`);
   }
