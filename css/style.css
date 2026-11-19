@@ -888,6 +888,9 @@ html[lang="en"] #lang-en {
 }
 
 .tool-difficulty {
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
   display: inline-flex;
   align-items: center;
   padding: 0.2rem 0.6rem;
@@ -1759,3 +1762,13 @@ body { padding-bottom: var(--storage-notice-h, 0px); }
 #start-book-links { display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 0; list-style: none; }
 #start-book-links li { min-width: 0; max-width: 100%; }
 #start-books-panel[hidden], #start-first-panel[hidden] { display: none; }
+
+
+/* Standalone recovery page: both languages remain visible without scripts. */
+.recovery-main { width: 100%; max-width: 48rem; margin: 0 auto; padding: 1rem; }
+.recovery-section { min-width: 0; margin: 1rem 0; padding: 1rem; background: var(--surface-bg); border: 1px solid var(--border); border-radius: .75rem; overflow-wrap: anywhere; }
+.recovery-section h1, .recovery-section h2 { margin: 0 0 1rem; color: var(--heading); font-size: 1.5rem; }
+.recovery-section p { line-height: 1.7; }
+.recovery-section nav { display: grid; gap: .75rem; }
+.recovery-section a { display: flex; align-items: center; min-height: 44px; padding: .5rem .75rem; color: var(--control-text); background: var(--control-bg); border: 1px solid var(--control-border); border-radius: .5rem; }
+.recovery-section a:hover { background: var(--control-hover-bg); }

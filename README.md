@@ -1,6 +1,6 @@
 # ハッキング・ラボ・オンライン - Hacking Lab Online
 
-当サイトは、**「生成AIで作るセキュリティツール」プロジェクト** で誕生した教育ツール群を一覧化し、独学を支援するためのポータルサイトです。
+ハッキング・ラボ・オンラインは、**「生成AIで作るセキュリティツール」プロジェクト**のツールを探して試し、進捗を記録できるサイトです。
 
 - [「生成AIで作るセキュリティツール100」プロジェクト](https://akademeia.info/?page_id=42163)
 - [「生成AIで作るセキュリティツール200」プロジェクト](https://akademeia.info/?page_id=44607)
@@ -63,11 +63,12 @@ GitHub ActionsのStep Summaryには、件数、前回値を保持したツール
 
 ---
 
-## 📂 リポジトリー構成
+## 📂 リポジトリ構成
 
 ```text
 /
 ├ index.html                # メインHTML（ヘッダー・タブ・モーダル）
+├ 404.html                  # JavaScriptなしで読める日英の案内と入口
 ├ list.html                 # JavaScript不要の一覧（自動生成・手動編集禁止）
 ├ css/
 │   ├ style.css             # 全体スタイル（モバイルファースト）
@@ -180,7 +181,7 @@ GitHub ActionsのStep Summaryには、件数、前回値を保持したツール
 `categories.json`の各フィールドは以下の意味を持ちます。
 
 - **id**：識別子（集計・フィルター動作に使用するキー）。絞り込みの URL の `?cat=` にもそのまま出るので、英小文字・数字・ハイフンだけで書く（`npm test` が確かめる）。変えたり消したりしたときは `tools.json` も作り直す。古い id の付いたリンクは、カテゴリーの絞り込みのない一覧で開く
-- **ja / en**：UIに表示されるカテゴリー名
+- **ja / en**：画面に表示するカテゴリ名
 - **aliases_ja / aliases_en**：表記ゆれを吸収するための別名。`tools.json` を作るときに README のカテゴリー名を `id` へ対応させるのに使い、キーワード検索でもカテゴリー名と同じく探す対象にする
 
 ---
@@ -295,7 +296,7 @@ demo_url: "https://ipusiron.github.io/[slug]/"
 
 hub: true
 ---
-!-->
+-->
 ```
 
 ---
@@ -450,7 +451,6 @@ GitHub Actionsはこれらの検査をコミット前に実行します。
 
 ## 🚀 今後の改善予定
 
-* category aliasの完全サポート
 * カードUIのさらなる改善
 
 ---
@@ -459,8 +459,7 @@ GitHub Actionsはこれらの検査をコミット前に実行します。
 
 * セキュリティ・暗号技術が専門の日本の技術書著者
 * 福島県相馬市出身・在住
-* 25年以上の執筆経験
-* 商業誌・同人誌で累計30冊以上を刊行
+* 執筆25年以上／著書40冊超（商業誌・同人誌を含む）
 
 主な著書：
 
@@ -477,7 +476,7 @@ GitHub Actionsはこれらの検査をコミット前に実行します。
 
 ---
 
-## 🔗 GitHub リポジトリ
+## 🔗 GitHubリポジトリ
 
 [https://github.com/ipusiron/hackinglab-online/](https://github.com/ipusiron/hackinglab-online/)
 
