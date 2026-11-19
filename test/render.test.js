@@ -33,6 +33,8 @@ function checkCards(document, language, book = null) {
   for (const card of cards) {
     const tool = bySlug.get(card.dataset.slug);
     assert.equal(card.querySelector(".tool-title")?.textContent, tool.title);
+    assert.equal(card.querySelector(".tool-title").getAttribute("aria-label"), `Day${tool.id.slice(3)} ${tool.title}`);
+    assert.equal(card.querySelector(".tool-day").getAttribute("aria-hidden"), "true");
     assert.equal(card.querySelector(".tool-title").tagName, groups ? "H4" : "H3");
     assert.equal(card.querySelector(".tool-title").getAttribute("tabindex"), "-1");
     assert.equal(card.querySelector(".tool-subtitle")?.textContent, tool["subtitle_" + language]);
@@ -43,6 +45,11 @@ function checkCards(document, language, book = null) {
     const demo = card.querySelector('[data-part="demo"]');
     assert.equal(!!demo, !!tool.demo_url, `${tool.id}: demo presence`);
     if (demo) assert.equal(demo.href, U.demoLink(tool.demo_url, language));
+    for (const [link, label] of [[demo, language === "ja" ? "デモ" : "Demo"], [repo, "GitHub"]]) {
+      if (!link) continue;
+      assert.equal(link.getAttribute("aria-label"), language === "ja" ? `${label}（${tool.title}、新しいタブで開く）` : `${label} (${tool.title}, opens in a new tab)`);
+      assert.equal(link.target, "_blank"); assert.equal(link.rel, "noopener");
+    }
     const progress = card.querySelector('[data-part="progress"]');
     assert.equal(progress?.tagName, "SELECT", `${tool.id}: no native progress control`);
     assert.equal(progress.value, "0");
@@ -96,7 +103,7 @@ for (const language of ["ja", "en"]) {
 for (const language of ["ja", "en"]) {
   test(`R4: ${language} keeps every card visible and omits unknown/invalid difficulty badges`, async () => {
     const fixture = JSON.parse(read("data/tools.json"));
-    const cases = [null, undefined, 0, 6, "3", 1, 5];
+    const cases = [null, undefined, 0, 6, "3", 1, 2, 3, 4, 5, -1, 2.5];
     cases.forEach((value, i) => {
       if (value === undefined) delete fixture.tools[i].difficulty;
       else fixture.tools[i].difficulty = value;
@@ -107,9 +114,14 @@ for (const language of ["ja", "en"]) {
       const card = cards.find((c) => c.dataset.slug === fixture.tools[i].slug);
       assert.ok(card, `Card disappeared for difficulty=${String(value)}`);
       const badge = card.querySelector(".tool-difficulty");
-      if (value === 1 || value === 5) {
+      if (Number.isInteger(value) && value >= 1 && value <= 5) {
         assert.ok(badge, `Missing valid difficulty=${value}`);
         assert.equal((badge.textContent.match(/★/g) || []).length, value);
+        assert.equal((badge.textContent.match(/☆/g) || []).length, 5 - value);
+        assert.equal(badge.getAttribute("role"), "img");
+        assert.equal(badge.getAttribute("aria-label"), language === "ja" ? `難易度：5段階中${value}` : `Difficulty: ${value} of 5`);
+        assert.equal(badge.firstElementChild.getAttribute("aria-hidden"), "true");
+        assert.equal(badge.textContent, (language === "ja" ? "難易度：" : "Difficulty: ") + "★".repeat(value) + "☆".repeat(5 - value));
       } else assert.equal(badge, null, `Unknown/invalid difficulty=${String(value)} must not appear as a rating`);
     });
   });

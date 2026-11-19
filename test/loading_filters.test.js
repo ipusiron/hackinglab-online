@@ -67,9 +67,12 @@ test("LF2: the required 20s deadline aborts stalled fetch even if abort is ignor
   assert.equal(p.fetched.length, 6, "Double-click started another attempt");
   assert.equal(state(p), "ready");
   assert.equal(p.document.activeElement, el(p, "filter-search-input"));
+  const readyDate = el(p, "last-updated-value").textContent;
+  assert.notEqual(readyDate, "-");
   finishOld({ ok: true, json: async () => ({ ...catalog, generated_at: "stale response" }) });
   await p.flush();
-  assert.equal(el(p, "last-updated-value").textContent, catalog.generated_at);
+  assert.equal(el(p, "last-updated-value").textContent, readyDate);
+  assert.equal(p.evaluate("catalogGeneratedAt"), catalog.generated_at);
   assert.equal(cards(p).length, visible.length);
 });
 

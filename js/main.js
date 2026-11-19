@@ -42,7 +42,30 @@ let copyGeneration = 0;
 let navigationVersion = 0;
 let interactionVersion = 0;
 let historyScrollTimer = 0;
-const ordinaryTitle = document.title;
+let catalogGeneratedAt = null;
+function baseTitle() {
+  return currentLang === "ja"
+    ? "ハッキング・ラボ・オンライン｜IPUSIRONのセキュリティツールで独学"
+    : "Hacking Lab Online | Self-study with IPUSIRON's security tools";
+}
+
+function formatCatalogDate(value, language) {
+  // Require a timestamp with an explicit zone; do not infer a local date or use today.
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(value)) return "-";
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return "-";
+  const [year, month, day] = value.slice(0, 10).split("-").map(Number);
+  const calendar = new Date(value.slice(0, 10) + "T00:00:00Z");
+  if (calendar.getUTCFullYear() !== year || calendar.getUTCMonth() + 1 !== month || calendar.getUTCDate() !== day) return "-";
+  return new Intl.DateTimeFormat(language === "ja" ? "ja-JP" : "en-US", {
+    timeZone: "Asia/Tokyo", year: "numeric", month: language === "ja" ? "long" : "short", day: "numeric"
+  }).format(date);
+}
+
+function updateCatalogDate() {
+  const value = document.getElementById("last-updated-value");
+  if (value) value.textContent = formatCatalogDate(catalogGeneratedAt, currentLang);
+}
 const LINK_TEXT = {
   partial: ["このリンクのツールのうち、見つからないものがありました。", "Some tools in this link could not be found."],
   empty: ["このリンクのツールが見つからないため、すべてのツールを表示しています。", "None of the tools in this link were found, so all tools are shown."],
@@ -1103,10 +1126,8 @@ async function loadData() {
     searchEntries = null;
     books = usableBooks(bJson);
     // （先に入れると、書籍データを待つあいだにフッターだけが先に描き変わる）
-    const lastUpdatedEl = document.getElementById("last-updated-value");
-    if (lastUpdatedEl) {
-      lastUpdatedEl.textContent = toolsJson.generated_at || "-";
-    }
+    catalogGeneratedAt = toolsJson.generated_at;
+    updateCatalogDate();
 
     if (!HB) console.warn("books.js not loaded; book filter disabled");
     applyBooksAvailability();
@@ -1387,6 +1408,8 @@ function updateLanguageUI() {
 
   updateStartEntries();
   updateRecordsUI();
+  updateCatalogDate();
+  updateLinkedTitle();
 }
 
 // ---- タブ切替 ----
@@ -2000,7 +2023,7 @@ function updateLinkedTitle() {
     const tool = tools.find((t) => t.id === linkedToolId && t.hub !== false);
     if (tool) title = isJa ? `${tool.title}（Day${tool.id.slice(3)}）` : `${tool.title} (Day${tool.id.slice(3)})`;
   }
-  document.title = title ? title + (isJa ? "｜ハッキング・ラボ・オンライン" : " | Hacking Lab Online") : ordinaryTitle;
+  document.title = title ? title + (isJa ? "｜ハッキング・ラボ・オンライン" : " | Hacking Lab Online") : baseTitle();
 }
 
 function renderSetBanner() {
@@ -2612,12 +2635,14 @@ function createToolCard(tool, book) {
     ? tool.id.slice(3)
     : tool.id || "";
   daySpan.textContent = `Day${dayNumber}`;
+  daySpan.setAttribute("aria-hidden", "true");
 
   const titleSpan = document.createElement(book && Array.isArray(book.chapters) && book.chapters.length ? "h4" : "h3");
   titleSpan.className = "tool-title";
   titleSpan.tabIndex = -1;
   titleSpan.dataset.part = "title";
   titleSpan.textContent = tool.title || "";
+  titleSpan.setAttribute("aria-label", `Day${dayNumber} ${tool.title || ""}`);
 
   if (toolSet.ids.length) {
     const position = document.createElement("span");
@@ -2646,8 +2671,13 @@ function createToolCard(tool, book) {
   if (Number.isInteger(tool.difficulty) && tool.difficulty >= 1 && tool.difficulty <= 5) {
     const diffSpan = document.createElement("span");
     diffSpan.className = "tool-difficulty";
-    const stars = "★".repeat(tool.difficulty);
-    diffSpan.textContent = currentLang === "ja" ? `難易度: ${stars}` : `Level: ${stars}`;
+    diffSpan.setAttribute("role", "img");
+    diffSpan.setAttribute("aria-label", currentLang === "ja" ? `難易度：5段階中${tool.difficulty}` : `Difficulty: ${tool.difficulty} of 5`);
+    const visibleRating = document.createElement("span");
+    visibleRating.setAttribute("aria-hidden", "true");
+    const stars = "★".repeat(tool.difficulty) + "☆".repeat(5 - tool.difficulty);
+    visibleRating.textContent = currentLang === "ja" ? `難易度：${stars}` : `Difficulty: ${stars}`;
+    diffSpan.appendChild(visibleRating);
     meta.appendChild(diffSpan);
   }
 
@@ -2684,6 +2714,7 @@ function createToolCard(tool, book) {
     demoBtn.className = "tool-button";
     demoBtn.dataset.part = "demo";
     demoBtn.textContent = currentLang === "ja" ? "デモ" : "Demo";
+    demoBtn.setAttribute("aria-label", currentLang === "ja" ? `デモ（${tool.title}、新しいタブで開く）` : `Demo (${tool.title}, opens in a new tab)`);
   }
 
   const repoBtn = document.createElement("a");
@@ -2693,6 +2724,7 @@ function createToolCard(tool, book) {
   repoBtn.className = "tool-button secondary";
   repoBtn.dataset.part = "repo";
   repoBtn.textContent = "GitHub";
+  repoBtn.setAttribute("aria-label", currentLang === "ja" ? `GitHub（${tool.title}、新しいタブで開く）` : `GitHub (${tool.title}, opens in a new tab)`);
 
   const progressLabel = document.createElement("label");
   progressLabel.className = "tool-progress-control";
@@ -3223,12 +3255,12 @@ function handleShareOnX() {
   let text;
   if (currentLang === "ja") {
     text = `「ハッキング・ラボ・オンライン」で学習進捗を管理中🔬📚
-全 ${total} ツール：未着手${n0}／学習中${n1}／一周完了${n2}／定着済み${n3}
+全${total}ツール：未着手${n0}／学習中${n1}／一周完了${n2}／定着済み${n3}
 ${url}
 #生成AIセキュリティツール #ハッキングラボオンライン`;
   } else {
-    text = `Tracking my progress on ${total}+ tools at Hacking Lab Online 🔬
-Not started ${n0} / In progress ${n1} / First pass ${n2} / Mastered ${n3}
+    text = `Tracking my progress on Hacking Lab Online 🔬
+All ${total} tools: Not started ${n0} / In progress ${n1} / First pass ${n2} / Mastered ${n3}
 ${url}
 #GenAI #SecurityTools #HackingLabOnline`;
   }

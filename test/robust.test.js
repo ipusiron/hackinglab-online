@@ -106,7 +106,7 @@ test("RB2: 閉じて始める「はじめ方」は描く前に CSS で畳み（j
 
 test("RB3: データの更新日時は、一覧と同じ時に入れる（書籍データを待つ前に入れない）", () => {
   const load = fnBody("loadData");
-  const iUpdated = load.indexOf('"last-updated-value"');
+  const iUpdated = load.indexOf("updateCatalogDate()");
   assert.ok(iUpdated >= 0, "更新日時を入れる所がない");
   assert.ok(
     iUpdated > load.lastIndexOf("await "),
