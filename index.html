@@ -137,33 +137,30 @@
         <!-- はじめ方（Start here）：比較しない独学の入口 -->
         <details id="start-here" open>
           <summary>
-            <span class="label-ja">はじめ方</span>
-            <span class="label-en">Start here</span>
+            <span class="label-ja">はじめ方</span><span class="label-en">Start here</span>
+            <span class="start-closed-hint"><span class="label-ja">基本の手順と、最初に試す3本</span><span class="label-en">The basic steps, plus 3 tools to try first</span></span>
           </summary>
           <div class="start-here-body">
-            <p class="start-here-lead">
-              <span class="label-ja">著書40冊超・執筆25年以上の著者が生成AIで作った、手を動かして学ぶセキュリティツールの独学の場です。本のサポートページから来ると、その本で使うツールだけが表示されます。</span>
-              <span class="label-en">A self-study place of hands-on security tools, built with generative AI by an author of 40+ books over 25+ years. Coming from a book's support page shows only the tools that book uses.</span>
-            </p>
-            <nav
-              class="start-here-entries"
-              aria-label="はじめ方の入口"
-              data-aria-label-ja="はじめ方の入口"
-              data-aria-label-en="Ways to start"
-            >
-              <a href="?book=security-tools-100">
-                <span class="label-ja">ツール100を見る</span>
-                <span class="label-en">Browse Tools 100</span>
-              </a>
-              <a href="?book=security-tools-200">
-                <span class="label-ja">ツール200を見る</span>
-                <span class="label-en">Browse Tools 200</span>
-              </a>
-              <a href="./">
-                <span class="label-ja">すべてのツール</span>
-                <span class="label-en">All tools</span>
-              </a>
-            </nav>
+            <p class="start-here-lead"><span class="label-ja">生成AIで作ったセキュリティツールで、手を動かしながら独学できるサイトです。ツールを作ったのは、著書40冊超・執筆25年以上の著者です。本のサポートページのリンクから来ると、その本に関係するツールだけが出ます。</span><span class="label-en">This site lets you teach yourself security hands-on with tools built using generative AI. The tools are made by an author with 40+ books and 25+ years of writing. If you come from a link on a book&#x27;s support page, only the tools related to that book are shown.</span></p>
+            <p class="start-basic"><span class="label-ja">基本の手順：①カードの「デモ」で試す→②「進捗」で段階を選ぶ→③「学習ダッシュボード」で見返す</span><span class="label-en">Basic steps: 1. Try a tool with “Demo” → 2. Choose its stage in “Progress” → 3. Review your progress on the “Dashboard” tab</span></p>
+            <div class="start-here-entries">
+              <button id="start-first-button" type="button" aria-controls="start-first-panel" aria-expanded="true" disabled><span class="label-ja">3本から始める</span><span class="label-en">Start with 3 tools</span></button>
+              <button id="start-books-button" type="button" aria-controls="start-books-panel" aria-expanded="false" disabled><span class="label-ja">書籍から探す</span><span class="label-en">Browse by book</span></button>
+              <button id="start-all-button" type="button" disabled><span class="label-ja">すべて見る</span><span class="label-en">See all tools</span></button>
+            </div>
+            <section id="start-first-panel" aria-labelledby="start-first-heading">
+              <h2 id="start-first-heading"><span class="label-ja">作者が選んだ、最初に試す3本</span><span class="label-en">Three tools to try first, picked by the author</span></h2>
+              <ol class="start-first-tools">
+                <li><p><span class="label-ja">Caesar Cipher Wheel Tool（Day003）：ずらす数を3にし、最初から入っている<code>hello world.</code>が<code>KHOOR ZRUOG.</code>になるか確かめる</span><span class="label-en">Caesar Cipher Wheel Tool (Day003): set the shift to 3 and check that the preset <code>hello world.</code> becomes <code>KHOOR ZRUOG.</code></span></p><a class="start-demo" data-tool-id="day003" target="_blank" rel="noopener" aria-disabled="true" tabindex="-1"><span class="label-ja">デモを開く</span><span class="label-en">Open demo</span></a></li>
+                <li><p><span class="label-ja">Caesar Cipher Breaker（Day008）：入力欄の文を1本目で出た<code>KHOOR ZRUOG.</code>に入れ替えて「総当たり解読」を押し、候補1が鍵3の<code>HELLO WORLD.</code>になるか確かめる</span><span class="label-en">Caesar Cipher Breaker (Day008): replace the input with <code>KHOOR ZRUOG.</code> (the result from tool 1), press “Brute-force,” and check that the line marked “Rank 1” is <code>HELLO WORLD.</code> with key 3</span></p><a class="start-demo" data-tool-id="day008" target="_blank" rel="noopener" aria-disabled="true" tabindex="-1"><span class="label-ja">デモを開く</span><span class="label-en">Open demo</span></a></li>
+                <li><p><span class="label-ja">RailFence CipherLab（Day034）：平文に<code>HELLO</code>を入れ、レール数を3、方式を「方式2（交互）」にして、<code>HOELL</code>になるか確かめる（文字は変わらず、並びだけが変わる）</span><span class="label-en">RailFence CipherLab (Day034): type <code>HELLO</code> as the plaintext, choose 3 rails and Method 2 (zigzag), and check that it becomes <code>HOELL</code> (same letters, new order)</span></p><a class="start-demo" data-tool-id="day034" target="_blank" rel="noopener" aria-disabled="true" tabindex="-1"><span class="label-ja">デモを開く</span><span class="label-en">Open demo</span></a></li>
+              </ol>
+            </section>
+            <section id="start-books-panel" aria-labelledby="start-books-heading" hidden>
+              <h2 id="start-books-heading"><span class="label-ja">書籍／プロジェクト</span><span class="label-en">Books / Projects</span></h2>
+              <p><span class="label-ja">書籍やプロジェクトを選ぶと、それに関係するツールだけを並べます。</span><span class="label-en">Pick a book or project to list only the tools related to it.</span></p>
+              <ul id="start-book-links"></ul>
+            </section>
             <p id="record-location" class="start-here-note start-here-nocompare"><span class="label-ja">進捗はこのブラウザーの中にだけ保存し、サーバーには送りません。ランキングも、他人との比較もありません。</span><span class="label-en">Your progress is saved only in this browser and is never sent to a server. No rankings, no comparing yourself with others.</span></p>
           </div>
         </details>
@@ -415,40 +412,86 @@
           <span class="label-en">Help</span>
         </h2>
 
-        <div class="label-ja">
-          <p>
-            このサイトは「生成AIで作るセキュリティツール」プロジェクトで開発された教育向けツールを集約した、独学支援プラットフォームです。
-          </p>
+          <p><span class="label-ja">「生成AIで作るセキュリティツール」プロジェクトのツールを探して試し、進捗を記録できるサイトです。</span><span class="label-en">On this site you can find and try the tools from the “Security Tools with Generative AI” project and keep track of your progress.</span></p>
+        <section aria-labelledby="help-usage">
+          <h3 id="help-usage" tabindex="-1"><span class="label-ja">サイトの使い方</span><span class="label-en">How to use this site</span></h3>
+          <p><span class="label-ja">はじめての人は、一覧の上の「はじめ方」から始めてください。作者が選んだ、最初に試す3本があります。</span><span class="label-en">If you&#x27;re new, begin with “Start here” above the list. It has three tools to try first, picked by the author.</span></p>
+          <p><span class="label-ja">基本の手順：①カードの「デモ」で試す→②「進捗」で段階を選ぶ→③「学習ダッシュボード」で見返す。1本ごとの区切りは、READMEの使い方をひととおり試した「一周完了」が目安です。</span><span class="label-en">Basic steps: 1. Try a tool with “Demo” → 2. Choose its stage in “Progress” → 3. Review your progress on the “Dashboard” tab. For each tool, “First pass” (you have worked through the usage steps in the README once) is a good place to stop.</span></p>
+          <p><span class="label-ja">「デモ」はツールをブラウザーで開きます。「GitHub」は、使い方の説明（README）とソースコードのページを開きます。どちらも新しいタブで開きます。デモがないツールやGoogle Colabで動くツールは、READMEに動かし方があります。</span><span class="label-en">“Demo” opens the tool in your browser. “GitHub” opens the page with its README (how to use it) and the source code. Both open in a new tab. For the few tools that have no demo or that run in Google Colab, the README explains how to run them.</span></p>
+          <p><span class="label-ja">ツール一覧：「カテゴリ」と「進捗」で絞り込めます。検索欄では、ツール名・説明・タグ・カテゴリ名・Day番号（例：Day50）で探せます。</span><span class="label-en">Tools tab: narrow the list by “Category” and “Progress”. The search box finds tools by name, description, tag, category name, or Day number (for example, Day50).</span></p>
+          <p><span class="label-ja">書籍・プロジェクト：本やプロジェクトに関係するツールだけに絞り込めます。本のサポートページのリンクから来ると、その本のツールが章・節ごとに並び、カードにその章・節が出ます。1本のツールが複数の章・節に関係するときは、それぞれに出ます。</span><span class="label-en">Books &amp; projects: show only the tools related to a book or project. If you come from a link on a book&#x27;s support page, that book&#x27;s tools are listed by chapter or section, and each card shows which one. A tool related to several chapters or sections appears under each of them.</span></p>
+          <p><span class="label-ja">学習ダッシュボード：進捗を、全体・カテゴリ別・書籍やプロジェクト別に見返せます。Xで共有することもできます。</span><span class="label-en">Dashboard tab: review your progress overall, by category, and by book or project. You can also share it on X.</span></p>
+          <p><span class="label-ja">ツール1本を指すリンクは、アドレスの後ろに「#day」とDay番号の3桁を付けて作れます（例：https://hackinglab.online/#day045）。</span><span class="label-en">To link to a single tool, add “#day” and its three-digit Day number to the address (for example, https://hackinglab.online/#day045).</span></p>
+          <p><span class="label-ja">画面の配色は、お使いの端末の設定（ライト・ダーク）に合わせて変わります。</span><span class="label-en">The colors follow your device&#x27;s light or dark setting.</span></p>
+        </section>
 
-          <h3>このサイトの方針</h3>
+        <section aria-labelledby="help-stuck">
+          <h3 id="help-stuck" tabindex="-1"><span class="label-ja">つまずいたとき</span><span class="label-en">If you get stuck</span></h3>
           <ul>
-            <li>
-              ランク制・順位・バッジ・称号は、これからも実装しません。超初心者から初心者のうちは、他人と比べる必要がないと考えているからです。
-            </li>
-            <li>
-              各ツールの本体はGitHub Pages（<code>ipusiron.github.io/&lt;ツール&gt;/</code>）に置いています。このサイトはツールを置き換えるのではなく、探すための索引と、学ぶための文脈に徹します。
-            </li>
-            <li>
-              著者の書籍・連載とも行き来できます。本で読んだ手法をツールで確かめ、ツールから本の該当箇所へ戻れます。
-            </li>
+            <li><span class="label-ja">使い方がわからないときは、カードの「GitHub」からREADMEを開き、「使い方」などの節を読んでください。</span><span class="label-en">If you&#x27;re not sure how to use a tool, open its README with “GitHub” on the card and read the “Usage” (or “How to use”) section.</span></li>
+            <li><span class="label-ja">思った結果が出ないときは、READMEにある例と同じ入力で試し、同じ結果になるかを確かめてください。</span><span class="label-en">If you don&#x27;t get the result you expected, try the same input as an example in the README and check that you get the same result.</span></li>
+            <li><span class="label-ja">例では同じ結果になるのに自分の入力で合わないときは、READMEの「注意」や「限界」の節を読み、ツールが扱う範囲の外でないかを確かめてください。</span><span class="label-en">If the examples work but your own case doesn&#x27;t, read the README&#x27;s “Notes” or “Limitations” section to see whether your case is outside what the tool covers.</span></li>
+            <li><span class="label-ja">本と一緒に使っているときは、カードに出る章・節に戻り、本の手順と入力を見直してください。</span><span class="label-en">If you&#x27;re using a book, go back to the chapter or section shown on the card and check the book&#x27;s steps and inputs.</span></li>
+            <li><span class="label-ja">生成AIに聞いたときは、答えをそのまま使わず、ツールで同じ結果が出るかを確かめてください。</span><span class="label-en">If you asked a generative AI, don&#x27;t use its answer as is; check that the tool gives the same result.</span></li>
+            <li><span class="label-ja">1本でつまずいたら、ほかのツールへ先に進んでもかまいません。</span><span class="label-en">If you get stuck on one tool, it&#x27;s fine to move on to another first.</span></li>
           </ul>
+        </section>
 
-          <h3>サイトの使い方</h3>
+        <section aria-labelledby="help-progress">
+          <h3 id="help-progress" tabindex="-1"><span class="label-ja">進捗の付け方</span><span class="label-en">Marking your progress</span></h3>
+          <p><span class="label-ja">カードの「進捗」で、4つの段階から選びます。目安は次のとおりで、ほかの人と比べるためのものではありません。</span><span class="label-en">Use “Progress” on each card to choose one of four stages. Here is a guide; it is not for comparing yourself with others.</span></p>
           <ul>
-            <li>
-              ツール一覧：カテゴリー・進捗・検索から学習するツールを探せます。
-            </li>
-            <li>
-              書籍・プロジェクト：本やプロジェクトに関係するツールだけに絞り込めます。本のサポートページのリンクから来ると、その本のツールが章・節ごとに並び、カードにその章・節が出ます。1本のツールが複数の章・節に関係するときは、それぞれに出ます。
-            </li>
-            <li>ツール1本を指すリンクは、アドレスの後ろに「#day」とDay番号の3桁を付けて作れます（例：https://hackinglab.online/#day045）。</li>
-            <li>学習ダッシュボード：学習進度を可視化し、Xで共有できます。</li>
+            <li><span class="label-ja">未着手：まだ開いていない</span><span class="label-en">Not started: not opened yet</span></li>
+            <li><span class="label-ja">学習中：デモを開いて触り始めた</span><span class="label-en">In progress: opened the demo and started trying it</span></li>
+            <li><span class="label-ja">一周完了：READMEの使い方に沿って、ひととおり自分で試した</span><span class="label-en">First pass: worked through the usage steps in the README once on your own</span></li>
+            <li><span class="label-ja">定着済み：日をおいて、READMEを見ずに同じ操作ができ、仕組みを人に説明できた</span><span class="label-en">Mastered: some days later, could do the same steps without the README and explain how it works to someone</span></li>
           </ul>
+        </section>
 
+        <section aria-labelledby="help-storage">
+          <h3 id="help-storage" tabindex="-1"><span class="label-ja">記録の残り方</span><span class="label-en">How your records are saved</span></h3>
+          <p><span class="label-ja">進捗はこのブラウザーの中にだけ保存し、サーバーには送りません。</span><span class="label-en">Your progress is saved only in this browser and is never sent to a server.</span></p>
+          <p><span class="label-ja">別のブラウザーや端末、プライベートウィンドウには引き継がれません。</span><span class="label-en">It does not carry over to other browsers, other devices, or private windows.</span></p>
+          <p><span class="label-ja">ブラウザーでこのサイトのデータを消すと、進捗の記録も消えます。</span><span class="label-en">Clearing this site&#x27;s data in your browser erases your progress.</span></p>
+          <p><span class="label-ja">サイトのデータの保存を止めている設定や、保存の容量がいっぱいのときは、ページを閉じると進捗が消えます（そのときは画面の下に知らせが出ます）。</span><span class="label-en">If your browser blocks site data or its storage is full, your progress is lost when you close the page (a notice appears at the bottom of the screen).</span></p>
+          <p><span class="label-ja">iPhone・iPad・MacのSafariは、「サイト越えトラッキングを防ぐ」がオン（初期設定）のとき、Safariを使った日で数えて7日のあいだ、このサイトで1回もクリック・タップ・文字入力をしないと、進捗の記録を消すことがあります。</span><span class="label-en">Safari on iPhone, iPad, and Mac may erase your progress if you don&#x27;t click, tap, or type anything on this site over 7 days of using Safari, while “Prevent Cross-Site Tracking” is on (it is on by default).</span></p>
+          <p><span class="label-ja">学習ダッシュボードの「記録をファイルに保存」で控えのファイルを作っておくと、別のブラウザーや端末でも「ファイルから戻す」で記録を戻せます。ファイルはこの端末に保存するだけで、どこにも送りません。</span><span class="label-en">On the Dashboard tab, “Save records to a file” makes a backup file, and “Restore from a file” brings your records back, even in another browser or on another device. The file is only saved on your device and is never sent anywhere.</span></p>
+          <p><span class="label-ja">「はじめ方」を開いたか閉じたかも、このブラウザーにだけ残ります。</span><span class="label-en">Whether “Start here” is open or closed is also saved only in this browser.</span></p>
+        </section>
 
+        <section aria-labelledby="help-list">
+          <h3 id="help-list" tabindex="-1"><span class="label-ja">一覧の見方</span><span class="label-en">Reading the list</span></h3>
+          <ul>
+            <li><span class="label-ja">難易度（★）：★1〜★5の5段階で、作者が付けた目安です。学ぶ順を表すものではありません。</span><span class="label-en">Difficulty (★): the author&#x27;s rough guide on a five-point scale, from ★1 to ★5. It does not show a learning order.</span></li>
+            <li><span class="label-ja">Day番号：ツールを作った順に付けた通し番号です。これも学ぶ順ではありません。</span><span class="label-en">Day numbers: serial numbers given in the order the tools were made. They do not show a learning order either.</span></li>
+            <li><span class="label-ja">ツール100・ツール200：「生成AIで作るセキュリティツール」の2つのプロジェクトです。ツール100はDay001〜Day100で完結しました。ツール200はDay200まで作っている途中で、新しいツールは公開するたびに一覧に加わります。</span><span class="label-en">Tools 100 and Tools 200: the two projects of “Security Tools with Generative AI”. Tools 100 (Day001–Day100) is complete. Tools 200 is in progress toward Day200, and each new tool joins the list when it is published.</span></li>
+          </ul>
+        </section>
 
-          <h3>管理人について（IPUSIRON）</h3>
-          <p>
+        <section aria-labelledby="help-keyboard">
+          <h3 id="help-keyboard" tabindex="-1"><span class="label-ja">キーボードで使う</span><span class="label-en">Using the keyboard</span></h3>
+          <ul>
+            <li><span class="label-ja">Tabキーで次のボタンや入力欄へ、Shift+Tabで1つ前へ移ります。</span><span class="label-en">Tab moves to the next button or field; Shift+Tab moves back one.</span></li>
+            <li><span class="label-ja">「ツール一覧」と「学習ダッシュボード」のタブは、←→キーで切り替えます。Homeキーで最初、Endキーで最後のタブへ移ります。</span><span class="label-en">Switch between the “Tools” and “Dashboard” tabs with the ← and → keys. Home goes to the first tab and End to the last.</span></li>
+            <li><span class="label-ja">検索欄では、Escキーで入力した文字を消せます。</span><span class="label-en">In the search box, Esc clears what you typed.</span></li>
+            <li><span class="label-ja">ヘルプはEscキーか右上の「×」で閉じます。開いている間は、Tabキーで移る先がヘルプの中だけになります。</span><span class="label-en">Close Help with Esc or the “×” at the top right. While Help is open, Tab stays inside it.</span></li>
+            <li><span class="label-ja">MacのSafariでは、設定によってTabキーがリンクやボタンに止まらないことがあります。リンクへはOption+Tabで移れます。ボタンへ移れないときは、macOSのキーボード設定で「キーボードナビゲーション」をオンにしてください。</span><span class="label-en">In Safari on a Mac, Tab may skip links or buttons depending on your settings. Use Option+Tab to reach links. If buttons are skipped, turn on Keyboard Navigation in macOS Keyboard settings.</span></li>
+          </ul>
+        </section>
+
+        <section aria-labelledby="help-approach">
+          <h3 id="help-approach" tabindex="-1"><span class="label-ja">このサイトの方針</span><span class="label-en">Our approach</span></h3>
+          <ul><li><span class="label-ja">ランク制・順位・バッジ・称号は、これからも実装しません。超初心者から初心者のうちは、他人と比べる必要がないと考えているからです。</span><span class="label-en">No ranking, scores, badges or titles — now or later. Beginners
+              have no need to compare themselves with others.</span></li>
+            <li><span class="label-ja">ツールの本体は主にGitHub Pages（ipusiron.github.io/&lt;ツール&gt;/）にあります。このサイトは、ツールを探すための索引と、学ぶための案内を置く場所です。</span><span class="label-en">Most tools live on GitHub Pages (ipusiron.github.io/&lt;tool&gt;/). This site is an index for finding the tools and a guide for learning with them.</span></li>
+            <li><span class="label-ja">著者の本で読んだ手法を、ツールで手を動かして確かめられるようにしています。</span><span class="label-en">It is also built so that you can try out, hands-on, the techniques you read about in the author&#x27;s books.</span></li>
+          </ul>
+        </section>
+
+        <section aria-labelledby="help-admin">
+          <h3 id="help-admin" tabindex="-1"><span class="label-ja">管理人について（IPUSIRON）</span><span class="label-en">About the administrator (IPUSIRON)</span></h3>
+          <div class="label-ja">
+<p>
             IPUSIRON（イプシロン）は、セキュリティや暗号技術を専門とする技術書著者・教育者です。
             1979年に福島県相馬市で生まれ、現在も地元に在住しています。
             25年以上にわたり技術書を執筆し、商業誌・同人誌を含めて40冊超の書籍を刊行してきました。
@@ -464,62 +507,19 @@
 
           <p>
             また、暗号分野の翻訳・監修も手がけています。<br />
-            ブログ：<a href="https://akademeia.info/" target="_blank"
+            ブログ：<a href="https://akademeia.info/" target="_blank" rel="noopener"
               >Security Akademeia</a
             ><br />
             英語書籍：<a
               href="https://ipusiron.github.io/book_Caesar_concise_en/"
-              target="_blank"
+              target="_blank" rel="noopener"
             >
               『Caesar Cipher Breaking – A Concise Edition』
             </a>
           </p>
-        </div>
-
-        <div class="label-en">
-          <p>
-            This site is a self-learning platform built on educational tools
-            created in the project "Security Tools with Generative AI".
-          </p>
-
-          <h3>Our approach</h3>
-          <ul>
-            <li>
-              No ranking, scores, badges or titles — now or later. Beginners
-              have no need to compare themselves with others.
-            </li>
-            <li>
-              Each tool itself lives on GitHub Pages
-              (<code>ipusiron.github.io/&lt;tool&gt;/</code>). This site is an
-              index and a layer of learning context, not a replacement for the
-              tools.
-            </li>
-            <li>
-              It also links back and forth with the author's books and projects:
-              try a technique from a book here, and jump from a tool back to the
-              relevant chapter.
-            </li>
-          </ul>
-
-          <h3>How to use this site</h3>
-          <ul>
-            <li>To link to a single tool, add “#day” and its three-digit Day number to the address (for example, https://hackinglab.online/#day045).</li>
-            <li>
-              Tools tab: browse tools by category, progress status, and search.
-            </li>
-            <li>
-              Books &amp; projects: show only the tools related to a book or project. If you come from a link on a book's support page, that book's tools are listed by chapter or section, and each card shows which one. A tool related to several chapters or sections appears under each of them.
-            </li>
-            <li>
-              Dashboard tab: track your learning progress and share snapshots on
-              X.
-            </li>
-          </ul>
-
-
-
-          <h3>About the Administrator (IPUSIRON)</h3>
-          <p>
+          </div>
+          <div class="label-en">
+<p>
             IPUSIRON is a prolific Japanese technical author and educator
             specializing in security and cryptography. Born in 1979 in Soma
             City, Fukushima, Japan, he continues to reside in his hometown. With
@@ -531,7 +531,7 @@
           <p>Notable titles include:</p>
           <ul>
             <li>
-              <i>Ango Gijutsu no Subete (All About Cryptographic Technology)</i> <span lang="ja">(暗号技術のすべて)</span>
+              <i>All About Cryptographic Technology</i> <span lang="ja">(暗号技術のすべて)</span>
             </li>
             <li>
               <i>How to Build a Hacking Lab – Complete Edition</i>
@@ -551,37 +551,18 @@
             He is also an experienced translator and editorial supervisor of
             cryptographic literature.<br />
             Blog:
-            <a href="https://akademeia.info/" target="_blank"
+            <a href="https://akademeia.info/" target="_blank" rel="noopener"
               >Security Akademeia</a
             ><br />
             English Book:
             <a
               href="https://ipusiron.github.io/book_Caesar_concise_en/"
-              target="_blank"
+              target="_blank" rel="noopener"
             >
               Caesar Cipher Breaking – A Concise Edition
             </a>
           </p>
-        </div>
-        <section aria-labelledby="help-progress">
-          <h3 id="help-progress"><span class="label-ja">進捗の付け方</span><span class="label-en">Marking your progress</span></h3>
-          <p><span class="label-ja">カードの「進捗」で、4つの段階から選びます。目安は次のとおりで、ほかの人と比べるためのものではありません。</span><span class="label-en">Use “Progress” on each card to choose one of four stages. Here is a guide; it is not for comparing yourself with others.</span></p>
-          <ul>
-            <li><span class="label-ja">未着手：まだ開いていない</span><span class="label-en">Not started: not opened yet</span></li>
-            <li><span class="label-ja">学習中：デモを開いて触り始めた</span><span class="label-en">In progress: opened the demo and started trying it</span></li>
-            <li><span class="label-ja">一周完了：READMEの使い方に沿って、ひととおり自分で試した</span><span class="label-en">First pass: worked through the usage steps in the README once on your own</span></li>
-            <li><span class="label-ja">定着済み：日をおいて、READMEを見ずに同じ操作ができ、仕組みを人に説明できた</span><span class="label-en">Mastered: some days later, could do the same steps without the README and explain how it works to someone</span></li>
-          </ul>
-        </section>
-
-        <section aria-labelledby="help-storage">
-          <h3 id="help-storage" tabindex="-1"><span class="label-ja">記録の残り方</span><span class="label-en">How your records are saved</span></h3>
-          <p><span class="label-ja">進捗はこのブラウザーの中にだけ保存し、サーバーには送りません。</span><span class="label-en">Your progress is saved only in this browser and is never sent to a server.</span></p>
-          <p><span class="label-ja">別のブラウザーや端末、プライベートウィンドウには引き継がれません。</span><span class="label-en">It does not carry over to other browsers, other devices, or private windows.</span></p>
-          <p><span class="label-ja">ブラウザーでこのサイトのデータを消すと、進捗の記録も消えます。</span><span class="label-en">Clearing this site&#x27;s data in your browser erases your progress.</span></p>
-          <p><span class="label-ja">サイトのデータの保存を止めている設定や、保存の容量がいっぱいのときは、ページを閉じると進捗が消えます（そのときは画面の下に知らせが出ます）。</span><span class="label-en">If your browser blocks site data or its storage is full, your progress is lost when you close the page (a notice appears at the bottom of the screen).</span></p>
-          <p><span class="label-ja">iPhone・iPad・MacのSafariは、「サイト越えトラッキングを防ぐ」がオン（初期設定）のとき、Safariを使った日で数えて7日のあいだ、このサイトで1回もクリックやタップをしないと、進捗の記録を消すことがあります。</span><span class="label-en">Safari on iPhone, iPad, and Mac may erase your progress if you don&#x27;t click or tap anything on this site over 7 days of using Safari, while “Prevent Cross-Site Tracking” is on (it is on by default).</span></p>
-          <p><span class="label-ja">学習ダッシュボードの「記録をファイルに保存」で控えのファイルを作っておくと、別のブラウザーや端末でも「ファイルから戻す」で記録を戻せます。ファイルはこの端末に保存するだけで、どこにも送りません。</span><span class="label-en">On the Dashboard tab, “Save records to a file” makes a backup file, and “Restore from a file” brings your records back, even in another browser or on another device. The file is only saved on your device and is never sent anywhere.</span></p>
+          </div>
         </section>
       </div>
     </div>

@@ -109,8 +109,8 @@ test("SF8: 絞り込み（本・カテゴリー・進捗・検索）を変えた
   for (const v of ["bookSelect", "categorySelect", "progressSelect", "searchInput"]) {
     assert.match(body, new RegExp(`keepInPlace\\(${v},`), `${v} を変えたときに、操作した欄の位置を保っていない`);
   }
-  // 検索欄は、変換を確定したとき（compositionend）と、ふつうの入力（input）の両方で保つ
-  assert.equal((body.match(/keepInPlace\(searchInput,/g) || []).length, 2, "検索欄の2つの処理の両方で保っていない");
+  // 検索欄は、変換の確定・ふつうの入力・Escapeでの消去の3経路で位置を保つ
+  assert.equal((body.match(/keepInPlace\(searchInput,/g) || []).length, 3, "検索欄の3つの処理で位置を保っていない");
   // すぐに動かす（html の scroll-behavior: smooth のままだと、欄がいったん下がってから戻って見える）
   assert.match(mainJs, /function scrollByInstant\(dy\)\s*\{[\s\S]*?behavior:\s*"instant"/);
 });
