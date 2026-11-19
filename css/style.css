@@ -973,49 +973,53 @@ html[lang="en"] #lang-en {
   border-color: var(--secondary-hover-border);
 }
 
-/* 進捗ボタン */
-.tool-progress-button {
-  margin-left: auto;
-  padding: 0.4rem 0.85rem;
-  border-radius: 999px;
-  border: 1px solid transparent;
-  font-size: 0.8rem;
-  font-weight: 500;
+/* Native progress choices keep their full width and stable height in every stage. */
+.tool-progress-control {
+  display: grid;
+  gap: 0.25rem;
+  flex: 1 1 100%;
+  width: 100%;
+  min-width: 0;
+}
+.tool-progress-caption { font-size: 0.875rem; font-weight: 500; }
+.tool-progress-select {
+  width: 100%;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0.4rem 0.35rem;
+  border: 1px solid var(--text-secondary);
+  border-radius: 0.5rem;
+  font: inherit;
+  font-size: 1rem;
   cursor: pointer;
-  transition: filter 0.15s ease, transform 0.1s ease;
 }
-
-.tool-progress-button:hover {
-  filter: brightness(0.95);
-  transform: translateY(-1px);
-}
-
-.tool-progress-button:active {
-  transform: translateY(0);
+.tool-progress-select option { background-color: var(--field-bg); color: var(--text); }
+.progress-guide { margin-bottom: 1.5rem; overflow-wrap: anywhere; }
+.progress-guide > summary {
+  min-height: 2.75rem;
+  padding: 0.5rem 0;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 /* 進捗状態別の色分け */
-.tool-progress-button.progress-0 {
+.tool-progress-select.progress-0 {
   background-color: var(--progress-0-bg);
-  border-color: var(--progress-0-border);
   color: var(--progress-0-text);
 }
 
-.tool-progress-button.progress-1 {
+.tool-progress-select.progress-1 {
   background-color: var(--progress-1-bg);
-  border-color: var(--progress-1-border);
   color: var(--progress-1-text);
 }
 
-.tool-progress-button.progress-2 {
+.tool-progress-select.progress-2 {
   background-color: var(--progress-2-bg);
-  border-color: var(--progress-2-border);
   color: var(--progress-2-text);
 }
 
-.tool-progress-button.progress-3 {
+.tool-progress-select.progress-3 {
   background-color: var(--progress-3-bg);
-  border-color: var(--progress-3-border);
   color: var(--progress-3-text);
 }
 
@@ -1347,11 +1351,6 @@ html.help-open.keep-gutter {
     font-size: 0.75rem;
   }
 
-  .tool-progress-button {
-    padding: 0.3rem 0.6rem;
-    font-size: 0.75rem;
-  }
-
   /* カテゴリ別・書籍別進捗：PC幅では2列 */
   #category-progress-list,
   #book-progress-list {
@@ -1400,7 +1399,6 @@ html.help-open.keep-gutter {
 
   /* 幅も 44px 以上にする（768px 以上の指で操作する端末では、PC幅でのボタンコンパクト化で「デモ」が 40px 幅になる） */
   .tool-footer .tool-button,
-  .tool-progress-button,
   .footer-inner a,
   .book-banner-link {
     display: inline-flex;
@@ -1462,14 +1460,12 @@ html.help-open.keep-gutter {
    ホバーの規則より後ろに置く（前に置くと、同じ詳細度のホバーの規則が勝って浮いたまま残る） */
 @media (prefers-reduced-motion: reduce) {
   .tool-card,
-  .tool-footer .tool-button,
-  .tool-progress-button {
+  .tool-footer .tool-button {
     transition: none;
   }
 
   .tool-card:hover,
-  .tool-footer .tool-button:hover,
-  .tool-progress-button:hover {
+  .tool-footer .tool-button:hover {
     transform: none;
   }
 }
@@ -1634,14 +1630,7 @@ html.js-ready #slow-loading { display: none; }
    follow touch/inline-flex rules so the layout cells remain active everywhere. */
 #list-summary { display: grid; }
 #list-count, #list-count-space { grid-area: 1 / 1; margin: 0; overflow-wrap: anywhere; }
-#list-count-space, .tool-progress-space { visibility: hidden; }
-.tool-progress-button {
-  display: inline-grid;
-  grid-template-columns: minmax(0, 1fr);
-  max-width: 100%;
-  align-items: center;
-}
-.tool-progress-label, .tool-progress-space { grid-area: 1 / 1; min-width: 0; }
+#list-count-space { visibility: hidden; }
 
 
 /* Local record controls and the one-time, dismissible storage notice. */
@@ -1680,3 +1669,9 @@ body { padding-bottom: var(--storage-notice-h, 0px); }
 #storage-warning-help { margin-top: .25rem; }
 
 #help-dialog { overflow-wrap: anywhere; }
+
+/* Leave room for native arrows and the full stage name at narrow widths with enlarged text. */
+@media (max-width: 400px) {
+  .tool-card { padding-inline: 0.6rem; }
+  .tool-outside-label { right: 0.6rem; max-width: calc(100% - 1.2rem); }
+}

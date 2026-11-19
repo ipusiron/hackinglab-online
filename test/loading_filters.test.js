@@ -1,7 +1,7 @@
 "use strict";
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
-const { runPage, read } = require("./helpers/page.js");
+const { runPage, read, chooseProgress } = require("./helpers/page.js");
 const B = require("../js/books.js");
 const catalog = JSON.parse(read("data/tools.json"));
 const categories = JSON.parse(read("data/categories.json"));
@@ -205,16 +205,16 @@ test("LF12: progress changes keep every duplicate in place, count outside once, 
   const all = cards(p); const card = all.find((item) => all.filter((c) => c.dataset.toolId === item.dataset.toolId).length > 1);
   const copies = all.filter((c) => c.dataset.toolId === card.dataset.toolId);
   const total = new Set(all.map((c) => c.dataset.toolId)).size;
-  const button = card.querySelector('[data-part="progress"]'); button.focus(); button.dispatch("click");
+  const button = card.querySelector('[data-part="progress"]'); button.focus(); chooseProgress(button, 1);
   assert.deepEqual(cards(p), all); assert.equal(p.document.activeElement, button);
   for (const item of copies) { assert.equal(item.querySelector(".tool-outside-label").hidden, false); assert.ok(item.querySelector(".tool-outside-space")); }
   assert.equal(count(p), `Showing ${total} of ${total} (1 no longer matches)`);
   assert.equal(status(p), 'This card no longer matches the “Not started” filter. It stays in the list until you change the filters.');
-  el(p, "book-status").textContent = "already announced"; button.dispatch("click"); assert.equal(status(p), "already announced");
-  button.dispatch("click"); button.dispatch("click");
+  el(p, "book-status").textContent = "already announced"; chooseProgress(button, 2); assert.equal(status(p), "already announced");
+  chooseProgress(button, 3); chooseProgress(button, 0);
   for (const item of copies) assert.equal(item.querySelector(".tool-outside-label").hidden, true);
   assert.equal(count(p), `Showing all ${total} tools`);
-  button.dispatch("click"); selected(p, "filter-category", "classic-crypto");
+  chooseProgress(button, 1); selected(p, "filter-category", "classic-crypto");
   assert.equal(cards(p).some((c) => c.dataset.toolId === card.dataset.toolId), false);
 });
 
@@ -226,7 +226,7 @@ test("LF13: cross-tab progress applies and removes outside labels without rebuil
   p.values.set(`progress_${slug}`, "0"); p.dispatch("storage", { key: `progress_${slug}` });
   await time.advance(100, p); assert.equal(first.querySelector(".tool-outside-label").hidden, true);
   const set = await runPage({ search: "?tools=3,8" }); selected(set, "filter-progress", "0");
-  cards(set)[0].querySelector('[data-part="progress"]').dispatch("click");
+  chooseProgress(cards(set)[0].querySelector('[data-part="progress"]'), 1);
   assert.equal(cards(set).some((c) => c.classList.contains("is-outside")), false);
 });
 
@@ -299,7 +299,7 @@ test("LF18: all-results and zero-results use their approved full spoken sentence
 test("LF19: language-only redraw retains outside IDs and chapter duplicates without re-announcing marks", async () => {
   const p = await runPage({ search: "?book=genai-crypto" }); selected(p, "filter-progress", "0");
   const before = cards(p); const item = before.find((c) => before.filter((x) => x.dataset.toolId === c.dataset.toolId).length > 1);
-  item.querySelector('[data-part="progress"]').dispatch("click");
+  chooseProgress(item.querySelector('[data-part="progress"]'), 1);
   const identities = before.map((c) => `${c.dataset.toolId}/${c.dataset.group}`);
   const priorStatus = status(p); el(p, "lang-en").dispatch("click");
   assert.deepEqual(cards(p).map((c) => `${c.dataset.toolId}/${c.dataset.group}`), identities);
@@ -314,7 +314,7 @@ test("LF19: language-only redraw retains outside IDs and chapter duplicates with
   assert.equal(cards(p).some((c) => c.dataset.toolId === item.dataset.toolId), false);
 });
 
-test("LF20: reserved count and progress text are hidden from accessibility, while only the current stage changes", async () => {
+test("LF20: count reservation stays hidden and native options stay in place across direct stage choices", async () => {
   for (const language of ["ja", "en"]) {
     const p = await runPage({ search: `?lang=${language}` });
     assert.equal(el(p, "list-count-space").textContent, "");
@@ -322,20 +322,16 @@ test("LF20: reserved count and progress text are hidden from accessibility, whil
     const reserved = el(p, "list-count-space").textContent;
     assert.equal(el(p, "list-count-space").getAttribute("aria-hidden"), "true");
     assert.equal(reserved, language === "ja" ? `${visible.length}本中${visible.length}本を表示（${visible.length}本は条件外）` : `Showing ${visible.length} of ${visible.length} (${visible.length} no longer matches)`);
-    const button = cards(p)[0].querySelector('[data-part="progress"]');
-    const labels = language === "ja" ? ["未着手", "学習中", "一周完了", "定着済み"] : ["Not started", "In progress", "First pass", "Mastered"];
-    const label = (stage) => language === "ja" ? `進捗: ${stage}` : `Progress: ${stage}`;
-    const spaces = button.querySelectorAll(".tool-progress-space");
-    assert.deepEqual(spaces.map((space) => space.textContent), labels.map(label));
-    for (const space of spaces) assert.equal(space.getAttribute("aria-hidden"), "true");
-    for (const stage of [1, 2, 3, 0]) {
-      button.dispatch("click");
-      assert.equal(button.querySelector(".tool-progress-label").textContent, label(labels[stage]));
-      assert.deepEqual(button.querySelectorAll(".tool-progress-space"), spaces);
+    const control = cards(p)[0].querySelector('[data-part="progress"]');
+    const options = control.querySelectorAll("option");
+    control.focus();
+    for (const stage of [3, 1, 2, 0]) {
+      chooseProgress(control, stage);
+      assert.equal(control.value, String(stage));
+      assert.deepEqual(control.querySelectorAll("option"), options);
+      assert.equal(p.document.activeElement, control);
       assert.equal(el(p, "list-count-space").textContent, reserved);
     }
   }
-  const css = read("css/style.css");
-  assert.match(css, /#list-count-space, \.tool-progress-space\s*\{\s*visibility: hidden/);
-  assert.match(css, /\.tool-progress-button\s*\{[^}]*display: inline-grid/);
+  assert.match(read("css/style.css"), /#list-count-space\s*\{\s*visibility: hidden/);
 });

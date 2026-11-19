@@ -268,4 +268,9 @@ async function runPage({ search = "", storageFailure = "none", dataOverrides = {
     async forward() { context.history.forward(); await flush(); }
   };
 }
-module.exports = { runPage, ROOT, read };
+function chooseProgress(control, level) {
+  assert.equal(control.tagName, "SELECT", "Progress changes must use a native select");
+  control.value = String(level);
+  control.dispatch("change");
+}
+module.exports = { runPage, ROOT, read, chooseProgress };

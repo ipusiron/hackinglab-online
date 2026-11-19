@@ -193,7 +193,7 @@ test("SR17: restored progress synchronizes chapter duplicates and outside count 
   await restore(page, file({ [target.dataset.toolId]: 2 }));
   assert.deepEqual(page.document.querySelectorAll(".tool-card"), cards);
   for (const copy of cards.filter((card) => card.dataset.toolId === target.dataset.toolId)) {
-    assert.equal(copy.querySelector(".tool-progress-label").textContent, "進捗: 一周完了");
+    assert.equal(copy.querySelector('[data-part="progress"]').value, "2");
     assert.equal(copy.querySelector(".tool-outside-label").hidden, false);
   }
   assert.match(id(page, "list-count").textContent, /（1本は条件外）$/);
