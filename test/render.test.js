@@ -5,7 +5,7 @@ const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const B = require("../js/books.js");
 const U = require("../js/url.js");
-const { runPage, read } = require("./helpers/page.js");
+const { runPage, read, chooseProgress } = require("./helpers/page.js");
 const allTools = JSON.parse(read("data/tools.json")).tools;
 const visible = allTools.filter((t) => t.hub !== false);
 const books = JSON.parse(read("data/books.json")).books;
@@ -44,11 +44,13 @@ function checkCards(document, language, book = null) {
     assert.equal(!!demo, !!tool.demo_url, `${tool.id}: demo presence`);
     if (demo) assert.equal(demo.href, U.demoLink(tool.demo_url, language));
     const progress = card.querySelector('[data-part="progress"]');
-    assert.equal(progress?.tagName, "BUTTON", `${tool.id}: no progress control`);
-    const expectedStage = language === "ja" ? "進捗: 未着手" : "Progress: Not started";
-    assert.equal(progress.querySelector(".tool-progress-label")?.textContent, expectedStage);
-    assert.equal(progress.querySelectorAll(".tool-progress-space").length, 4);
-    for (const space of progress.querySelectorAll(".tool-progress-space")) assert.equal(space.getAttribute("aria-hidden"), "true");
+    assert.equal(progress?.tagName, "SELECT", `${tool.id}: no native progress control`);
+    assert.equal(progress.value, "0");
+    const labels = language === "ja" ? ["未着手", "学習中", "一周完了", "定着済み"] : ["Not started", "In progress", "First pass", "Mastered"];
+    assert.deepEqual(progress.querySelectorAll("option").map((o) => o.value), ["0", "1", "2", "3"]);
+    assert.deepEqual(progress.querySelectorAll("option").map((o) => o.textContent), labels);
+    assert.equal(progress.getAttribute("aria-label"), language === "ja" ? `進捗（${tool.title}）` : `Progress (${tool.title})`);
+    assert.equal(progress.closest("label").querySelector(".tool-progress-caption").textContent, language === "ja" ? "進捗" : "Progress");
     assert.deepEqual(card.querySelectorAll(".tool-book-ref").map((n) => n.textContent),
       book ? B.formatRef(book, tool.id, language) : [], `${tool.id}: book references`);
   }
@@ -78,7 +80,7 @@ for (const language of ["ja", "en"]) {
       const page = await runPage({ search: `?lang=${language}`, storageFailure });
       const cards = checkCards(page.document, language);
       const progress = cards[0].querySelector('[data-part="progress"]');
-      progress.dispatch("click");
+      chooseProgress(progress, 1);
       assert.ok(progress.classList.contains("progress-1"), "Progress did not update using the memory fallback");
       assert.ok(page.document.getElementById("overall-n1").textContent.endsWith("1"), "Dashboard did not update after progress");
       const select = page.document.getElementById("filter-book");
@@ -112,3 +114,101 @@ for (const language of ["ja", "en"]) {
     });
   });
 }
+
+test("PS1: direct choices skip stages, keep focus and history, and ignore unchanged/invalid values", async () => {
+  const writes = [];
+  const p = await runPage({ storedValues: { hlo_start_here: "closed" }, storageHooks: { write(key, value) { if (key.startsWith("progress_")) writes.push([key, value]); } } });
+  const card = p.document.querySelector(".tool-card");
+  const control = card.querySelector('[data-part="progress"]');
+  const key = `progress_${card.dataset.slug}`;
+  const href = p.context.location.href, history = p.context.history.length;
+  const options = control.querySelectorAll("option");
+  control.focus(); control.dispatch("click");
+  assert.equal(control.value, "0", "Opening the picker must not cycle progress");
+  chooseProgress(control, 3);
+  assert.equal(p.values.get(key), "3");
+  assert.equal(p.document.getElementById("overall-n3").textContent.endsWith("1"), true);
+  chooseProgress(control, 3);
+  for (const invalid of ["", "4", "-1", "1.5", "01", " 2", "NaN"]) {
+    chooseProgress(control, invalid);
+    assert.equal(control.value, "3", `Invalid choice ${JSON.stringify(invalid)} was not restored`);
+  }
+  assert.deepEqual(writes, [[key, "3"]]);
+  chooseProgress(control, 0);
+  assert.deepEqual(writes, [[key, "3"], [key, "0"]]);
+  assert.equal(p.document.activeElement, control);
+  assert.deepEqual(control.querySelectorAll("option"), options);
+  assert.equal(p.context.location.href, href); assert.equal(p.context.history.length, history);
+});
+
+test("PS2: direct backward choices synchronize every chapter copy and outside mark without rebuilding controls", async () => {
+  const p = await runPage({ search: "?book=genai-crypto" });
+  const filter = p.document.getElementById("filter-progress"); filter.value = "0"; filter.dispatch("change");
+  const cards = p.document.querySelectorAll(".tool-card");
+  const target = cards.find((c) => cards.filter((d) => d.dataset.slug === c.dataset.slug).length > 1);
+  const copies = cards.filter((c) => c.dataset.slug === target.dataset.slug);
+  const controls = copies.map((c) => c.querySelector('[data-part="progress"]'));
+  const options = controls.map((c) => c.querySelectorAll("option"));
+  controls[1].focus();
+  for (const level of [3, 1, 0]) {
+    chooseProgress(controls[1], level);
+    assert.deepEqual(p.document.querySelectorAll(".tool-card"), cards);
+    controls.forEach((control, i) => {
+      assert.equal(control.value, String(level));
+      assert.deepEqual(control.querySelectorAll("option"), options[i]);
+      assert.equal(copies[i].querySelector(".tool-outside-label").hidden, level === 0);
+    });
+    assert.equal(p.document.activeElement, controls[1]);
+  }
+  chooseProgress(controls[1], 3);
+  p.document.getElementById("lang-en").dispatch("click");
+  const rebuilt = p.document.querySelectorAll('.tool-progress-select').filter((c) => c.dataset.slug === target.dataset.slug);
+  assert.equal(rebuilt.length, copies.length);
+  for (const control of rebuilt) {
+    assert.equal(control.value, "3");
+    assert.equal(control.querySelectorAll("option")[3].textContent, "Mastered");
+    assert.match(control.getAttribute("aria-label"), /^Progress \(.+\)$/);
+  }
+  assert.equal(p.document.activeElement.dataset.slug, target.dataset.slug);
+  assert.equal(p.document.activeElement.closest(".tool-card").dataset.group, copies[1].dataset.group);
+});
+
+test("PS3: direct choices remain usable after a storage write failure and can be backed up", async () => {
+  const p = await runPage({ storageFailure: "write" });
+  const card = p.document.querySelector(".tool-card"), control = card.querySelector('[data-part="progress"]');
+  control.focus(); chooseProgress(control, 3);
+  assert.equal(control.value, "3"); assert.equal(p.document.activeElement, control);
+  assert.equal(p.document.getElementById("storage-warning").hidden, false);
+  assert.equal(p.evaluate(`getProgress(${JSON.stringify(card.dataset.slug)})`), 3);
+  p.document.getElementById("records-export").click();
+  assert.equal(p.downloads.length, 1);
+  chooseProgress(control, 0);
+  assert.equal(p.evaluate(`getProgress(${JSON.stringify(card.dataset.slug)})`), 0);
+  assert.equal(control.value, "0");
+});
+
+test("PS4: the same stage guide appears in help and a closed dashboard disclosure that survives updates", async () => {
+  const p = await runPage({ search: "?tab=dashboard" });
+  const guide = p.document.getElementById("progress-guide");
+  const help = p.document.getElementById("help-progress").closest("section");
+  assert.equal(guide.tagName, "DETAILS"); assert.equal(guide.open, false);
+  assert.equal(guide.parentNode.children[0], guide, "The guide belongs at the top of the dashboard");
+  for (const language of ["ja", "en"]) {
+    const content = (section) => section.querySelectorAll("p, li").map((el) => el.querySelector(`.label-${language}`).textContent);
+    assert.deepEqual(content(guide), content(help));
+    assert.equal(content(guide).length, 5);
+  }
+  assert.equal(guide.querySelector("summary .label-ja").textContent, "進捗の4段階の目安");
+  assert.equal(guide.querySelector("summary .label-en").textContent, "What the four stages mean");
+  const summary = guide.querySelector("summary"); summary.dispatch("click");
+  assert.equal(guide.open, true);
+  p.document.getElementById("lang-en").dispatch("click");
+  p.document.getElementById("tab-tools-label").dispatch("click");
+  chooseProgress(p.document.querySelector('[data-part="progress"]'), 3);
+  p.document.getElementById("tab-dashboard-label").dispatch("click");
+  assert.equal(p.document.getElementById("progress-guide"), guide);
+  assert.equal(guide.querySelector("summary"), summary); assert.equal(guide.open, true);
+  p.values.set(`progress_${visible[0].slug}`, "2"); p.evaluate("refreshProgressViews()");
+  assert.equal(guide.open, true);
+  summary.dispatch("click"); assert.equal(guide.open, false);
+});

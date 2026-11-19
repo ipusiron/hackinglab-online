@@ -80,7 +80,7 @@ On a slow mobile connection every extra round trip delays the cards by about 0.6
 ### Start here
 `test/lang.test.js` (LG4), `test/robust.test.js` (RB2) and `test/site.test.js` (H37) check these rules.
 - "Start here" (`#start-here`) is open in the HTML. Whether it starts open is decided before the first paint: closed when the URL has `?book=` (other than empty or `all`), then the state remembered on this device (`localStorage` key `hlo_start_here`, `open` or `closed`), then by width (open from 768px, closed below). `js/lang.js` writes the first two as `<html data-start>`; without it, CSS and `js/main.js` use the width (`NARROW_MQ`). Until `js/main.js` sets the state and adds `js-ready`, CSS draws a "Start here" that starts closed with its content hidden, so nothing moves when it closes
-- `js/main.js` remembers the state (through `js/storage.js`) when the user opens or closes it with its summary (a `click`; the `toggle` event also fires when JS sets `open`, so it is not used). It remembers `closed` when a visitor with nothing remembered starts using the list (an entry, a book from the select or the dashboard, or a progress button). Only opening the page or looking at "Start here" remembers nothing
+- `js/main.js` remembers the state (through `js/storage.js`) when the user opens or closes it with its summary (a `click`; the `toggle` event also fires when JS sets `open`, so it is not used). It remembers `closed` when a visitor with nothing remembered starts using the list (an entry, a book from the select or the dashboard, or a progress choice). Only opening the page or looking at "Start here" remembers nothing
 
 ### Back and Forward
 The list state is kept in the URL (`js/url.js`), and `js/main.js` decides when a change adds a history entry. `test/site.test.js` (H26–H28, H31–H32) checks these rules.
@@ -134,7 +134,11 @@ User progress is stored in browser localStorage with keys `progress_{slug}` cont
 - 2: 一周完了 / First pass
 - 3: 定着済み / Mastered
 
-When another tab of the same browser changes the progress, the open page redraws its progress buttons and the dashboard (`storage` event, `setupProgressSync()` in `js/main.js`). The many events of a full reset are merged into one redraw, and the tool list itself is not rebuilt. The dashboard's book rows are rebuilt, so a focused row hands the focus to the same book's new row, without scrolling.
+Each card uses a native select with four options (`0` through `3`), a visible Progress label and a tool-specific accessible name. A `change` writes the selected stage directly; unchanged or malformed values do not write. Keep the select and its options in place during local changes, cross-tab sync and record import so focus and the native control remain intact. Language-only list rendering retains outside cards and restores focus through the existing `data-part="progress"` key. Do not restore the old cycling click handler or hidden copies of all stage labels.
+
+The shared four-stage explanation is static HTML in help (`help-progress`) and at the top of the dashboard (`progress-guide`, a closed native details). Rendering the dashboard or changing language must not replace this disclosure or reset its open state. Native progress selects stay at least 1rem and 44px tall at all widths; verify full selected text including the native arrow at 320px with 200% text, not just document overflow. `PS*` runtime tests cover the direct-choice contracts; actual OS pickers, touch and screen-reader output require separate manual testing.
+
+When another tab of the same browser changes the progress, the open page redraws its progress selects and the dashboard (`storage` event, `setupProgressSync()` in `js/main.js`). The many events of a full reset are merged into one redraw, and the tool list itself is not rebuilt. The dashboard's book rows are rebuilt, so a focused row hands the focus to the same book's new row, without scrolling.
 
 ## Adding New Tools
 

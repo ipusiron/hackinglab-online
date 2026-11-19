@@ -2467,25 +2467,43 @@ function createToolCard(tool, book) {
   repoBtn.dataset.part = "repo";
   repoBtn.textContent = "GitHub";
 
-  const progressBtn = document.createElement("button");
-  progressBtn.type = "button";
-  progressBtn.className = "tool-progress-button";
-  progressBtn.dataset.part = "progress";
-  progressBtn.dataset.slug = tool.slug;
-  updateProgressButton(progressBtn, tool.slug);
+  const progressLabel = document.createElement("label");
+  progressLabel.className = "tool-progress-control";
+  const progressCaption = document.createElement("span");
+  progressCaption.className = "tool-progress-caption";
+  progressCaption.textContent = currentLang === "ja" ? "進捗" : "Progress";
+  const progressSelect = document.createElement("select");
+  progressSelect.className = "tool-progress-select";
+  progressSelect.dataset.part = "progress";
+  progressSelect.dataset.slug = tool.slug;
+  progressSelect.setAttribute("aria-label", currentLang === "ja" ? `進捗（${tool.title}）` : `Progress (${tool.title})`);
+  PROGRESS_LABELS[currentLang].forEach((stage, level) => {
+    const option = document.createElement("option");
+    option.value = String(level);
+    option.textContent = stage;
+    progressSelect.appendChild(option);
+  });
+  updateProgressSelect(progressSelect, tool.slug);
+  progressLabel.appendChild(progressCaption);
+  progressLabel.appendChild(progressSelect);
 
-  progressBtn.addEventListener("click", () => {
-    const level = (getProgress(tool.slug) + 1) % 4;
+  progressSelect.addEventListener("change", () => {
+    // A native choice changes directly to that stage; malformed or unchanged values do not write.
+    if (!/^[0-3]$/.test(progressSelect.value)) {
+      updateProgressSelect(progressSelect, tool.slug);
+      return;
+    }
+    const level = Number(progressSelect.value);
+    if (level === getProgress(tool.slug)) return;
     setProgress(tool.slug, level);
     markStartSeen();
-    // 同じツールが複数の章に出ているときは、全部のボタンを同期する
-    syncProgressButtons(tool.slug);
+    syncProgressControls(tool.slug);
     renderDashboard();
   });
 
   if (demoBtn) footer.appendChild(demoBtn);
   footer.appendChild(repoBtn);
-  footer.appendChild(progressBtn);
+  footer.appendChild(progressLabel);
 
   card.appendChild(header);
   card.appendChild(subtitle);
@@ -2541,41 +2559,24 @@ function setProgress(slug, level) {
   progressVersion++; // 次に一覧を描くときは作り直す（全部リセットしたあとに、古い進捗の表示を残さない）
 }
 
-function updateProgressButton(btn, slug) {
+function updateProgressSelect(select, slug) {
   const level = getProgress(slug);
-  const label = PROGRESS_LABELS[currentLang][level];
-  let current = btn.querySelector(".tool-progress-label");
-  if (!current) {
-    current = document.createElement("span");
-    current.className = "tool-progress-label";
-    btn.appendChild(current);
-    // All four labels share one grid cell and reserve their maximum size.
-    // They are layout-only: only the current label names the button.
-    PROGRESS_LABELS[currentLang].forEach((stage) => {
-      const space = document.createElement("span");
-      space.className = "tool-progress-space";
-      space.setAttribute("aria-hidden", "true");
-      space.textContent = currentLang === "ja" ? `進捗: ${stage}` : `Progress: ${stage}`;
-      btn.appendChild(space);
-    });
-  }
-  current.textContent = currentLang === "ja" ? `進捗: ${label}` : `Progress: ${label}`;
-
-  // 進捗状態の色分けクラスを更新
-  btn.classList.remove("progress-0", "progress-1", "progress-2", "progress-3");
-  btn.classList.add(`progress-${level}`);
+  // Keep options and the focused native control in place during local/cross-tab updates.
+  select.value = String(level);
+  select.classList.remove("progress-0", "progress-1", "progress-2", "progress-3");
+  select.classList.add(`progress-${level}`);
 }
 
-// 同じ slug の進捗ボタンをすべて更新する（章をまたいで同じツールが出る場合の同期）。
-function syncProgressButtons(slug) {
+// 同じ slug の進捗選択欄をすべて更新する（章をまたいで同じツールが出る場合の同期）。
+function syncProgressControls(slug) {
   let sel;
   try {
-    sel = `.tool-progress-button[data-slug="${CSS.escape(slug)}"]`;
+    sel = `.tool-progress-select[data-slug="${CSS.escape(slug)}"]`;
   } catch (e) {
-    sel = ".tool-progress-button";
+    sel = ".tool-progress-select";
   }
-  document.querySelectorAll(sel).forEach((b) => {
-    if (b.dataset.slug === slug) updateProgressButton(b, slug);
+  document.querySelectorAll(sel).forEach((control) => {
+    if (control.dataset.slug === slug) updateProgressSelect(control, slug);
   });
   updateOutsideCards();
 }
@@ -2602,11 +2603,9 @@ function updateOutsideCards(announce = true) {
 
 // ---- 別のタブの進捗 ----
 
-// 同じブラウザーの別のタブで進捗が変わったら（storage イベント）、このタブの進捗ボタンとダッシュボードを描き直す。
-// 押したときの次の段階は保存した値から決めるので、描き直さないと、古い表示のまま押したときに1段飛んだように見えたり、
-// 別のタブで付けた「定着済み」を消したりする。全体のリセットでは本数分の知らせが続けて届くので、知らせが止まってから
-// 1回だけ描き直す。一覧は作り直さない（このタブで押したときと同じく、フォーカスとスクロールの位置を動かさない）。
-// ダッシュボードの本の行は作り直すので、フォーカスしていた行は、作り直した同じ行へ戻す
+// Reflect another tab's stored stages in the native selects and dashboard.
+// Coalesce full-reset events, then synchronize once without rebuilding the list
+// or its controls, preserving focus and scroll position.
 const PROGRESS_SYNC_DELAY_MS = 100;
 let progressSyncTimer = 0;
 
@@ -2633,9 +2632,9 @@ function refreshProgressViews() {
   clearTimeout(progressSyncTimer);
   progressSyncTimer = 0;
   if (!tools.length) return; // データが届く前は描くものがない（届いたときに、保存された値で描く）
-  // 一覧にあるボタンは、ここで全部今の値に合わせる（作り直しの省略で残したカードも、表示は新しい値になる）
-  document.querySelectorAll(".tool-progress-button").forEach((b) => {
-    if (b.dataset.slug) updateProgressButton(b, b.dataset.slug);
+  // Synchronize every retained select, including cards whose render was cached.
+  document.querySelectorAll(".tool-progress-select").forEach((b) => {
+    if (b.dataset.slug) updateProgressSelect(b, b.dataset.slug);
   });
   updateOutsideCards();
   progressVersion++;

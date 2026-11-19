@@ -245,7 +245,7 @@ test("H13: 動きを減らす設定では、カードとカードのボタンを
   const blocks = mediaBlocks(/prefers-reduced-motion:\s*reduce/);
   assert.ok(blocks.length > 0, "prefers-reduced-motion: reduce の指定がない");
   const last = blocks[blocks.length - 1];
-  for (const sel of [".tool-card:hover", ".tool-footer .tool-button:hover", ".tool-progress-button:hover"]) {
+  for (const sel of [".tool-card:hover", ".tool-footer .tool-button:hover"]) {
     assert.ok(last.body.includes(sel), `${sel} を打ち消していない`);
   }
   assert.match(last.body, /transform:\s*none/);
@@ -509,7 +509,7 @@ test("H25: 別のタブで進捗が変わったら（storage イベント）、�
   assert.match(handler, /clearTimeout\(progressSyncTimer\);\s*progressSyncTimer = setTimeout\(refreshProgressViews,/);
   assert.match(fnBody("setupStaticUI") + fnBody("setupHelpModal") + mainJs.match(/document\.addEventListener\("DOMContentLoaded"[\s\S]*?\n\}\);/)[0], /setupProgressSync\(\)/);
   const refresh = fnBody("refreshProgressViews");
-  assert.match(refresh, /querySelectorAll\("\.tool-progress-button"\)[\s\S]*updateProgressButton\(/, "進捗ボタンを描き直していない");
+  assert.match(refresh, /querySelectorAll\("\.tool-progress-select"\)[\s\S]*updateProgressSelect\(/, "進捗ボタンを描き直していない");
   assert.match(refresh, /renderDashboard\(\)/, "ダッシュボードを描き直していない");
   assert.doesNotMatch(refresh, /renderToolList\(|renderAll\(/, "一覧を作り直している（フォーカスとスクロールの位置が動く）");
   // ダッシュボードの本の行は作り直すので、作り直す前にフォーカスしている部品の目印を取り、作り直したあとに同じ行へ戻す（H32）
@@ -808,6 +808,11 @@ test("H35: 狭い画面（767px まで）と指で操作する端末では、ヘ
   assert.equal(blocks.length, 1, "@media (max-width: 767.98px), (pointer: coarse) が1つでない（マウスで使う 768px 以上の画面は今の大きさのまま）");
   const b = blocks[0];
   const inner = cssRules(b.body);
+  // Native progress selects keep readable text and a 44px target at desktop widths too.
+  const progress = bodyOf(".tool-progress-select");
+  assert.match(progress, /min-height:\s*2\.75rem/);
+  assert.match(progress, /min-width:\s*2\.75rem/);
+  assert.match(progress, /font-size:\s*1rem/);
   const minHeightOf = (sel) =>
     inner.filter((r) => r.selector.split(",").map((s) => s.trim()).includes(sel)).some((r) => /min-height:\s*2\.75rem/.test(r.body));
   for (const sel of [
@@ -817,7 +822,6 @@ test("H35: 狭い画面（767px まで）と指で操作する端末では、ヘ
     "#share-on-x",
     "#reset-all-progress",
     ".tool-footer .tool-button",
-    ".tool-progress-button",
     ".footer-inner a",
     ".book-banner-link",
     ".book-progress-title"
@@ -826,7 +830,7 @@ test("H35: 狭い画面（767px まで）と指で操作する端末では、ヘ
   }
   // ヘッダーの3つとカード・リンクは幅も 44px（「?」は .header-controls .help-button で書き、丸の指定に勝たせる。
   // 768px 以上の指で操作する端末では、PC幅でのボタンコンパクト化で「デモ」が 40px 幅になる）
-  for (const sel of [".header-controls button", ".header-controls .help-button", ".tool-footer .tool-button", ".tool-progress-button"]) {
+  for (const sel of [".header-controls button", ".header-controls .help-button", ".tool-footer .tool-button"]) {
     assert.ok(
       inner.some((r) => r.selector.split(",").map((s) => s.trim()).includes(sel) && /min-width:\s*2\.75rem/.test(r.body)),
       `${sel} の幅が 2.75rem になっていない`
@@ -913,7 +917,7 @@ test("H37: 「はじめ方」の開閉は、利用者が開閉したらその形
   assert.match(book.slice(0, book.indexOf("\n  });")), /if \(e\.target\.value\) markStartSeen\(\);/, "本を選んでも残していない");
   assert.match(fnBody("renderBookProgress"), /title\.addEventListener\("click", \(e\) => \{\s*markStartSeen\(\);/, "ダッシュボードの本の行で本を選んでも残していない");
   const card = fnBody("createToolCard");
-  const click = card.slice(card.indexOf('progressBtn.addEventListener("click"'));
+  const click = card.slice(card.indexOf('progressSelect.addEventListener("change"'));
   assert.match(click.slice(0, click.indexOf("\n  });")), /setProgress\(tool\.slug, level\);\s*markStartSeen\(\);/, "進捗を付けても残していない");
   // 開いただけ・見ただけでは残さない（開いて見せた「はじめ方」が、読む前に次から閉じてしまわない）
   assert.equal((blankComments(mainJs).match(/markStartSeen\(\)/g) || []).length, 4 + 1, "markStartSeen を呼ぶ所は、入口・本の選択欄・ダッシュボードの本の行・進捗の4か所と、宣言の1か所");

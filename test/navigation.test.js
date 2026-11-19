@@ -1,7 +1,7 @@
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { runPage, read } = require("./helpers/page.js");
+const { runPage, read, chooseProgress } = require("./helpers/page.js");
 const B = require("../js/books.js");
 const allTools = JSON.parse(read("data/tools.json")).tools;
 const visible = allTools.filter((t) => t.hub !== false);
@@ -40,7 +40,7 @@ for (const lang of ["ja", "en"]) {
     assert.equal(cards(p)[0].querySelector(".tool-set-position").getAttribute("aria-label"),lang==="ja" ? "12本中1本目" : "1 of 12");
     assert.equal(p.document.querySelector(".set-banner-details").open,false);
     assert.match(p.document.title,lang==="ja" ? /このリンクのツール（12本）｜/ : /Tools in this link \(12\) \|/);
-    cards(p)[0].querySelector('[data-part="progress"]').dispatch("click");
+    chooseProgress(cards(p)[0].querySelector('[data-part="progress"]'), 1);
     assert.deepEqual(ids(p),requested.slice(0,12),"Progress must not reorder a set");
   });
 }
@@ -125,7 +125,7 @@ test("N8: hash-only history navigates exactly once and keyboard progress does no
   await p.back();
   assert.equal(p.document.activeElement,title(p,"day003"));
   assert.equal(p.document.scrollCalls.length,3,"One popstate plus hashchange must produce one jump");
-  title(p,"day003").closest(".tool-card").querySelector('[data-part="progress"]').dispatch("click");
+  chooseProgress(title(p,"day003").closest(".tool-card").querySelector('[data-part="progress"]'), 1);
   assert.equal(p.document.scrollCalls.length,3);
 });
 
@@ -231,7 +231,7 @@ test("N16: manual category/search/progress changes clear single hashes; reload r
 
 test("N17: progress filters are restored in history state without entering shared URLs",async()=>{
   const p=await runPage();
-  cards(p)[0].querySelector('[data-part="progress"]').dispatch("click");
+  chooseProgress(cards(p)[0].querySelector('[data-part="progress"]'), 1);
   selected(p,"filter-progress","1");
   assert.equal(cards(p).length,1);
   p.document.querySelector('[data-tab-target="tab-dashboard"]').dispatch("click");
@@ -273,7 +273,7 @@ test("N20: set details survive ordinary redraw and have a reusable focus key",as
   const p=await runPage({search:"?tools=3,8"});
   const summary=p.document.getElementById("set-banner-details-summary");
   summary.dispatch("click");summary.focus();
-  cards(p)[0].querySelector('[data-part="progress"]').dispatch("click");
+  chooseProgress(cards(p)[0].querySelector('[data-part="progress"]'), 1);
   assert.equal(p.document.querySelector(".set-banner-details").open,true);
   assert.equal(p.document.getElementById("set-banner-details-summary"),summary);
   p.document.getElementById("lang-en").dispatch("click");
