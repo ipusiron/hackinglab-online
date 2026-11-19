@@ -60,9 +60,8 @@ test("P4: share text uses actual whole-catalog progress independently of the sel
     el(p,`lang-${language}`).click();el(p,"share-on-x").click();
     const [href,target,features]=calls.at(-1), url=new URL(href), lines=url.searchParams.get("text").split("\n");
     assert.equal(url.origin+url.pathname,"https://twitter.com/intent/tweet");assert.equal(target,"_blank");assert.equal(features,"noopener");
-    assert.equal(lines[0],language==="ja" ? "「ハッキング・ラボ・オンライン」で学習進捗を管理中🔬📚" : "Tracking my progress on Hacking Lab Online 🔬");
-    assert.equal(lines[1],language==="ja" ? `全${visible.length}ツール：未着手${visible.length-3}／学習中1／一周完了1／定着済み1` : `All ${visible.length} tools: Not started ${visible.length-3} / In progress 1 / First pass 1 / Mastered 1`);
-    const shared=new URL(lines[2]);assert.equal(shared.searchParams.get("lang"),language==="en" ? "en" : null);assert.equal(shared.searchParams.has("tools"),false);
+    assert.equal(lines[0],language==="ja" ? "「ハッキング・ラボ・オンライン」で、ツールを2本一周しました（うち定着済み1本）🔬📚" : "I've worked through 2 tools at Hacking Lab Online (1 mastered) 🔬");
+    const shared=new URL(lines[1]);assert.equal(shared.searchParams.get("lang"),language==="en" ? "en" : null);assert.equal(shared.searchParams.has("tools"),false);
   }
   assert.equal(calls.length,2);
 });

@@ -42,6 +42,9 @@ let linkedToolId = "";
 let pendingNavigation = null;
 let lastNavigationHref = "";
 let copyGeneration = 0;
+const HSH = typeof HLOShare !== "undefined" ? HLOShare : null;
+let shareCopyGeneration = 0;
+let shareScopeKey = "";
 let navigationVersion = 0;
 let interactionVersion = 0;
 let historyScrollTimer = 0;
@@ -727,6 +730,7 @@ function setupStaticUI() {
   // X共有ボタン
   const shareBtn = document.getElementById("share-on-x");
   shareBtn?.addEventListener("click", handleShareOnX);
+  document.getElementById("share-copy-link")?.addEventListener("click", copyShareLink);
 
   // 全体リセット
   const resetBtn = document.getElementById("reset-all-progress");
@@ -1113,6 +1117,7 @@ function usableBooks(value) {
 
 function setLoadState(state) {
   loadState = state;
+  if (state !== "ready") clearShareFeedback(false);
   document.getElementById("main-content").dataset.loadState = state;
   document.getElementById("catalog-loading").hidden = state !== "loading";
   document.getElementById("catalog-error").hidden = state !== "error";
@@ -1122,7 +1127,7 @@ function setLoadState(state) {
     document.getElementById(id).disabled = state !== "ready";
   });
   document.getElementById("retry-data").disabled = state !== "error";
-  if (state !== "ready") ["share-on-x", "reset-all-progress"].forEach((id) => { document.getElementById(id).disabled = true; });
+  if (state !== "ready") ["share-on-x", "share-copy-link", "reset-all-progress"].forEach((id) => { document.getElementById(id).disabled = true; });
   updateRecordsUI();
   updateStartEntries();
 }
@@ -1236,9 +1241,9 @@ async function loadData() {
 // データが届いてダッシュボードを描いたあとに呼ぶ。届く前（?tab=dashboard で開いたときや、読み込み中にタブを押したとき）に
 // シェアを押すと、0本の数で投稿の文を作ってしまうため。読み込みに失敗したときは押せないまま
 function enableDashboardActions() {
-  ["share-on-x", "reset-all-progress"].forEach((id) => {
+  ["share-on-x", "share-copy-link", "reset-all-progress"].forEach((id) => {
     const btn = document.getElementById(id);
-    if (btn) btn.disabled = false;
+    if (btn) btn.disabled = id !== "reset-all-progress" && !HSH;
   });
 }
 
@@ -1456,6 +1461,7 @@ function tabName(targetId) {
 }
 
 function switchTab(targetId) {
+  if (currentTab !== tabName(targetId)) clearShareFeedback(false);
   cancelListStatus();
   currentTab = tabName(targetId);
   const panels = document.querySelectorAll(".tab-panel");
@@ -2254,6 +2260,7 @@ function renderToolList(retainedIds, announceBookNotice = true) {
   if (loadState !== "ready") return;
 
   refreshBookTarget();
+  refreshShareUI();
   removeUnusedCategoryChoices();
   const book = toolSet.ids.length ? null : currentBook();
   renderSetBanner();
@@ -2980,6 +2987,7 @@ function refreshProgressViews() {
 
 function renderDashboard() {
   if (loadState !== "ready") return;
+  refreshShareUI();
   const total = tools.filter((t) => t.hub !== false).length;
 
   let n0 = 0,
@@ -3299,47 +3307,85 @@ function renderCategoryProgress() {
   });
 }
 
-// ---- X共有 ----
+// ---- 選択範囲の共有 ----
+
+function shareData() {
+  if (!HSH || loadState !== "ready") return null;
+  const book = currentBook();
+  const progress = new Map();
+  tools.filter((tool) => tool.hub !== false).forEach((tool) => {
+    if (!progress.has(tool.id)) progress.set(tool.id, getProgress(tool.slug));
+  });
+  const counts = HSH.summarizeProgress(tools, progress, book ? HB.expandTargetIds(book, tools) : null);
+  const selection = book ? { slug: book.slug, label: HB.bookLabel(book, currentLang), related: book.relation === "related" } : null;
+  return HSH.buildShare({ lang: currentLang, counts, selection });
+}
+
+function clearShareFeedback(rescueFocus) {
+  shareCopyGeneration++;
+  const field = document.getElementById("share-copy-url");
+  const button = document.getElementById("share-copy-link");
+  if (rescueFocus && field && document.activeElement === field && currentTab === "dashboard" && button && !button.disabled) {
+    button.focus({ preventScroll: true });
+  }
+  if (field) { field.hidden = true; field.value = ""; }
+  const status = document.getElementById("share-copy-status");
+  if (status) { status.hidden = true; status.textContent = ""; }
+}
+
+function refreshShareUI() {
+  const data = shareData();
+  if (!data) return;
+  const key = currentLang + ":" + data.url + ":" + data.scopeNote;
+  if (key !== shareScopeKey) {
+    clearShareFeedback(true);
+    shareScopeKey = key;
+  }
+  const note = document.getElementById("share-scope-note");
+  if (note) {
+    note.hidden = !data.scopeNote;
+    if (note.textContent !== data.scopeNote) note.textContent = data.scopeNote;
+  }
+}
 
 function handleShareOnX() {
-  const total = tools.filter((t) => t.hub !== false).length;
+  const data = shareData();
+  if (data) window.open(data.intentUrl, "_blank", "noopener");
+}
 
-  let n0 = 0,
-    n1 = 0,
-    n2 = 0,
-    n3 = 0;
-
-  tools
-    .filter((t) => t.hub !== false)
-    .forEach((tool) => {
-      const lvl = getProgress(tool.slug);
-      if (lvl === 0) n0++;
-      else if (lvl === 1) n1++;
-      else if (lvl === 2) n2++;
-      else if (lvl === 3) n3++;
-    });
-
-  // 英語表示のときは ?lang=en を付ける（共有されたリンクを開いた人も英語で始まる）
-  const base = window.location.origin + window.location.pathname;
-  const url = HU ? HU.withLang(base, currentLang) : base;
-
-  let text;
-  if (currentLang === "ja") {
-    text = `「ハッキング・ラボ・オンライン」で学習進捗を管理中🔬📚
-全${total}ツール：未着手${n0}／学習中${n1}／一周完了${n2}／定着済み${n3}
-${url}
-#生成AIセキュリティツール #ハッキングラボオンライン`;
-  } else {
-    text = `Tracking my progress on Hacking Lab Online 🔬
-All ${total} tools: Not started ${n0} / In progress ${n1} / First pass ${n2} / Mastered ${n3}
-${url}
-#GenAI #SecurityTools #HackingLabOnline`;
+async function copyShareLink() {
+  if (currentTab !== "dashboard") return;
+  const data = shareData();
+  if (!data) return;
+  refreshShareUI();
+  const guard = { generation: ++shareCopyGeneration, key: shareScopeKey,
+    navigation: navigationVersion, interaction: interactionVersion, focus: document.activeElement };
+  const status = document.getElementById("share-copy-status");
+  const field = document.getElementById("share-copy-url");
+  if (!status || !field) return;
+  status.hidden = true;
+  status.textContent = "";
+  let copied = false;
+  try {
+    await navigator.clipboard.writeText(data.url);
+    copied = true;
+  } catch (_) { /* The readonly field is the manual copy path. */ }
+  if (guard.generation !== shareCopyGeneration || guard.key !== shareScopeKey ||
+      guard.navigation !== navigationVersion || guard.interaction !== interactionVersion ||
+      guard.focus !== document.activeElement || loadState !== "ready" || currentTab !== "dashboard") return;
+  status.textContent = LINK_TEXT[copied ? "copied" : "copyFailed"][currentLang === "ja" ? 0 : 1];
+  status.hidden = false;
+  if (copied && document.activeElement === field) {
+    document.getElementById("share-copy-link").focus({ preventScroll: true });
   }
-
-  const shareUrl =
-    "https://twitter.com/intent/tweet?text=" + encodeURIComponent(text);
-
-  window.open(shareUrl, "_blank", "noopener");
+  field.hidden = copied;
+  if (!copied) {
+    field.value = data.url;
+    if (document.activeElement === document.getElementById("share-copy-link")) {
+      field.focus();
+      field.select();
+    }
+  }
 }
 
 // ---- 全体リセット ----

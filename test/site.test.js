@@ -659,7 +659,8 @@ test("H30: 選んだ言語を覚える。JA・EN で選んだ言語を保存し�
   assert.match(fnBody("updateLanguageUI"), /updateStartEntries\(\)/);
   assert.match(fnBody("updateStartEntries"), /HU\.withLang\(url\.toString\(\), currentLang\)/);
   assert.match(fnBody("renderBookProgress"), /HU\.withLang\(new URL\(rowHref, window\.location\.href\)\.toString\(\), "en"\)/);
-  assert.match(fnBody("handleShareOnX"), /const url = HU \? HU\.withLang\(base, currentLang\) : base;/);
+  assert.match(fnBody("handleShareOnX"), /shareData\(\)/);
+  assert.match(fnBody("shareData"), /HSH\.buildShare\(\{ lang: currentLang, counts, selection \}\)/);
   // 検索欄の案内文は index.html に書かない（英語で開いたとき、main.js が動く前に日本語の文が出ないように）
   assert.doesNotMatch(openTag("filter-search-input"), /\splaceholder=/);
   assert.match(fnBody("updateLanguageUI"), /searchInput\.placeholder = isJa/);
@@ -865,12 +866,12 @@ test("H36: サイト名は「・」の後ろでだけ折り（<wbr>）、語の�
 
 test("H38: ダッシュボードの「Xで進捗をシェア」「すべて未着手にリセット」は、データが届くまで押せない（index.html で disabled、届いてダッシュボードを描いたあとに外す）", () => {
   // ?tab=dashboard で開いたときや、読み込み中にタブを押したとき、データが届く前にシェアを押すと 0 本の数で投稿の文を作ってしまう
-  for (const id of ["share-on-x", "reset-all-progress"]) {
+  for (const id of ["share-on-x", "share-copy-link", "reset-all-progress"]) {
     assert.match(openTag(id), /^<button\b[^>]*\sdisabled[\s>]/, `#${id} がデータの届く前から押せる`);
   }
   const enable = fnBody("enableDashboardActions");
-  assert.match(enable, /\["share-on-x", "reset-all-progress"\]/);
-  assert.match(enable, /btn\.disabled = false;/);
+  assert.match(enable, /\["share-on-x", "share-copy-link", "reset-all-progress"\]/);
+  assert.match(enable, /btn\.disabled = id !== "reset-all-progress" && !HSH;/);
   // 外すのは、データが届いて描いたあと（読み込みに失敗したときは外さない）
   const load = loadDataBody();
   const iEnable = load.indexOf("enableDashboardActions()");
