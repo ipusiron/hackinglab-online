@@ -33,7 +33,7 @@ function checkCards(document, language, book = null) {
   for (const card of cards) {
     const tool = bySlug.get(card.dataset.slug);
     assert.equal(card.querySelector(".tool-title")?.textContent, tool.title);
-    assert.equal(card.querySelector(".tool-title").tagName, "H3");
+    assert.equal(card.querySelector(".tool-title").tagName, groups ? "H4" : "H3");
     assert.equal(card.querySelector(".tool-title").getAttribute("tabindex"), "-1");
     assert.equal(card.querySelector(".tool-subtitle")?.textContent, tool["subtitle_" + language]);
     const description = card.querySelector(".tool-description")?.textContent;

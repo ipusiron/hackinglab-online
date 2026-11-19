@@ -94,6 +94,148 @@ const NARROW_MQ = "(max-width: 767.98px)";
 // 一覧を作り直さずに済むかを見るための、前回の表示の鍵と、進捗を変えるたびに増やす版
 let lastListKey = null;
 let progressVersion = 0;
+let loadState = "loading";
+let loadAttempt = null;
+let statusTimer = 0;
+let statusRepeatTimer = 0;
+let statusVersion = 0;
+let shownToolIds = new Set();
+let outsideToolIds = new Set();
+const LIST_TEXT = {
+  "list_heading": [
+    "ツール一覧",
+    "Tool list"
+  ],
+  "all_count": [
+    "全{total}本を表示",
+    "Showing all {total} tools"
+  ],
+  "filtered_count": [
+    "{total}本中{shown}本を表示",
+    "Showing {shown} of {total} tools"
+  ],
+  "outside_count": [
+    "{total}本中{shown}本を表示（{outside}本は条件外）",
+    "Showing {shown} of {total} ({outside} no longer matches)"
+  ],
+  "count_announcement": [
+    "{total}本中{shown}本を表示しています。",
+    "Showing {shown} of {total} tools."
+  ],
+  "empty": [
+    "条件に合うツールはありません。",
+    "No tools match the current filters."
+  ],
+  "empty_book": [
+    "「{book}」の中に、ほかの条件に合うツールはありません。",
+    "No tools from “{book}” match the other filters."
+  ],
+  "clear_all": [
+    "条件をすべて外す",
+    "Clear all filters"
+  ],
+  "clear_except_book": [
+    "カテゴリ・進捗・検索の条件を外す",
+    "Clear category, progress, and search"
+  ],
+  "outside_label": [
+    "「{progress}」の条件外",
+    "No longer “{progress}”"
+  ],
+  "outside_announcement": [
+    "「{progress}」の条件から外れました。カードは、絞り込みを変えるまで一覧に残ります。",
+    "This card no longer matches the “{progress}” filter. It stays in the list until you change the filters."
+  ],
+  "search_label": [
+    "検索",
+    "Search"
+  ],
+  "search_placeholder": [
+    "ツール名・説明・Day番号",
+    "Name, description, Day number"
+  ],
+  "loading": [
+    "ツールの一覧を読み込んでいます…",
+    "Loading the tool list…"
+  ],
+  "load_error": [
+    "ツールの一覧を読み込めませんでした。通信の状態を確かめてから、もう一度読み込んでください。",
+    "Couldn't load the tool list. Check your connection, then try again."
+  ],
+  "retry": [
+    "もう一度読み込む",
+    "Try again"
+  ],
+  "slow_loading": [
+    "表示に時間がかかっています。",
+    "This is taking longer than usual."
+  ],
+  "reload_page": [
+    "ページを読み込み直す",
+    "Reload the page"
+  ],
+  "no_javascript": [
+    "ツールの一覧と絞り込みはJavaScriptで表示しています。ブラウザーでJavaScriptを有効にしてから、このページを読み込み直してください。",
+    "The tool list and filters need JavaScript. Turn on JavaScript in your browser, then reload this page."
+  ]
+};
+
+function listText(key, values = {}) {
+  return LIST_TEXT[key][currentLang === "ja" ? 0 : 1].replace(/\{(\w+)\}/g, (_, name) => String(values[name] ?? ""));
+}
+
+// Both the debounce and the short same-message reset belong to the current view.
+function cancelListStatus() {
+  clearTimeout(statusTimer);
+  clearTimeout(statusRepeatTimer);
+  statusTimer = statusRepeatTimer = 0;
+  statusVersion++;
+}
+
+function announceListStatus(message, delay = 0) {
+  cancelListStatus();
+  if (loadState !== "ready") return;
+  const version = statusVersion;
+  const publish = () => {
+    statusTimer = 0;
+    if (version !== statusVersion || loadState !== "ready") return;
+    const el = document.getElementById("book-status");
+    if (!el) return;
+    if (el.textContent === message) {
+      el.textContent = "";
+      statusRepeatTimer = setTimeout(() => {
+        statusRepeatTimer = 0;
+        if (version === statusVersion && loadState === "ready") el.textContent = message;
+      }, 50);
+    } else el.textContent = message;
+  };
+  if (delay) statusTimer = setTimeout(publish, delay);
+  else publish();
+}
+
+function listCounts() {
+  const total = toolSet.ids.length ? toolSet.ids.length : bookTargetSet ? bookTargetSet.size : new Set(tools.filter((t) => t.hub !== false).map((t) => t.id)).size;
+  return { total, shown: shownToolIds.size, outside: outsideToolIds.size };
+}
+
+function updateListCount() {
+  const el = document.getElementById("list-count");
+  if (!el || loadState !== "ready") return;
+  const counts = listCounts();
+  el.textContent = listText(counts.outside ? "outside_count" : counts.shown === counts.total ? "all_count" : "filtered_count", counts);
+}
+
+function announceListCount(delay = 0) {
+  const counts = listCounts();
+  let message;
+  if (!counts.shown) {
+    const book = currentBook();
+    message = listText(book ? "empty_book" : "empty", { book: book && HB ? HB.bookLabel(book, currentLang) : "" });
+  } else if (counts.shown === counts.total && !counts.outside) {
+    message = currentLang === "ja" ? `全${counts.total}本を表示しています。` : `Showing all ${counts.total} tools.`;
+  } else message = listText("count_announcement", counts);
+  announceListStatus(message, delay);
+}
 
 document.addEventListener("DOMContentLoaded", () => {
   setupStaticUI();
@@ -120,7 +262,9 @@ function setupStaticUI() {
   const langEnBtn = document.getElementById("lang-en");
 
   const setLanguage = (lang) => {
-    if (lang === currentLang) return; // 今の言語のボタンは押しても何もしない
+    if (lang === currentLang) return;
+    cancelListStatus(); // 今の言語のボタンは押しても何もしない
+    const retainedIds = new Set(shownToolIds);
     const anchor = captureReadingAnchor(); // 作り直す前に、読んでいたカードと高さを覚える
     const focused = document.activeElement;
     const focusedKey = focusKey(focused);
@@ -131,7 +275,7 @@ function setupStaticUI() {
     syncLangParam();
     updateLanguageUI();
     setupFilterOptions(); // ラベルが変わるのでフィルターも再生成
-    renderAll();
+    renderAll(retainedIds);
     restoreReadingAnchor(anchor);
     restoreRebuiltFocus(focused, focusedKey);
   };
@@ -190,6 +334,7 @@ function setupStaticUI() {
       commitUrl({ cat: e.target.value }, "push", "category");
       filters.categoryId = e.target.value;
       renderToolList();
+      announceListCount();
     });
   });
 
@@ -199,6 +344,7 @@ function setupStaticUI() {
       clearToolHashForFilter();
       filters.progress = e.target.value;
       renderToolList();
+      announceListCount();
     });
   });
 
@@ -207,11 +353,12 @@ function setupStaticUI() {
   // Firefox は compositionend のあとに isComposing=false の input を出す。どちらの順でも、同じ語なら
   // applySearch が描き直さないので、絞るのは1回だけ。変換を通らない英字は、今までどおり1文字ごとに絞る。
   // 「変換中」の印は自分では持たない（compositionend を取りこぼすと、検索が止まったままになるため）
+  searchInput?.addEventListener("compositionstart", cancelListStatus);
   searchInput?.addEventListener("compositionend", () => {
     keepInPlace(searchInput, () => applySearch(searchInput.value));
   });
   searchInput?.addEventListener("input", (e) => {
-    if (e.isComposing) return;
+    if (e.isComposing) { cancelListStatus(); return; }
     keepInPlace(searchInput, () => applySearch(searchInput.value));
   });
 
@@ -249,6 +396,8 @@ function setupStaticUI() {
       keepInPlace(a, () => openStartEntry(slug));
     });
   });
+
+  document.getElementById("retry-data")?.addEventListener("click", loadData);
 
   // X共有ボタン
   const shareBtn = document.getElementById("share-on-x");
@@ -433,35 +582,97 @@ function nextTabIndex(key, current, count) {
 
 // ---- データ読み込み ----
 
-async function loadData() {
-  // 最初の表示に使う JSON は、最初の await より前に全部取り始める（ほかを待ってから取ると、往復1回分カードが遅れる）。
-  // 書籍データは無くても一覧を出せるので、Promise.all には入れず、失敗はここで受け止めて null にする。
-  // 決まりはハブの CLAUDE.md（Loading data）にあり、test/site.test.js がこの形を確かめる
-  const booksPromise = fetch("./data/books.json")
-    .then((res) => (res.ok ? res.json() : null))
-    .catch(() => null);
+// A deadline includes response.json(), and Promise.race also bounds fetch implementations
+// that do not observe AbortSignal. No partial response mutates the page state.
+function boundedResult(promise, delay, controller, fallback) {
+  let timer;
+  const timeout = new Promise((resolve, reject) => {
+    timer = setTimeout(() => {
+      controller.abort();
+      if (fallback) resolve(null);
+      else reject(new Error("Catalog loading timed out"));
+    }, delay);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
+async function fetchCatalogJson(url, controller) {
+  const response = await fetch(url, { signal: controller.signal });
+  if (!response.ok) throw new Error(`Catalog request failed: ${response.status}`);
+  return response.json();
+}
+
+function validateRequiredCatalog(nextCategories, catalog) {
+  const text = (value) => typeof value === "string" && value.trim().length > 0;
+  const strings = (value) => Array.isArray(value) && value.every((v) => typeof v === "string");
+  const unique = (items, key) => new Set(items.map((item) => item[key])).size === items.length;
+  const safeUrl = (value) => {
+    try { const url = new URL(value); return url.protocol === "https:" && !url.username && !url.password; }
+    catch (_) { return false; }
+  };
+  if (!Array.isArray(nextCategories) || !nextCategories.length || !nextCategories.every((c) =>
+    c && text(c.id) && /^[a-z0-9-]+$/.test(c.id) && text(c.ja) && text(c.en) &&
+    [c.aliases_ja, c.aliases_en].every((v) => v === undefined || strings(v))) || !unique(nextCategories, "id")) throw new Error("Invalid categories catalog");
+  if (!catalog || catalog.schema_version !== 1 || typeof catalog.generated_at !== "string" || !Array.isArray(catalog.tools) || !catalog.tools.some((t) => t && t.hub !== false)) throw new Error("Empty or invalid tools catalog");
+  const ids = new Set(nextCategories.map((c) => c.id));
+  if (!catalog.tools.every((t) => t && typeof t.id === "string" && /^day[0-9]{3}$/.test(t.id) && text(t.slug) && text(t.title) &&
+    (t.hub === undefined || typeof t.hub === "boolean") && strings(t.category_ids) && t.category_ids.every((id) => ids.has(id)) &&
+    [t.tags, t.category_ja, t.category_en].every((v) => v === undefined || strings(v)) &&
+    [t.subtitle_ja, t.subtitle_en, t.description_ja, t.description_en].every((v) => v === undefined || typeof v === "string") &&
+    safeUrl(t.repo_url) && (!t.demo_url || safeUrl(t.demo_url))) || !unique(catalog.tools, "id") || !unique(catalog.tools, "slug")) throw new Error("Invalid tools catalog");
+}
+
+function usableBooks(value) {
+  // Optional data must never make a successful required catalog unusable.
+  if (!HB || !value || !Array.isArray(value.books)) return [];
   try {
-    const [catRes, toolsRes] = await Promise.all([
-      fetch("./data/categories.json"),
-      fetch("./data/tools.json")
-    ]);
+    if (!value.books.every((book) => book && typeof book.slug === "string" && book.slug &&
+      typeof book.title_ja === "string" && typeof book.title_en === "string")) return [];
+    if (HB.validateBooks(value, tools).length) return [];
+    return value.books;
+  } catch (_) { return []; }
+}
 
-    if (!catRes.ok || !toolsRes.ok) {
-      console.warn("Failed to load JSON files");
-      releaseReservedSpace();
-      return;
-    }
+function setLoadState(state) {
+  loadState = state;
+  document.getElementById("main-content").dataset.loadState = state;
+  document.getElementById("catalog-loading").hidden = state !== "loading";
+  document.getElementById("catalog-error").hidden = state !== "error";
+  document.getElementById("load-fallback").hidden = state !== "error";
+  document.getElementById("list-summary").hidden = state !== "ready";
+  ["filter-book", "filter-category", "filter-progress", "filter-search-input"].forEach((id) => {
+    document.getElementById(id).disabled = state !== "ready";
+  });
+  document.getElementById("retry-data").disabled = state !== "error";
+  if (state !== "ready") ["share-on-x", "reset-all-progress"].forEach((id) => { document.getElementById(id).disabled = true; });
+}
 
-    categories = await catRes.json();
-    const toolsJson = await toolsRes.json();
-    tools = Array.isArray(toolsJson.tools) ? toolsJson.tools : [];
-    searchEntries = null; // 検索用の項目は、このデータで作り直す
-
-    // 書籍データ（自己完結した読み込み。失敗してもハブは従来どおり動く）
-    const bJson = await booksPromise;
-    books = bJson && Array.isArray(bJson.books) ? bJson.books : [];
-
-    // 更新日時。ここから描き終えるまで await をはさまないので、一覧と同じ時に画面に出る
+async function loadData() {
+  if (loadAttempt || loadState === "ready") return;
+  cancelListStatus();
+  const retry = document.getElementById("retry-data");
+  const returnFocus = loadState === "error" && document.activeElement === retry;
+  const focusGuard = { interaction: interactionVersion, navigation: navigationVersion, href: window.location.href };
+  const attempt = { required: new AbortController(), optional: new AbortController() };
+  loadAttempt = attempt;
+  urlStateReady = false;
+  setLoadState("loading");
+  setListBusy(true);
+  reserveBookBanner();
+  const booksPromise = fetchCatalogJson("./data/books.json", attempt.optional).catch(() => null);
+  const requiredPromise = Promise.all([
+    fetchCatalogJson("./data/categories.json", attempt.required),
+    fetchCatalogJson("./data/tools.json", attempt.required)
+  ]);
+  try {
+    const [nextCategories, toolsJson] = await boundedResult(requiredPromise, 20000, attempt.required, false);
+    validateRequiredCatalog(nextCategories, toolsJson);
+    const bJson = await boundedResult(booksPromise, 3000, attempt.optional, true);
+    if (loadAttempt !== attempt) return;
+    categories = nextCategories;
+    tools = toolsJson.tools;
+    searchEntries = null;
+    books = usableBooks(bJson);
     // （先に入れると、書籍データを待つあいだにフッターだけが先に描き変わる）
     const lastUpdatedEl = document.getElementById("last-updated-value");
     if (lastUpdatedEl) {
@@ -496,22 +707,39 @@ async function loadData() {
     if (urlState.tab === "dashboard") tidy.tab = currentTab;
     if (toolSet.present) Object.assign(tidy, { book: filters.book, cat: filters.categoryId, q: filters.search });
     if (linkedToolId || linkNotices.includes("unknown")) Object.assign(tidy, { book: filters.book, cat: filters.categoryId, q: filters.search, tab: currentTab, tools: toolSet.ids.length ? toolSet.ids : null });
+    const retryHrefUnchanged = focusGuard.href === window.location.href;
     commitUrl(tidy);
     urlStateReady = true;
 
     setupFilterOptions();
+    setLoadState("ready");
     setListBusy(false);
     renderAll();
     enableDashboardActions();
     lastNavigationHref = window.location.href;
     if (queuedNavigation && hasSavedView(queuedNavigation.view)) {
-      restoreView(queuedNavigation.view, null);
-      restoreFocus(queuedNavigation.view);
+      if (queuedNavigation.interaction === interactionVersion) {
+        restoreView(queuedNavigation.view, null);
+        restoreFocus(queuedNavigation.view);
+      }
     } else maybeScrollToHash();
     markCardsPainted();
+    // Only replace focus lost with the retry button; respect any intervening interaction/navigation.
+    if (returnFocus && focusGuard.interaction === interactionVersion && focusGuard.navigation === navigationVersion &&
+        retryHrefUnchanged && !queuedNavigation && !linkedToolId &&
+        (document.activeElement === retry || document.activeElement === document.body)) {
+      const target = currentTab === "tools" && !toolSet.ids.length ? document.getElementById("filter-search-input") : document.getElementById(`tab-${currentTab}-label`);
+      target?.focus({ preventScroll: true });
+    }
   } catch (err) {
+    if (loadAttempt !== attempt) return;
     console.error("Error loading data:", err);
+    setLoadState("error");
     releaseReservedSpace();
+  } finally {
+    attempt.required.abort();
+    attempt.optional.abort();
+    if (loadAttempt === attempt) loadAttempt = null;
   }
 }
 
@@ -687,8 +915,10 @@ function restoreReadingAnchor(anchor) {
 
 // ---- UIレンダリング全体 ----
 
-function renderAll() {
-  renderToolList();
+function renderAll(retainedIds) {
+  if (loadState !== "ready") return;
+  renderToolList(retainedIds);
+  if (retainedIds) updateOutsideCards(false);
   renderDashboard();
 }
 
@@ -719,8 +949,8 @@ function updateLanguageUI() {
   const searchInput = document.getElementById("filter-search-input");
   if (searchInput) {
     searchInput.placeholder = isJa
-      ? "タイトル・説明・タグで検索"
-      : "Search by title / description / tags";
+      ? LIST_TEXT.search_placeholder[0]
+      : LIST_TEXT.search_placeholder[1];
   }
 
   // 「はじめ方」の入口は、英語のときは ?lang=en を付けた href にする（新しいタブで開いたときや、リンクを写したときも英語で開く）。
@@ -740,6 +970,7 @@ function tabName(targetId) {
 }
 
 function switchTab(targetId) {
+  cancelListStatus();
   currentTab = tabName(targetId);
   const panels = document.querySelectorAll(".tab-panel");
   panels.forEach((panel) => {
@@ -1005,6 +1236,7 @@ function setupHistory() {
 // 戻る・進むで来た履歴の URL から、一覧の条件（本・カテゴリー・検索・タブ）を戻して描き直し、その履歴で見ていた位置を出す。
 // 条件が同じでも hash を解決する。保存位置があれば、hash への移動よりそちらを優先する。
 function applyHistoryState(view) {
+  cancelListStatus();
   lastPush = null; // 戻ったあとの変更は、まとめずに積む
   // 言語は戻る・進むで変えない。前の言語のときに積んだ履歴へ来たら、URL の ?lang= を今の言語に直す
   syncLangParam();
@@ -1017,7 +1249,7 @@ function applyHistoryState(view) {
   const focusedKey = focusKey(focused);
   const searchInput = document.getElementById("filter-search-input");
   if (!urlStateReady) {
-    pendingNavigation = { view };
+    pendingNavigation = { view, interaction: interactionVersion };
     lastNavigationHref = window.location.href;
     // データが届く前はタブと検索欄だけを合わせる（本・カテゴリーは、データが届いたときに URL から読む）
     if (!HU) return;
@@ -1039,8 +1271,8 @@ function applyHistoryState(view) {
   applyToolLinks(hasSavedView(view));
   setupFilterOptions();
   refreshBookTarget();
-  updateBookStatus(filters.book, false);
   renderToolList();
+  updateBookStatus();
   lastNavigationHref = window.location.href;
   if (hasSavedView(view)) {
     restoreView(view, filtersTop);
@@ -1478,6 +1710,7 @@ function countSuffix(n) {
 // opts.history："push" は履歴を積む（選択欄・解除・「はじめ方」の入口）。false は URL に書かない（戻る・進む、
 // 呼ぶ側で書いたとき）。既定は今の履歴を書き換える。opts.source は commitUrl の同じ欄の変更をまとめるための名前
 function setBookFilter(slug, opts) {
+  cancelListStatus();
   const o = opts || {};
   if (o.history !== false) commitUrl({ book: slug || "", tools: null, hash: "" }, o.history, o.source);
   leaveToolSet();
@@ -1485,41 +1718,25 @@ function setBookFilter(slug, opts) {
   const sel = document.getElementById("filter-book");
   if (sel) sel.value = filters.book;
   refreshBookTarget();
-  updateBookStatus(filters.book, opts && opts.cleared);
   renderToolList();
+  updateBookStatus();
 }
 
-// スクリーンリーダー向けの状態通知（本の選択・解除のときだけ更新）。
-function updateBookStatus(slug, cleared) {
-  const el = document.getElementById("book-status");
-  if (!el) return;
-  if (slug) {
-    const book = currentBook();
-    const name = book ? HB.bookTitle(book, currentLang) : slug;
-    const n = bookTargetSet ? bookTargetSet.size : 0;
-    el.textContent =
-      currentLang === "ja"
-        ? `『${name}』で絞り込み中。該当${n}本。`
-        : `Filtered by "${name}": ${n === 1 ? "1 tool" : n + " tools"}.`;
-  } else if (cleared) {
-    el.textContent =
-      currentLang === "ja"
-        ? "書籍の絞り込みを解除しました。"
-        : "Book filter cleared.";
-  } else {
-    el.textContent = "";
-  }
+// 本の選択・履歴移動も、件数と0件案内を共通のstatusで通知する。
+function updateBookStatus() {
+  announceListCount();
 }
 
 // ---- ツール一覧の描画 ----
 
-function renderToolList() {
+function renderToolList(retainedIds) {
   const listEl = document.getElementById("tool-list");
   if (!listEl) return;
   // データが届くまでは描かない。読み込み中に言語を切り替えたり検索欄に入力したりしても、空のデータで
   // 「一致するツールがありません」を出したり、?book= のために取っておいたバナーの場所を外したりしない
   // （外すと、データが届いたときにバナーがまた下の部品を押し下げる）。データが届くと、loadData が印を外してから描く
   if (listEl.getAttribute("aria-busy") === "true") return;
+  if (loadState !== "ready") return;
 
   refreshBookTarget();
   const book = toolSet.ids.length ? null : currentBook();
@@ -1535,19 +1752,25 @@ function renderToolList() {
     filterBySearch(t);
 
   const byId = new Map(tools.filter((t) => t.hub !== false).map((t) => [t.id, t]));
-  const matched = toolSet.ids.length ? toolSet.ids.map((id) => byId.get(id)).filter(Boolean) : tools.filter(baseMatch);
+  const matched = toolSet.ids.length ? toolSet.ids.map((id) => byId.get(id)).filter(Boolean) : retainedIds ? tools.filter((t) => t.hub !== false && retainedIds.has(t.id)) : tools.filter(baseMatch);
 
   // 出すものが前回と同じなら作り直さない（検索の1文字ごとに全部のカードを作り直すと、遅い端末で固まる）。
   // 言語・本・進捗が変わったときは、同じツールの並びでも文字・掲載箇所・進捗の表示が変わるので作り直す
   const listKey = [
     currentLang,
     filters.book,
+    filters.categoryId,
+    filters.progress,
+    filters.search,
     toolSet.ids.join(","),
     progressVersion,
     matched.map((t) => t.id).join(",")
   ].join("|");
-  if (listKey === lastListKey && listEl.firstElementChild) return;
+  if (listKey === lastListKey && listEl.firstElementChild) { updateListCount(); return; }
   lastListKey = listKey;
+  shownToolIds = new Set(matched.map((t) => t.id));
+  outsideToolIds.clear();
+  updateListCount();
 
   listEl.innerHTML = "";
   // 章の重複掲載でも同じ id は最初のカードだけに付ける。
@@ -1610,20 +1833,33 @@ function renderToolList() {
 }
 
 function appendEmptyState(listEl, book) {
+  const box = document.createElement("div");
+  box.className = "list-empty";
   const p = document.createElement("p");
-  if (book) {
-    const label = HB ? HB.bookLabel(book, currentLang) : "";
-    p.textContent =
-      currentLang === "ja"
-        ? `「${label}」の中に、ほかの条件に一致するツールがありません。`
-        : `No tools from "${label}" match the other filters.`;
-  } else {
-    p.textContent =
-      currentLang === "ja"
-        ? "条件に一致するツールがありません。"
-        : "No tools match the current filters.";
-  }
-  listEl.appendChild(p);
+  p.textContent = listText(book ? "empty_book" : "empty", { book: book && HB ? HB.bookLabel(book, currentLang) : "" });
+  const clear = document.createElement("button");
+  clear.id = "clear-filters";
+  clear.type = "button";
+  clear.textContent = listText(book ? "clear_except_book" : "clear_all");
+  clear.addEventListener("click", () => {
+    cancelListStatus();
+    commitUrl({ cat: "", q: "", hash: "" }, "push");
+    linkedToolId = "";
+    linkNotices = [];
+    filters.categoryId = "";
+    filters.progress = "all";
+    setSearchQuery("");
+    document.getElementById("filter-category").value = "";
+    document.getElementById("filter-progress").value = "all";
+    const search = document.getElementById("filter-search-input");
+    search.value = "";
+    renderToolList();
+    search.focus({ preventScroll: true });
+    announceListCount();
+  });
+  box.appendChild(p);
+  box.appendChild(clear);
+  listEl.appendChild(box);
 }
 
 // 選択中の本のバナー（札・書名・件数・リンク・解除・注記・章ジャンプ）。
@@ -1836,6 +2072,7 @@ function applySearch(raw) {
   setSearchQuery(raw);
   if (filters.search === before) return;
   renderToolList();
+  announceListCount(700);
 }
 
 function createToolCard(tool, book) {
@@ -1843,6 +2080,18 @@ function createToolCard(tool, book) {
   card.className = "tool-card";
   // ツールの slug と、下のボタン・リンクの data-part は、一覧を作り直したあとに同じ部品へフォーカスを戻すための目印（focusKey）
   card.dataset.slug = tool.slug || "";
+  card.dataset.toolId = tool.id;
+  const outside = document.createElement("span");
+  outside.className = "tool-outside-label";
+  outside.hidden = true;
+  card.appendChild(outside);
+  if (!toolSet.ids.length && filters.progress !== "all") {
+    const space = document.createElement("span");
+    space.className = "tool-outside-space";
+    space.setAttribute("aria-hidden", "true");
+    space.textContent = listText("outside_label", { progress: PROGRESS_LABELS[currentLang][Number(filters.progress)] });
+    card.appendChild(space);
+  }
 
   const header = document.createElement("div");
   header.className = "tool-card-header";
@@ -1854,7 +2103,7 @@ function createToolCard(tool, book) {
     : tool.id || "";
   daySpan.textContent = `Day${dayNumber}`;
 
-  const titleSpan = document.createElement("h3");
+  const titleSpan = document.createElement(book && Array.isArray(book.chapters) && book.chapters.length ? "h4" : "h3");
   titleSpan.className = "tool-title";
   titleSpan.tabIndex = -1;
   titleSpan.dataset.part = "title";
@@ -2031,6 +2280,27 @@ function syncProgressButtons(slug) {
   document.querySelectorAll(sel).forEach((b) => {
     if (b.dataset.slug === slug) updateProgressButton(b, slug);
   });
+  updateOutsideCards();
+}
+
+// Keep progress changes in place until another list render, including chapter duplicates.
+function updateOutsideCards(announce = true) {
+  if (loadState !== "ready") return;
+  const next = new Set();
+  const progress = PROGRESS_LABELS[currentLang][Number(filters.progress)];
+  document.querySelectorAll("#tool-list .tool-card").forEach((card) => {
+    const outside = !toolSet.ids.length && filters.progress !== "all" && String(getProgress(card.dataset.slug)) !== filters.progress;
+    const label = card.querySelector(".tool-outside-label");
+    card.classList.toggle("is-outside", outside);
+    label.hidden = !outside;
+    label.textContent = outside ? listText("outside_label", { progress }) : "";
+    if (outside) next.add(card.dataset.toolId);
+  });
+  const newlyOutside = [...next].some((id) => !outsideToolIds.has(id));
+  if (!newlyOutside && [...outsideToolIds].some((id) => !next.has(id))) cancelListStatus();
+  outsideToolIds = next;
+  updateListCount();
+  if (newlyOutside && announce) announceListStatus(listText("outside_announcement", { progress }));
 }
 
 // ---- 別のタブの進捗 ----
@@ -2068,6 +2338,8 @@ function refreshProgressViews() {
   document.querySelectorAll(".tool-progress-button").forEach((b) => {
     if (b.dataset.slug) updateProgressButton(b, b.dataset.slug);
   });
+  updateOutsideCards();
+  progressVersion++;
   // 作り直す前にフォーカスしている部品と目印を覚え、作り直したあとに同じ部品へ戻す（スクロールはしない）
   const focused = document.activeElement;
   const focusedKey = focusKey(focused);
@@ -2078,6 +2350,7 @@ function refreshProgressViews() {
 // ---- ダッシュボード描画 ----
 
 function renderDashboard() {
+  if (loadState !== "ready") return;
   const total = tools.filter((t) => t.hub !== false).length;
 
   let n0 = 0,

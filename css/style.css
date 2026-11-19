@@ -1568,3 +1568,64 @@ html.help-open.keep-gutter {
   padding: 0.6rem 0;
   overflow-wrap: anywhere;
 }
+
+/* Loading guidance lives outside the tabs, including an initial dashboard URL. */
+#catalog-loading, #catalog-error, #slow-loading {
+  margin: 0 0 1rem;
+  padding: 0.75rem;
+  border: 1px solid var(--field-border);
+  border-radius: 0.5rem;
+  background: var(--surface-bg);
+  overflow-wrap: anywhere;
+}
+#catalog-error p, #slow-loading p { margin: 0 0 0.5rem; }
+#retry-data, #clear-filters, #slow-loading a {
+  display: inline-block;
+  min-height: 44px;
+  min-width: 44px;
+  max-width: 100%;
+  padding: 0.5rem 0.75rem;
+  font: inherit;
+  color: var(--link);
+  background: var(--surface-bg);
+  border: 1px solid var(--field-border);
+  border-radius: 0.5rem;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+#slow-loading { visibility: hidden; position: absolute; }
+html.js-ready #slow-loading { display: none; }
+@media (scripting: enabled) {
+  html:not(.js-ready) #slow-loading { animation: hlo-slow-loading 0s linear 25s forwards; }
+}
+/* A deadline, not motion: this remains enabled with prefers-reduced-motion. */
+@keyframes hlo-slow-loading { to { visibility: visible; position: static; } }
+@media (scripting: none) {
+  #catalog-loading, #slow-loading { display: none; }
+}
+#list-summary { margin: 1rem 0; }
+#list-summary h2 { margin: 0 0 0.3rem; font-size: 1.15rem; color: var(--heading); }
+#list-count { margin: 0; overflow-wrap: anywhere; }
+.list-empty { grid-column: 1 / -1; }
+.tool-card { position: relative; }
+.tool-outside-label, .tool-outside-space {
+  display: block;
+  padding: 0.1rem 0.35rem;
+  border: 1px solid var(--field-border);
+  border-radius: 0.3rem;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.tool-outside-space { visibility: hidden; margin-top: -1rem; }
+.tool-outside-label {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  right: 1.1rem;
+  max-width: calc(100% - 2.2rem);
+  background: var(--surface-bg);
+  color: var(--text);
+}
+/* The overlay must not be clipped by content-visibility's paint containment. */
+#tool-list:not(.is-grouped) > .tool-card.is-outside { content-visibility: visible; }

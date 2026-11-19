@@ -107,8 +107,9 @@
       </button>
     </nav>
 
-    <main id="main-content">
+    <main id="main-content" data-load-state="loading">
       <noscript>
+        <p><span lang="ja">ツールの一覧と絞り込みはJavaScriptで表示しています。ブラウザーでJavaScriptを有効にしてから、このページを読み込み直してください。</span><br /><span lang="en">The tool list and filters need JavaScript. Turn on JavaScript in your browser, then reload this page.</span></p>
         <p class="static-list-fallback">
           <a href="./list.html"><span lang="ja">JavaScriptなしで読めるツール一覧</span> / <span lang="en">Tool list without JavaScript</span></a>
         </p>
@@ -116,6 +117,15 @@
       <p id="load-fallback" class="static-list-fallback" hidden>
         <a href="./list.html"><span class="label-ja">JavaScriptなしで読めるツール一覧</span><span class="label-en">Tool list without JavaScript</span></a>
       </p>
+      <div id="catalog-loading" role="status"><span class="label-ja">ツールの一覧を読み込んでいます…</span><span class="label-en">Loading the tool list…</span></div>
+      <div id="catalog-error" role="alert" hidden>
+        <p><span class="label-ja">ツールの一覧を読み込めませんでした。通信の状態を確かめてから、もう一度読み込んでください。</span><span class="label-en">Couldn't load the tool list. Check your connection, then try again.</span></p>
+        <button id="retry-data" type="button" disabled><span class="label-ja">もう一度読み込む</span><span class="label-en">Try again</span></button>
+      </div>
+      <div id="slow-loading">
+        <p><span class="label-ja">表示に時間がかかっています。</span><span class="label-en">This is taking longer than usual.</span></p>
+        <a href=""><span class="label-ja">ページを読み込み直す</span><span class="label-en">Reload the page</span></a>
+      </div>
       <!-- タブ1：ツール一覧 -->
       <section
         id="tab-tools"
@@ -174,7 +184,7 @@
               <span class="label-ja">書籍・シリーズ</span>
               <span class="label-en">Books &amp; series</span>
             </label>
-            <select id="filter-book">
+            <select id="filter-book" disabled>
               <!-- JSで "すべて / All" + books.json から選択肢を生成 -->
             </select>
           </div>
@@ -185,7 +195,7 @@
               <span class="label-ja">カテゴリ</span>
               <span class="label-en">Category</span>
             </label>
-            <select id="filter-category">
+            <select id="filter-category" disabled>
               <!-- JSで "すべて / All" + categories.json から選択肢を生成 -->
             </select>
           </div>
@@ -196,14 +206,14 @@
               <span class="label-ja">進捗</span>
               <span class="label-en">Progress</span>
             </label>
-            <select id="filter-progress">
+            <select id="filter-progress" disabled>
               <!-- JSで「すべて / 未着手 / 学習中 / 一周完了 / 定着済み」を生成 -->
             </select>
           </div>
 
           <!-- 検索ボックス -->
           <div class="filter-group filter-search">
-            <label for="filter-search-input" class="visually-hidden">
+            <label for="filter-search-input">
               <span class="label-ja">検索</span>
               <span class="label-en">Search</span>
             </label>
@@ -211,8 +221,14 @@
             <input
               type="search"
               id="filter-search-input"
+              disabled
             />
           </div>
+        </div>
+
+        <div id="list-summary" hidden>
+          <h2 class="visually-hidden"><span class="label-ja">ツール一覧</span><span class="label-en">Tool list</span></h2>
+          <p id="list-count"></p>
         </div>
 
         <!-- ツール一覧（カードをJSで挿入）。データが届くまでは aria-busy="true" で、CSS が1画面分の高さを取る -->

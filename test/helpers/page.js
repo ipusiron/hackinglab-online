@@ -70,7 +70,7 @@ class Element {
     if (child.parentNode) child.parentNode.childNodes.splice(child.parentNode.childNodes.indexOf(child), 1);
     this.childNodes.push(child); child.parentNode = this; return child;
   }
-  replaceChildren(...children) { if (this.contains(this.ownerDocument.activeElement)) this.ownerDocument.activeElement = this.ownerDocument.body; this.childNodes.forEach((c) => { c.parentNode = null; }); this.childNodes = []; children.forEach((c) => this.appendChild(c)); }
+  replaceChildren(...children) { if (this !== this.ownerDocument.activeElement && this.contains(this.ownerDocument.activeElement)) this.ownerDocument.activeElement = this.ownerDocument.body; this.childNodes.forEach((c) => { c.parentNode = null; }); this.childNodes = []; children.forEach((c) => this.appendChild(c)); }
   setAttribute(name, value) {
     this.attrs.set(name, String(value));
     if (name.startsWith("data-")) this.dataset[name.slice(5).replace(/-([a-z])/g, (_, c) => c.toUpperCase())] = String(value);
@@ -138,7 +138,7 @@ function parseHtml(html, location) {
   Object.defineProperty(document, "title", { get() { return document.querySelector("title")?.textContent || ""; }, set(value) { document.querySelector("title").textContent = value; } });
   return document;
 }
-async function runPage({ search = "", storageFailure = "none", dataOverrides = {}, deferData = false, dataFailures = {}, clipboard = "success", storedValues = {}, allowLoadFailure = false } = {}) {
+async function runPage({ search = "", storageFailure = "none", dataOverrides = {}, deferData = false, dataFailures = {}, clipboard = "success", storedValues = {}, allowLoadFailure = false, fetchResponse = null, clock = null } = {}) {
   const location = new URL("https://hackinglab.online/" + search);
   const document = parseHtml(read("index.html"), location);
   const messages = []; const fetched = []; const values = new Map(Object.entries(storedValues)); const calls = { getter: 0, read: 0, write: 0 };
@@ -169,7 +169,8 @@ async function runPage({ search = "", storageFailure = "none", dataOverrides = {
   const copied = [];
   const scrolls = [];
   const context = {
-    document, location, URL, URLSearchParams, setTimeout, clearTimeout,
+    document, location, URL, URLSearchParams, AbortController, DOMException,
+    setTimeout: clock ? clock.setTimeout : setTimeout, clearTimeout: clock ? clock.clearTimeout : clearTimeout,
     innerWidth: 1280, innerHeight: 900, scrollY: 0,
     matchMedia: () => ({ matches: false }),
     addEventListener(type, listener) { const all = listeners.get(type) || []; all.push(listener); listeners.set(type, all); },
@@ -200,10 +201,14 @@ async function runPage({ search = "", storageFailure = "none", dataOverrides = {
       },
       back() { this.go(-1); }, forward() { this.go(1); }
     },
-    fetch: async (url) => {
+    fetch: async (url, options = {}) => {
       const file = localFile(url); fetched.push(path.relative(ROOT, file).replaceAll(path.sep, "/"));
       const name = fetched.at(-1);
       await gate;
+      if (fetchResponse) {
+        const result = await fetchResponse(name, options, fetched.filter((item) => item === name).length);
+        if (result !== undefined) return result;
+      }
       if (dataFailures[name] === "reject") throw new Error("Fixture fetch failed");
       if (dataFailures[name]) return { ok: false, status: dataFailures[name] };
       const json = JSON.parse(Object.hasOwn(dataOverrides, name) ? JSON.stringify(dataOverrides[name]) : fs.readFileSync(file, "utf8"));
@@ -237,7 +242,7 @@ async function runPage({ search = "", storageFailure = "none", dataOverrides = {
   if (!deferData) checkLoaded();
   return {
     document, context, messages, fetched, storageCalls: calls, values, copied, events, scrolls, entries,
-    flush, dispatch: emit,
+    flush, dispatch: emit, evaluate: (source) => vm.runInContext(source, context),
     async releaseData() { release(); await flush(); checkLoaded(); },
     async navigateHash(hash, beforePaint) {
       const oldURL = location.href;
