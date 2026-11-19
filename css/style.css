@@ -692,6 +692,8 @@ html[lang="en"] #lang-en {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
+  max-width: calc(100% - 0.75rem);
+  overflow-wrap: anywhere;
   margin-right: 0.75rem;
   color: var(--book-link);
 }
