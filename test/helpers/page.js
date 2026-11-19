@@ -92,12 +92,14 @@ class Element {
   getBoundingClientRect() { return this.rect || { top: 0, bottom: 0, left: 0, right: 0, height: 0, width: 0 }; }
   addEventListener(type, listener) { const all = this.listeners.get(type) || []; all.push(listener); this.listeners.set(type, all); }
   dispatch(type, fields = {}) {
-    const event = { target: this, button: 0, defaultPrevented: false, preventDefault() { this.defaultPrevented = true; }, ...fields };
+    const event = { target: this, currentTarget: this, button: 0, defaultPrevented: false, preventDefault() { this.defaultPrevented = true; }, ...fields };
     for (const fn of this.listeners.get(type) || []) fn(event);
     if (type === "click" && this.tagName === "SUMMARY" && !event.defaultPrevented) this.parentElement.open = !this.parentElement.open;
     return event;
   }
   focus(options) { this.ownerDocument.activeElement = this; (this.ownerDocument.focusCalls ||= []).push({ element: this, options }); }
+  click() { if (this.disabled) return; this.ownerDocument.onElementClick?.(this); return this.dispatch("click"); }
+  remove() { if (this.parentNode) { this.parentNode.childNodes.splice(this.parentNode.childNodes.indexOf(this), 1); this.parentNode = null; } }
   select() { this.selectionStart = 0; this.selectionEnd = this.value.length; }
   scrollIntoView(options) { (this.ownerDocument.scrollCalls ||= []).push({ element: this, options }); }
 }
@@ -138,13 +140,13 @@ function parseHtml(html, location) {
   Object.defineProperty(document, "title", { get() { return document.querySelector("title")?.textContent || ""; }, set(value) { document.querySelector("title").textContent = value; } });
   return document;
 }
-async function runPage({ search = "", storageFailure = "none", dataOverrides = {}, deferData = false, dataFailures = {}, clipboard = "success", storedValues = {}, allowLoadFailure = false, fetchResponse = null, clock = null } = {}) {
+async function runPage({ search = "", storageFailure = "none", dataOverrides = {}, deferData = false, dataFailures = {}, clipboard = "success", storedValues = {}, allowLoadFailure = false, fetchResponse = null, clock = null, storageHooks = {}, confirmResult = false, downloadFailure = null } = {}) {
   const location = new URL("https://hackinglab.online/" + search);
   const document = parseHtml(read("index.html"), location);
   const messages = []; const fetched = []; const values = new Map(Object.entries(storedValues)); const calls = { getter: 0, read: 0, write: 0 };
   const store = {
-    getItem(k) { calls.read++; if (storageFailure === "read") throw new Error("storage read blocked"); return values.get(k) ?? null; },
-    setItem(k, v) { calls.write++; if (storageFailure === "write") throw new Error("storage full"); values.set(k, String(v)); }
+    getItem(k) { calls.read++; if (storageFailure === "read") throw new Error("storage read blocked"); if (storageHooks.read) { const result = storageHooks.read(k, values); if (result !== undefined) return result; } return values.get(k) ?? null; },
+    setItem(k, v) { calls.write++; if (storageFailure === "write") throw new Error("storage full"); if (storageHooks.write) storageHooks.write(k, String(v), values); values.set(k, String(v)); }
   };
   const localFile = (url) => {
     const parsed = new URL(url, location);
@@ -167,16 +169,27 @@ async function runPage({ search = "", storageFailure = "none", dataOverrides = {
   const gate = new Promise((resolve) => { release = resolve; });
   if (!deferData) release();
   const copied = [];
+  const downloads = []; const objectUrls = new Map(); const revokedUrls = []; const confirmations = [];
+  class TestURL extends URL {
+    static createObjectURL(blob) { if (downloadFailure === "create") throw new Error("Download unavailable"); const url = "blob:https://hackinglab.online/" + objectUrls.size; objectUrls.set(url, blob); return url; }
+    static revokeObjectURL(url) { revokedUrls.push(url); }
+  }
+  document.onElementClick = (element) => {
+    if (element.tagName !== "A" || !element.download) return;
+    if (downloadFailure === "click") throw new Error("Download rejected");
+    assert.ok(objectUrls.has(element.href), "Download did not use a local Blob URL");
+    downloads.push({ filename: element.download, blob: objectUrls.get(element.href), href: element.href });
+  };
   const scrolls = [];
   const context = {
-    document, location, URL, URLSearchParams, AbortController, DOMException,
+    document, location, URL: TestURL, URLSearchParams, AbortController, DOMException, TextEncoder, Blob,
     setTimeout: clock ? clock.setTimeout : setTimeout, clearTimeout: clock ? clock.clearTimeout : clearTimeout,
     innerWidth: 1280, innerHeight: 900, scrollY: 0,
     matchMedia: () => ({ matches: false }),
     addEventListener(type, listener) { const all = listeners.get(type) || []; all.push(listener); listeners.set(type, all); },
     scrollTo(...args) { const y = typeof args[0] === "object" ? args[0].top : args[1]; context.scrollY = y; scrolls.push({ type: "to", y }); },
     scrollBy(...args) { const y = typeof args[0] === "object" ? args[0].top : args[1]; context.scrollY += y; scrolls.push({ type: "by", y }); },
-    open() { throw new Error("Unexpected popup in integration test"); }, confirm: () => false,
+    open() { throw new Error("Unexpected popup in integration test"); }, confirm: (message) => { confirmations.push(message); return typeof confirmResult === "function" ? confirmResult(message, values) : confirmResult; },
     navigator: { clipboard: { async writeText(value) { if (clipboard === "reject") throw new Error("Clipboard denied"); copied.push(value); } } },
     getComputedStyle: () => ({ position: "sticky" }),
     ResizeObserver: class { observe() {} },
@@ -241,7 +254,7 @@ async function runPage({ search = "", storageFailure = "none", dataOverrides = {
   await flush();
   if (!deferData) checkLoaded();
   return {
-    document, context, messages, fetched, storageCalls: calls, values, copied, events, scrolls, entries,
+    document, context, messages, fetched, storageCalls: calls, values, copied, events, scrolls, entries, downloads, confirmations, revokedUrls,
     flush, dispatch: emit, evaluate: (source) => vm.runInContext(source, context),
     async releaseData() { release(); await flush(); checkLoaded(); },
     async navigateHash(hash, beforePaint) {

@@ -1642,3 +1642,41 @@ html.js-ready #slow-loading { display: none; }
   align-items: center;
 }
 .tool-progress-label, .tool-progress-space { grid-area: 1 / 1; min-width: 0; }
+
+
+/* Local record controls and the one-time, dismissible storage notice. */
+html { scroll-padding-bottom: calc(var(--storage-notice-h, 0px) + 1rem); }
+body { padding-bottom: var(--storage-notice-h, 0px); }
+#dashboard-records { margin-top: 1.5rem; min-width: 0; overflow-wrap: anywhere; }
+.records-controls { display: flex; flex-wrap: wrap; gap: .75rem; }
+.records-controls button, #storage-warning-close, #storage-warning-help {
+  min-height: 2.75rem; min-width: 2.75rem; max-width: 100%;
+  padding: .5rem .8rem; font: inherit; overflow-wrap: anywhere;
+  color: var(--text); background-color: var(--field-bg);
+  border: 1px solid var(--field-border); border-radius: .5rem;
+}
+.records-controls button:disabled {
+  color: var(--disabled-text); background-color: var(--disabled-bg);
+  border-color: var(--disabled-border); cursor: default;
+}
+#records-status:empty { display: none; }
+.storage-warning {
+  position: fixed; z-index: 80; bottom: 0; left: 0; right: 0;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .75rem;
+  max-height: 45dvh; padding: .75rem max(.75rem, env(safe-area-inset-right)) calc(.75rem + env(safe-area-inset-bottom)) max(.75rem, env(safe-area-inset-left));
+  color: var(--text); background-color: var(--surface-bg);
+  border-top: 2px solid var(--field-border); box-sizing: border-box;
+}
+.storage-warning[hidden] { display: none; }
+.storage-warning-body { min-height: 0; min-width: 0; overflow: auto; overflow-wrap: anywhere; }
+.storage-warning-body p { margin: 0 0 .5rem; }
+#storage-warning-close { align-self: start; }
+@media (forced-colors: active) {
+  .storage-warning, .records-controls button, #storage-warning-close, #storage-warning-help { border-color: CanvasText; }
+}
+
+.storage-warning-body { grid-column: 1; grid-row: 1; }
+#storage-warning-close { grid-column: 2; grid-row: 1; }
+#storage-warning-help { margin-top: .25rem; }
+
+#help-dialog { overflow-wrap: anywhere; }

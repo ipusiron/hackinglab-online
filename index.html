@@ -9,7 +9,7 @@
       http-equiv="Content-Security-Policy"
       content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'"
     />
-    
+
     <!-- Favicon -->
     <link rel="icon" href="./favicon/HLO.ico" sizes="any">
     <link rel="icon" type="image/png" sizes="32x32" href="./favicon/HLO_32.png">
@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="./css/style.css" />
 
     <!-- script はすべてここ（CSP の meta のあと）に置く。
-         defer の6本：実行は書いた順（books → search → storage → tabs → url → main）で、ページを読み終えてから
+         defer の7本：実行は書いた順（books → search → storage → records → tabs → url → main）で、ページを読み終えてから
          DOMContentLoaded の前に終わる。meta の CSP があると Chromium は先読みをしないので、defer がないと1本ずつ取りに行くことがあり、
          遅い回線ではその分カードが遅れる。async にはしない（実行の順番が崩れ、main.js がほかより先に動くと、書籍の絞り込み・
          検索・URL の条件が働かない）。下の lang.js より前に書き、fetchpriority="high" を付ける（後ろに書くと lang.js を待つあいだに
@@ -29,6 +29,7 @@
     <script src="./js/books.js" defer fetchpriority="high"></script>
     <script src="./js/search.js" defer fetchpriority="high"></script>
     <script src="./js/storage.js" defer fetchpriority="high"></script>
+    <script src="./js/records.js" defer fetchpriority="high"></script>
     <script src="./js/tabs.js" defer fetchpriority="high"></script>
     <script src="./js/url.js" defer fetchpriority="high"></script>
     <script src="./js/main.js" defer fetchpriority="high"></script>
@@ -163,10 +164,7 @@
                 <span class="label-en">All tools</span>
               </a>
             </nav>
-            <p class="start-here-note start-here-nocompare">
-              <span class="label-ja">進捗はこの端末にだけ残ります。ランキングも、他人との比較もありません。</span>
-              <span class="label-en">Your progress stays on this device only. No ranking, no comparing yourself with others.</span>
-            </p>
+            <p id="record-location" class="start-here-note start-here-nocompare"><span class="label-ja">進捗はこのブラウザーの中にだけ保存し、サーバーには送りません。ランキングも、他人との比較もありません。</span><span class="label-en">Your progress is saved only in this browser and is never sent to a server. No rankings, no comparing yourself with others.</span></p>
           </div>
         </details>
 
@@ -309,6 +307,18 @@
           </div>
         </section>
 
+        <section id="dashboard-records" aria-labelledby="records-title">
+          <h2 id="records-title"><span class="label-ja">記録の控え</span><span class="label-en">Backup</span></h2>
+          <p><span class="label-ja">ファイルに控えておくと、ブラウザーのデータが消えたときや、別のブラウザー・端末で開いたときに、記録を戻せます。ファイルはこの端末に保存するだけで、どこにも送りません。</span><span class="label-en">With a copy saved to a file, you can bring your records back if browser data is cleared, or in another browser or on another device. The file stays on your device and is never sent anywhere.</span></p>
+          <div class="records-controls">
+            <button type="button" id="records-export" disabled><span class="label-ja">記録をファイルに保存</span><span class="label-en">Save records to a file</span></button>
+            <button type="button" id="records-import" disabled><span class="label-ja">ファイルから戻す</span><span class="label-en">Restore from a file</span></button>
+            <input type="file" id="records-file" accept=".json,application/json" hidden />
+          </div>
+          <p id="records-last-saved" hidden></p>
+          <p id="records-status" role="status" aria-live="polite" aria-atomic="true"></p>
+        </section>
+
         <!-- 全体リセット -->
         <section id="dashboard-reset">
           <button type="button" id="reset-all-progress" disabled>
@@ -350,6 +360,16 @@
         </div>
       </div>
     </footer>
+
+    <aside id="storage-warning" class="storage-warning" hidden>
+      <div class="storage-warning-body" tabindex="0" role="status" aria-live="polite" aria-atomic="true">
+        <p><span class="label-ja">このブラウザーでは進捗を保存できません。サイトのデータの保存が止められているか、保存できる容量がいっぱいです。このページを閉じると、付けた進捗は消えます。</span><span class="label-en">This browser can&#x27;t save your progress. Site data may be blocked, or storage may be full. Your progress will be lost when you close this page.</span></p>
+        <p><span class="label-ja">このページを閉じる前なら、学習ダッシュボードの「記録をファイルに保存」で控えを残せます。</span><span class="label-en">Before you close this page, you can keep a copy with “Save records to a file” on the Dashboard.</span></p>
+      <button type="button" id="storage-warning-help"><span class="label-ja">記録の残り方</span><span class="label-en">How your records are saved</span></button>
+      </div>
+
+      <button type="button" id="storage-warning-close"><span class="label-ja">閉じる</span><span class="label-en">Close</span></button>
+    </aside>
 
     <!-- ヘルプモーダル -->
     <div id="help-modal" class="modal" hidden>
@@ -403,8 +423,9 @@
             </li>
             <li>ツール1本を指すリンクは、アドレスの後ろに「#day」とDay番号の3桁を付けて作れます（例：https://hackinglab.online/#day045）。</li>
             <li>学習ダッシュボード：学習進度を可視化し、Xで共有できます。</li>
-            <li>進捗はブラウザーごとに localStorage に保存されます。</li>
           </ul>
+
+
 
           <h3>管理人について（IPUSIRON）</h3>
           <p>
@@ -475,8 +496,9 @@
               Dashboard tab: track your learning progress and share snapshots on
               X.
             </li>
-            <li>Your progress is stored per browser using localStorage.</li>
           </ul>
+
+
 
           <h3>About the Administrator (IPUSIRON)</h3>
           <p>
@@ -523,6 +545,15 @@
             </a>
           </p>
         </div>
+        <section aria-labelledby="help-storage">
+          <h3 id="help-storage" tabindex="-1"><span class="label-ja">記録の残り方</span><span class="label-en">How your records are saved</span></h3>
+          <p><span class="label-ja">進捗はこのブラウザーの中にだけ保存し、サーバーには送りません。</span><span class="label-en">Your progress is saved only in this browser and is never sent to a server.</span></p>
+          <p><span class="label-ja">別のブラウザーや端末、プライベートウィンドウには引き継がれません。</span><span class="label-en">It does not carry over to other browsers, other devices, or private windows.</span></p>
+          <p><span class="label-ja">ブラウザーでこのサイトのデータを消すと、進捗の記録も消えます。</span><span class="label-en">Clearing this site&#x27;s data in your browser erases your progress.</span></p>
+          <p><span class="label-ja">サイトのデータの保存を止めている設定や、保存の容量がいっぱいのときは、ページを閉じると進捗が消えます（そのときは画面の下に知らせが出ます）。</span><span class="label-en">If your browser blocks site data or its storage is full, your progress is lost when you close the page (a notice appears at the bottom of the screen).</span></p>
+          <p><span class="label-ja">iPhone・iPad・MacのSafariは、「サイト越えトラッキングを防ぐ」がオン（初期設定）のとき、Safariを使った日で数えて7日のあいだ、このサイトで1回もクリックやタップをしないと、進捗の記録を消すことがあります。</span><span class="label-en">Safari on iPhone, iPad, and Mac may erase your progress if you don&#x27;t click or tap anything on this site over 7 days of using Safari, while “Prevent Cross-Site Tracking” is on (it is on by default).</span></p>
+          <p><span class="label-ja">学習ダッシュボードの「記録をファイルに保存」で控えのファイルを作っておくと、別のブラウザーや端末でも「ファイルから戻す」で記録を戻せます。ファイルはこの端末に保存するだけで、どこにも送りません。</span><span class="label-en">On the Dashboard tab, “Save records to a file” makes a backup file, and “Restore from a file” brings your records back, even in another browser or on another device. The file is only saved on your device and is never sent anywhere.</span></p>
+        </section>
       </div>
     </div>
 

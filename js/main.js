@@ -51,32 +51,60 @@ const LINK_TEXT = {
   copyFailed: ["コピーできませんでした。下のリンクを選んでコピーしてください。", "Couldn't copy the link. Select the link below and copy it."]
 };
 
-// localStorage を安全に使うラッパー（js/storage.js）。読み込めていなければ同等の最小実装で代える。
-const progressStore =
-  typeof HLOStorage !== "undefined"
-    ? HLOStorage.createSafeStorage(() => window.localStorage)
-    : (() => {
-        const memory = new Map();
-        return {
-          getItem(key) {
-            try {
-              const v = window.localStorage.getItem(key);
-              if (v !== null) return v;
-            } catch (e) {
-              /* メモリーへ退避 */
-            }
-            return memory.has(key) ? memory.get(key) : null;
-          },
-          setItem(key, value) {
-            memory.set(key, String(value));
-            try {
-              window.localStorage.setItem(key, String(value));
-            } catch (e) {
-              /* 保存できない環境では、このページを開いているあいだだけ保持する */
-            }
-          }
-        };
-      })();
+// The fallback preserves the same storage contract if storage.js did not load.
+function createFallbackStorage(getStorage, onFailure) {
+    const dirty = new Map();
+    const clean = new Map();
+    function failed(key) {
+      try { if (typeof onFailure === "function") onFailure(key); } catch (_) { /* Notification must not break storage access. */ }
+    }
+    function readFresh(key) {
+      try {
+        const storage = getStorage();
+        if (!storage || typeof storage.getItem !== "function") throw new Error("Storage unavailable");
+        const raw = storage.getItem(key);
+        const value = raw == null ? null : String(raw);
+        if (value === null) clean.delete(key);
+        else clean.set(key, value);
+        return { ok: true, value };
+      } catch (_) {
+        failed(key);
+        return { ok: false, value: null };
+      }
+    }
+    function getItem(key) {
+      if (dirty.has(key)) return dirty.get(key);
+      const result = readFresh(key);
+      return result.ok ? result.value : clean.get(key) ?? null;
+    }
+    function setMemory(key, value) {
+      dirty.set(key, String(value));
+      failed(key);
+      return false;
+    }
+    function setItem(key, value) {
+      const text = String(value);
+      dirty.set(key, text);
+      try {
+        const storage = getStorage();
+        if (!storage || typeof storage.setItem !== "function") throw new Error("Storage unavailable");
+        storage.setItem(key, text);
+        clean.set(key, text);
+        dirty.delete(key);
+        return true;
+      } catch (_) {
+        failed(key);
+        return false;
+      }
+    }
+    function invalidate(key) {
+      if (key === null) clean.clear();
+      else clean.delete(key);
+      // Unsaved values are deliberately kept so that an export can still rescue them.
+    }
+    return { getItem, setItem, readFresh, setMemory, invalidate };
+  }
+const progressStore = (typeof HLOStorage !== "undefined" ? HLOStorage.createSafeStorage : createFallbackStorage)(() => window.localStorage, noteStorageFailure);
 
 // 選んだ言語を保存するキー（js/lang.js が開いたときに読む）
 const LANG_KEY = typeof HLOLang !== "undefined" && HLOLang.KEY ? HLOLang.KEY : "hlo_lang";
@@ -242,8 +270,244 @@ function announceListCount(delay = 0) {
   announceListStatus(message, delay);
 }
 
+const RECORDS_TEXT = {
+  "record_location": [
+    "進捗はこのブラウザーの中にだけ保存し、サーバーには送りません。ランキングも、他人との比較もありません。",
+    "Your progress is saved only in this browser and is never sent to a server. No rankings, no comparing yourself with others."
+  ],
+  "record_location_failed": [
+    "このブラウザーでは進捗を保存できないため、ページを閉じると消えます。ランキングも、他人との比較もありません。",
+    "This browser can't save your progress, so it will be lost when you close the page. No rankings, no comparing yourself with others."
+  ],
+  "export_empty": [
+    "保存する記録はありません（すべて未着手です）。",
+    "Nothing to save. No tool has any progress recorded."
+  ],
+  "import_empty": [
+    "戻す進捗はありません。このブラウザーの記録は、ファイルと同じか、ファイルより進んでいます。",
+    "Nothing to restore. This browser's records are the same as or further along than the file."
+  ],
+  "import_invalid": [
+    "このファイルは読めません。「記録をファイルに保存」で作った.jsonのファイルを選んでください。",
+    "Can't read this file. Choose a .json file you saved with the “Save records to a file” button."
+  ],
+  "import_new_version": [
+    "このファイルは、このページより新しい形式です。ページを読み込み直してから、もう一度選んでください。",
+    "This file uses a newer format. Reload this page, then choose the file again."
+  ]
+};
+
+// ---- Local records: file input and download stay entirely in this browser ----
+const RECORDS = typeof HLORecords !== "undefined" ? HLORecords : null;
+const LAST_EXPORT_KEY = "hlo_records_last_export";
+let recordsBusy = false;
+let recordsResult = null;
+let lastExportAt = null;
+let storageWarningSeen = false;
+let storageWarningDismissed = false;
+let storageWarningFocus = null;
+
+function recordsText(key) {
+  return RECORDS_TEXT[key][currentLang === "ja" ? 0 : 1];
+}
+
+function localRecordDate(value) {
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return "";
+  return new Intl.DateTimeFormat(currentLang === "ja" ? "ja-JP" : "en-US", {
+    year: "numeric", month: currentLang === "ja" ? "long" : "short", day: "numeric"
+  }).format(date);
+}
+
+function recordsResultText() {
+  if (!recordsResult) return "";
+  const { key, count } = recordsResult;
+  if (key === "exported") return currentLang === "ja" ? `${count}本の記録をファイルに保存しました。` : `Saved records for ${count} ${count === 1 ? "tool" : "tools"} to a file.`;
+  if (key === "imported") return currentLang === "ja" ? `${count}本の進捗をファイルから戻しました。` : `Restored progress for ${count} ${count === 1 ? "tool" : "tools"} from the file.`;
+  return recordsText(key);
+}
+
+function updateRecordsUI() {
+  ["records-export", "records-import"].forEach((id) => {
+    const button = document.getElementById(id);
+    if (button) button.disabled = loadState !== "ready" || !RECORDS || recordsBusy;
+  });
+  const saved = document.getElementById("records-last-saved");
+  if (saved) {
+    const date = lastExportAt && localRecordDate(lastExportAt);
+    saved.hidden = !date;
+    saved.textContent = date ? (currentLang === "ja" ? `最後に保存した日：${date}` : `Last saved: ${date}`) : "";
+  }
+  const status = document.getElementById("records-status");
+  const message = recordsResultText();
+  if (status && status.textContent !== message) status.textContent = message;
+  const note = document.getElementById("record-location");
+  if (note) {
+    const copy = RECORDS_TEXT[storageWarningSeen ? "record_location_failed" : "record_location"];
+    note.querySelector(".label-ja").textContent = copy[0];
+    note.querySelector(".label-en").textContent = copy[1];
+  }
+}
+
+function updateStorageNoticeSpace() {
+  const notice = document.getElementById("storage-warning");
+  const height = notice && !notice.hidden ? notice.getBoundingClientRect().height : 0;
+  document.documentElement.style.setProperty("--storage-notice-h", `${height}px`);
+}
+
+function noteStorageFailure(key) {
+  if (!String(key).startsWith("progress_") || storageWarningSeen) return;
+  storageWarningSeen = true;
+  storageWarningFocus = document.activeElement;
+  const notice = document.getElementById("storage-warning");
+  if (notice && !storageWarningDismissed) notice.hidden = false;
+  updateRecordsUI();
+  requestAnimationFrame(() => {
+    updateStorageNoticeSpace();
+    const active = document.activeElement;
+    if (!notice || notice.hidden || !active || active === document.body || notice.contains(active)) return;
+    const boundary = notice.getBoundingClientRect().top;
+    const bottom = active.getBoundingClientRect().bottom;
+    if (bottom > boundary && boundary > 0) window.scrollBy({ top: bottom - boundary + 8, behavior: "auto" });
+  });
+}
+
+function setRecordsResult(key, count) {
+  recordsResult = { key, count };
+  updateRecordsUI();
+}
+
+function setupRecordsUI() {
+  const saved = progressStore.getItem(LAST_EXPORT_KEY);
+  if (saved && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(saved) && Number.isFinite(Date.parse(saved)) && new Date(saved).toISOString() === saved) lastExportAt = saved;
+  document.getElementById("records-export")?.addEventListener("click", handleRecordsExport);
+  document.getElementById("records-import")?.addEventListener("click", () => {
+    if (!recordsBusy && loadState === "ready" && RECORDS) document.getElementById("records-file").click();
+  });
+  document.getElementById("records-file")?.addEventListener("change", handleRecordsImport);
+  document.getElementById("storage-warning-close")?.addEventListener("click", () => {
+    storageWarningDismissed = true;
+    const notice = document.getElementById("storage-warning");
+    const restore = notice.contains(document.activeElement);
+    notice.hidden = true;
+    updateStorageNoticeSpace();
+    if (restore) {
+      const target = storageWarningFocus && storageWarningFocus !== document.body && !storageWarningFocus.disabled && storageWarningFocus.isConnected && isShown(storageWarningFocus) ? storageWarningFocus : document.querySelector('.tab-button[aria-selected="true"]');
+      target?.focus({ preventScroll: true });
+    }
+  });
+  if (typeof ResizeObserver !== "undefined") new ResizeObserver(updateStorageNoticeSpace).observe(document.getElementById("storage-warning"));
+  updateRecordsUI();
+}
+
+function getRecordTools() {
+  return tools.filter((tool) => tool.hub !== false);
+}
+
+function recordProgressMaps(ids) {
+  const effective = new Map();
+  const durable = new Map();
+  const wanted = ids ? new Set(ids) : null;
+  for (const tool of getRecordTools()) {
+    if (wanted && !wanted.has(tool.id)) continue;
+    effective.set(tool.id, getProgress(tool.slug));
+    const result = progressStore.readFresh(`progress_${tool.slug}`);
+    durable.set(tool.id, { ok: result.ok, value: normalizeProgress(result.value) });
+  }
+  return { effective, durable };
+}
+
+function handleRecordsExport() {
+  if (recordsBusy || loadState !== "ready" || !RECORDS) return;
+  recordsBusy = true;
+  recordsResult = null;
+  const button = document.getElementById("records-export");
+  const focused = document.activeElement === button;
+  updateRecordsUI();
+  let objectUrl = null;
+  let anchor = null;
+  try {
+    const now = new Date();
+    const progress = new Map(getRecordTools().map((tool) => [tool.id, getProgress(tool.slug)]));
+    const result = RECORDS.createRecords(progress, now.toISOString());
+    if (!result) { setRecordsResult("export_empty"); return; }
+    const file = new Blob([result.json], { type: "application/json" });
+    objectUrl = URL.createObjectURL(file);
+    anchor = document.createElement("a");
+    anchor.href = objectUrl;
+    anchor.download = `hackinglab-records-${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}.json`;
+    anchor.hidden = true;
+    document.body.appendChild(anchor);
+    anchor.click();
+    // This confirms download initiation, not that the user saved a file on disk.
+    lastExportAt = now.toISOString();
+    progressStore.setItem(LAST_EXPORT_KEY, lastExportAt);
+    setRecordsResult("exported", result.count);
+  } catch (_) {
+    // Keep file names and exception details out of status messages; do not report a failed download as saved.
+    recordsResult = null;
+  } finally {
+    anchor?.remove();
+    if (objectUrl) setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+    recordsBusy = false;
+    updateRecordsUI();
+    if (focused) button.focus({ preventScroll: true });
+  }
+}
+
+function importConfirmation(savedAt, count, localAhead) {
+  const date = localRecordDate(savedAt);
+  if (currentLang === "ja") return `${date}に保存したファイルから、${count}本の進捗を戻します。このブラウザーのほうが進んでいる${localAhead}本は、そのままにします。よろしいですか？`;
+  return `This will restore progress for ${count} ${count === 1 ? "tool" : "tools"} from the file saved on ${date}. The ${localAhead} ${localAhead === 1 ? "tool that is" : "tools that are"} further along in this browser will stay as ${localAhead === 1 ? "it is" : "they are"}. Continue?`;
+}
+
+async function handleRecordsImport() {
+  const input = document.getElementById("records-file");
+  if (recordsBusy || loadState !== "ready" || !RECORDS) return;
+  const file = input.files?.[0];
+  if (!file) return;
+  recordsBusy = true;
+  recordsResult = null;
+  const guard = { interaction: interactionVersion, navigation: navigationVersion, href: location.href };
+  const active = document.activeElement;
+  updateRecordsUI();
+  try {
+    if (!Number.isFinite(file.size) || file.size < 0 || file.size > RECORDS.MAX_BYTES) { setRecordsResult("import_invalid"); return; }
+    const parsed = RECORDS.parseRecords(await file.text(), new Set(getRecordTools().map((tool) => tool.id)));
+    if (!parsed.ok) { setRecordsResult(parsed.reason === "new-version" ? "import_new_version" : "import_invalid"); return; }
+    const first = recordProgressMaps();
+    const current = new Map([...first.effective].map(([id, value]) => [id, Math.max(value, first.durable.get(id)?.ok ? first.durable.get(id).value : 0)]));
+    const plan = RECORDS.planImport(parsed.progress, current);
+    if (!plan.candidates.size) { setRecordsResult("import_empty"); return; }
+    if (!window.confirm(importConfirmation(parsed.savedAt, plan.candidates.size, plan.localAheadCount))) return;
+    const latest = recordProgressMaps(plan.candidates.keys());
+    const result = RECORDS.recheckImport(plan.candidates, latest.effective, latest.durable);
+    const byId = new Map(getRecordTools().map((tool) => [tool.id, tool]));
+    for (const update of result.updates) {
+      const key = `progress_${byId.get(update.id).slug}`;
+      if (update.persist) progressStore.setItem(key, String(update.level));
+      else progressStore.setMemory(key, String(update.level));
+    }
+    if (result.count) refreshProgressViews();
+    setRecordsResult(result.count ? "imported" : "import_empty", result.count);
+  } catch (_) {
+    setRecordsResult("import_invalid");
+  } finally {
+    input.value = "";
+    recordsBusy = false;
+    updateRecordsUI();
+    if (guard.interaction === interactionVersion && guard.navigation === navigationVersion && guard.href === location.href &&
+      (active === document.getElementById("records-import") || active === input || active === document.body)) {
+      const button = document.getElementById("records-import");
+      if (isShown(button)) button.focus({ preventScroll: true });
+    }
+  }
+}
+
+
 document.addEventListener("DOMContentLoaded", () => {
   setupStaticUI();
+  setupRecordsUI();
   setupHelpModal();
   setupProgressSync();
   setupHistory();
@@ -528,6 +792,13 @@ function setupHelpModal() {
   };
 
   helpButton?.addEventListener("click", openHelp);
+  document.getElementById("storage-warning-help")?.addEventListener("click", (e) => {
+    e.currentTarget.focus({ preventScroll: true });
+    openHelp();
+    const heading = document.getElementById("help-storage");
+    heading?.focus({ preventScroll: true });
+    heading?.scrollIntoView({ block: "start", behavior: "auto" });
+  });
   helpClose?.addEventListener("click", closeHelp);
 
   // オーバーレイ部分クリックで閉じる
@@ -650,6 +921,7 @@ function setLoadState(state) {
   });
   document.getElementById("retry-data").disabled = state !== "error";
   if (state !== "ready") ["share-on-x", "reset-all-progress"].forEach((id) => { document.getElementById(id).disabled = true; });
+  updateRecordsUI();
 }
 
 async function loadData() {
@@ -965,6 +1237,7 @@ function updateLanguageUI() {
     const base = a.dataset.href;
     a.setAttribute("href", isJa || !HU ? base : HU.withLang(new URL(base, window.location.href).toString(), "en"));
   });
+  updateRecordsUI();
 }
 
 // ---- タブ切替 ----
@@ -2249,13 +2522,13 @@ function getCategoryLabels(tool) {
 // ---- 進捗管理（localStorage） ----
 
 // 読み書きは progressStore 経由（例外を投げず、使えない環境ではメモリーに退避する）。
-function getProgress(slug) {
-  const raw = progressStore.getItem(`progress_${slug}`);
+function normalizeProgress(raw) {
   const num = Number(raw);
-  if (raw !== null && Number.isInteger(num) && num >= 0 && num <= 3) {
-    return num;
-  }
-  return 0;
+  return raw !== null && Number.isInteger(num) && num >= 0 && num <= 3 ? num : 0;
+}
+
+function getProgress(slug) {
+  return normalizeProgress(progressStore.getItem(`progress_${slug}`));
 }
 
 function setProgress(slug, level) {
@@ -2334,6 +2607,8 @@ let progressSyncTimer = 0;
 
 function setupProgressSync() {
   window.addEventListener("storage", (e) => {
+    try { if (e.storageArea && e.storageArea !== window.localStorage) return; } catch (_) { /* Invalidate clean cache even if access was revoked. */ }
+    progressStore.invalidate(e.key);
     // key が null のときは、別のタブで保存した値がまとめて消された
     if (e.key !== null && String(e.key).indexOf("progress_") !== 0) return;
     clearTimeout(progressSyncTimer);
