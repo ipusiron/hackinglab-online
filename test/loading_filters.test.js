@@ -313,3 +313,29 @@ test("LF19: language-only redraw retains outside IDs and chapter duplicates with
   selected(p, "filter-progress", "0");
   assert.equal(cards(p).some((c) => c.dataset.toolId === item.dataset.toolId), false);
 });
+
+test("LF20: reserved count and progress text are hidden from accessibility, while only the current stage changes", async () => {
+  for (const language of ["ja", "en"]) {
+    const p = await runPage({ search: `?lang=${language}` });
+    assert.equal(el(p, "list-count-space").textContent, "");
+    selected(p, "filter-progress", "0");
+    const reserved = el(p, "list-count-space").textContent;
+    assert.equal(el(p, "list-count-space").getAttribute("aria-hidden"), "true");
+    assert.equal(reserved, language === "ja" ? `${visible.length}本中${visible.length}本を表示（${visible.length}本は条件外）` : `Showing ${visible.length} of ${visible.length} (${visible.length} no longer matches)`);
+    const button = cards(p)[0].querySelector('[data-part="progress"]');
+    const labels = language === "ja" ? ["未着手", "学習中", "一周完了", "定着済み"] : ["Not started", "In progress", "First pass", "Mastered"];
+    const label = (stage) => language === "ja" ? `進捗: ${stage}` : `Progress: ${stage}`;
+    const spaces = button.querySelectorAll(".tool-progress-space");
+    assert.deepEqual(spaces.map((space) => space.textContent), labels.map(label));
+    for (const space of spaces) assert.equal(space.getAttribute("aria-hidden"), "true");
+    for (const stage of [1, 2, 3, 0]) {
+      button.dispatch("click");
+      assert.equal(button.querySelector(".tool-progress-label").textContent, label(labels[stage]));
+      assert.deepEqual(button.querySelectorAll(".tool-progress-space"), spaces);
+      assert.equal(el(p, "list-count-space").textContent, reserved);
+    }
+  }
+  const css = read("css/style.css");
+  assert.match(css, /#list-count-space, \.tool-progress-space\s*\{\s*visibility: hidden/);
+  assert.match(css, /\.tool-progress-button\s*\{[^}]*display: inline-grid/);
+});

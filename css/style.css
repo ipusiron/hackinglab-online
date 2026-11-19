@@ -1629,3 +1629,16 @@ html.js-ready #slow-loading { display: none; }
 }
 /* The overlay must not be clipped by content-visibility's paint containment. */
 #tool-list:not(.is-grouped) > .tool-card.is-outside { content-visibility: visible; }
+
+/* Reserve wrapping before progress changes, including enlarged text. These rules
+   follow touch/inline-flex rules so the layout cells remain active everywhere. */
+#list-summary { display: grid; }
+#list-count, #list-count-space { grid-area: 1 / 1; margin: 0; overflow-wrap: anywhere; }
+#list-count-space, .tool-progress-space { visibility: hidden; }
+.tool-progress-button {
+  display: inline-grid;
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 100%;
+  align-items: center;
+}
+.tool-progress-label, .tool-progress-space { grid-area: 1 / 1; min-width: 0; }

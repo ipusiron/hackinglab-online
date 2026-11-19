@@ -223,6 +223,11 @@ function updateListCount() {
   if (!el || loadState !== "ready") return;
   const counts = listCounts();
   el.textContent = listText(counts.outside ? "outside_count" : counts.shown === counts.total ? "all_count" : "filtered_count", counts);
+  // Reserve the longest possible outside count at the current width/font size.
+  // Updating progress must not move the cards below this line.
+  const space = document.getElementById("list-count-space");
+  if (space) space.textContent = filters.progress !== "all" && !toolSet.ids.length && counts.shown
+    ? listText("outside_count", { ...counts, outside: counts.shown }) : "";
 }
 
 function announceListCount(delay = 0) {
@@ -2261,8 +2266,22 @@ function setProgress(slug, level) {
 function updateProgressButton(btn, slug) {
   const level = getProgress(slug);
   const label = PROGRESS_LABELS[currentLang][level];
-  btn.textContent =
-    currentLang === "ja" ? `進捗: ${label}` : `Progress: ${label}`;
+  let current = btn.querySelector(".tool-progress-label");
+  if (!current) {
+    current = document.createElement("span");
+    current.className = "tool-progress-label";
+    btn.appendChild(current);
+    // All four labels share one grid cell and reserve their maximum size.
+    // They are layout-only: only the current label names the button.
+    PROGRESS_LABELS[currentLang].forEach((stage) => {
+      const space = document.createElement("span");
+      space.className = "tool-progress-space";
+      space.setAttribute("aria-hidden", "true");
+      space.textContent = currentLang === "ja" ? `進捗: ${stage}` : `Progress: ${stage}`;
+      btn.appendChild(space);
+    });
+  }
+  current.textContent = currentLang === "ja" ? `進捗: ${label}` : `Progress: ${label}`;
 
   // 進捗状態の色分けクラスを更新
   btn.classList.remove("progress-0", "progress-1", "progress-2", "progress-3");

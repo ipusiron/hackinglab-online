@@ -45,7 +45,10 @@ function checkCards(document, language, book = null) {
     if (demo) assert.equal(demo.href, U.demoLink(tool.demo_url, language));
     const progress = card.querySelector('[data-part="progress"]');
     assert.equal(progress?.tagName, "BUTTON", `${tool.id}: no progress control`);
-    assert.ok(progress.textContent.length > 0);
+    const expectedStage = language === "ja" ? "進捗: 未着手" : "Progress: Not started";
+    assert.equal(progress.querySelector(".tool-progress-label")?.textContent, expectedStage);
+    assert.equal(progress.querySelectorAll(".tool-progress-space").length, 4);
+    for (const space of progress.querySelectorAll(".tool-progress-space")) assert.equal(space.getAttribute("aria-hidden"), "true");
     assert.deepEqual(card.querySelectorAll(".tool-book-ref").map((n) => n.textContent),
       book ? B.formatRef(book, tool.id, language) : [], `${tool.id}: book references`);
   }

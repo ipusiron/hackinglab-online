@@ -211,7 +211,7 @@ const mediaBlocks = (condRe) =>
 
 test("H10: 折りたたみの見出し（summary）は開閉の印を消さない（display を変えない・list-style: none にしない）", () => {
   const sums = rules.filter(
-    (r) => /summary(?!::)/.test(r.selector) && !/::(?:marker|-webkit-details-marker)/.test(r.selector)
+    (r) => /(?:^|[\s>+~,(:])summary(?![\w-]|::)/.test(r.selector) && !/::(?:marker|-webkit-details-marker)/.test(r.selector)
   );
   assert.ok(sums.length > 0);
   for (const r of sums) {
