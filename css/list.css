@@ -1,0 +1,105 @@
+/* The static list inherits both palettes and focus colors from style.css. */
+html.sl-document {
+  scroll-padding-top: 0.5rem;
+}
+
+.sl-page {
+  overflow-wrap: anywhere;
+}
+
+.sl-header,
+.sl-main,
+.sl-footer {
+  width: min(100%, 70rem);
+  margin-inline: auto;
+  padding: 1rem;
+}
+
+.sl-header h1,
+.sl-main h2,
+.sl-main h3,
+.sl-main h4 {
+  color: var(--heading);
+  line-height: 1.5;
+}
+
+.sl-header h1 { font-size: 1.5rem; }
+.sl-main h2 { font-size: 1.375rem; }
+.sl-main h3 { font-size: 1.25rem; }
+.sl-main h4 { font-size: 1.125rem; }
+
+.sl-page h1 span,
+.sl-page h2 span,
+.sl-page h3 span,
+.sl-page h4 span,
+.sl-subtitle span,
+.sl-reference span,
+.sl-note span {
+  display: block;
+}
+
+.sl-page a {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.5rem;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  max-width: 100%;
+  padding: 0.5rem;
+  text-underline-offset: 0.15em;
+}
+
+.sl-page a span { min-width: 0; }
+
+.sl-navigation,
+.sl-book-navigation {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+.sl-tool-list {
+  list-style: none;
+  margin: 1rem 0 2rem;
+  padding: 0;
+}
+
+.sl-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.5rem 1rem;
+  padding: 0.875rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-bg);
+}
+
+.sl-content,
+.sl-links { min-width: 0; }
+.sl-day { color: var(--text-secondary); }
+.sl-tool-title strong { font-size: 1rem; }
+.sl-subtitle,
+.sl-reference { margin-top: 0.25rem; color: var(--text-secondary); }
+.sl-reference { font-size: 0.875rem; }
+
+.sl-links {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.sl-book { margin-block: 2rem; }
+.sl-book h3 { margin-bottom: 0.5rem; }
+.sl-book-link { margin-block: 0; }
+.sl-note { margin-block: 0.5rem; color: var(--text-secondary); }
+.sl-note span + span { margin-top: 0.25rem; }
+
+@media (min-width: 48rem) {
+  .sl-row { grid-template-columns: minmax(0, 1fr) minmax(10rem, 14rem); }
+}
+
+@media (forced-colors: active) {
+  .sl-row { border-color: CanvasText; }
+}

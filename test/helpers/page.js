@@ -1,5 +1,5 @@
 "use strict";
-// Rendering smoke tests only: this DOM has no CSS/layout, browser navigation or accessibility tree.
+// DOM/history integration tests: no CSS layout or accessibility tree. History and events are modeled explicitly.
 // Unsupported DOM APIs fail normally; do not add a Proxy that silently supplies no-op methods.
 const fs = require("node:fs");
 const path = require("node:path");
@@ -70,7 +70,7 @@ class Element {
     if (child.parentNode) child.parentNode.childNodes.splice(child.parentNode.childNodes.indexOf(child), 1);
     this.childNodes.push(child); child.parentNode = this; return child;
   }
-  replaceChildren(...children) { this.childNodes.forEach((c) => { c.parentNode = null; }); this.childNodes = []; children.forEach((c) => this.appendChild(c)); }
+  replaceChildren(...children) { if (this.contains(this.ownerDocument.activeElement)) this.ownerDocument.activeElement = this.ownerDocument.body; this.childNodes.forEach((c) => { c.parentNode = null; }); this.childNodes = []; children.forEach((c) => this.appendChild(c)); }
   setAttribute(name, value) {
     this.attrs.set(name, String(value));
     if (name.startsWith("data-")) this.dataset[name.slice(5).replace(/-([a-z])/g, (_, c) => c.toUpperCase())] = String(value);
@@ -89,7 +89,7 @@ class Element {
   closest(selector) { for (let n = this; n; n = n.parentElement) if (matches(n, selector)) return n; return null; }
   contains(node) { for (let n = node; n; n = n.parentNode) if (n === this) return true; return false; }
   getClientRects() { for (let n = this; n; n = n.parentElement) if (n.hidden) return []; return [{}]; }
-  getBoundingClientRect() { return { top: 0, bottom: 0, left: 0, right: 0, height: 0, width: 0 }; }
+  getBoundingClientRect() { return this.rect || { top: 0, bottom: 0, left: 0, right: 0, height: 0, width: 0 }; }
   addEventListener(type, listener) { const all = this.listeners.get(type) || []; all.push(listener); this.listeners.set(type, all); }
   dispatch(type, fields = {}) {
     const event = { target: this, button: 0, defaultPrevented: false, preventDefault() { this.defaultPrevented = true; }, ...fields };
@@ -97,10 +97,11 @@ class Element {
     if (type === "click" && this.tagName === "SUMMARY" && !event.defaultPrevented) this.parentElement.open = !this.parentElement.open;
     return event;
   }
-  focus() { this.ownerDocument.activeElement = this; }
-  scrollIntoView() {}
+  focus(options) { this.ownerDocument.activeElement = this; (this.ownerDocument.focusCalls ||= []).push({ element: this, options }); }
+  select() { this.selectionStart = 0; this.selectionEnd = this.value.length; }
+  scrollIntoView(options) { (this.ownerDocument.scrollCalls ||= []).push({ element: this, options }); }
 }
-for (const [prop, attr] of Object.entries({ id: "id", className: "class", lang: "lang", rel: "rel", target: "target", type: "type" })) {
+for (const [prop, attr] of Object.entries({ id: "id", className: "class", lang: "lang", rel: "rel", target: "target", type: "type", tabIndex: "tabindex" })) {
   Object.defineProperty(Element.prototype, prop, { get() { return this.getAttribute(attr) || ""; }, set(v) { this.setAttribute(attr, v); } });
 }
 for (const prop of ["hidden", "open", "disabled", "selected"]) {
@@ -134,12 +135,13 @@ function parseHtml(html, location) {
   assert.equal(stack.length, 1, "Unclosed HTML elements");
   document.documentElement = document.querySelector("html"); document.body = document.querySelector("body"); document.head = document.querySelector("head");
   document.activeElement = document.body;
+  Object.defineProperty(document, "title", { get() { return document.querySelector("title")?.textContent || ""; }, set(value) { document.querySelector("title").textContent = value; } });
   return document;
 }
-async function runPage({ search = "", storageFailure = "none", dataOverrides = {} } = {}) {
+async function runPage({ search = "", storageFailure = "none", dataOverrides = {}, deferData = false, dataFailures = {}, clipboard = "success", storedValues = {}, allowLoadFailure = false } = {}) {
   const location = new URL("https://hackinglab.online/" + search);
   const document = parseHtml(read("index.html"), location);
-  const messages = []; const fetched = []; const values = new Map(); const calls = { getter: 0, read: 0, write: 0 };
+  const messages = []; const fetched = []; const values = new Map(Object.entries(storedValues)); const calls = { getter: 0, read: 0, write: 0 };
   const store = {
     getItem(k) { calls.read++; if (storageFailure === "read") throw new Error("storage read blocked"); return values.get(k) ?? null; },
     setItem(k, v) { calls.write++; if (storageFailure === "write") throw new Error("storage full"); values.set(k, String(v)); }
@@ -152,23 +154,59 @@ async function runPage({ search = "", storageFailure = "none", dataOverrides = {
     return file;
   };
   const frames = [];
+  const listeners = new Map();
+  const events = [];
+  const emit = (type, fields = {}) => {
+    events.push(type);
+    for (const listener of listeners.get(type) || []) listener({ type, ...fields });
+  };
+  const clone = (value) => value == null ? value : JSON.parse(JSON.stringify(value));
+  const entries = [{ url: location.href, state: null }];
+  let historyIndex = 0;
+  let release;
+  const gate = new Promise((resolve) => { release = resolve; });
+  if (!deferData) release();
+  const copied = [];
+  const scrolls = [];
   const context = {
     document, location, URL, URLSearchParams, setTimeout, clearTimeout,
     innerWidth: 1280, innerHeight: 900, scrollY: 0,
     matchMedia: () => ({ matches: false }),
-    addEventListener() {}, scrollTo() {}, scrollBy() {}, open() {}, confirm: () => false,
+    addEventListener(type, listener) { const all = listeners.get(type) || []; all.push(listener); listeners.set(type, all); },
+    scrollTo(...args) { const y = typeof args[0] === "object" ? args[0].top : args[1]; context.scrollY = y; scrolls.push({ type: "to", y }); },
+    scrollBy(...args) { const y = typeof args[0] === "object" ? args[0].top : args[1]; context.scrollY += y; scrolls.push({ type: "by", y }); },
+    open() { throw new Error("Unexpected popup in integration test"); }, confirm: () => false,
+    navigator: { clipboard: { async writeText(value) { if (clipboard === "reject") throw new Error("Clipboard denied"); copied.push(value); } } },
     getComputedStyle: () => ({ position: "sticky" }),
     ResizeObserver: class { observe() {} },
     requestAnimationFrame: (fn) => { frames.push(fn); return frames.length; },
     performance: { mark() {} },
     history: {
-      state: null,
-      replaceState(state, _, url) { this.state = state; if (url) location.href = new URL(url, location).href; },
-      pushState(state, _, url) { this.state = state; if (url) location.href = new URL(url, location).href; }
+      get state() { return clone(entries[historyIndex].state); },
+      get length() { return entries.length; },
+      scrollRestoration: "auto",
+      replaceState(state, _, url) { if (url) location.href = new URL(url, location).href; entries[historyIndex] = { url: location.href, state: clone(state) }; },
+      pushState(state, _, url) { if (url) location.href = new URL(url, location).href; entries.splice(historyIndex + 1); entries.push({ url: location.href, state: clone(state) }); historyIndex++; },
+      go(delta) {
+        const next = historyIndex + delta;
+        if (next < 0 || next >= entries.length || next === historyIndex) return;
+        setImmediate(() => {
+          const oldURL = location.href;
+          historyIndex = next;
+          location.href = entries[historyIndex].url;
+          emit("popstate", { state: clone(entries[historyIndex].state) });
+          if (new URL(oldURL).hash !== location.hash) emit("hashchange", { oldURL, newURL: location.href });
+        });
+      },
+      back() { this.go(-1); }, forward() { this.go(1); }
     },
     fetch: async (url) => {
       const file = localFile(url); fetched.push(path.relative(ROOT, file).replaceAll(path.sep, "/"));
-      const json = JSON.parse(Object.hasOwn(dataOverrides, fetched.at(-1)) ? JSON.stringify(dataOverrides[fetched.at(-1)]) : fs.readFileSync(file, "utf8"));
+      const name = fetched.at(-1);
+      await gate;
+      if (dataFailures[name] === "reject") throw new Error("Fixture fetch failed");
+      if (dataFailures[name]) return { ok: false, status: dataFailures[name] };
+      const json = JSON.parse(Object.hasOwn(dataOverrides, name) ? JSON.stringify(dataOverrides[name]) : fs.readFileSync(file, "utf8"));
       return { ok: true, json: async () => json };
     },
     console: Object.fromEntries(["warn", "error", "log", "info"].map((level) => [level, (...args) => messages.push({ level, text: args.map(String).join(" ") })]))
@@ -184,12 +222,32 @@ async function runPage({ search = "", storageFailure = "none", dataOverrides = {
     vm.runInContext(fs.readFileSync(file, "utf8"), context, { filename: path.relative(ROOT, file), timeout: 5000 });
   }
   document.dispatch("DOMContentLoaded");
-  // All fixture fetches resolve locally. One event-loop turn drains the loadData Promise chain.
-  await new Promise(setImmediate);
-  for (let i = 0; i < 10 && frames.length; i++) frames.shift()();
-  assert.deepEqual(messages.filter((m) => m.level === "warn" || m.level === "error"), [], "Rendering reported an error/warning");
-  assert.equal(document.getElementById("tool-list")?.getAttribute("aria-busy"), "false", "loadData did not finish rendering");
-  assert.equal(document.getElementById("share-on-x")?.disabled, false, "Dashboard actions never became ready");
-  return { document, context, messages, fetched, storageCalls: calls, values };
+  const flush = async () => {
+    await new Promise(setImmediate);
+    for (let i = 0; i < 100 && frames.length; i++) frames.shift()();
+    await new Promise(setImmediate);
+  };
+  const checkLoaded = () => {
+    if (allowLoadFailure) return;
+    assert.deepEqual(messages.filter((m) => m.level === "warn" || m.level === "error"), [], "Rendering reported an error/warning");
+    assert.equal(document.getElementById("tool-list")?.getAttribute("aria-busy"), "false", "loadData did not finish rendering");
+    assert.equal(document.getElementById("share-on-x")?.disabled, false, "Dashboard actions never became ready");
+  };
+  await flush();
+  if (!deferData) checkLoaded();
+  return {
+    document, context, messages, fetched, storageCalls: calls, values, copied, events, scrolls, entries,
+    flush, dispatch: emit,
+    async releaseData() { release(); await flush(); checkLoaded(); },
+    async navigateHash(hash, beforePaint) {
+      const oldURL = location.href;
+      context.history.pushState(null, "", hash);
+      if (new URL(oldURL).hash !== location.hash) emit("hashchange", { oldURL, newURL: location.href });
+      if (beforePaint) beforePaint();
+      await flush();
+    },
+    async back() { context.history.back(); await flush(); },
+    async forward() { context.history.forward(); await flush(); }
+  };
 }
 module.exports = { runPage, ROOT, read };

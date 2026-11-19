@@ -2,8 +2,9 @@
   "name": "hackinglab-online",
   "private": true,
   "scripts": {
-    "test": "node --test test/books.test.js test/site.test.js test/scroll_focus.test.js test/robust.test.js test/search.test.js test/url.test.js test/lang.test.js test/catalog.test.js test/render.test.js",
-    "test:generator": "python -m unittest discover -s test -p test_update_tools.py -v"
+    "test": "node --test test/books.test.js test/site.test.js test/scroll_focus.test.js test/robust.test.js test/search.test.js test/url.test.js test/lang.test.js test/catalog.test.js test/render.test.js test/static_list.test.js test/navigation.test.js",
+    "test:generator": "python -m unittest discover -s test -p test_update_tools.py -v",
+    "build:pages": "node scripts/build_pages.js"
   },
   "engines": {
     "node": ">=20"

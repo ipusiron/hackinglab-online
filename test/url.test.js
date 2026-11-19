@@ -2,6 +2,7 @@
 // 依存なし（node:test / node:assert/strict のみ）。
 // js/url.js の純関数の検査。UR1・UR2 は一覧の条件（?book=・?cat=・?q=・?tab=）を URL から読む・URL へ書く関数、
 // UR3 はカードの「GitHub」「デモ」のリンクの言語ごとの形、UR4 は URL の ?lang= の書き方を、
+// UR5〜UR8 はツール ID・選択リンク・カード位置の読み書きを、
 // この中の小さなデータで確かめる（data/*.json の中身には頼らない）。
 
 const assert = require("node:assert/strict");
@@ -156,4 +157,117 @@ test("UR4: withLang は英語のときだけ絶対 URL に ?lang=en を付ける
   assert.equal(U.withLang(BASE + "?book=x", "ja"), BASE + "?book=x");
   assert.equal(U.withLang("?book=x", "en"), "?book=x");
   assert.equal(U.withLang(undefined, "en"), "");
+});
+
+const VISIBLE_IDS = Array.from({ length: 15 }, (_, i) => "day" + String(i + 1).padStart(3, "0"));
+
+test("UR5: 数字・Day付き数字・大小文字・空白を同じ dayNNN にそろえる", () => {
+  for (const value of [1, "1", "01", "001", "day1", "DAY001", " Day 001 ", "day\t1"]) {
+    assert.equal(U.normalizeToolId(value), "day001", JSON.stringify(value));
+  }
+  assert.equal(U.normalizeToolId(999), "day999");
+  assert.equal(U.normalizeToolId("Day120"), "day120");
+});
+
+test("UR5: IDの全体に一致しない値・範囲外・数字でない型は採らない", () => {
+  for (const value of ["", " ", 0, "000", "Day0", -1, "+1", 1.5, "1e2", "0x1", 1000, "0001", "day001x", "xday001", "day-1", "day1,day2", "Ｄａｙ１", "１２", null, undefined, true, [], {}, NaN, Infinity]) {
+    assert.equal(U.normalizeToolId(value), "", String(value));
+  }
+});
+
+test("UR6: tools指定なしと空指定を区別し、空要素は不明値にしない", () => {
+  for (const search of ["", undefined, "?q=day001&TOOLS=day002"]) {
+    assert.deepEqual(U.readTools(search, VISIBLE_IDS), { present: false, ids: [], unknown: false, truncated: false });
+  }
+  for (const search of ["?tools", "?tools=", "?tools=,%20,&tools="]) {
+    assert.deepEqual(U.readTools(search, VISIBLE_IDS), { present: true, ids: [], unknown: false, truncated: false });
+  }
+});
+
+test("UR6: 複数toolsをURL順に読み、正規化後の重複と非表示IDを除く", () => {
+  const known = new Set(["day001", "day002", "day003"]);
+  const before = [...known];
+  const result = U.readTools("?tools=Day3,%20001,day003&ref=x&tools=2,DAY001,999,%3Cnot-an-id%3E", known);
+  assert.deepEqual(result, { present: true, ids: ["day003", "day001", "day002"], unknown: true, truncated: false });
+  assert.deepEqual([...known], before);
+  assert.deepEqual(U.readTools("?tools=1", []), { present: true, ids: [], unknown: true, truncated: false });
+  assert.deepEqual(U.readTools("?tools=1", undefined), { present: true, ids: [], unknown: true, truncated: false });
+  assert.deepEqual(U.readTools("?tools=%E0%A4%A,1", VISIBLE_IDS), { present: true, ids: ["day001"], unknown: true, truncated: false });
+});
+
+test("UR6: 12本の上限は既知IDの重複除去後に適用し、不明値は枠を使わない", () => {
+  const firstTwelve = VISIBLE_IDS.slice(0, 12).reverse();
+  const exact = "?tools=999,garbage," + firstTwelve.concat(firstTwelve).join(",") + "&tools=Day12";
+  assert.deepEqual(U.readTools(exact, VISIBLE_IDS), { present: true, ids: firstTwelve, unknown: true, truncated: false });
+  assert.deepEqual(U.readTools(exact + "&tools=13,Day013,14", VISIBLE_IDS), { present: true, ids: firstTwelve, unknown: true, truncated: true });
+  // 上限に達したあとにも不明値があれば知らせる。
+  assert.deepEqual(U.readTools("?tools=" + firstTwelve.join(",") + ",13,unknown", VISIBLE_IDS), { present: true, ids: firstTwelve, unknown: true, truncated: true });
+  assert.deepEqual(U.readTools("?tools=" + firstTwelve.join(","), VISIBLE_IDS), { present: true, ids: firstTwelve, unknown: false, truncated: false });
+  assert.deepEqual(U.readTools("?tools=" + VISIBLE_IDS.join(","), VISIBLE_IDS), { present: true, ids: VISIBLE_IDS.slice(0, 12), unknown: false, truncated: true });
+});
+
+test("UR7: 表示対象のカードhashだけがknownになり、他のhashは干渉しない", () => {
+  for (const hash of ["#day1", "#DAY001", "#day%20001", "#%64ay003"]) {
+    assert.deepEqual(U.readToolHash(hash, new Set(VISIBLE_IDS)), { kind: "known", id: hash === "#%64ay003" ? "day003" : "day001" });
+  }
+  for (const hash of ["", "#", null, undefined]) {
+    assert.deepEqual(U.readToolHash(hash, VISIBLE_IDS), { kind: "none", id: "" });
+  }
+  for (const hash of ["#book-group-ch01", "#top", "#123", "day001", "#%2564ay001", "#%E0%A4%A"]) {
+    assert.deepEqual(U.readToolHash(hash, VISIBLE_IDS), { kind: "other", id: "" }, hash);
+  }
+});
+
+test("UR7: Day対象でも非表示・不正・壊れたエスケープならunknownで、生の文字を返さない", () => {
+  for (const hash of ["#day999", "#day000", "#day", "#day001-extra", "#day%3Cnot-an-id%3E", "#day%E0%A4%A", "#day%2531"]) {
+    assert.deepEqual(U.readToolHash(hash, VISIBLE_IDS), { kind: "unknown", id: "" }, hash);
+  }
+  assert.deepEqual(U.readToolHash("#day001", []), { kind: "unknown", id: "" });
+});
+
+test("UR8: tools未指定なら全パラメーターの値を保ち、検索・言語・本だけを変えられる", () => {
+  const original = BASE + "?ref=first&tools=Day3,001&tools=&tools=999,2&ref=second&lang=ja#day003";
+  const url = new URL(U.buildUrl(original, { book: "genai-crypto", cat: "forensics", q: "暗号", lang: "ja" }));
+  assert.deepEqual(url.searchParams.getAll("tools"), ["Day3,001", "", "999,2"]);
+  assert.deepEqual(url.searchParams.getAll("ref"), ["first", "second"]);
+  assert.equal(url.hash, "#day003");
+  assert.equal(url.searchParams.get("lang"), "ja");
+  assert.deepEqual(U.readTools(url.search, VISIBLE_IDS), U.readTools(new URL(original).search, VISIBLE_IDS));
+  assert.deepEqual(U.readState(url.search, KNOWN), { book: "genai-crypto", cat: "forensics", q: "暗号", tab: "tools" });
+  assert.equal(new URL(U.buildUrl(original, { lang: "en" })).searchParams.get("lang"), "en");
+});
+
+test("UR8: tools配列を指定したときだけ正規化して12本の単一値へまとめ、入力を変更しない", () => {
+  const tools = ["DAY003", 1, "day1", "bad", ...VISIBLE_IDS, "day999"];
+  const before = tools.slice();
+  const result = new URL(U.buildUrl(BASE + "index.html?tools=999&tools=2&q=keep&lang=en#top", { tools }));
+  const expected = ["day003", "day001", "day002", ...VISIBLE_IDS.slice(3, 12)];
+  assert.deepEqual(result.searchParams.getAll("tools"), [expected.join(",")]);
+  assert.deepEqual(U.readTools(result.search, VISIBLE_IDS), { present: true, ids: expected, unknown: false, truncated: false });
+  assert.deepEqual(tools, before);
+  assert.equal(result.pathname, "/index.html");
+  assert.equal(result.searchParams.get("q"), "keep");
+  assert.equal(result.searchParams.get("lang"), "en");
+  assert.equal(result.hash, "#top");
+  // 実在確認は読み取り側の責務。書く側は構文の正規化までを行う。
+  assert.equal(new URL(U.buildUrl(BASE, { tools: [999] })).searchParams.get("tools"), "day999");
+});
+
+test("UR8: toolsの空指定で解除し、指定しない他条件とhashを残す", () => {
+  for (const tools of [[], "", null, undefined]) {
+    assert.equal(U.buildUrl(BASE + "?tools=1&tools=2", { tools }), BASE);
+    assert.equal(U.buildUrl(BASE + "?tools=1&book=genai-crypto&q=caesar&lang=ja#day001", { tools }), BASE + "?book=genai-crypto&q=caesar&lang=ja#day001");
+  }
+});
+
+test("UR8: 明示hashは本変更時の自動解除より優先し、未指定なら既存の解除規則を保つ", () => {
+  const original = BASE + "?book=genai-crypto&tools=1&lang=ja#book-group-ch03";
+  assert.equal(new URL(U.buildUrl(original, { book: "security-tools-100", hash: "#day001" })).hash, "#day001");
+  assert.equal(new URL(U.buildUrl(original, { book: "security-tools-100", hash: "#book-group-ch05" })).hash, "#book-group-ch05");
+  assert.equal(new URL(U.buildUrl(original, { book: "security-tools-100" })).hash, "");
+  assert.equal(new URL(U.buildUrl(original, { tools: [2] })).hash, "#book-group-ch03");
+  assert.equal(new URL(U.buildUrl(original, { hash: "" })).hash, "");
+  assert.equal(new URL(U.buildUrl(BASE, { hash: "day001" })).hash, "#day001");
+  const cleared = new URL(U.buildUrl(original, { book: "", tools: [], hash: "" }));
+  assert.equal(cleared.toString(), BASE + "?lang=ja");
 });

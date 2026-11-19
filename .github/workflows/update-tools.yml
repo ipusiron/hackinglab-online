@@ -43,6 +43,8 @@ jobs:
         run: npm run test:generator
       - name: Generate and report catalog
         run: python scripts/update_tools.py --check-demos --summary "$GITHUB_STEP_SUMMARY"
+      - name: Generate static tool list
+        run: npm run build:pages
       - name: Validate generated catalog and rendering
         env:
           AFTER_REGEN: '1'
@@ -53,14 +55,19 @@ jobs:
           AFTER_REGEN: '1'
           HLO_BASE_COMMIT: origin/main
         run: |
-          if git diff --quiet -- data/tools.json data/added.json; then
+          if git diff --quiet -- data/tools.json data/added.json list.html; then
             echo "No catalog changes"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/tools.json data/added.json
+          git add data/tools.json data/added.json list.html
           git commit -m "Update tool catalog from README metadata"
           git pull --rebase origin main
+          npm run build:pages
           npm test
+          if ! git diff --quiet -- list.html; then
+            git add list.html
+            git commit -m "Regenerate static list after synchronization"
+          fi
           git push origin HEAD:main
