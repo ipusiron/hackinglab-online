@@ -731,6 +731,7 @@ function setupStaticUI() {
   const shareBtn = document.getElementById("share-on-x");
   shareBtn?.addEventListener("click", handleShareOnX);
   document.getElementById("share-copy-link")?.addEventListener("click", copyShareLink);
+  document.getElementById("share-copy-url")?.addEventListener("focus", revealShareCopyField);
 
   // 全体リセット
   const resetBtn = document.getElementById("reset-all-progress");
@@ -3353,6 +3354,22 @@ function handleShareOnX() {
   if (data) window.open(data.intentUrl, "_blank", "noopener");
 }
 
+// Native focus can return while a previous smooth scroll is still moving away.
+// Stop the earlier scroll only while this field still owns focus, then reveal it once.
+function revealShareCopyField() {
+  const field = document.getElementById("share-copy-url");
+  if (!field || document.activeElement !== field || !isShown(field)) return;
+  const guard = { generation: shareCopyGeneration, key: shareScopeKey,
+    navigation: navigationVersion, interaction: interactionVersion };
+  requestAnimationFrame(() => {
+    if (guard.generation !== shareCopyGeneration || guard.key !== shareScopeKey ||
+        guard.navigation !== navigationVersion || guard.interaction !== interactionVersion ||
+        document.activeElement !== field || !isShown(field) || loadState !== "ready" || currentTab !== "dashboard") return;
+    window.scrollTo({ top: window.scrollY, left: window.scrollX || 0, behavior: "instant" });
+    field.scrollIntoView({ block: "nearest", behavior: "instant" });
+  });
+}
+
 async function copyShareLink() {
   if (currentTab !== "dashboard") return;
   const data = shareData();
@@ -3382,7 +3399,7 @@ async function copyShareLink() {
   if (!copied) {
     field.value = data.url;
     if (document.activeElement === document.getElementById("share-copy-link")) {
-      field.focus();
+      field.focus({ preventScroll: true });
       field.select();
     }
   }

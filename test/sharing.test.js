@@ -158,3 +158,42 @@ test("SI13 successful retry rescues the still-focused manual field before hiding
   assert.equal(field.hidden,true);assert.equal(p.document.activeElement,button);
   assert.equal(el(p,"share-copy-status").textContent,"Link copied.");
 });
+
+test("SI14 manual fallback reveals once, while stale clipboard failures never move the viewport",async()=>{
+  for(const stale of [false,true]) {
+    const p=await runPage({search:"?tab=dashboard&lang=en"});let reject;
+    p.context.navigator.clipboard={writeText:()=>new Promise((_,no)=>{reject=no})};
+    const button=el(p,"share-copy-link"),field=el(p,"share-copy-url");
+    button.focus();button.click();
+    if(stale){p.dispatch("keydown",{key:"Tab"});el(p,"records-export").focus();}
+    const before=(p.document.scrollCalls||[]).length,focus=p.document.activeElement;
+    reject(Error("denied"));await p.flush();
+    const reveals=(p.document.scrollCalls||[]).slice(before);
+    if(stale){assert.equal(reveals.length,0);assert.equal(p.document.activeElement,focus);assert.equal(field.hidden,true);}
+    else {assert.equal(reveals.length,1);assert.equal(reveals[0].element,field);assert.equal(reveals[0].options.block,"nearest");assert.equal(reveals[0].options.behavior,"instant");assert.equal(p.document.activeElement,field);assert.equal(field.selectionEnd,field.value.length);}
+  }
+});
+
+test("SI15 returning to the manual field reveals once without changing selection, unless the focus request is stale",async()=>{
+  for(const action of ["none","interaction","other-focus","language","history","hidden","detached","new-copy"]){
+    const p=await runPage({search:"?tab=dashboard&lang=en",clipboard:"reject"});
+    await copy(p);const field=el(p,"share-copy-url"),button=el(p,"share-copy-link");
+    field.selectionStart=3;field.selectionEnd=11;
+    button.focus();field.focus();
+    const before=(p.document.scrollCalls||[]).filter(x=>x.element===field).length;
+    if(action==="interaction")p.dispatch("keydown",{key:"ArrowLeft"});
+    if(action==="other-focus")el(p,"records-export").focus();
+    if(action==="language")el(p,"lang-ja").click();
+    if(action==="history"){p.context.history.pushState(null,"","?q=day003&tab=dashboard&lang=en");p.dispatch("popstate",{state:null});}
+    if(action==="hidden")field.hidden=true;
+    if(action==="detached")field.remove();
+    if(action==="new-copy"){p.context.navigator.clipboard={writeText:()=>new Promise(()=>{})};button.click();}
+    await p.flush();
+    const reveals=(p.document.scrollCalls||[]).filter(x=>x.element===field).length-before;
+    assert.equal(reveals,action==="none"?1:0,action);
+    if(action==="none"){
+      assert.equal(p.document.activeElement,field);assert.equal(field.selectionStart,3);assert.equal(field.selectionEnd,11);
+      field.focus();await p.flush();assert.equal((p.document.scrollCalls||[]).filter(x=>x.element===field).length,before+1);
+    }
+  }
+});
