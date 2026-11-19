@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-11-08T03:26:21Z",
+  "generated_at": "2026-11-17T00:45:54Z",
   "tools": [
     {
       "id": "day001",
@@ -4221,6 +4221,44 @@
       ],
       "repo_url": "https://github.com/ipusiron/account-domino-mapper",
       "demo_url": "https://ipusiron.github.io/account-domino-mapper/",
+      "hub": true
+    },
+    {
+      "id": "day128",
+      "slug": "vision-trap-atlas",
+      "title": "Vision Trap Atlas",
+      "subtitle_ja": "目の罠を見て、押して確かめる図鑑",
+      "subtitle_en": "An atlas of visual traps to see and try",
+      "description_ja": "人が意識するより先に目がしてしまうこと（ポップアウト・視覚探索・ゲシュタルトの法則・図と地・グラフの誤読・目の錯覚）を、つまみで動かす図と、自分の探す時間を測る2つの実験で確かめる図鑑。同じ目の性質が、グラフでは見せるために、迷彩では隠すために使われる様子を、小さな図で並べる。記録は画面の中だけで、外部へは何も送らない。日英対応。",
+      "description_en": "An atlas for checking what your eyes do before you think about it (pop-out, visual search, Gestalt principles of grouping, figure and ground, chart misreading and optical illusions), with figures you adjust and two experiments that time your own search. Small figures show how the same traits are used by charts to show and by camouflage to hide. Records stay on the page; nothing is sent anywhere. Japanese and English UI.",
+      "category_ja": [
+        "可視化",
+        "学習支援"
+      ],
+      "category_en": [
+        "Visualization",
+        "Learning Support"
+      ],
+      "category_ids": [
+        "learning-support",
+        "visualization"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "visual-perception",
+        "preattentive-features",
+        "visual-search",
+        "gestalt",
+        "gestalt-principles",
+        "figure-ground",
+        "misleading-charts",
+        "data-visualization",
+        "camouflage",
+        "optical-illusions",
+        "education"
+      ],
+      "repo_url": "https://github.com/ipusiron/vision-trap-atlas",
+      "demo_url": "https://ipusiron.github.io/vision-trap-atlas/",
       "hub": true
     }
   ]
