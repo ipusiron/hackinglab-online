@@ -332,7 +332,7 @@ function matchParen(src, pos) {
   return -1;
 }
 
-test("H16: 描く前に言語を決める js/lang.js だけは defer なしで head に置き、ほかの script はすべて defer（async なし）で books → search → storage → tabs → url → main の順に、lang.js より前に fetchpriority=\"high\" で置く", () => {
+test("H16: 描く前に言語を決める js/lang.js だけは defer なしで head に置き、ほかの script はすべて defer（async なし）で books → search → storage → records → tabs → url → main の順に、lang.js より前に fetchpriority=\"high\" で置く", () => {
   const headEnd = html.indexOf("</head>");
   const tags = [...html.matchAll(/<script\b[^>]*>/g)].map((m) => ({ tag: m[0], at: m.index, src: (m[0].match(/\ssrc="([^"]+)"/) || [])[1] }));
   for (const t of tags) {
@@ -353,9 +353,9 @@ test("H16: 描く前に言語を決める js/lang.js だけは defer なしで h
     assert.match(t.tag, /\sfetchpriority="high"[\s>]/, `fetchpriority="high" がない: ${t.tag}`);
   }
   const srcs = deferred.map((t) => t.src);
-  const order = ["./js/books.js", "./js/search.js", "./js/storage.js", "./js/tabs.js", "./js/url.js", "./js/main.js"].map((x) => srcs.indexOf(x));
+  const order = ["./js/books.js", "./js/search.js", "./js/storage.js", "./js/records.js", "./js/tabs.js", "./js/url.js", "./js/main.js"].map((x) => srcs.indexOf(x));
   assert.ok(order.every((i) => i >= 0), `読み込む script が足りない: ${srcs.join(", ")}`);
-  assert.deepEqual([...order].sort((a, b) => a - b), order, "script の順番が books → search → storage → tabs → url → main でない");
+  assert.deepEqual([...order].sort((a, b) => a - b), order, "script の順番が books → search → storage → records → tabs → url → main でない");
   assert.equal(srcs[srcs.length - 1], "./js/main.js", "main.js が defer の script の最後でない");
 });
 

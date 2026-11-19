@@ -1,53 +1,59 @@
-// js/storage.js
-// localStorage を安全に使うための小さなラッパー（DOM 非依存）。
-// プライベートウィンドウや保存の禁止などで localStorage が使えない・例外を投げるときは、
-// このページを開いているあいだだけメモリーに保持して、画面が壊れないようにする。
-// ブラウザーでは globalThis.HLOStorage に公開し、Node のテストでは module.exports から読む。
+// Safe localStorage access. Failed writes stay effective until this page closes.
+// A successful cache entry is never allowed to resurrect an externally deleted value.
 (function (root) {
   "use strict";
-
-  // getStorage: localStorage を返す関数。アクセスそのものが例外を投げる環境があるので関数で受ける。
-  function createSafeStorage(getStorage) {
-    const memory = new Map();
-
-    function storage() {
+  function createSafeStorage(getStorage, onFailure) {
+    const dirty = new Map();
+    const clean = new Map();
+    function failed(key) {
+      try { if (typeof onFailure === "function") onFailure(key); } catch (_) { /* Notification must not break storage access. */ }
+    }
+    function readFresh(key) {
       try {
-        const s = getStorage();
-        return s && typeof s.getItem === "function" ? s : null;
-      } catch (e) {
-        return null;
+        const storage = getStorage();
+        if (!storage || typeof storage.getItem !== "function") throw new Error("Storage unavailable");
+        const raw = storage.getItem(key);
+        const value = raw == null ? null : String(raw);
+        if (value === null) clean.delete(key);
+        else clean.set(key, value);
+        return { ok: true, value };
+      } catch (_) {
+        failed(key);
+        return { ok: false, value: null };
       }
     }
-
     function getItem(key) {
-      const s = storage();
-      if (s) {
-        try {
-          const v = s.getItem(key);
-          if (v !== null && v !== undefined) return String(v);
-        } catch (e) {
-          /* メモリーへ退避 */
-        }
-      }
-      return memory.has(key) ? memory.get(key) : null;
+      if (dirty.has(key)) return dirty.get(key);
+      const result = readFresh(key);
+      return result.ok ? result.value : clean.get(key) ?? null;
     }
-
+    function setMemory(key, value) {
+      dirty.set(key, String(value));
+      failed(key);
+      return false;
+    }
     function setItem(key, value) {
-      const v = String(value);
-      memory.set(key, v);
-      const s = storage();
-      if (!s) return false;
+      const text = String(value);
+      dirty.set(key, text);
       try {
-        s.setItem(key, v);
+        const storage = getStorage();
+        if (!storage || typeof storage.setItem !== "function") throw new Error("Storage unavailable");
+        storage.setItem(key, text);
+        clean.set(key, text);
+        dirty.delete(key);
         return true;
-      } catch (e) {
+      } catch (_) {
+        failed(key);
         return false;
       }
     }
-
-    return { getItem, setItem };
+    function invalidate(key) {
+      if (key === null) clean.clear();
+      else clean.delete(key);
+      // Unsaved values are deliberately kept so that an export can still rescue them.
+    }
+    return { getItem, setItem, readFresh, setMemory, invalidate };
   }
-
   const api = { createSafeStorage };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.HLOStorage = api;
