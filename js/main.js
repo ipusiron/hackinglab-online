@@ -480,6 +480,11 @@ async function handleRecordsImport() {
     const plan = RECORDS.planImport(parsed.progress, current);
     if (!plan.candidates.size) { setRecordsResult("import_empty"); return; }
     if (!window.confirm(importConfirmation(parsed.savedAt, plan.candidates.size, plan.localAheadCount))) return;
+    // A native confirm can delay cross-tab storage visibility. In browser tests,
+    // one task exposed only part of the queued changes; give two task opportunities
+    // before re-reading the fixed candidates. This is not a transaction or CAS guarantee.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await new Promise((resolve) => setTimeout(resolve, 0));
     const latest = recordProgressMaps(plan.candidates.keys());
     const result = RECORDS.recheckImport(plan.candidates, latest.effective, latest.durable);
     const byId = new Map(getRecordTools().map((tool) => [tool.id, tool]));

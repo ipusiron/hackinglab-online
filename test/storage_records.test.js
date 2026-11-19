@@ -238,3 +238,54 @@ test("SR20: backup covers the public catalog independently of active filters and
   assert.match(page.confirmations[0], /進んでいる1本は/);
   assert.equal(page.values.get(key(hidden)), "3");
 });
+
+test("SR21: two task opportunities expose both queued durable updates before candidate-only recheck", async () => {
+  const observations = [];
+  let page;
+  page = await runPage({ search: "?tab=dashboard", storedValues: { [key(first)]: "1", [key(second)]: "1", [key(third)]: "3" }, confirmResult: (_, disk) => {
+    observations.push(["sync", disk.get(key(first)), disk.get(key(second))]);
+    setTimeout(() => {
+      disk.set(key(first), "3");
+      observations.push(["first-task", disk.get(key(first)), disk.get(key(second))]);
+      assert.equal(id(page, "records-import").disabled, true);
+      setTimeout(() => { disk.set(key(second), "3"); disk.delete(key(third)); observations.push(["second-task", disk.get(key(first)), disk.get(key(second))]); }, 0);
+    }, 0);
+    return true;
+  } });
+  const writes = page.storageCalls.write;
+  const button = id(page, "records-import"); button.focus();
+  await restore(page, file({ [first.id]: 2, [second.id]: 2, [third.id]: 2 }));
+  assert.deepEqual(observations, [["sync", "1", "1"], ["first-task", "3", "1"], ["second-task", "3", "3"]]);
+  assert.equal(page.storageCalls.write, writes, "Both original candidates became unnecessary; do not overwrite either one");
+  assert.equal(level(page, first), 3); assert.equal(level(page, second), 3);
+  assert.equal(level(page, third), 0, "A newly eligible record was not in the confirmed candidates");
+  assert.equal(page.confirmations.length, 1); assert.equal(id(page, "records-status").textContent, "戻す進捗はありません。このブラウザーの記録は、ファイルと同じか、ファイルより進んでいます。");
+  assert.equal(button.disabled, false); assert.equal(page.document.activeElement, button);
+});
+
+test("SR22: delayed partial read failure stays memory-only while busy and post-confirm navigation retains focus", async () => {
+  let blocked = false; let page; let duplicateAttempt;
+  page = await runPage({ search: "?tab=dashboard", storedValues: { [key(first)]: "1", [key(second)]: "1" }, storageHooks: {
+    read(k) { if (blocked && k === key(second)) throw Error("Storage read access revoked"); }
+  }, confirmResult: (_, disk) => {
+    setTimeout(() => {
+      disk.set(key(first), "3");
+      assert.equal(id(page, "records-import").disabled, true);
+      duplicateAttempt = page.evaluate("handleRecordsImport()");
+      setTimeout(() => {
+        blocked = true;
+        id(page, "tab-tools-label").focus(); id(page, "tab-tools-label").click();
+      }, 0);
+    }, 0);
+    return true;
+  } });
+  const writes = page.storageCalls.write;
+  id(page, "records-import").focus();
+  await restore(page, file({ [first.id]: 2, [second.id]: 2 })); await duplicateAttempt;
+  assert.equal(page.confirmations.length, 1); assert.equal(page.storageCalls.write, writes);
+  assert.equal(page.values.get(key(first)), "3"); assert.equal(page.values.get(key(second)), "1");
+  assert.equal(level(page, second), 2); assert.equal(id(page, "storage-warning").hidden, false);
+  assert.equal(id(page, "records-status").textContent, "1本の進捗をファイルから戻しました。");
+  assert.equal(page.document.activeElement, id(page, "tab-tools-label"));
+  assert.equal(id(page, "records-import").disabled, false);
+});
