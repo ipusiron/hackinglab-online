@@ -1787,3 +1787,6 @@ body { padding-bottom: var(--storage-notice-h, 0px); }
 .share-actions button { min-height: 2.75rem; max-width: 100%; overflow-wrap: anywhere; }
 #share-scope-note, #share-copy-status { overflow-wrap: anywhere; line-height: 1.6; }
 #share-copy-url { display: block; width: 100%; min-width: 0; min-height: 2.75rem; margin-top: .5rem; padding: .5rem; font: inherit; scroll-margin-block: .5rem; color: var(--control-text); background: var(--control-bg); border: 1px solid var(--field-border); border-radius: .5rem; }
+
+/* Decorative symbols are limited to the two external card links. */
+.tool-button .external-link-icon { width: .9em; height: .9em; flex: 0 0 auto; margin-inline-start: .2em; vertical-align: -.1em; }

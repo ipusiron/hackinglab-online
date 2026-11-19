@@ -631,11 +631,12 @@ test("H28: Start panels use native controls and book links preserve modified cli
   assert.match(fnBody("updateStartEntries"), /HU\.withLang\(url\.toString\(\), currentLang\)/);
 });
 
-test("H29: カードの「GitHub」「デモ」のリンクは、英語表示のときだけ英語の README と ?lang=en にする（js/url.js の関数で作り、日本語表示は変えない）", () => {
+test("H29: card Usage targets share safe language-aware README construction", () => {
   const card = fnBody("createToolCard");
-  assert.match(card, /demoBtn\.href = HU \? HU\.demoLink\(tool\.demo_url, currentLang\) : tool\.demo_url;/);
-  assert.match(card, /repoBtn\.href = \(HU \? HU\.repoLink\(tool\.repo_url, currentLang\) : tool\.repo_url\) \|\| "#";/);
-  // 言語を切り替えたら一覧を作り直すので、リンクも新しい言語になる（作り直しの省略の鍵に言語が入っている。RB6）
+  assert.match(card, /HU\.demoLink\(tool\.demo_url, currentLang\)/);
+  assert.match(card, /HU\.readmeTarget\(tool\.repo_url, currentLang, tool\.readme_usage\)/);
+  assert.match(card, /repoBtn\.href = readme\.href \|\| "#"/);
+  assert.match(card, /setAttribute\("hreflang", readme\.lang\)/);
   assert.match(fnBody("renderToolList"), /const listKey = \[\s*currentLang,/);
 });
 

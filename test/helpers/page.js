@@ -118,6 +118,7 @@ Object.defineProperty(Element.prototype, "href", { get() { return new URL(this.g
 function parseHtml(html, location) {
   const document = new Element("document", null, 9); document.ownerDocument = document; document.location = location;
   document.createElement = (tag) => new Element(tag, document);
+  document.createElementNS = (namespace, tag) => { const element = new Element(tag, document); element.namespaceURI = namespace; return element; };
   document.createTextNode = (text) => ({ nodeType: 3, textContent: text, parentNode: null });
   document.createDocumentFragment = () => new Element("fragment", document, 11);
   document.getElementById = (id) => descendants(document).find((n) => n.id === id) || null;

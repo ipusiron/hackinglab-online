@@ -41,13 +41,13 @@ function checkCards(document, language, book = null) {
     const description = card.querySelector(".tool-description")?.textContent;
     assert.ok(description && tool["description_" + language].startsWith(description.replace(/…$/, "")), `${tool.id}: wrong/empty description`);
     const repo = card.querySelector('[data-part="repo"]');
-    assert.equal(repo?.href, U.repoLink(tool.repo_url, language), `${tool.id}: repository link`);
+    assert.equal(repo?.href, U.repoLink(tool.repo_url, language, tool.readme_usage), `${tool.id}: repository link`);
     const demo = card.querySelector('[data-part="demo"]');
     assert.equal(!!demo, !!tool.demo_url, `${tool.id}: demo presence`);
     if (demo) assert.equal(demo.href, U.demoLink(tool.demo_url, language));
-    for (const [link, label] of [[demo, language === "ja" ? "デモ" : "Demo"], [repo, "GitHub"]]) {
+    for (const [link, label] of [[demo, language === "ja" ? "デモ" : "Demo"], [repo, language === "ja" ? "使い方" : "Usage"]]) {
       if (!link) continue;
-      assert.equal(link.getAttribute("aria-label"), language === "ja" ? `${label}（${tool.title}、新しいタブで開く）` : `${label} (${tool.title}, opens in a new tab)`);
+      assert.equal(link.getAttribute("aria-label"), language === "ja" ? `${label}（${tool.title}${link === repo ? "のREADME" : ""}、新しいタブで開く）` : `${label} (${tool.title}${link === repo ? " README" : ""}, opens in a new tab)`);
       assert.equal(link.target, "_blank"); assert.equal(link.rel, "noopener");
     }
     const progress = card.querySelector('[data-part="progress"]');

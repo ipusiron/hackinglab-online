@@ -20,6 +20,7 @@ from dataclasses import dataclass, field
 from http.client import HTTPException
 from pathlib import Path
 from urllib.error import HTTPError, URLError
+from readme_usage import extract_usage, previous_entry, valid_entry
 from urllib.parse import urlsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
@@ -104,9 +105,13 @@ def load_categories(path: Path) -> dict:
     except MetadataError as exc:
         raise CatalogError(str(exc)) from exc
 
-def fetch_readme(repo: str, timeout: float) -> str:
+class ReadmeMissingError(ReadmeError):
+    """Both supported branches returned HTTP404 for this filename."""
+
+
+def fetch_readme(repo: str, timeout: float, filename: str = "README.md") -> str:
     for branch in ("main", "master"):
-        request = Request(f"https://raw.githubusercontent.com/{repo}/{branch}/README.md", method="GET")
+        request = Request(f"https://raw.githubusercontent.com/{repo}/{branch}/{filename}", method="GET")
         try:
             with urlopen(request, timeout=timeout) as response:
                 if not safe_https(response.geturl()):
@@ -120,7 +125,7 @@ def fetch_readme(repo: str, timeout: float) -> str:
             raise ReadmeError(f"README HTTP {exc.code}") from exc
         except (URLError, OSError, UnicodeError, HTTPException) as exc:
             raise ReadmeError("README read failed: " + type(exc).__name__) from exc
-    raise ReadmeError("README not found on main or master")
+    raise ReadmeMissingError(filename + " not found on main or master")
 
 
 def extract_yaml_from_readme(text: str) -> dict:
@@ -240,6 +245,8 @@ class Report:
     difficulty: list = field(default_factory=list)
     slug_changes: list = field(default_factory=list)
     demos: list = field(default_factory=list)
+    usage_retained: list = field(default_factory=list)
+    usage_missing: list = field(default_factory=list)
     total: int = 0
     visible: int = 0
     changed: bool = False
@@ -277,6 +284,8 @@ class Report:
         lines += table("Tools without a mapped category", ["Tool"], [(tid,) for tid in self.empty_categories])
         lines += table("Unknown difficulty (stored as null)", ["Tool"], [(tid,) for tid in self.difficulty])
         lines += table("Slug changes (saved progress uses the slug)", ["Tool", "Previous", "Current"], self.slug_changes)
+        lines += table("Usage metadata retained or unavailable", ["Repository", "Language", "Reason"], self.usage_retained)
+        lines += table("Confirmed missing README files", ["Repository", "Language"], self.usage_missing)
         lines += table("Demo GET results", ["Tool", "URL", "Result"], self.demos)
         return "\n".join(lines) + "\n"
 
@@ -343,14 +352,35 @@ def regenerate(root: Path, *, timeout: float = 20, check_demos: bool = False,
         print("Reading " + repo, file=sys.stderr)
         old = previous.get(repo)
         try:
-            metadata = extract_yaml_from_readme(fetch_readme(repo, timeout))
+            japanese = fetch_readme(repo, timeout)
+            metadata = extract_yaml_from_readme(japanese)
             entry = normalized_entry(metadata, repo, maps)
         except ReadmeError as exc:
             if old is None:
                 raise CatalogError("New repository has no valid metadata: " + repo + ": " + str(exc)) from exc
-            entry = normalized_entry(old, repo, maps)
+            # Keep the complete prior tool when the required Japanese source is
+            # unavailable; never mix it with a newly fetched English heading.
+            entry = copy.deepcopy(old)
             report.retained.append((repo, str(exc)))
             print("WARNING: retaining " + repo + ": " + str(exc), file=sys.stderr)
+        else:
+            usage = {"ja": extract_usage(japanese, "ja")["metadata"]}
+            try:
+                english = fetch_readme(repo, timeout, "README.en.md")
+            except ReadmeMissingError:
+                usage["en"] = {"status": "missing"}
+                report.usage_missing.append((repo, "en"))
+            except ReadmeError as exc:
+                prior = previous_entry(old.get("readme_usage") if old else None, "en")
+                if prior is not None:
+                    usage["en"] = prior
+                report.usage_retained.append((repo, "en", str(exc)))
+            else:
+                usage["en"] = extract_usage(english, "en")["metadata"]
+            # Derived values are independent of optional keys in frontmatter.
+            if not all(valid_entry(value) for value in usage.values()):
+                raise CatalogError("Invalid derived usage metadata: " + repo)
+            entry["readme_usage"] = usage
         if old and old["id"] != entry["id"]:
             raise CatalogError("Tool id changed for an existing repository: " + repo)
         if old and old["slug"] != entry["slug"]:

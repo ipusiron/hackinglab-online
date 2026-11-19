@@ -2687,6 +2687,30 @@ function applySearch(raw) {
   announceListCount(700, true);
 }
 
+// A decorative external-tab symbol: the shaft ends at the arrowhead base.
+function appendExternalIcon(link) {
+  const ns = "http://www.w3.org/2000/svg";
+  const icon = document.createElementNS(ns, "svg");
+  icon.setAttribute("class", "external-link-icon");
+  icon.setAttribute("viewBox", "0 0 16 16");
+  icon.setAttribute("aria-hidden", "true");
+  icon.setAttribute("focusable", "false");
+  const square = document.createElementNS(ns, "path");
+  square.setAttribute("d", "M7 3H3V13H13V9");
+  square.setAttribute("fill", "none");
+  square.setAttribute("stroke", "currentColor");
+  square.setAttribute("stroke-width", "1.5");
+  const shaft = document.createElementNS(ns, "line");
+  shaft.setAttribute("x1", "7"); shaft.setAttribute("y1", "9");
+  shaft.setAttribute("x2", "11"); shaft.setAttribute("y2", "5");
+  shaft.setAttribute("stroke", "currentColor"); shaft.setAttribute("stroke-width", "1.5");
+  const head = document.createElementNS(ns, "polygon");
+  head.setAttribute("points", "9,3 13,7 14,2");
+  head.setAttribute("fill", "currentColor");
+  icon.appendChild(square); icon.appendChild(shaft); icon.appendChild(head);
+  link.appendChild(icon);
+}
+
 function createToolCard(tool, book) {
   const card = document.createElement("article");
   card.className = "tool-card";
@@ -2782,8 +2806,8 @@ function createToolCard(tool, book) {
 
   // デモ URL があるツールだけ「デモ」ボタンを出す。
   // ハードウェア／バックエンド系など、ブラウザーで動かないツールは demo_url が空で、
-  // その場合はボタンを出さず GitHub への導線だけにする（404 のデモボタンを避ける）。
-  // 英語表示のときは、デモに ?lang=en を付け、GitHub は英語の README を開く（js/url.js。日本語表示のリンクは変えない）
+  // その場合は使い方への導線だけにする（404 のデモボタンを避ける）。
+  // README は言語に対応する節、確認済みの英語欠落時は日本語の先頭を開く。
   let demoBtn = null;
   if (tool.demo_url) {
     demoBtn = document.createElement("a");
@@ -2793,17 +2817,21 @@ function createToolCard(tool, book) {
     demoBtn.className = "tool-button";
     demoBtn.dataset.part = "demo";
     demoBtn.textContent = currentLang === "ja" ? "デモ" : "Demo";
+    appendExternalIcon(demoBtn);
     demoBtn.setAttribute("aria-label", currentLang === "ja" ? `デモ（${tool.title}、新しいタブで開く）` : `Demo (${tool.title}, opens in a new tab)`);
   }
 
   const repoBtn = document.createElement("a");
-  repoBtn.href = (HU ? HU.repoLink(tool.repo_url, currentLang) : tool.repo_url) || "#";
+  const readme = HU ? HU.readmeTarget(tool.repo_url, currentLang, tool.readme_usage) : { href: "", lang: currentLang };
+  repoBtn.href = readme.href || "#";
+  repoBtn.setAttribute("hreflang", readme.lang);
   repoBtn.target = "_blank";
   repoBtn.rel = "noopener";
   repoBtn.className = "tool-button secondary";
   repoBtn.dataset.part = "repo";
-  repoBtn.textContent = "GitHub";
-  repoBtn.setAttribute("aria-label", currentLang === "ja" ? `GitHub（${tool.title}、新しいタブで開く）` : `GitHub (${tool.title}, opens in a new tab)`);
+  repoBtn.textContent = currentLang === "ja" ? "使い方" : "Usage";
+  appendExternalIcon(repoBtn);
+  repoBtn.setAttribute("aria-label", currentLang === "ja" ? `使い方（${tool.title}のREADME、新しいタブで開く）` : `Usage (${tool.title} README, opens in a new tab)`);
 
   const progressLabel = document.createElement("label");
   progressLabel.className = "tool-progress-control";

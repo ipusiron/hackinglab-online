@@ -10,6 +10,7 @@ on:
       - 'scripts/category_groups.py'
       - 'data/added.json'
       - 'scripts/update_tools.py'
+      - 'scripts/readme_usage.py'
       - '.github/workflows/update-tools.yml'
   workflow_dispatch:
   schedule:

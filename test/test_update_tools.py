@@ -31,6 +31,7 @@ def tool(tid="day001", repo="one", *, visible=True, added=DATE):
         "category_ja": ["最初"], "category_en": ["First"], "category_ids": ["z-first"],
         "difficulty": 2, "tags": [], "repo_url": "https://github.com/example/" + repo,
         "demo_url": "https://example.github.io/" + repo + "/", "hub": visible,
+        "readme_usage": {"ja": {"status": "top"}, "en": {"status": "top"}},
     }
     if added is not None:
         value["added"] = added
@@ -38,7 +39,7 @@ def tool(tid="day001", repo="one", *, visible=True, added=DATE):
 
 
 def readme(value):
-    value = {key: val for key, val in value.items() if key not in ("category_ids", "added")}
+    value = {key: val for key, val in value.items() if key not in ("category_ids", "added", "readme_usage")}
     return "<!--\n---\n" + yaml.safe_dump(value, allow_unicode=True) + "---\n-->\n"
 
 
@@ -96,6 +97,8 @@ class RegenerationTests(unittest.TestCase):
             for repo, body in lookup.items():
                 if req.full_url == f"https://raw.githubusercontent.com/{repo}/main/README.md":
                     return Response(req.full_url, body)
+                if req.full_url == f"https://raw.githubusercontent.com/{repo}/main/README.en.md":
+                    return Response(req.full_url, "# Tool documentation\n")
             raise AssertionError("Unexpected request: " + req.full_url)
         return request
 
@@ -132,7 +135,7 @@ class RegenerationTests(unittest.TestCase):
                 raise TimeoutError("test timeout")
             return serve(req, **kwargs)
         report, http = self.regenerate(request)
-        self.assertEqual(http.call_count, 2)
+        self.assertEqual(http.call_count, 3)
         self.assertEqual(report.retained[0][0], "example/one")
         self.assertEqual([value["id"] for value in self.data()["tools"]], ["day001", "day002"])
         self.assertEqual(self.data("added"), {"day001": DATE, "day002": "2026-11-20"})
@@ -152,7 +155,7 @@ class RegenerationTests(unittest.TestCase):
             return serve(req, **kwargs)
 
         report, http = self.regenerate(request)
-        self.assertEqual(http.call_count, 2)
+        self.assertEqual(http.call_count, 3)
         self.assertEqual(report.retained, [("example/one", "README read failed: IncompleteRead")])
         self.assertEqual(self.data()["tools"][0], tool())
         self.assertEqual([entry["id"] for entry in self.data()["tools"]], ["day001", "day002"])
@@ -165,7 +168,7 @@ class RegenerationTests(unittest.TestCase):
             return Response(req.full_url, readme(tool()))
         report, http = self.regenerate(request)
         self.assertFalse(report.changed)
-        self.assertEqual(http.call_count, 2)
+        self.assertEqual(http.call_count, 4)
         self.assertIn("/master/", http.call_args.args[0].full_url)
 
     def test_server_error_does_not_try_another_branch(self):
@@ -280,7 +283,7 @@ class RegenerationTests(unittest.TestCase):
         self.install([tool(), tool("day002", "two")])
         (self.root / "repos.txt").write_text("https://github.com/example/one\n", encoding="utf-8")
         report, http = self.regenerate()
-        self.assertEqual(http.call_count, 1)
+        self.assertEqual(http.call_count, 2)
         self.assertEqual([value["id"] for value in self.data()["tools"]], ["day001"])
         self.assertEqual(self.data("added"), {"day001": DATE, "day002": DATE})
         self.assertEqual(report.removed, [("example/two", "day002")])

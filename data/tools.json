@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-11-19T18:21:56Z",
+  "generated_at": "2026-11-19T19:23:12Z",
   "tools": [
     {
       "id": "day001",
@@ -27,6 +27,16 @@
       "repo_url": "https://github.com/ipusiron/password-checker",
       "demo_url": "https://ipusiron.github.io/password-checker/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2025-11-24"
     },
     {
@@ -65,6 +75,16 @@
       "repo_url": "https://github.com/ipusiron/hash-detector",
       "demo_url": "https://ipusiron.github.io/hash-detector/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use-it"
+        }
+      },
       "added": "2025-11-24"
     },
     {
@@ -101,6 +121,16 @@
       "repo_url": "https://github.com/ipusiron/caesar-cipher-wheel",
       "demo_url": "https://ipusiron.github.io/caesar-cipher-wheel/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use-it"
+        }
+      },
       "added": "2025-11-24"
     },
     {
@@ -137,6 +167,16 @@
       "repo_url": "https://github.com/ipusiron/japanese-caesar-cipher",
       "demo_url": "https://ipusiron.github.io/japanese-caesar-cipher/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use-it"
+        }
+      },
       "added": "2025-11-24"
     },
     {
@@ -172,6 +212,16 @@
       "repo_url": "https://github.com/ipusiron/rot13-encoder",
       "demo_url": "https://ipusiron.github.io/rot13-encoder/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2025-11-24"
     },
     {
@@ -208,6 +258,16 @@
       "repo_url": "https://github.com/ipusiron/hacking-scene-simulator",
       "demo_url": "https://ipusiron.github.io/hacking-scene-simulator/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use-it"
+        }
+      },
       "added": "2025-11-24"
     },
     {
@@ -239,6 +299,16 @@
       "repo_url": "https://github.com/ipusiron/image-exif-checker",
       "demo_url": "https://ipusiron.github.io/image-exif-checker/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2025-11-24"
     },
     {
@@ -271,6 +341,16 @@
       "repo_url": "https://github.com/ipusiron/caesar-cipher-breaker",
       "demo_url": "https://ipusiron.github.io/caesar-cipher-breaker/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use-it"
+        }
+      },
       "added": "2025-11-28"
     },
     {
@@ -302,6 +382,16 @@
       "repo_url": "https://github.com/ipusiron/frequency-analyzer",
       "demo_url": "https://ipusiron.github.io/frequency-analyzer/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2025-11-28"
     },
     {
@@ -335,6 +425,16 @@
       "repo_url": "https://github.com/ipusiron/scytale-cipher-visualizer",
       "demo_url": "https://ipusiron.github.io/scytale-cipher-visualizer/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2025-11-28"
     },
     {
@@ -368,6 +468,16 @@
       "repo_url": "https://github.com/ipusiron/osm-infra-viewer",
       "demo_url": "https://ipusiron.github.io/osm-infra-viewer/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2025-11-28"
     },
     {
@@ -401,6 +511,16 @@
       "repo_url": "https://github.com/ipusiron/uesugi-cipher",
       "demo_url": "https://ipusiron.github.io/uesugi-cipher/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use-it"
+        }
+      },
       "added": "2025-11-28"
     },
     {
@@ -439,6 +559,16 @@
       "repo_url": "https://github.com/ipusiron/whereshot",
       "demo_url": "https://ipusiron.github.io/whereshot/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2025-11-28"
     },
     {
@@ -471,6 +601,16 @@
       "repo_url": "https://github.com/ipusiron/shinobi_iroha_cipher",
       "demo_url": "https://ipusiron.github.io/shinobi_iroha_cipher/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use-it"
+        }
+      },
       "added": "2025-11-28"
     },
     {
@@ -501,6 +641,16 @@
       "repo_url": "https://github.com/ipusiron/doh-watcher",
       "demo_url": "https://colab.research.google.com/github/ipusiron/doh-watcher/blob/main/doh_watcher.ipynb",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use-it"
+        }
+      },
       "added": "2025-11-28"
     },
     {
@@ -536,6 +686,16 @@
       "repo_url": "https://github.com/ipusiron/ioc-hunter",
       "demo_url": "https://ipusiron.github.io/ioc-hunter/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use-it"
+        }
+      },
       "added": "2025-11-28"
     },
     {
@@ -570,6 +730,16 @@
       "repo_url": "https://github.com/ipusiron/vigenere-cipher-tool",
       "demo_url": "https://ipusiron.github.io/vigenere-cipher-tool/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use-it"
+        }
+      },
       "added": "2025-11-28"
     },
     {
@@ -609,6 +779,16 @@
       "repo_url": "https://github.com/ipusiron/cipherclimb",
       "demo_url": "https://ipusiron.github.io/cipherclimb/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use-it"
+        }
+      },
       "added": "2025-11-28"
     },
     {
@@ -643,6 +823,16 @@
       "repo_url": "https://github.com/ipusiron/passcloud",
       "demo_url": "https://ipusiron.github.io/passcloud/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use-it"
+        }
+      },
       "added": "2025-11-28"
     },
     {
@@ -675,6 +865,16 @@
       "repo_url": "https://github.com/ipusiron/dork-watcher",
       "demo_url": "https://ipusiron.github.io/dork-watcher/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2025-11-28"
     },
     {
@@ -707,6 +907,16 @@
       "repo_url": "https://github.com/ipusiron/image-diff-sec",
       "demo_url": "https://ipusiron.github.io/image-diff-sec/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -739,6 +949,16 @@
       "repo_url": "https://github.com/ipusiron/dancingmen-cipherlab",
       "demo_url": "https://ipusiron.github.io/dancingmen-cipherlab/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -777,6 +997,16 @@
       "repo_url": "https://github.com/ipusiron/weirdstring-inspector",
       "demo_url": "https://ipusiron.github.io/weirdstring-inspector/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -810,6 +1040,16 @@
       "repo_url": "https://github.com/ipusiron/grille-cipherlab",
       "demo_url": "https://ipusiron.github.io/grille-cipherlab/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -842,6 +1082,16 @@
       "repo_url": "https://github.com/ipusiron/morse-tree-visualizer",
       "demo_url": "https://ipusiron.github.io/morse-tree-visualizer/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -873,6 +1123,16 @@
       "repo_url": "https://github.com/ipusiron/cdn-trainer",
       "demo_url": "https://ipusiron.github.io/cdn-trainer/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use-it"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -904,6 +1164,16 @@
       "repo_url": "https://github.com/ipusiron/playfair-cipherlab",
       "demo_url": "https://ipusiron.github.io/playfair-cipherlab/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -937,6 +1207,16 @@
       "repo_url": "https://github.com/ipusiron/repeatseq-analyzer",
       "demo_url": "https://ipusiron.github.io/repeatseq-analyzer/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -971,6 +1251,16 @@
       "repo_url": "https://github.com/ipusiron/otp-animation",
       "demo_url": "https://ipusiron.github.io/otp-animation/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -1004,6 +1294,16 @@
       "repo_url": "https://github.com/ipusiron/modular-text-divider",
       "demo_url": "https://ipusiron.github.io/modular-text-divider/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -1036,6 +1336,16 @@
       "repo_url": "https://github.com/ipusiron/git-secrets-playground",
       "demo_url": "https://ipusiron.github.io/git-secrets-playground/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -1070,6 +1380,16 @@
       "repo_url": "https://github.com/ipusiron/pigpen-cipherlab",
       "demo_url": "https://ipusiron.github.io/pigpen-cipherlab/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -1105,6 +1425,16 @@
       "repo_url": "https://github.com/ipusiron/clipthreat-studio",
       "demo_url": "https://ipusiron.github.io/clipthreat-studio/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "️-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "️-usage"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -1137,6 +1467,16 @@
       "repo_url": "https://github.com/ipusiron/railfence-cipherlab",
       "demo_url": "https://ipusiron.github.io/railfence-cipherlab/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -1168,6 +1508,16 @@
       "repo_url": "https://github.com/ipusiron/anti-mailspoofing-school",
       "demo_url": "https://ipusiron.github.io/anti-mailspoofing-school/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -1205,6 +1555,16 @@
       "repo_url": "https://github.com/ipusiron/hidden-message-challenge",
       "demo_url": "https://ipusiron.github.io/hidden-message-challenge/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2026-10-15"
     },
     {
@@ -1239,6 +1599,16 @@
       "repo_url": "https://github.com/ipusiron/quick-rot47",
       "demo_url": "https://ipusiron.github.io/quick-rot47/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -1271,6 +1641,14 @@
       "repo_url": "https://github.com/ipusiron/localstorage-playground",
       "demo_url": "https://ipusiron.github.io/localstorage-playground/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "top"
+        },
+        "en": {
+          "status": "top"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -1305,6 +1683,14 @@
       "repo_url": "https://github.com/ipusiron/urlpurifier",
       "demo_url": "https://ipusiron.github.io/urlpurifier/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "top"
+        },
+        "en": {
+          "status": "top"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -1338,6 +1724,14 @@
       "repo_url": "https://github.com/ipusiron/magic-sign-inspector",
       "demo_url": "https://ipusiron.github.io/magic-sign-inspector/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "top"
+        },
+        "en": {
+          "status": "top"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -1376,6 +1770,16 @@
       "repo_url": "https://github.com/ipusiron/mic-gain-logger",
       "demo_url": "https://ipusiron.github.io/mic-gain-logger/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -1407,6 +1811,16 @@
       "repo_url": "https://github.com/ipusiron/classic-js-obfuscator",
       "demo_url": "https://ipusiron.github.io/classic-js-obfuscator/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -1444,6 +1858,16 @@
       "repo_url": "https://github.com/ipusiron/columnar-cipherlab",
       "demo_url": "https://ipusiron.github.io/columnar-cipherlab/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-本ツールの使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use-the-tool"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -1480,6 +1904,16 @@
       "repo_url": "https://github.com/ipusiron/cipher-clairvoyance",
       "demo_url": "https://ipusiron.github.io/cipher-clairvoyance/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -1512,6 +1946,16 @@
       "repo_url": "https://github.com/ipusiron/anagram-hunter",
       "demo_url": "https://ipusiron.github.io/anagram-hunter/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -1547,6 +1991,16 @@
       "repo_url": "https://github.com/ipusiron/alphaloom",
       "demo_url": "https://ipusiron.github.io/alphaloom/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -1583,6 +2037,16 @@
       "repo_url": "https://github.com/ipusiron/ic-learning-visualizer",
       "demo_url": "https://ipusiron.github.io/ic-learning-visualizer/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -1622,6 +2086,16 @@
       "repo_url": "https://github.com/ipusiron/token-entropy-estimator",
       "demo_url": "https://ipusiron.github.io/token-entropy-estimator/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -1654,6 +2128,16 @@
       "repo_url": "https://github.com/ipusiron/affine-cipherlab",
       "demo_url": "https://ipusiron.github.io/affine-cipherlab/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -1689,6 +2173,16 @@
       "repo_url": "https://github.com/ipusiron/dialsafe-simulator",
       "demo_url": "https://ipusiron.github.io/dialsafe-simulator/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -1725,6 +2219,16 @@
       "repo_url": "https://github.com/ipusiron/involution-studio",
       "demo_url": "https://ipusiron.github.io/involution-studio/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -1762,6 +2266,16 @@
       "repo_url": "https://github.com/ipusiron/basexx-visualizer",
       "demo_url": "https://ipusiron.github.io/basexx-visualizer/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -1798,6 +2312,16 @@
       "repo_url": "https://github.com/ipusiron/jwt-inspector",
       "demo_url": "https://ipusiron.github.io/jwt-inspector/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -1834,6 +2358,16 @@
       "repo_url": "https://github.com/ipusiron/canary-file-generator",
       "demo_url": "https://ipusiron.github.io/canary-file-generator/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -1870,6 +2404,16 @@
       "repo_url": "https://github.com/ipusiron/bacon-cipherlab",
       "demo_url": "https://ipusiron.github.io/bacon-cipherlab/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -1908,6 +2452,16 @@
       "repo_url": "https://github.com/ipusiron/hashviz",
       "demo_url": "https://ipusiron.github.io/hashviz/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -1944,6 +2498,16 @@
       "repo_url": "https://github.com/ipusiron/perceptron-otp-visualizer",
       "demo_url": "https://ipusiron.github.io/perceptron-otp-visualizer/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -1974,6 +2538,16 @@
       "repo_url": "https://github.com/ipusiron/invisible-clicks",
       "demo_url": "https://ipusiron.github.io/invisible-clicks/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-機能と使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-features-and-usage"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -2006,6 +2580,16 @@
       "repo_url": "https://github.com/ipusiron/asset-inventory-helper",
       "demo_url": "https://ipusiron.github.io/asset-inventory-helper/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方クイックスタート"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-quick-start"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -2041,6 +2625,16 @@
       "repo_url": "https://github.com/ipusiron/reverse-bruteforce-demo",
       "demo_url": "https://ipusiron.github.io/reverse-bruteforce-demo/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -2071,6 +2665,16 @@
       "repo_url": "https://github.com/ipusiron/seal-tamper-lab",
       "demo_url": "https://ipusiron.github.io/seal-tamper-lab/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "how-to-use"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -2102,6 +2706,16 @@
       "repo_url": "https://github.com/ipusiron/port-scan-visualizer",
       "demo_url": "https://ipusiron.github.io/port-scan-visualizer/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -2138,6 +2752,16 @@
       "repo_url": "https://github.com/ipusiron/keypress-pattern-analyzer",
       "demo_url": "https://ipusiron.github.io/keypress-pattern-analyzer/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -2174,6 +2798,16 @@
       "repo_url": "https://github.com/ipusiron/patternlock-security-trainer",
       "demo_url": "https://ipusiron.github.io/patternlock-security-trainer/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -2207,6 +2841,16 @@
       "repo_url": "https://github.com/ipusiron/idor-clinic",
       "demo_url": "https://ipusiron.github.io/idor-clinic/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-クイックスタート"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-quick-start"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -2238,6 +2882,16 @@
       "repo_url": "https://github.com/ipusiron/GrayNinja",
       "demo_url": "https://ipusiron.github.io/GrayNinja/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -2273,6 +2927,16 @@
       "repo_url": "https://github.com/ipusiron/polybius-cipherlab",
       "demo_url": "https://ipusiron.github.io/polybius-cipherlab/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -2305,6 +2969,16 @@
       "repo_url": "https://github.com/ipusiron/path-escape",
       "demo_url": "https://ipusiron.github.io/path-escape/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -2339,6 +3013,14 @@
       "repo_url": "https://github.com/ipusiron/trevanion-cipherlab",
       "demo_url": "https://ipusiron.github.io/trevanion-cipherlab/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "top"
+        },
+        "en": {
+          "status": "top"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -2369,6 +3051,14 @@
       "repo_url": "https://github.com/ipusiron/visual-cryptography-cipherlab",
       "demo_url": "https://ipusiron.github.io/visual-cryptography-cipherlab/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "top"
+        },
+        "en": {
+          "status": "top"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -2402,6 +3092,16 @@
       "repo_url": "https://github.com/ipusiron/strip-cipherlab",
       "demo_url": "https://ipusiron.github.io/strip-cipherlab/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -2436,6 +3136,16 @@
       "repo_url": "https://github.com/ipusiron/zigzag-cipherlab",
       "demo_url": "https://ipusiron.github.io/zigzag-cipherlab/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -2468,6 +3178,16 @@
       "repo_url": "https://github.com/ipusiron/infoquantity-academy",
       "demo_url": "https://ipusiron.github.io/infoquantity-academy/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -2505,6 +3225,16 @@
       "repo_url": "https://github.com/ipusiron/qr-risk-radar",
       "demo_url": "https://ipusiron.github.io/qr-risk-radar/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -2538,6 +3268,16 @@
       "repo_url": "https://github.com/ipusiron/captcha-art-generator",
       "demo_url": "https://ipusiron.github.io/captcha-art-generator/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-getting-started"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -2578,6 +3318,14 @@
       "repo_url": "https://github.com/ipusiron/crypto-emoji-translator",
       "demo_url": "https://ipusiron.github.io/crypto-emoji-translator/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "top"
+        },
+        "en": {
+          "status": "top"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -2618,6 +3366,16 @@
       "repo_url": "https://github.com/ipusiron/browser-fingerprint-mirror",
       "demo_url": "https://ipusiron.github.io/browser-fingerprint-mirror/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -2654,6 +3412,14 @@
       "repo_url": "https://github.com/ipusiron/beaufort-cipherlab",
       "demo_url": "https://ipusiron.github.io/beaufort-cipherlab/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "top"
+        },
+        "en": {
+          "status": "top"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -2687,6 +3453,16 @@
       "repo_url": "https://github.com/ipusiron/leetforge",
       "demo_url": "https://ipusiron.github.io/leetforge/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -2722,6 +3498,16 @@
       "repo_url": "https://github.com/ipusiron/porta-cipherlab",
       "demo_url": "https://ipusiron.github.io/porta-cipherlab/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -2758,6 +3544,16 @@
       "repo_url": "https://github.com/ipusiron/emotion-based-scam-detector",
       "demo_url": "https://ipusiron.github.io/emotion-based-scam-detector/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -2792,6 +3588,16 @@
       "repo_url": "https://github.com/ipusiron/global-cultural-scam-atlas",
       "demo_url": "https://ipusiron.github.io/global-cultural-scam-atlas/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -2828,6 +3634,16 @@
       "repo_url": "https://github.com/ipusiron/intrusion-path-mapper",
       "demo_url": "https://ipusiron.github.io/intrusion-path-mapper/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -2863,6 +3679,16 @@
       "repo_url": "https://github.com/ipusiron/mirror-cipherlab",
       "demo_url": "https://ipusiron.github.io/mirror-cipherlab/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -2893,6 +3719,14 @@
       "repo_url": "https://github.com/ipusiron/camoforge",
       "demo_url": "https://ipusiron.github.io/camoforge/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "top"
+        },
+        "en": {
+          "status": "top"
+        }
+      },
       "added": "2025-11-23"
     },
     {
@@ -2928,6 +3762,16 @@
       "repo_url": "https://github.com/ipusiron/epigraph-chronogrammer",
       "demo_url": "https://ipusiron.github.io/epigraph-chronogrammer/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "️-機能と使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "️-features-and-usage"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -2962,6 +3806,16 @@
       "repo_url": "https://github.com/ipusiron/physical-key-ledger",
       "demo_url": "https://ipusiron.github.io/physical-key-ledger/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-利用方法"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use-it"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -3000,6 +3854,16 @@
       "repo_url": "https://github.com/ipusiron/pin-threat-simulator",
       "demo_url": "https://ipusiron.github.io/pin-threat-simulator/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -3034,6 +3898,16 @@
       "repo_url": "https://github.com/ipusiron/keywalk-analyzer",
       "demo_url": "https://ipusiron.github.io/keywalk-analyzer/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使用方法"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -3069,6 +3943,14 @@
       "repo_url": "https://github.com/ipusiron/fontorigin-analyzer",
       "demo_url": "https://ipusiron.github.io/fontorigin-analyzer/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "top"
+        },
+        "en": {
+          "status": "top"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -3105,6 +3987,16 @@
       "repo_url": "https://github.com/ipusiron/reverse-logo-hunt",
       "demo_url": "https://ipusiron.github.io/reverse-logo-hunt/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -3145,6 +4037,16 @@
       "repo_url": "https://github.com/ipusiron/browser-permission-radar",
       "demo_url": "https://ipusiron.github.io/browser-permission-radar/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -3178,6 +4080,14 @@
       "repo_url": "https://github.com/ipusiron/hill-cipherlab",
       "demo_url": "https://ipusiron.github.io/hill-cipherlab/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "top"
+        },
+        "en": {
+          "status": "top"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -3214,6 +4124,16 @@
       "repo_url": "https://github.com/ipusiron/toyspn-builder",
       "demo_url": "https://ipusiron.github.io/toyspn-builder/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-クイックスタート"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-quick-start"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -3256,6 +4176,14 @@
       "repo_url": "https://github.com/ipusiron/permutation-cipherlab",
       "demo_url": "https://ipusiron.github.io/permutation-cipherlab/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "top"
+        },
+        "en": {
+          "status": "top"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -3297,6 +4225,14 @@
       "repo_url": "https://github.com/ipusiron/rollingstock-planner",
       "demo_url": "https://ipusiron.github.io/rollingstock-planner/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "top"
+        },
+        "en": {
+          "status": "top"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -3336,6 +4272,14 @@
       "repo_url": "https://github.com/ipusiron/classical-cipher-structure-trainer",
       "demo_url": "https://ipusiron.github.io/classical-cipher-structure-trainer/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "top"
+        },
+        "en": {
+          "status": "top"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -3380,6 +4324,14 @@
       "repo_url": "https://github.com/ipusiron/ops-loadout",
       "demo_url": "https://ipusiron.github.io/ops-loadout/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "top"
+        },
+        "en": {
+          "status": "top"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -3413,6 +4365,16 @@
       "repo_url": "https://github.com/ipusiron/book-code-builder",
       "demo_url": "https://ipusiron.github.io/book-code-builder/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -3446,6 +4408,14 @@
       "repo_url": "https://github.com/ipusiron/cors-playground",
       "demo_url": "https://ipusiron.github.io/cors-playground/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "top"
+        },
+        "en": {
+          "status": "top"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -3482,6 +4452,16 @@
       "repo_url": "https://github.com/ipusiron/color-hack-box",
       "demo_url": "https://ipusiron.github.io/color-hack-box/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2025-11-23"
     },
     {
@@ -3520,6 +4500,16 @@
       "repo_url": "https://github.com/ipusiron/qrcrashtest",
       "demo_url": "https://ipusiron.github.io/qrcrashtest/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "how-to-use"
+        }
+      },
       "added": "2025-11-23"
     },
     {
@@ -3552,6 +4542,16 @@
       "repo_url": "https://github.com/ipusiron/acrostic-cipherlab",
       "demo_url": "https://ipusiron.github.io/acrostic-cipherlab/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2025-12-07"
     },
     {
@@ -3584,6 +4584,16 @@
       "repo_url": "https://github.com/ipusiron/stegogrid-explorer",
       "demo_url": "https://ipusiron.github.io/stegogrid-explorer/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2025-12-25"
     },
     {
@@ -3618,6 +4628,16 @@
       "repo_url": "https://github.com/ipusiron/substitution-mapping-mixer",
       "demo_url": "https://ipusiron.github.io/substitution-mapping-mixer/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2026-01-24"
     },
     {
@@ -3652,6 +4672,16 @@
       "repo_url": "https://github.com/ipusiron/substitution-cipher-analysis-workbench",
       "demo_url": "https://ipusiron.github.io/substitution-cipher-analysis-workbench/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2026-01-24"
     },
     {
@@ -3685,6 +4715,16 @@
       "repo_url": "https://github.com/ipusiron/alphabet-shift-spectrum",
       "demo_url": "https://ipusiron.github.io/alphabet-shift-spectrum/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2026-01-24"
     },
     {
@@ -3720,6 +4760,16 @@
       "repo_url": "https://github.com/ipusiron/cypher-enigma-simulator",
       "demo_url": "https://ipusiron.github.io/cypher-enigma-simulator/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2026-01-24"
     },
     {
@@ -3752,6 +4802,16 @@
       "repo_url": "https://github.com/ipusiron/gematria-cipherlab",
       "demo_url": "https://ipusiron.github.io/gematria-cipherlab/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2026-01-24"
     },
     {
@@ -3784,6 +4844,16 @@
       "repo_url": "https://github.com/ipusiron/semantic-candidate-ranker",
       "demo_url": "https://ipusiron.github.io/semantic-candidate-ranker/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2026-01-24"
     },
     {
@@ -3816,6 +4886,16 @@
       "repo_url": "https://github.com/ipusiron/softmax-confidence-meter",
       "demo_url": "https://ipusiron.github.io/softmax-confidence-meter/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2026-01-24"
     },
     {
@@ -3851,6 +4931,16 @@
       "repo_url": "https://github.com/ipusiron/async-rpc-failure-simulator",
       "demo_url": "",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "クイックスタート"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "quick-start"
+        }
+      },
       "added": "2026-10-16"
     },
     {
@@ -3889,6 +4979,16 @@
       "repo_url": "https://github.com/ipusiron/hid-beam",
       "demo_url": "",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "️-セットアップと運用"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "️-setup-and-operation"
+        }
+      },
       "added": "2026-10-15"
     },
     {
@@ -3919,6 +5019,16 @@
       "repo_url": "https://github.com/ipusiron/hex-dump-trainer",
       "demo_url": "https://ipusiron.github.io/hex-dump-trainer/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2026-10-16"
     },
     {
@@ -3956,6 +5066,16 @@
       "repo_url": "https://github.com/ipusiron/postmirror",
       "demo_url": "https://ipusiron.github.io/postmirror/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2026-10-16"
     },
     {
@@ -3986,6 +5106,16 @@
       "repo_url": "https://github.com/ipusiron/codabar-lens",
       "demo_url": "https://ipusiron.github.io/codabar-lens/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2026-10-17"
     },
     {
@@ -4021,6 +5151,16 @@
       "repo_url": "https://github.com/ipusiron/hash-chain-tamper-trainer",
       "demo_url": "https://ipusiron.github.io/hash-chain-tamper-trainer/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2026-10-17"
     },
     {
@@ -4056,6 +5196,16 @@
       "repo_url": "https://github.com/ipusiron/sha256-byte-inspector",
       "demo_url": "https://ipusiron.github.io/sha256-byte-inspector/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2026-10-19"
     },
     {
@@ -4090,6 +5240,16 @@
       "repo_url": "https://github.com/ipusiron/ultrasonic-reach-meter",
       "demo_url": "https://ipusiron.github.io/ultrasonic-reach-meter/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2026-10-21"
     },
     {
@@ -4123,6 +5283,16 @@
       "repo_url": "https://github.com/ipusiron/airborne-tone-link",
       "demo_url": "https://ipusiron.github.io/airborne-tone-link/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2026-10-21"
     },
     {
@@ -4156,6 +5326,16 @@
       "repo_url": "https://github.com/ipusiron/dtmfusion",
       "demo_url": "https://ipusiron.github.io/dtmfusion/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2026-10-21"
     },
     {
@@ -4189,6 +5369,16 @@
       "repo_url": "https://github.com/ipusiron/photon-flicker-link",
       "demo_url": "https://ipusiron.github.io/photon-flicker-link/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2026-10-22"
     },
     {
@@ -4221,6 +5411,16 @@
       "repo_url": "https://github.com/ipusiron/shamir-sharing-cipherlab",
       "demo_url": "https://ipusiron.github.io/shamir-sharing-cipherlab/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use-it"
+        }
+      },
       "added": "2026-10-23"
     },
     {
@@ -4257,6 +5457,16 @@
       "repo_url": "https://github.com/ipusiron/scatter-seeds",
       "demo_url": "https://ipusiron.github.io/scatter-seeds/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2026-10-23"
     },
     {
@@ -4290,6 +5500,16 @@
       "repo_url": "https://github.com/ipusiron/overlay-qr-shares",
       "demo_url": "https://ipusiron.github.io/overlay-qr-shares/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage"
+        }
+      },
       "added": "2026-10-24"
     },
     {
@@ -4323,6 +5543,16 @@
       "repo_url": "https://github.com/ipusiron/blakley-sharing-cipherlab",
       "demo_url": "https://ipusiron.github.io/blakley-sharing-cipherlab/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方と固定教材例"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-usage-and-fixed-examples"
+        }
+      },
       "added": "2026-10-29"
     },
     {
@@ -4359,6 +5589,16 @@
       "repo_url": "https://github.com/ipusiron/account-domino-mapper",
       "demo_url": "https://ipusiron.github.io/account-domino-mapper/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2026-11-01"
     },
     {
@@ -4398,6 +5638,16 @@
       "repo_url": "https://github.com/ipusiron/vision-trap-atlas",
       "demo_url": "https://ipusiron.github.io/vision-trap-atlas/",
       "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
       "added": "2026-11-17"
     }
   ]

@@ -188,14 +188,37 @@
 
   // ---- カードのリンク（言語ごと） ----
 
-  // 英語表示のときの「GitHub」のリンク先。リポジトリーのトップ（https://github.com/<owner>/<repo>）なら、英語の README
-  // （README.en.md）を開く。既定のブランチが main でも master でも開けるよう、ブランチの名前の代わりに HEAD を使う。
-  // 日本語表示と、ほかの形の URL はそのまま返す
-  function repoLink(repoUrl, lang) {
-    var u = typeof repoUrl === "string" ? repoUrl : "";
-    if (lang !== "en") return u;
-    var m = /^(https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+?)(?:\.git)?\/?$/.exec(u);
-    return m ? m[1] + "/blob/HEAD/README.en.md" : u;
+  // Optional generated metadata contains raw heading fragments, never URLs.
+  function validReadmeEntry(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value) || !has(value, "status")) return false;
+    var keys = Object.keys(value);
+    if (value.status === "heading") {
+      if (keys.length !== 2 || !has(value, "fragment") || typeof value.fragment !== "string") return false;
+      var chars = Array.from(value.fragment);
+      return chars.length > 0 && chars.length <= 512 && chars.every(function (char) { return /^[\p{L}\p{M}\p{N}_\-\u200d]$/u.test(char); });
+    }
+    return keys.length === 1 && (value.status === "top" || value.status === "missing");
+  }
+
+  function validReadmeUsage(value) {
+    return !!value && typeof value === "object" && !Array.isArray(value) && Object.keys(value).every(function (key) {
+      return (key === "ja" || key === "en") && validReadmeEntry(value[key]);
+    });
+  }
+
+  function readmeTarget(repoUrl, language, usage) {
+    var lang = language === "en" ? "en" : "ja";
+    var match = typeof repoUrl === "string" && /^https:\/\/github\.com\/([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+?)(?:\.git)?\/?$/.exec(repoUrl);
+    if (!match || /[\r\n]/.test(repoUrl) || [match[1], match[2]].some(function (part) { return part === "." || part === ".."; })) return { href: "", lang: lang };
+    var entry = usage && typeof usage === "object" && !Array.isArray(usage) && has(usage, lang) && validReadmeEntry(usage[lang]) ? usage[lang] : null;
+    // A confirmed missing English file opens the Japanese file at its top.
+    var targetLang = lang === "en" && entry && entry.status === "missing" ? "ja" : lang;
+    var href = "https://github.com/" + match[1] + "/" + match[2] + "/blob/HEAD/README" + (targetLang === "en" ? ".en" : "") + ".md";
+    return { href: href + (entry && entry.status === "heading" ? "#" + encodeURIComponent(entry.fragment) : ""), lang: targetLang };
+  }
+
+  function repoLink(repoUrl, language, usage) {
+    return readmeTarget(repoUrl, language, usage).href;
   }
 
   // 英語表示のときの「デモ」のリンク先。ipusiron.github.io のページなら ?lang=en を付ける（ほかのパラメーターと # は残す）。
@@ -223,6 +246,8 @@
     buildUrl: buildUrl,
     withLang: withLang,
     repoLink: repoLink,
+    readmeTarget: readmeTarget,
+    validReadmeUsage: validReadmeUsage,
     demoLink: demoLink
   };
 
