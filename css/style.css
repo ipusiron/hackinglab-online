@@ -1675,3 +1675,49 @@ body { padding-bottom: var(--storage-notice-h, 0px); }
   .tool-card { padding-inline: 0.6rem; }
   .tool-outside-label { right: 0.6rem; max-width: calc(100% - 1.2rem); }
 }
+
+/* Book arrivals reserve their collapsed filter layout before deferred main runs. */
+#filter-toggle,
+#back-to-filters {
+  min-height: 2.75rem;
+  max-width: 100%;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--book-accent-border);
+  border-radius: 0.5rem;
+  background: var(--surface-bg);
+  color: var(--book-text);
+  font: inherit;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+#back-to-filters { margin-top: 1rem; }
+#book-notice {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  border: 1px solid var(--book-accent-border);
+  border-radius: 0.5rem;
+  background: var(--book-subtle-bg);
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+#book-notice h2 { margin: 0; font-size: 1rem; }
+#book-notice p { margin: 0.5rem 0 0; }
+.book-group-header {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+.book-back-to-sections {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  max-width: 100%;
+  color: var(--book-link);
+  overflow-wrap: anywhere;
+}
+.book-back-to-sections-end { grid-column: 1 / -1; justify-self: start; }
+.book-banner-badge + .book-banner-badge { margin-left: 0.4rem; }
+@media (max-width: 767.98px) {
+  html[data-book-arrival="true"]:not(.js-ready) #tool-filters { display: none; }
+  html[data-book-arrival="true"]:not(.js-ready) #filter-toggle { display: block !important; }
+}

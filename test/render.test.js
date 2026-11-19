@@ -24,7 +24,7 @@ function checkCards(document, language, book = null) {
   const headings = list.querySelectorAll(".book-group-heading");
   assert.deepEqual(headings.map((h) => h.id), groups ? groups.map((g) => "book-group-" + g.key) : []);
   headings.forEach((heading, i) => {
-    assert.ok(heading.textContent.includes(groups[i]["label_" + language]), "Wrong chapter language");
+    assert.ok(heading.textContent.includes(B.chapterTitle(book, groups[i].key, language)), "Wrong chapter language");
     assert.ok(heading.textContent.includes(String(groups[i].items.length)), "Chapter count is absent");
   });
   const assignedIds = cards.map((card) => card.id).filter(Boolean);

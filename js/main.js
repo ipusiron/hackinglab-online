@@ -17,6 +17,9 @@ let filters = {
 const HB = typeof HLOBooks !== "undefined" ? HLOBooks : null;
 // いま選択中の本の対象 id 集合（renderToolList / setBookFilter で更新）。
 let bookTargetSet = null;
+let filtersExpanded = true;
+let filterDisclosureUsed = false;
+const bookJumpStates = new Map();
 
 // キーワード検索の純関数（js/search.js）。読み込めていなければ null とし、入力全体の部分一致で代える。
 const HS = typeof HLOSearch !== "undefined" ? HLOSearch : null;
@@ -258,7 +261,9 @@ function updateListCount() {
     ? listText("outside_count", { ...counts, outside: counts.shown }) : "";
 }
 
-function announceListCount(delay = 0) {
+function announceListCount(delay = 0, userInitiated = false) {
+  // Initial/history/language notices take priority; an explicit filter change reports its result.
+  if (!userInitiated && !document.getElementById("book-notice")?.hidden) return;
   const counts = listCounts();
   let message;
   if (!counts.shown) {
@@ -531,6 +536,9 @@ function setupStaticUI() {
     yearSpan.textContent = new Date().getFullYear();
   }
 
+  setupFilterDisclosure();
+  document.getElementById("back-to-filters")?.addEventListener("click", backToFilters);
+
   // 言語切替
   const langJaBtn = document.getElementById("lang-ja");
   const langEnBtn = document.getElementById("lang-en");
@@ -607,8 +615,8 @@ function setupStaticUI() {
       clearToolHashForFilter();
       commitUrl({ cat: e.target.value }, "push", "category");
       filters.categoryId = e.target.value;
-      renderToolList();
-      announceListCount();
+      renderToolList(undefined, false);
+      announceListCount(0, true);
     });
   });
 
@@ -617,8 +625,8 @@ function setupStaticUI() {
     keepInPlace(progressSelect, () => {
       clearToolHashForFilter();
       filters.progress = e.target.value;
-      renderToolList();
-      announceListCount();
+      renderToolList(undefined, false);
+      announceListCount(0, true);
     });
   });
 
@@ -711,6 +719,67 @@ function setupStaticUI() {
   }
 
   updateLanguageUI();
+}
+
+// Disclosure preference belongs to this visit, independently of a set hiding all filters.
+function setupFilterDisclosure() {
+  const meaningful = typeof HLOLang !== "undefined" && HLOLang.isBookArrival(location.search, location.hash);
+  filtersExpanded = !meaningful;
+  document.getElementById("filter-toggle").disabled = false;
+  document.getElementById("filter-toggle")?.addEventListener("click", () => {
+    filterDisclosureUsed = true;
+    filtersExpanded = !filtersExpanded;
+    updateFilterVisibility();
+  });
+  window.addEventListener("resize", () => {
+    // Never hide the field being edited when crossing into the narrow layout.
+    if (document.activeElement?.closest("#tool-filters")) filtersExpanded = true;
+    updateFilterVisibility();
+  });
+  updateFilterVisibility();
+}
+
+function updateFilterVisibility() {
+  const narrow = !!(window.matchMedia && window.matchMedia(NARROW_MQ).matches);
+  const setActive = toolSet.ids.length > 0;
+  const expanded = !setActive && (!narrow || filtersExpanded);
+  const controls = document.getElementById("tool-filters");
+  const toggle = document.getElementById("filter-toggle");
+  if (controls) controls.hidden = !expanded;
+  const back = document.getElementById("back-to-filters");
+  if (back) back.hidden = loadState !== "ready" || setActive;
+  if (toggle) {
+    toggle.hidden = setActive || !narrow;
+    toggle.setAttribute("aria-expanded", String(expanded));
+  }
+}
+
+function backToFilters() {
+  if (loadState !== "ready" || toolSet.ids.length) return;
+  filterDisclosureUsed = true;
+  filtersExpanded = true;
+  updateFilterVisibility();
+  const target = ["filter-book", "filter-category", "filter-progress", "filter-search-input"]
+    .map((id) => document.getElementById(id)).find((el) => isShown(el) && !el.disabled);
+  if (!target) return;
+  // The document's scroll-padding keeps the region below a fixed header.
+  document.getElementById("tool-filters").scrollIntoView({ block: "start", behavior: "auto" });
+  target.focus({ preventScroll: true });
+}
+
+function revealFilterTarget(target) {
+  if (!target?.closest("#tool-filters")) return target;
+  if (toolSet.ids.length) return null;
+  if (target.id === "filter-book" && document.getElementById("filter-book-group").hidden) target = document.getElementById("filter-search-input");
+  filtersExpanded = true;
+  updateFilterVisibility();
+  return target;
+}
+
+function focusFilter(id, options, scrollToTarget = false) {
+  const target = revealFilterTarget(document.getElementById(id));
+  if (scrollToTarget) target?.scrollIntoView({ block: "nearest", behavior: "auto" });
+  target?.focus(options);
 }
 
 // ?book= で来たときは、データが届く前にバナーの場所を取っておく（css の #book-banner.is-pending）。
@@ -991,6 +1060,9 @@ async function loadData() {
     if (linkedToolId || linkNotices.includes("unknown")) Object.assign(tidy, { book: filters.book, cat: filters.categoryId, q: filters.search, tab: currentTab, tools: toolSet.ids.length ? toolSet.ids : null });
     const retryHrefUnchanged = focusGuard.href === window.location.href;
     commitUrl(tidy);
+    if (!filterDisclosureUsed && (toolSet.present || linkedToolId || linkNotices.includes("unknown") ||
+        (typeof HLOLang !== "undefined" && !HLOLang.hasBookParam(location.search)))) filtersExpanded = true;
+    updateFilterVisibility();
     urlStateReady = true;
 
     setupFilterOptions();
@@ -1011,7 +1083,7 @@ async function loadData() {
         retryHrefUnchanged && !queuedNavigation && !linkedToolId &&
         (document.activeElement === retry || document.activeElement === document.body)) {
       const target = currentTab === "tools" && !toolSet.ids.length ? document.getElementById("filter-search-input") : document.getElementById(`tab-${currentTab}-label`);
-      target?.focus({ preventScroll: true });
+      revealFilterTarget(target)?.focus({ preventScroll: true });
     }
   } catch (err) {
     if (loadAttempt !== attempt) return;
@@ -1299,7 +1371,7 @@ function setupFilterOptions() {
         bookSelect.appendChild(og);
       };
       addGroup("book", "書籍", "Books");
-      addGroup("series", "シリーズ", "Series");
+      addGroup("series", "プロジェクト", "Projects");
     }
 
     // 言語切替などで作り直したあとも選択を保つ
@@ -1649,7 +1721,8 @@ function restoreRebuiltFocus(prev, key, savedKey) {
   const active = document.activeElement;
   if (active && active !== document.body) return;
   let target = savedKey ? elementForFocusKey(savedKey) : null;
-  if (!isShown(target)) target = elementForFocusKey(key);
+  target = revealFilterTarget(target);
+  if (!isShown(target)) target = revealFilterTarget(elementForFocusKey(key));
   if (!isShown(target)) target = fallbackFocusTarget(key);
   if (target) target.focus({ preventScroll: true });
 }
@@ -1669,7 +1742,7 @@ function fallbackFocusTarget(key) {
 // （積む前にフォーカスしていた本の行やカードのボタンなど）が表に出ていればそこへ、無ければ選ばれたタブのボタンへ移す。
 // restoreView が戻したスクロールの位置は動かさない
 function restoreFocus(view) {
-  let target = elementForFocusKey(view && view.focus);
+  let target = revealFilterTarget(elementForFocusKey(view && view.focus));
   if (!target || !panelOf(target) || panelOf(target).hidden || !target.getClientRects().length) {
     target = document.querySelector('.tab-button[aria-selected="true"]');
   }
@@ -1860,9 +1933,8 @@ function updateLinkedTitle() {
 
 function renderSetBanner() {
   const banner = document.getElementById("set-banner");
-  const controls = document.getElementById("tool-filters");
   const active = toolSet.ids.length > 0;
-  if (controls) controls.hidden = active;
+  updateFilterVisibility();
   if (!banner) return;
   banner.hidden = !active;
   const key = currentLang + ":" + toolSet.ids.join(",");
@@ -1899,7 +1971,7 @@ function renderSetBanner() {
     clearOtherFilters();
     setupFilterOptions();
     renderToolList();
-    document.getElementById("filter-book")?.focus({ preventScroll: true });
+    focusFilter("filter-book", { preventScroll: true });
   });
   const copy = document.createElement("button");
   copy.type = "button";
@@ -1973,19 +2045,16 @@ function isHttpUrl(u) {
   return typeof u === "string" && /^https:\/\//i.test(u);
 }
 
-// 本の種別の札（書籍／シリーズ／関連ツール）。
+// 本の種別の札（書籍／プロジェクト）。
 function bookKindLabel(book) {
   const isJa = currentLang === "ja";
-  if (book.relation === "related") {
-    return isJa ? "関連ツール" : "Related tools (book in Japanese)";
-  }
-  if (book.kind === "series") return isJa ? "シリーズ" : "Series";
+  if (book.kind === "series") return isJa ? "プロジェクト" : "Project";
   return isJa ? "書籍" : "Book (in Japanese)";
 }
 
 // 件数の括弧を言語ごとに出し分ける（日本語は全角、英語は半角＋スペース）。
 function countSuffix(n) {
-  return currentLang === "ja" ? `（${n}）` : ` (${n})`;
+  return currentLang === "ja" ? `（${n}本）` : ` (${n} ${n === 1 ? "tool" : "tools"})`;
 }
 
 // 本を選ぶ/外す。URL・select・読み上げを更新して再描画する。
@@ -2002,7 +2071,8 @@ function setBookFilter(slug, opts) {
   if (sel) sel.value = filters.book;
   refreshBookTarget();
   renderToolList();
-  updateBookStatus();
+  if (o.cleared) announceListStatus(currentLang === "ja" ? "書籍・プロジェクトの絞り込みを解除しました。" : "Book or project filter cleared.");
+  else updateBookStatus();
 }
 
 // 本の選択・履歴移動も、件数と0件案内を共通のstatusで通知する。
@@ -2012,7 +2082,7 @@ function updateBookStatus() {
 
 // ---- ツール一覧の描画 ----
 
-function renderToolList(retainedIds) {
+function renderToolList(retainedIds, announceBookNotice = true) {
   const listEl = document.getElementById("tool-list");
   if (!listEl) return;
   // データが届くまでは描かない。読み込み中に言語を切り替えたり検索欄に入力したりしても、空のデータで
@@ -2049,7 +2119,7 @@ function renderToolList(retainedIds) {
     progressVersion,
     matched.map((t) => t.id).join(",")
   ].join("|");
-  if (listKey === lastListKey && listEl.firstElementChild) { updateListCount(); return; }
+  if (listKey === lastListKey && listEl.firstElementChild) { updateListCount(); updateBookViewMetadata(announceBookNotice); return; }
   lastListKey = listKey;
   shownToolIds = new Set(matched.map((t) => t.id));
   outsideToolIds.clear();
@@ -2085,6 +2155,7 @@ function renderToolList(retainedIds) {
   if (displayGroups) {
     if (!displayGroups.length) {
       appendEmptyState(listEl, book);
+      updateBookViewMetadata(announceBookNotice);
       return;
     }
     displayGroups.forEach((g) => {
@@ -2092,9 +2163,13 @@ function renderToolList(retainedIds) {
       h.className = "book-group-heading";
       h.id = `book-group-${g.key}`;
       h.tabIndex = -1;
-      const label = currentLang === "ja" ? g.label_ja : g.label_en;
+      const label = HB.chapterTitle(book, g.key, currentLang);
       h.textContent = `${label}${countSuffix(g.items.length)}`;
-      listEl.appendChild(h);
+      const header = document.createElement("div");
+      header.className = "book-group-header";
+      header.appendChild(h);
+      if (displayGroups.length >= 2) header.appendChild(createBackToSections());
+      listEl.appendChild(header);
       g.items.forEach((tool) => {
         const card = makeCard(tool);
         // 同じツールが複数の章に出るとき、作り直したあとに同じ章のカードへフォーカスを戻すため（focusKey）
@@ -2102,17 +2177,21 @@ function renderToolList(retainedIds) {
         listEl.appendChild(card);
       });
     });
+    if (displayGroups.length >= 2) listEl.appendChild(createBackToSections(true));
+    updateBookViewMetadata(announceBookNotice);
     return;
   }
 
   if (matched.length === 0) {
     appendEmptyState(listEl, book);
+    updateBookViewMetadata(announceBookNotice);
     return;
   }
 
   matched.forEach((tool) => {
     listEl.appendChild(makeCard(tool));
   });
+  updateBookViewMetadata(announceBookNotice);
 }
 
 function appendEmptyState(listEl, book) {
@@ -2136,9 +2215,9 @@ function appendEmptyState(listEl, book) {
     document.getElementById("filter-progress").value = "all";
     const search = document.getElementById("filter-search-input");
     search.value = "";
-    renderToolList();
-    search.focus({ preventScroll: true });
-    announceListCount();
+    renderToolList(undefined, false);
+    focusFilter("filter-search-input", { preventScroll: true }, true);
+    announceListCount(0, true);
   });
   box.appendChild(p);
   box.appendChild(clear);
@@ -2151,10 +2230,15 @@ function renderBookBanner(book, shownCount, displayGroups) {
   if (!banner) return;
   banner.classList.remove("is-pending"); // 読み込み中に取っておいた場所を、中身で置き換える
   if (!book) {
+    const oldJump = banner.querySelector(".book-jump");
+    if (oldJump && banner.dataset.book) bookJumpStates.set(banner.dataset.book, oldJump.open);
     banner.hidden = true;
     banner.innerHTML = "";
     return;
   }
+  const oldJump = banner.querySelector(".book-jump");
+  if (oldJump && banner.dataset.book) bookJumpStates.set(banner.dataset.book, oldJump.open);
+  banner.dataset.book = book.slug;
   banner.hidden = false;
   banner.innerHTML = "";
   const isJa = currentLang === "ja";
@@ -2165,6 +2249,12 @@ function renderBookBanner(book, shownCount, displayGroups) {
   badge.className = "book-banner-badge";
   badge.textContent = bookKindLabel(book);
   banner.appendChild(badge);
+  if (book.relation === "related") {
+    const related = document.createElement("span");
+    related.className = "book-banner-badge";
+    related.textContent = isJa ? "関連ツール" : "Related tools";
+    banner.appendChild(related);
+  }
 
   // 書名
   const h2 = document.createElement("h2");
@@ -2189,13 +2279,7 @@ function renderBookBanner(book, shownCount, displayGroups) {
   const count = document.createElement("span");
   count.className = "book-banner-count";
   const unit = isJa ? `${n}本` : n === 1 ? "1 tool" : `${n} tools`;
-  const hit = isJa ? `該当 ${unit}` : `${unit}`;
-  count.textContent =
-    shownCount !== n
-      ? isJa
-        ? `${hit}（表示中 ${shownCount}本）`
-        : `${hit} (${shownCount} shown)`
-      : hit;
+  count.textContent = isJa ? `該当${unit}` : unit;
   meta.appendChild(count);
 
   // リンク・解除・章へ移動の data-part は、バナーを作り直したあとに同じ部品へフォーカスを戻すための目印（focusKey）
@@ -2205,9 +2289,10 @@ function renderBookBanner(book, shownCount, displayGroups) {
     link.dataset.part = "link";
     link.href = book.url;
     link.rel = "noopener";
+    link.target = "_blank";
     link.textContent = isJa
-      ? book.url_label_ja || "紹介ページを開く"
-      : book.url_label_en || "Open book page";
+      ? (book.url_label_ja || "紹介ページを開く") + "（新しいタブ）"
+      : (book.url_label_en || "Open book page") + " (new tab)";
     meta.appendChild(link);
   }
 
@@ -2216,15 +2301,20 @@ function renderBookBanner(book, shownCount, displayGroups) {
   clearBtn.className = "book-banner-clear";
   clearBtn.dataset.part = "clear";
   clearBtn.textContent = isJa ? "解除" : "Clear";
-  clearBtn.setAttribute("aria-label", isJa ? "書籍の絞り込みを解除" : "Clear book filter");
+  clearBtn.setAttribute("aria-label", isJa ? "書籍・プロジェクトの絞り込みを解除" : "Clear book or project filter");
   clearBtn.addEventListener("click", () => {
     setBookFilter("", { cleared: true, history: "push" });
-    const sel = document.getElementById("filter-book");
-    if (sel) sel.focus();
+    focusFilter("filter-book");
   });
   meta.appendChild(clearBtn);
 
   banner.appendChild(meta);
+
+  const duplicateNote = document.createElement("p");
+  duplicateNote.id = "book-duplicate-note";
+  duplicateNote.className = "book-banner-note";
+  duplicateNote.hidden = true;
+  banner.appendChild(duplicateNote);
 
   // 注記
   const noteText = isJa ? book.note_ja : book.note_en;
@@ -2251,21 +2341,18 @@ function renderBookBanner(book, shownCount, displayGroups) {
   if (displayGroups && displayGroups.length >= 2) {
     const details = document.createElement("details");
     details.className = "book-jump";
-    if (window.matchMedia && window.matchMedia("(min-width: 768px)").matches) {
-      details.open = true;
-    }
+    details.open = bookJumpStates.get(book.slug) || false;
     const summary = document.createElement("summary");
     summary.dataset.part = "jump";
-    summary.textContent = isJa
-      ? `章へ移動${countSuffix(displayGroups.length)}`
-      : `Jump to section${countSuffix(displayGroups.length)}`;
+    summary.id = "book-jump-summary";
+    summary.textContent = isJa ? "章・節へ移動" : "Jump to section";
     details.appendChild(summary);
     displayGroups.forEach((g) => {
       const a = document.createElement("a");
       a.className = "book-jump-link";
       a.dataset.part = "jump:" + g.key;
       a.href = `#book-group-${g.key}`;
-      const label = isJa ? g.label_ja : g.label_en;
+      const label = HB.chapterTitle(book, g.key, currentLang);
       a.textContent = `${label}${countSuffix(g.items.length)}`;
       a.addEventListener("click", (e) => {
         e.preventDefault();
@@ -2289,6 +2376,74 @@ function renderBookBanner(book, shownCount, displayGroups) {
     });
     banner.appendChild(details);
   }
+}
+
+function createBackToSections(atEnd = false) {
+  const link = document.createElement("a");
+  link.className = "book-back-to-sections" + (atEnd ? " book-back-to-sections-end" : "");
+  link.href = "#book-jump-summary";
+  link.textContent = currentLang === "ja" ? "章・節の一覧へ" : "Back to sections";
+  link.addEventListener("click", (event) => {
+    event.preventDefault();
+    const summary = document.getElementById("book-jump-summary");
+    if (!summary) return;
+    summary.closest("details").open = true;
+    summary.scrollIntoView();
+    summary.focus({ preventScroll: true });
+  });
+  return link;
+}
+
+// Count retained DOM cards, including those now outside the progress condition.
+// Updating this metadata never replaces the focused card or banner controls.
+function updateBookViewMetadata(announceNotice = true) {
+  const note = document.getElementById("book-duplicate-note");
+  const cards = Array.from(document.querySelectorAll("#tool-list .tool-card"));
+  const unique = new Set(cards.map((card) => card.dataset.toolId)).size;
+  if (note) {
+    const duplicate = cards.length > unique;
+    note.hidden = !duplicate;
+    const text = !duplicate ? "" : currentLang === "ja"
+      ? `複数の章・節に関係するツールは、それぞれの章・節にカードを並べています（カードは${cards.length}枚）。`
+      : `Tools related to more than one chapter or section appear under each of them (${cards.length} cards).`;
+    if (note.textContent !== text) note.textContent = text;
+  }
+  renderBookNotice(unique, announceNotice);
+}
+
+function renderBookNotice(shown, announce = true) {
+  const notice = document.getElementById("book-notice");
+  if (!notice) return;
+  const requested = typeof HLOLang !== "undefined" && HLOLang.hasBookParam(location.search);
+  // Resolve notices after set/hash precedence. Never expose an unknown raw value.
+  const applicable = requested && !filters.book && !toolSet.present && !linkedToolId && !linkNotices.includes("unknown");
+  if (!applicable) {
+    notice.hidden = true;
+    if (notice.dataset.key) {
+      cancelListStatus();
+      const status = document.getElementById("book-status");
+      const oldMessage = document.getElementById("book-notice-title").textContent + " " + document.getElementById("book-notice-text").textContent;
+      if (status && status.textContent === oldMessage) status.textContent = "";
+      document.getElementById("book-notice-title").textContent = "";
+      document.getElementById("book-notice-text").textContent = "";
+      notice.dataset.key = "";
+    }
+    return;
+  }
+  const isJa = currentLang === "ja";
+  const unknown = books.length > 0;
+  const all = shown === new Set(tools.filter((t) => t.hub !== false).map((t) => t.id)).size;
+  const key = [navigationVersion, currentLang, unknown, all].join(":");
+  notice.hidden = false;
+  if (notice.dataset.key === key) return;
+  notice.dataset.key = key;
+  document.getElementById("book-notice-title").textContent = unknown
+    ? (isJa ? "指定された本が見つからない" : "Book not found")
+    : (isJa ? "本の一覧を読み込めなかった" : "Couldn't load the book list");
+  document.getElementById("book-notice-text").textContent = unknown
+    ? (all ? (isJa ? "リンクで指定された本やプロジェクトが見つからないため、すべてのツールを表示しています。" : "The book or project in this link was not found, so all tools are shown. ") : "") + (isJa ? "「書籍・プロジェクト」から選べます。" : "You can choose one under “Books & projects.”")
+    : (all ? (isJa ? "そのため、すべてのツールを表示しています。" : "All tools are shown instead. ") : "") + (isJa ? "しばらくしてから、ページを読み込み直してください。" : "Please reload the page in a little while.");
+  if (announce) announceListStatus(document.getElementById("book-notice-title").textContent + " " + document.getElementById("book-notice-text").textContent);
 }
 
 function filterByBook(tool) {
@@ -2354,8 +2509,8 @@ function applySearch(raw) {
   const before = filters.search;
   setSearchQuery(raw);
   if (filters.search === before) return;
-  renderToolList();
-  announceListCount(700);
+  renderToolList(undefined, false);
+  announceListCount(700, true);
 }
 
 function createToolCard(tool, book) {
@@ -2598,6 +2753,7 @@ function updateOutsideCards(announce = true) {
   if (!newlyOutside && [...outsideToolIds].some((id) => !next.has(id))) cancelListStatus();
   outsideToolIds = next;
   updateListCount();
+  updateBookViewMetadata();
   if (newlyOutside && announce) announceListStatus(listText("outside_announcement", { progress }));
 }
 

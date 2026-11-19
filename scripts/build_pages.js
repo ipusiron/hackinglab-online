@@ -105,13 +105,13 @@ function buildPage(toolsData, booksData) {
       (book.refs?.[tool.id] || []).some(ref => HB.formatPages(ref.pages, "ja"))));
     lines.push(`        <section class="sl-book" aria-labelledby="sl-book-${escapeHtml(book.slug)}">`,
       `          <h3 id="sl-book-${escapeHtml(book.slug)}" tabindex="-1">${bilingual(HB.bookTitle(book, "ja"), HB.bookTitle(book, "en"))}</h3>`,
-      `          <p class="sl-book-link">${external(book.url, "book", bilingual(book.url_label_ja, book.url_label_en))}</p>`);
+      `          <p class="sl-book-link">${external(book.url, "book", bilingual(book.url_label_ja + "（新しいタブ）", book.url_label_en + " (new tab)"))}</p>`);
     for (const name of ["note", "pages_note"]) {
       if (name === "pages_note" && !hasPages) continue;
       if (book[`${name}_ja`] || book[`${name}_en`]) lines.push(`          <p class="sl-note">${bilingual(book[`${name}_ja`], book[`${name}_en`])}</p>`);
     }
     for (const group of groups) {
-      if (group.key) lines.push(`          <h4 id="sl-book-${escapeHtml(book.slug)}--chapter-${escapeHtml(group.key)}" tabindex="-1">${bilingual(HB.chapterLabel(book, group.key, "ja"), HB.chapterLabel(book, group.key, "en"))}</h4>`);
+      if (group.key) lines.push(`          <h4 id="sl-book-${escapeHtml(book.slug)}--chapter-${escapeHtml(group.key)}" tabindex="-1">${bilingual(HB.chapterTitle(book, group.key, "ja"), HB.chapterTitle(book, group.key, "en"))}</h4>`);
       lines.push('          <ul class="sl-tool-list">', ...group.items.map(t => toolRow(t, `sl-row-${book.slug}--${group.key || "all"}--${t.id}`, book)), "          </ul>");
     }
     lines.push("        </section>");

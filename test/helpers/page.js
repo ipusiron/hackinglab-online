@@ -140,7 +140,7 @@ function parseHtml(html, location) {
   Object.defineProperty(document, "title", { get() { return document.querySelector("title")?.textContent || ""; }, set(value) { document.querySelector("title").textContent = value; } });
   return document;
 }
-async function runPage({ search = "", storageFailure = "none", dataOverrides = {}, deferData = false, dataFailures = {}, clipboard = "success", storedValues = {}, allowLoadFailure = false, fetchResponse = null, clock = null, storageHooks = {}, confirmResult = false, downloadFailure = null } = {}) {
+async function runPage({ search = "", storageFailure = "none", dataOverrides = {}, deferData = false, dataFailures = {}, clipboard = "success", storedValues = {}, allowLoadFailure = false, fetchResponse = null, clock = null, storageHooks = {}, confirmResult = false, downloadFailure = null, width = 1280 } = {}) {
   const location = new URL("https://hackinglab.online/" + search);
   const document = parseHtml(read("index.html"), location);
   const messages = []; const fetched = []; const values = new Map(Object.entries(storedValues)); const calls = { getter: 0, read: 0, write: 0 };
@@ -184,8 +184,11 @@ async function runPage({ search = "", storageFailure = "none", dataOverrides = {
   const context = {
     document, location, URL: TestURL, URLSearchParams, AbortController, DOMException, TextEncoder, Blob,
     setTimeout: clock ? clock.setTimeout : setTimeout, clearTimeout: clock ? clock.clearTimeout : clearTimeout,
-    innerWidth: 1280, innerHeight: 900, scrollY: 0,
-    matchMedia: () => ({ matches: false }),
+    innerWidth: width, innerHeight: 900, scrollY: 0,
+    matchMedia: (query) => {
+      const bound = /\((min|max)-width:\s*([\d.]+)px\)/.exec(query);
+      return { matches: !!bound && (bound[1] === "min" ? context.innerWidth >= Number(bound[2]) : context.innerWidth <= Number(bound[2])) };
+    },
     addEventListener(type, listener) { const all = listeners.get(type) || []; all.push(listener); listeners.set(type, all); },
     scrollTo(...args) { const y = typeof args[0] === "object" ? args[0].top : args[1]; context.scrollY = y; scrolls.push({ type: "to", y }); },
     scrollBy(...args) { const y = typeof args[0] === "object" ? args[0].top : args[1]; context.scrollY += y; scrolls.push({ type: "by", y }); },
@@ -255,6 +258,7 @@ async function runPage({ search = "", storageFailure = "none", dataOverrides = {
   if (!deferData) checkLoaded();
   return {
     document, context, messages, fetched, storageCalls: calls, values, copied, events, scrolls, entries, downloads, confirmations, revokedUrls,
+    resize(width) { context.innerWidth = width; emit("resize"); },
     flush, dispatch: emit, evaluate: (source) => vm.runInContext(source, context),
     async releaseData() { release(); await flush(); checkLoaded(); },
     async navigateHash(hash, beforePaint) {

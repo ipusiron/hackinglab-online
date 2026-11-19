@@ -166,7 +166,7 @@ test("F4: formatRef（ページ無しで p. を出さない / 単一 p. / 範囲
   assert.deepEqual(B.formatRef(SYN_BOOK, "day002", "ja"), ["第1章 p.12", "第2章 pp.30-32"]);
   assert.deepEqual(B.formatRef(SYN_BOOK, "day002", "en"), ["Ch. 1 p.12", "Ch. 2 pp.30-32"]);
   const related = Object.assign({}, SYN_BOOK, { relation: "related" });
-  assert.deepEqual(B.formatRef(related, "day001", "ja"), ["関連: 第1章"]);
+  assert.deepEqual(B.formatRef(related, "day001", "ja"), ["関連：第1章"]);
   assert.deepEqual(B.formatRef(related, "day001", "en"), ["Related: Ch. 1"]);
   // 未知の ch
   const bad = Object.assign({}, SYN_BOOK, { refs: { day001: [{ ch: "zzz" }] } });

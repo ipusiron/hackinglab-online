@@ -737,7 +737,7 @@ test("H32: 一覧・バナー・ダッシュボードの本の行を作り直し
   // 見ていた位置で出るので、作り直した同じ部品は画面の外にあることがある（次の Tab で画面が大きく飛ぶ）
   assert.match(
     restore,
-    /let target = savedKey \? elementForFocusKey\(savedKey\) : null;\s*if \(!isShown\(target\)\) target = elementForFocusKey\(key\);\s*if \(!isShown\(target\)\) target = fallbackFocusTarget\(key\);\s*if \(target\) target\.focus\(\{ preventScroll: true \}\);/,
+    /let target = savedKey \? elementForFocusKey\(savedKey\) : null;\s*target = revealFilterTarget\(target\);\s*if \(!isShown\(target\)\) target = revealFilterTarget\(elementForFocusKey\(key\)\);\s*if \(!isShown\(target\)\) target = fallbackFocusTarget\(key\);\s*if \(target\) target\.focus\(\{ preventScroll: true \}\);/,
     "作り直したときに、来た履歴に書いておいた部品を先に使っていない"
   );
   assert.match(fnBody("isShown"), /el\.isConnected && el\.getClientRects\(\)\.length > 0/);
