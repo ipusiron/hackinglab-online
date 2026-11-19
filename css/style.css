@@ -1,3 +1,170 @@
+/* 明色は従来の配色を基本にする。色の役割を共有し、OS の設定だけで暗色へ切り替える。 */
+:root {
+  color-scheme: light;
+  --page-bg: #f5f5f7;
+  --surface-bg: #ffffff;
+  --subtle-bg: #f9fafb;
+  --muted-bg: #f3f4f6;
+  --badge-bg: #e5e7eb;
+  --text: #222;
+  --heading: #111827;
+  --site-title: #111;
+  --text-secondary: #4b5563;
+  --text-detail: #374151;
+  --text-muted: #6b7280;
+  --border: #e5e7eb;
+  --border-header: #e0e0e0;
+  --border-soft: #f3f4f6;
+  --control-bg: #f5f5f7;
+  --control-text: #333;
+  --control-border: #d0d0d4;
+  --control-hover-bg: #f3f4f6;
+  --control-selected-bg: #222;
+  --control-selected-text: #fff;
+  --tab-text: #666;
+  --tab-selected-bg: #e5efff;
+  --tab-accent: #2563eb;
+  --field-bg: #ffffff;
+  --field-border: #8a8a8a;
+  --focus: #2563eb;
+  --link: #0000ee;
+  --link-visited: #551a8b;
+  --primary-bg: #2563eb;
+  --primary-hover-bg: #1d4ed8;
+  --primary-text: #fff;
+  --secondary-border: #d1d5db;
+  --secondary-hover-border: #9ca3af;
+  --book-bg: #faf5ff;
+  --book-border: #e9d5ff;
+  --book-badge-bg: #ede9fe;
+  --book-accent-border: #c4b5fd;
+  --book-text: #5b21b6;
+  --book-link: #6d28d9;
+  --book-subtle-bg: #f5f3ff;
+  --difficulty-bg: #eff6ff;
+  --difficulty-border: #bfdbfe;
+  --difficulty-text: #1d4ed8;
+  --progress-0-bg: #f3f4f6;
+  --progress-0-border: #d1d5db;
+  --progress-0-text: #656d7a;
+  --progress-1-bg: #dbeafe;
+  --progress-1-border: #93c5fd;
+  --progress-1-text: #1d4ed8;
+  --progress-2-bg: #fef3c7;
+  --progress-2-border: #fcd34d;
+  --progress-2-text: #92400e;
+  --progress-3-bg: #d1fae5;
+  --progress-3-border: #6ee7b7;
+  --progress-3-text: #065f46;
+  --progress-n0: #d1d5db;
+  --progress-n1: #3b82f6;
+  --progress-n2: #f59e0b;
+  --progress-n3: #10b981;
+  --progress-track: #e5e7eb;
+  --share-bg: #0f172a;
+  --share-text: #ffffff;
+  --danger-border: #ef4444;
+  --danger-text: #b91c1c;
+  --danger-hover-bg: #fef2f2;
+  --disabled-bg: #e5e7eb;
+  --disabled-text: #4b5563;
+  --disabled-border: #9ca3af;
+  --shadow-card: rgba(15,23,42,0.06);
+  --shadow-raised: rgba(15,23,42,0.1);
+  --shadow-subtle: rgba(15,23,42,0.05);
+  --overlay: rgba(0,0,0,0.45);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --page-bg: #111827;
+    --surface-bg: #1f2937;
+    --subtle-bg: #182233;
+    --muted-bg: #273244;
+    --badge-bg: #374151;
+    --text: #e5e7eb;
+    --heading: #f3f4f6;
+    --site-title: #f9fafb;
+    --text-secondary: #cbd5e1;
+    --text-detail: #d1d5db;
+    --text-muted: #cbd5e1;
+    --border: #4b5563;
+    --border-header: #4b5563;
+    --border-soft: #374151;
+    --control-bg: #273244;
+    --control-text: #e5e7eb;
+    --control-border: #9ca3af;
+    --control-hover-bg: #374151;
+    --control-selected-bg: #e5e7eb;
+    --control-selected-text: #111827;
+    --tab-text: #cbd5e1;
+    --tab-selected-bg: #203b60;
+    --tab-accent: #93c5fd;
+    --field-bg: #172033;
+    --field-border: #9ca3af;
+    --focus: #bfdbfe;
+    --link: #93c5fd;
+    --link-visited: #c4b5fd;
+    --secondary-border: #9ca3af;
+    --secondary-hover-border: #cbd5e1;
+    --book-bg: #261d37;
+    --book-border: #66507e;
+    --book-badge-bg: #3e2d59;
+    --book-accent-border: #a78bfa;
+    --book-text: #ddd6fe;
+    --book-link: #c4b5fd;
+    --book-subtle-bg: #2e2142;
+    --difficulty-bg: #172f50;
+    --difficulty-border: #60a5fa;
+    --difficulty-text: #bfdbfe;
+    --progress-0-bg: #273244;
+    --progress-0-border: #8fa0b7;
+    --progress-0-text: #e5e7eb;
+    --progress-1-bg: #172f50;
+    --progress-1-border: #60a5fa;
+    --progress-1-text: #bfdbfe;
+    --progress-2-bg: #422f12;
+    --progress-2-border: #fbbf24;
+    --progress-2-text: #fde68a;
+    --progress-3-bg: #123b32;
+    --progress-3-border: #34d399;
+    --progress-3-text: #a7f3d0;
+    --progress-n0: #9ca3af;
+    --progress-n1: #60a5fa;
+    --progress-n2: #fbbf24;
+    --progress-n3: #34d399;
+    --progress-track: #374151;
+    --share-bg: #e5e7eb;
+    --share-text: #111827;
+    --danger-border: #f87171;
+    --danger-text: #fca5a5;
+    --danger-hover-bg: #3f1e26;
+    --disabled-bg: #374151;
+    --disabled-text: #cbd5e1;
+    --disabled-border: #6b7280;
+    --shadow-card: rgba(0,0,0,0.22);
+    --shadow-raised: rgba(0,0,0,0.35);
+    --shadow-subtle: rgba(0,0,0,0.18);
+    --overlay: rgba(0,0,0,0.7);
+  }
+}
+
+/* 固有の色を持つリンクには影響させず、本文中のリンクも暗い背景で読めるようにする。 */
+:where(a) {
+  color: var(--link);
+}
+
+:where(a:visited) {
+  color: var(--link-visited);
+}
+
+/* ボタン・リンク・入力欄・summary・移動先の見出し・ダイアログで共通の枠を使う。 */
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
 /* --------------------------------
  * ベース設定
  * -------------------------------- */
@@ -32,8 +199,8 @@ body {
   margin: 0;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   line-height: 1.6;
-  color: #222;
-  background-color: #f5f5f7;
+  color: var(--text);
+  background-color: var(--page-bg);
 }
 
 /* 言語ごとの表示切り替え（html の lang で決める。JS が動く前から正しい言語だけを出す） */
@@ -62,8 +229,8 @@ html[lang="en"] .label-ja {
   position: sticky;
   top: 0;
   z-index: 10;
-  background-color: #ffffff;
-  border-bottom: 1px solid #e0e0e0;
+  background-color: var(--surface-bg);
+  border-bottom: 1px solid var(--border-header);
 }
 
 .header-inner {
@@ -89,7 +256,7 @@ html[lang="en"] .label-ja {
   font-size: 1.6rem;
   line-height: inherit;
   font-weight: 700;
-  color: #111;
+  color: var(--site-title);
   word-break: keep-all;
   overflow-wrap: anywhere;
   line-break: strict;
@@ -97,7 +264,7 @@ html[lang="en"] .label-ja {
 
 .site-subtitle {
   font-size: 0.85rem;
-  color: #4b5563;
+  color: var(--text-secondary);
   line-height: 1.3;
 }
 
@@ -109,9 +276,9 @@ html[lang="en"] .label-ja {
 }
 
 .header-controls button {
-  border: 1px solid #d0d0d4;
-  background-color: #f5f5f7;
-  color: #333;
+  border: 1px solid var(--control-border);
+  background-color: var(--control-bg);
+  color: var(--control-text);
   padding: 0.35rem 0.6rem;
   border-radius: 999px;
   font-size: 0.8rem;
@@ -122,9 +289,9 @@ html[lang="en"] .label-ja {
    最初の描画から EN が押された見た目になる）。読み上げソフトには、main.js が aria-pressed で今の言語を伝える */
 html:not([lang="en"]) #lang-ja,
 html[lang="en"] #lang-en {
-  background-color: #222;
-  color: #fff;
-  border-color: #222;
+  background-color: var(--control-selected-bg);
+  color: var(--control-selected-text);
+  border-color: var(--control-selected-bg);
   cursor: default;
 }
 
@@ -160,7 +327,7 @@ html[lang="en"] #lang-en {
 }
 
 .help-button:hover {
-  background-color: #f3f4f6;
+  background-color: var(--control-hover-bg);
 }
 
 /* ヘッダーを固定しない画面：狭い画面（767px まで）と低い画面（高さ 500px まで。スマホを横にしたときや拡大したとき）。
@@ -218,13 +385,13 @@ html[lang="en"] #lang-en {
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
-  color: #666;
+  color: var(--tab-text);
 }
 
 .tab-button[aria-selected="true"] {
-  color: #111827;
-  border-color: #2563eb;
-  background-color: #e5efff;
+  color: var(--heading);
+  border-color: var(--tab-accent);
+  background-color: var(--tab-selected-bg);
   border-radius: 0.5rem 0.5rem 0 0;
 }
 
@@ -261,14 +428,14 @@ html[lang="en"] #lang-en {
   gap: 0.5rem;
   margin-bottom: 0.75rem;
   padding: 0.75rem;
-  background-color: #ffffff;
+  background-color: var(--surface-bg);
   border-radius: 0.75rem;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border);
 }
 
 .filter-group label {
   font-size: 0.8rem;
-  color: #6b7280;
+  color: var(--text-muted);
 }
 
 #tool-filters select,
@@ -276,20 +443,22 @@ html[lang="en"] #lang-en {
   width: 100%;
   padding: 0.35rem 0.5rem;
   border-radius: 0.4rem;
-  /* 欄の形がわかる濃さ（白の地に 3.45:1、検索欄の地 #f9fafb に 3.30:1。入力欄の枠の目安は 3:1 以上） */
-  border: 1px solid #8a8a8a;
+  /* 明暗どちらも、欄の内側と外側に対して枠のコントラストを 3:1 以上にする */
+  border: 1px solid var(--field-border);
   font-size: 1rem; /* iOS Safari の自動ズーム回避のため 16px 以上 */
   min-height: 44px; /* タップ領域 */
+  color: var(--text);
+  background-color: var(--field-bg);
 }
 
-.filter-search input[type="search"] {
-  background-color: #f9fafb;
+#tool-filters input[type="search"] {
+  background-color: var(--subtle-bg);
 }
 
 /* 検索欄の案内文。ブラウザーの既定の色は薄い（検索欄の地に Chromium で 4.41:1、WebKit で 2.25:1）ので、
    4.5:1 を超える色にする（4.63:1）。古い Firefox は案内文を opacity で半透明にしていたので、opacity も 1 にする */
 .filter-search input[type="search"]::placeholder {
-  color: #6b7280;
+  color: var(--text-muted);
   opacity: 1;
 }
 
@@ -307,8 +476,8 @@ html[lang="en"] #lang-en {
 #start-here {
   margin-bottom: 0.75rem;
   padding: 0.6rem 0.9rem;
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
+  background-color: var(--surface-bg);
+  border: 1px solid var(--border);
   border-radius: 0.75rem;
 }
 
@@ -319,7 +488,7 @@ html[lang="en"] #lang-en {
   align-content: center;
   font-size: 0.95rem;
   font-weight: 700;
-  color: #111827;
+  color: var(--heading);
   cursor: pointer;
 }
 
@@ -382,7 +551,7 @@ html[lang="en"] #lang-en {
 .start-here-lead {
   margin: 0.2rem 0 0.5rem;
   font-size: 0.9rem;
-  color: #374151;
+  color: var(--text-detail);
   line-height: 1.5;
 }
 
@@ -399,27 +568,27 @@ html[lang="en"] #lang-en {
   min-height: 44px;
   padding: 0.3rem 0.8rem;
   border-radius: 0.5rem;
-  border: 1px solid #2563eb;
-  background-color: #2563eb;
-  color: #ffffff;
+  border: 1px solid var(--primary-bg);
+  background-color: var(--primary-bg);
+  color: var(--primary-text);
   font-size: 0.8rem;
   font-weight: 600;
   text-decoration: none;
 }
 
 .start-here-entries a:hover {
-  background-color: #1d4ed8;
+  background-color: var(--primary-hover-bg);
 }
 
 .start-here-note {
   margin: 0.3rem 0 0;
   font-size: 0.78rem;
   line-height: 1.5;
-  color: #6b7280;
+  color: var(--text-muted);
 }
 
 .start-here-nocompare {
-  color: #5b21b6;
+  color: var(--book-text);
   font-weight: 600;
 }
 
@@ -430,8 +599,8 @@ html[lang="en"] #lang-en {
 #book-banner {
   margin-bottom: 0.75rem;
   padding: 0.75rem 0.9rem;
-  background-color: #faf5ff;
-  border: 1px solid #e9d5ff;
+  background-color: var(--book-bg);
+  border: 1px solid var(--book-border);
   border-radius: 0.75rem;
 }
 
@@ -446,9 +615,9 @@ html[lang="en"] #lang-en {
   display: inline-block;
   padding: 0.1rem 0.5rem;
   border-radius: 999px;
-  background-color: #ede9fe;
-  border: 1px solid #c4b5fd;
-  color: #5b21b6;
+  background-color: var(--book-badge-bg);
+  border: 1px solid var(--book-accent-border);
+  color: var(--book-text);
   font-size: 0.7rem;
   font-weight: 700;
 }
@@ -457,19 +626,13 @@ html[lang="en"] #lang-en {
   margin: 0.3rem 0 0;
   font-size: 1rem;
   font-weight: 700;
-  color: #111827;
-}
-
-.book-banner-title:focus-visible,
-.book-group-heading:focus-visible {
-  outline: 2px solid #6d28d9;
-  outline-offset: 2px;
+  color: var(--heading);
 }
 
 .book-banner-subtitle {
   font-size: 0.8rem;
   font-weight: 500;
-  color: #6b7280;
+  color: var(--text-muted);
 }
 
 .book-banner-meta {
@@ -479,7 +642,7 @@ html[lang="en"] #lang-en {
   gap: 0.4rem 0.75rem;
   margin-top: 0.4rem;
   font-size: 0.8rem;
-  color: #4b5563;
+  color: var(--text-secondary);
 }
 
 .book-banner-count {
@@ -487,7 +650,7 @@ html[lang="en"] #lang-en {
 }
 
 .book-banner-link {
-  color: #6d28d9;
+  color: var(--book-link);
 }
 
 .book-banner-clear {
@@ -495,22 +658,22 @@ html[lang="en"] #lang-en {
   min-height: 44px;
   padding: 0.3rem 0.7rem;
   border-radius: 0.5rem;
-  border: 1px solid #c4b5fd;
-  background-color: #ffffff;
-  color: #5b21b6;
+  border: 1px solid var(--book-accent-border);
+  background-color: var(--surface-bg);
+  color: var(--book-text);
   font-size: 0.8rem;
   cursor: pointer;
 }
 
 .book-banner-clear:hover {
-  background-color: #f5f3ff;
+  background-color: var(--book-subtle-bg);
 }
 
 .book-banner-note {
   margin: 0.4rem 0 0;
   font-size: 0.78rem;
   line-height: 1.5;
-  color: #4b5563;
+  color: var(--text-secondary);
 }
 
 .book-jump {
@@ -521,7 +684,7 @@ html[lang="en"] #lang-en {
 .book-jump > summary {
   min-height: 44px;
   padding: 0.6rem 0;
-  color: #5b21b6;
+  color: var(--book-text);
   cursor: pointer;
 }
 
@@ -529,17 +692,20 @@ html[lang="en"] #lang-en {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
+  max-width: calc(100% - 0.75rem);
+  overflow-wrap: anywhere;
   margin-right: 0.75rem;
-  color: #6d28d9;
+  color: var(--book-link);
 }
 
 /* 章の見出し（グループ） */
 .book-group-heading {
   grid-column: 1 / -1;
+  overflow-wrap: anywhere;
   margin: 0.5rem 0 0;
   font-size: 0.95rem;
   font-weight: 700;
-  color: #111827;
+  color: var(--heading);
   /* 位置は html の scroll-padding-top で決める（ここにも足すと二重になる） */
 }
 
@@ -549,9 +715,9 @@ html[lang="en"] #lang-en {
   margin-right: 0.4rem;
   padding: 0.05rem 0.4rem;
   border-radius: 999px;
-  background-color: #ede9fe;
-  border: 1px solid #c4b5fd;
-  color: #5b21b6;
+  background-color: var(--book-badge-bg);
+  border: 1px solid var(--book-accent-border);
+  color: var(--book-text);
   font-size: 0.65rem;
   font-weight: 700;
   vertical-align: middle;
@@ -563,9 +729,9 @@ html[lang="en"] #lang-en {
   align-items: center;
   padding: 0.2rem 0.6rem;
   border-radius: 0.5rem;
-  background-color: #f5f3ff;
-  border: 1px solid #c4b5fd;
-  color: #5b21b6;
+  background-color: var(--book-subtle-bg);
+  border: 1px solid var(--book-accent-border);
+  color: var(--book-text);
   font-size: 0.75rem;
   font-weight: 600;
   max-width: 100%;
@@ -666,11 +832,11 @@ html[lang="en"] #lang-en {
 /* --- カード本体 --- */
 .tool-card {
   min-width: 0;
-  background-color: #ffffff;
+  background-color: var(--surface-bg);
   border-radius: 0.875rem;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border);
   padding: 1rem 1.1rem;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 1px 3px var(--shadow-card);
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
@@ -678,7 +844,7 @@ html[lang="en"] #lang-en {
 }
 
 .tool-card:hover {
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
+  box-shadow: 0 4px 12px var(--shadow-raised);
   transform: translateY(-2px);
 }
 
@@ -694,10 +860,10 @@ html[lang="en"] #lang-en {
   flex-shrink: 0;
   font-size: 0.7rem;
   font-weight: 700;
-  color: #4b5563;
+  color: var(--text-secondary);
   padding: 0.2rem 0.5rem;
   border-radius: 999px;
-  background-color: #e5e7eb;
+  background-color: var(--badge-bg);
   letter-spacing: 0.02em;
 }
 
@@ -706,21 +872,21 @@ html[lang="en"] #lang-en {
   overflow-wrap: anywhere;
   font-size: 1.1rem;
   font-weight: 700;
-  color: #111827;
+  color: var(--heading);
   line-height: 1.3;
 }
 
 /* --- サブタイトル --- */
 .tool-subtitle {
   font-size: 0.85rem;
-  color: #4b5563;
+  color: var(--text-secondary);
   line-height: 1.5;
 }
 
 /* --- 説明文（line-clamp対応）--- */
 .tool-description {
   font-size: 0.85rem;
-  color: #374151;
+  color: var(--text-detail);
   line-height: 1.6;
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -742,9 +908,9 @@ html[lang="en"] #lang-en {
   align-items: center;
   padding: 0.2rem 0.6rem;
   border-radius: 999px;
-  background-color: #eff6ff;
-  border: 1px solid #bfdbfe;
-  color: #1d4ed8;
+  background-color: var(--difficulty-bg);
+  border: 1px solid var(--difficulty-border);
+  color: var(--difficulty-text);
   font-size: 0.75rem;
   font-weight: 600;
 }
@@ -754,9 +920,9 @@ html[lang="en"] #lang-en {
   align-items: center;
   padding: 0.2rem 0.6rem;
   border-radius: 999px;
-  background-color: #f3f4f6;
-  border: 1px solid #e5e7eb;
-  color: #374151;
+  background-color: var(--muted-bg);
+  border: 1px solid var(--border);
+  color: var(--text-detail);
   font-size: 0.75rem;
   font-weight: 500;
 }
@@ -765,7 +931,7 @@ html[lang="en"] #lang-en {
 .tool-footer {
   margin-top: auto;
   padding-top: 0.6rem;
-  border-top: 1px solid #f3f4f6;
+  border-top: 1px solid var(--border-soft);
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
@@ -778,16 +944,16 @@ html[lang="en"] #lang-en {
   border-radius: 0.5rem;
   font-size: 0.8rem;
   font-weight: 500;
-  border: 1px solid #2563eb;
-  background-color: #2563eb;
-  color: #fff;
+  border: 1px solid var(--primary-bg);
+  background-color: var(--primary-bg);
+  color: var(--primary-text);
   text-decoration: none;
   cursor: pointer;
   transition: background-color 0.15s ease, transform 0.1s ease;
 }
 
 .tool-footer .tool-button:hover {
-  background-color: #1d4ed8;
+  background-color: var(--primary-hover-bg);
   transform: translateY(-1px);
 }
 
@@ -796,14 +962,14 @@ html[lang="en"] #lang-en {
 }
 
 .tool-footer .tool-button.secondary {
-  background-color: #fff;
-  border-color: #d1d5db;
-  color: #374151;
+  background-color: var(--surface-bg);
+  border-color: var(--secondary-border);
+  color: var(--text-detail);
 }
 
 .tool-footer .tool-button.secondary:hover {
-  background-color: #f9fafb;
-  border-color: #9ca3af;
+  background-color: var(--subtle-bg);
+  border-color: var(--secondary-hover-border);
 }
 
 /* 進捗ボタン */
@@ -829,27 +995,27 @@ html[lang="en"] #lang-en {
 
 /* 進捗状態別の色分け */
 .tool-progress-button.progress-0 {
-  background-color: #f3f4f6;
-  border-color: #d1d5db;
-  color: #6b7280;
+  background-color: var(--progress-0-bg);
+  border-color: var(--progress-0-border);
+  color: var(--progress-0-text);
 }
 
 .tool-progress-button.progress-1 {
-  background-color: #dbeafe;
-  border-color: #93c5fd;
-  color: #1d4ed8;
+  background-color: var(--progress-1-bg);
+  border-color: var(--progress-1-border);
+  color: var(--progress-1-text);
 }
 
 .tool-progress-button.progress-2 {
-  background-color: #fef3c7;
-  border-color: #fcd34d;
-  color: #92400e;
+  background-color: var(--progress-2-bg);
+  border-color: var(--progress-2-border);
+  color: var(--progress-2-text);
 }
 
 .tool-progress-button.progress-3 {
-  background-color: #d1fae5;
-  border-color: #6ee7b7;
-  color: #065f46;
+  background-color: var(--progress-3-bg);
+  border-color: var(--progress-3-border);
+  color: var(--progress-3-text);
 }
 
 /* ================================
@@ -857,9 +1023,9 @@ html[lang="en"] #lang-en {
  * ================================ */
 
 #tab-dashboard section {
-  background-color: #ffffff;
+  background-color: var(--surface-bg);
   border-radius: 0.75rem;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border);
   padding: 0.75rem 0.9rem;
   margin-bottom: 0.75rem;
 }
@@ -883,9 +1049,9 @@ html[lang="en"] #lang-en {
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  background: conic-gradient(#d1d5db 0% 100%); /* デフォルト（JSで上書き） */
+  background: conic-gradient(var(--progress-n0) 0% 100%); /* デフォルト（JSで上書き） */
   position: relative;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.1);
+  box-shadow: 0 2px 8px var(--shadow-raised);
 }
 
 /* 中央の穴（ドーナツ風） */
@@ -897,7 +1063,7 @@ html[lang="en"] #lang-en {
   transform: translate(-50%, -50%);
   width: 60px;
   height: 60px;
-  background-color: #ffffff;
+  background-color: var(--surface-bg);
   border-radius: 50%;
 }
 
@@ -908,7 +1074,7 @@ html[lang="en"] #lang-en {
   justify-content: center;
   gap: 0.5rem 1rem;
   font-size: 0.75rem;
-  color: #374151;
+  color: var(--text-detail);
 }
 
 .pie-legend-item {
@@ -924,17 +1090,17 @@ html[lang="en"] #lang-en {
   flex-shrink: 0;
 }
 
-.pie-legend-color.color-n0 { background-color: #d1d5db; }
-.pie-legend-color.color-n1 { background-color: #3b82f6; }
-.pie-legend-color.color-n2 { background-color: #f59e0b; }
-.pie-legend-color.color-n3 { background-color: #10b981; }
+.pie-legend-color.color-n0 { background-color: var(--progress-n0); }
+.pie-legend-color.color-n1 { background-color: var(--progress-n1); }
+.pie-legend-color.color-n2 { background-color: var(--progress-n2); }
+.pie-legend-color.color-n3 { background-color: var(--progress-n3); }
 
 #share-on-x {
   padding: 0.35rem 0.8rem;
   border-radius: 0.5rem;
-  border: 1px solid #0f172a;
-  background-color: #0f172a;
-  color: #ffffff;
+  border: 1px solid var(--share-bg);
+  background-color: var(--share-bg);
+  color: var(--share-text);
   font-size: 0.8rem;
   cursor: pointer;
 }
@@ -946,23 +1112,25 @@ html[lang="en"] #lang-en {
 #reset-all-progress {
   padding: 0.3rem 0.7rem;
   border-radius: 0.5rem;
-  border: 1px solid #ef4444;
-  background-color: #ffffff;
-  color: #b91c1c;
+  border: 1px solid var(--danger-border);
+  background-color: var(--surface-bg);
+  color: var(--danger-text);
   font-size: 0.8rem;
   cursor: pointer;
 }
 
 #reset-all-progress:hover {
-  background-color: #fef2f2;
+  background-color: var(--danger-hover-bg);
 }
 
 /* データが届くまで（main.js が disabled を外すまで）は押せない見た目にする。ホバーの見た目も出さない
    （ホバーの規則と同じ詳細度なので、その後ろに書く） */
 #share-on-x:disabled,
 #reset-all-progress:disabled {
-  opacity: 0.5;
   cursor: not-allowed;
+  color: var(--disabled-text);
+  background-color: var(--disabled-bg);
+  border-color: var(--disabled-border);
 }
 
 #share-on-x:disabled:hover {
@@ -970,7 +1138,7 @@ html[lang="en"] #lang-en {
 }
 
 #reset-all-progress:disabled:hover {
-  background-color: #ffffff;
+  background-color: var(--disabled-bg);
 }
 
 /* ================================
@@ -987,11 +1155,11 @@ html[lang="en"] #lang-en {
 /* カテゴリカード */
 .category-progress-item {
   min-width: 0;
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
+  background-color: var(--surface-bg);
+  border: 1px solid var(--border);
   border-radius: 0.625rem;
   padding: 0.75rem 1rem;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 1px 2px var(--shadow-subtle);
 }
 
 /* カテゴリ名 */
@@ -999,7 +1167,7 @@ html[lang="en"] #lang-en {
   overflow-wrap: anywhere;
   font-weight: 600;
   font-size: 0.9rem;
-  color: #111827;
+  color: var(--heading);
   margin-bottom: 0.5rem;
 }
 
@@ -1009,32 +1177,32 @@ html[lang="en"] #lang-en {
   height: 8px;
   border-radius: 999px;
   overflow: hidden;
-  background-color: #e5e7eb;
+  background-color: var(--progress-track);
   margin-bottom: 0.5rem;
 }
 
 /* バー各セグメント */
 .category-progress-bar .bar-n0 {
-  background-color: #d1d5db; /* グレー: 未着手 */
+  background-color: var(--progress-n0); /* グレー: 未着手 */
 }
 
 .category-progress-bar .bar-n1 {
-  background-color: #3b82f6; /* 青: 学習中 */
+  background-color: var(--progress-n1); /* 青: 学習中 */
 }
 
 .category-progress-bar .bar-n2 {
-  background-color: #f59e0b; /* オレンジ: 一周完了 */
+  background-color: var(--progress-n2); /* オレンジ: 一周完了 */
 }
 
 .category-progress-bar .bar-n3 {
-  background-color: #10b981; /* 緑: 定着済み */
+  background-color: var(--progress-n3); /* 緑: 定着済み */
 }
 
 /* 数値テキスト。「定着済み0」「（全44）」の中では折らず、「 / 」と「（全…）」の前の空白で折る（日本語はどの字の間でも
    折れるので、狭い画面では「定着済｜み0」「（全｜44）」と折れていた）。overflow-wrap: anywhere は横幅に入らないときだけの保険 */
 .category-progress-detail {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: var(--text-muted);
   line-height: 1.4;
   word-break: keep-all;
   overflow-wrap: anywhere;
@@ -1045,8 +1213,8 @@ html[lang="en"] #lang-en {
  * -------------------------------- */
 
 #site-footer {
-  border-top: 1px solid #e5e7eb;
-  background-color: #f9fafb;
+  border-top: 1px solid var(--border);
+  background-color: var(--subtle-bg);
 }
 
 .footer-inner {
@@ -1058,7 +1226,7 @@ html[lang="en"] #lang-en {
   gap: 0.5rem;
   justify-content: space-between;
   font-size: 0.8rem;
-  color: #6b7280;
+  color: var(--text-muted);
 }
 
 /* --------------------------------
@@ -1069,7 +1237,7 @@ html[lang="en"] #lang-en {
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: rgba(0,0,0,0.45);
+  background: var(--overlay);
   justify-content: center;
   align-items: center;
   padding: 1rem;
@@ -1097,7 +1265,7 @@ html.help-open.keep-gutter {
 }
 
 .modal-content {
-  background: #fff;
+  background: var(--surface-bg);
   max-width: 600px;
   width: 100%;
   max-height: calc(100vh - 2rem);
@@ -1107,11 +1275,12 @@ html.help-open.keep-gutter {
   padding: 1.5rem;
   border-radius: 0.75rem;
   position: relative;
+  color: var(--text);
 }
 
-/* JS でダイアログ自体へフォーカスを移したときは枠を出さない（中のボタンには出る） */
-.modal-content:focus {
-  outline: none;
+/* 半透明の幕に左右されないよう、ダイアログのフォーカス枠は背景色のある内側に出す。 */
+.modal-content:focus-visible {
+  outline-offset: -3px;
 }
 
 /* 「×」は本文と一緒に流れないよう、右上に残す（sticky）。押せる大きさは、画面の幅にかかわらず 44px（2.75rem。
@@ -1125,12 +1294,17 @@ html.help-open.keep-gutter {
   width: 2.75rem;
   height: 2.75rem;
   margin: -1rem -1rem 0 0.5rem;
-  background: #fff;
+  background: var(--surface-bg);
   border: none;
   border-radius: 50%;
   font-size: 1.4rem;
   line-height: 1;
   cursor: pointer;
+  color: var(--text);
+}
+
+.modal-close:hover {
+  background-color: var(--control-hover-bg);
 }
 
 /* ================================
@@ -1254,6 +1428,10 @@ html.help-open.keep-gutter {
 /* 選ばれたタブを、色だけでなく下線の太さと字の太さでも示す。
    円グラフ・凡例の色見本・進捗の棒は、背景の色が消えないよう色を保ったまま枠を付ける */
 @media (forced-colors: active) {
+  :focus-visible {
+    outline-color: Highlight;
+  }
+
   .tab-button {
     border-bottom: 4px solid Canvas;
   }

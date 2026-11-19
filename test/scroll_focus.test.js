@@ -60,7 +60,7 @@ test("SF4: JA／EN は disabled にせず、aria-pressed で今の言語を示�
   // 押された見た目は、描く前に js/lang.js が決める <html lang> で出す（保存した言語が英語のときも、最初の描画から EN が押されて見える）
   assert.match(
     cssNoComments,
-    /html:not\(\[lang="en"\]\) #lang-ja,\s*html\[lang="en"\] #lang-en\s*\{[^}]*background-color:\s*#222/,
+    /html:not\(\[lang="en"\]\) #lang-ja,\s*html\[lang="en"\] #lang-en\s*\{[^}]*background-color:\s*var\(--control-selected-bg\)/,
     "今の言語のボタンの見た目が <html lang> で決まっていない"
   );
   // 強制カラーでも今の言語がわかる

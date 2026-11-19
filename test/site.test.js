@@ -448,23 +448,38 @@ function contrastRatio(a, b) {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-test("H23: 検索欄の案内文は検索欄の地に 4.5:1 以上、入力欄・選択欄の枠線は絞り込みの枠の地と検索欄の地に 3:1 以上", () => {
-  const color = (body, prop) => (body.match(new RegExp(`(?:^|[;\\s])${prop}:\\s*(#[0-9a-f]{6})\\b`, "i")) || [])[1];
-  const fieldBg = color(bodyOf('.filter-search input[type="search"]'), "background-color");
-  const boxBg = color(bodyOf("#tool-filters"), "background-color");
-  assert.ok(fieldBg && boxBg, "検索欄か絞り込みの枠の地の色がない");
-  const ph = bodyOf('.filter-search input[type="search"]::placeholder');
-  const phColor = color(ph, "color");
-  assert.ok(phColor, "案内文の色の指定がない（ブラウザーの既定の色は薄い）");
-  assert.match(ph, /opacity:\s*1\s*(?:;|$)/, "古い Firefox の opacity による半透明を打ち消していない");
-  const r = contrastRatio(phColor, fieldBg);
-  assert.ok(r >= 4.5, `案内文 ${phColor} と検索欄の地 ${fieldBg} の比が ${r.toFixed(2)}:1`);
-  for (const sel of ["#tool-filters select", '#tool-filters input[type="search"]']) {
-    const border = (bodyOf(sel).match(/border:\s*1px solid (#[0-9a-f]{6})\b/i) || [])[1];
-    assert.ok(border, `${sel} の枠線の色がない`);
-    for (const bg of [boxBg, fieldBg]) {
-      const rb = contrastRatio(border, bg);
-      assert.ok(rb >= 3, `${sel} の枠線 ${border} と地 ${bg} の比が ${rb.toFixed(2)}:1`);
+test("H23: 明暗とも検索欄の案内文は4.5:1以上、入力欄の枠線は内外の地に3:1以上", () => {
+  const rootBlocks = [...cssNoComments.matchAll(/:root\s*\{([^{}]*)\}/g)];
+  assert.equal(rootBlocks.length, 2, "明色と暗色の変数定義を検査する");
+  const properties = (body) => Object.fromEntries([...body.matchAll(/(--[\w-]+):\s*([^;]+);/g)].map(m => [m[1], m[2].trim()]));
+  const light = properties(rootBlocks[0][1]);
+  const dark = { ...light, ...properties(rootBlocks[1][1]) };
+  const declaration = (body, prop) => [...body.matchAll(new RegExp(`(?:^|[;\\s])${prop}:\\s*([^;]+)`, "g"))].at(-1)?.[1]?.trim();
+  for (const [scheme, palette] of Object.entries({ light, dark })) {
+    const color = (value) => {
+      assert.ok(value, `${scheme}: 色の指定がない`);
+      let resolved = value.replace(/var\((--[\w-]+)\)/g, (_, name) => {
+        assert.ok(palette[name], `${scheme}: ${name} が未定義`);
+        return palette[name];
+      });
+      const m = resolved.match(/#[0-9a-f]{6}\b|#[0-9a-f]{3}\b/i);
+      assert.ok(m, `${scheme}: 解決できない色 ${resolved}`);
+      return m[0].length === 4 ? "#" + [...m[0].slice(1)].map(c => c + c).join("") : m[0];
+    };
+    const fieldBg = color(declaration(bodyOf('#tool-filters input[type="search"]'), "background-color"));
+    const boxBg = color(declaration(bodyOf("#tool-filters"), "background-color"));
+    const ph = bodyOf('.filter-search input[type="search"]::placeholder');
+    const phColor = color(declaration(ph, "color"));
+    assert.match(ph, /opacity:\s*1\s*(?:;|$)/);
+    const r = contrastRatio(phColor, fieldBg);
+    assert.ok(r >= 4.5, `${scheme}: 案内文 ${phColor} / ${fieldBg} = ${r.toFixed(2)}:1`);
+    for (const sel of ["#tool-filters select", '#tool-filters input[type="search"]']) {
+      const border = color(declaration(bodyOf(sel), "border"));
+      const controlBg = color(declaration(bodyOf(sel), "background-color"));
+      for (const bg of [boxBg, controlBg]) {
+        const rb = contrastRatio(border, bg);
+        assert.ok(rb >= 3, `${scheme}: ${sel} の枠線 ${border} / ${bg} = ${rb.toFixed(2)}:1`);
+      }
     }
   }
 });

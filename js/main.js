@@ -1913,10 +1913,10 @@ function renderPieChart(container, n0, n1, n2, n3, total) {
     const end3 = end2 + p3;
 
     pie.style.background = `conic-gradient(
-      #d1d5db 0% ${end0}%,
-      #3b82f6 ${end0}% ${end1}%,
-      #f59e0b ${end1}% ${end2}%,
-      #10b981 ${end2}% ${end3}%
+      var(--progress-n0) 0% ${end0}%,
+      var(--progress-n1) ${end0}% ${end1}%,
+      var(--progress-n2) ${end1}% ${end2}%,
+      var(--progress-n3) ${end2}% ${end3}%
     )`;
   }
 

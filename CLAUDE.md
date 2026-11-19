@@ -156,3 +156,9 @@ When another tab of the same browser changes the progress, the open page redraws
 - An unchanged catalog keeps its existing `generated_at`. The update workflow serializes runs, checks out current main, uses PyYAML 6.0.3, validates before committing, rebases and validates again before pushing. The Step Summary includes retention, category/difficulty warnings, slug changes and optional GET results for demos.
 - `test/catalog.test.js` checks schema, raw category mappings and first-listed dates; `test/render.test.js` executes the real page scripts with a small DOM against all tools and books, including blocked storage. Unknown raw category names are always warnings. `AFTER_REGEN=1` also allows an empty mapped category list and invalid difficulty as warnings; structural and rendering errors still fail. PR checks reject lost mappings for previously recognized raw category names. The rendered card omits an unknown difficulty rather than displaying one star. `HLO_BASE_COMMIT` enables immutable-date comparisons; a base without added.json is allowed only for its initial introduction.
 - Pages currently publishes from the main branch. GITHUB_TOKEN bot pushes do not start a Pages build, so successful scheduled regeneration guarantees the repository update only. Verify Pages deployment separately; do not claim automatic live publication from the update job alone.
+
+### Color schemes
+
+- Colors use semantic CSS custom properties. The dark palette follows `prefers-color-scheme: dark`; there is no theme storage or manual switch.
+- Pie charts, legends, and progress bars share `--progress-n0` through `--progress-n3`. Keep CSS variables inside the inline gradient so an OS setting change updates an existing chart without rebuilding it.
+- Check both palettes in browser QA, including native form controls, focus, progress states, the help dialog, and 200% text. Do not rely on `color-scheme` alone to set backgrounds and text.
