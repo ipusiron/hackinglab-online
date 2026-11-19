@@ -97,7 +97,12 @@ class Element {
     if (type === "click" && this.tagName === "SUMMARY" && !event.defaultPrevented) this.parentElement.open = !this.parentElement.open;
     return event;
   }
-  focus(options) { this.ownerDocument.activeElement = this; (this.ownerDocument.focusCalls ||= []).push({ element: this, options }); }
+  focus(options) {
+    const previous = this.ownerDocument.activeElement;
+    this.ownerDocument.activeElement = this;
+    (this.ownerDocument.focusCalls ||= []).push({ element: this, options });
+    if (previous !== this) this.dispatch("focus", { relatedTarget: previous });
+  }
   click() { if (this.disabled) return; this.ownerDocument.onElementClick?.(this); return this.dispatch("click"); }
   remove() { if (this.parentNode) { this.parentNode.childNodes.splice(this.parentNode.childNodes.indexOf(this), 1); this.parentNode = null; } }
   select() { this.selectionStart = 0; this.selectionEnd = this.value.length; }

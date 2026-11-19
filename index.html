@@ -42,6 +42,7 @@
     <script src="./js/tabs.js" defer fetchpriority="high"></script>
     <script src="./js/url.js" defer fetchpriority="high"></script>
     <script src="./js/category_groups.js" defer fetchpriority="high"></script>
+    <script src="./js/share.js" defer fetchpriority="high"></script>
     <script src="./js/main.js" defer fetchpriority="high"></script>
     <script src="./js/lang.js"></script>
   </head>
@@ -298,12 +299,20 @@
 
           <!-- X共有ボタン（下のリセットと同じく、データが届くまでは押せない。main.js が届いたときに disabled を外す） -->
           <div id="share-controls">
-            <button type="button" id="share-on-x" disabled>
-              <span class="label-ja">Xで進捗を共有</span>
-              <span class="label-en"
-                >Share progress on X</span
-              >
-            </button>
+            <p id="share-scope-note" hidden></p>
+            <div class="share-actions">
+              <button type="button" id="share-on-x" disabled>
+                <span class="label-ja">Xで進捗を共有</span>
+                <span class="label-en">Share progress on X</span>
+              </button>
+              <button type="button" id="share-copy-link" disabled>
+                <span class="label-ja">リンクをコピー</span>
+                <span class="label-en">Copy link</span>
+              </button>
+            </div>
+            <p id="share-copy-status" role="status" aria-atomic="true" hidden></p>
+            <input id="share-copy-url" type="text" readonly hidden
+              data-aria-label-ja="リンクをコピー" data-aria-label-en="Copy link">
           </div>
         </section>
 

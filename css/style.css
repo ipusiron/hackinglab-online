@@ -1086,7 +1086,8 @@ html[lang="en"] #lang-en {
 .pie-legend-color.color-n2 { background-color: var(--progress-n2); }
 .pie-legend-color.color-n3 { background-color: var(--progress-n3); }
 
-#share-on-x {
+#share-on-x,
+#share-copy-link {
   padding: 0.35rem 0.8rem;
   border-radius: 0.5rem;
   border: 1px solid var(--share-bg);
@@ -1096,7 +1097,8 @@ html[lang="en"] #lang-en {
   cursor: pointer;
 }
 
-#share-on-x:hover {
+#share-on-x:hover,
+#share-copy-link:hover {
   filter: brightness(1.05);
 }
 
@@ -1117,6 +1119,7 @@ html[lang="en"] #lang-en {
 /* データが届くまで（main.js が disabled を外すまで）は押せない見た目にする。ホバーの見た目も出さない
    （ホバーの規則と同じ詳細度なので、その後ろに書く） */
 #share-on-x:disabled,
+#share-copy-link:disabled,
 #reset-all-progress:disabled {
   cursor: not-allowed;
   color: var(--disabled-text);
@@ -1124,7 +1127,8 @@ html[lang="en"] #lang-en {
   border-color: var(--disabled-border);
 }
 
-#share-on-x:disabled:hover {
+#share-on-x:disabled:hover,
+#share-copy-link:disabled:hover {
   filter: none;
 }
 
@@ -1373,6 +1377,7 @@ html.help-open.keep-gutter {
   .header-controls button,
   .tab-button,
   #share-on-x,
+  #share-copy-link,
   #reset-all-progress {
     min-height: 2.75rem;
   }
@@ -1775,3 +1780,10 @@ body { padding-bottom: var(--storage-notice-h, 0px); }
 
 /* Selected category/field guidance shares the existing text palette. */
 #category-guidance { margin: 0 0 1rem; overflow-wrap: anywhere; line-height: 1.6; }
+
+/* Sharing controls are static so progress refreshes preserve manual-copy selection. */
+#share-controls { min-width: 0; }
+.share-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+.share-actions button { min-height: 2.75rem; max-width: 100%; overflow-wrap: anywhere; }
+#share-scope-note, #share-copy-status { overflow-wrap: anywhere; line-height: 1.6; }
+#share-copy-url { display: block; width: 100%; min-width: 0; min-height: 2.75rem; margin-top: .5rem; padding: .5rem; font: inherit; scroll-margin-block: .5rem; color: var(--control-text); background: var(--control-bg); border: 1px solid var(--field-border); border-radius: .5rem; }
