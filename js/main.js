@@ -1550,13 +1550,13 @@ function createToolCard(tool, book) {
   const meta = document.createElement("div");
   meta.className = "tool-meta";
 
-  const diffSpan = document.createElement("span");
-  diffSpan.className = "tool-difficulty";
-  const stars = "★".repeat(tool.difficulty || 1);
-  if (currentLang === "ja") {
-    diffSpan.textContent = `難易度: ${stars}`;
-  } else {
-    diffSpan.textContent = `Level: ${stars}`;
+  // 不明な難易度を星1つとして表示しない。
+  if (Number.isInteger(tool.difficulty) && tool.difficulty >= 1 && tool.difficulty <= 5) {
+    const diffSpan = document.createElement("span");
+    diffSpan.className = "tool-difficulty";
+    const stars = "★".repeat(tool.difficulty);
+    diffSpan.textContent = currentLang === "ja" ? `難易度: ${stars}` : `Level: ${stars}`;
+    meta.appendChild(diffSpan);
   }
 
   const catSpan = document.createElement("span");
@@ -1564,7 +1564,6 @@ function createToolCard(tool, book) {
   const labels = getCategoryLabels(tool);
   catSpan.textContent = labels.join(", ");
 
-  meta.appendChild(diffSpan);
   meta.appendChild(catSpan);
 
   // 本を選んでいるときだけ、その本での掲載箇所（章・ページ）を1場所1チップで出す

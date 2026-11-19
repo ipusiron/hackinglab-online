@@ -2,51 +2,65 @@ name: Update tools.json
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
     paths:
       - 'repos.txt'
       - 'data/categories.json'
+      - 'data/added.json'
       - 'scripts/update_tools.py'
       - '.github/workflows/update-tools.yml'
   workflow_dispatch:
+  schedule:
+    # Monday 06:17 JST
+    - cron: '17 21 * * 0'
 
 permissions:
   contents: write
 
+concurrency:
+  group: catalog-update
+  cancel-in-progress: false
+
 jobs:
   update-tools:
     runs-on: ubuntu-latest
-
+    timeout-minutes: 30
     steps:
-      - name: Checkout repository
+      - name: Checkout current main
         uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 0
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
-      - name: Install dependencies
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install pinned YAML parser
+        run: python -m pip install PyYAML==6.0.3
+      - name: Test generator without network
+        run: npm run test:generator
+      - name: Generate and report catalog
+        run: python scripts/update_tools.py --check-demos --summary "$GITHUB_STEP_SUMMARY"
+      - name: Validate generated catalog and rendering
+        env:
+          AFTER_REGEN: '1'
+          HLO_BASE_COMMIT: HEAD
+        run: npm test
+      - name: Commit semantic changes and synchronize
+        env:
+          AFTER_REGEN: '1'
+          HLO_BASE_COMMIT: origin/main
         run: |
-          python -m pip install --upgrade pip
-          pip install pyyaml
-
-      - name: Generate tools.json
-        run: |
-          python scripts/update_tools.py
-
-      - name: Commit and push if changed
-        run: |
-          if git diff --quiet data/tools.json; then
-            echo "No changes in data/tools.json"
+          if git diff --quiet -- data/tools.json data/added.json; then
+            echo "No catalog changes"
             exit 0
           fi
-
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/tools.json
-          git commit -m "Update tools.json from repos.txt"
+          git add data/tools.json data/added.json
+          git commit -m "Update tool catalog from README metadata"
+          git pull --rebase origin main
+          npm test
           git push origin HEAD:main

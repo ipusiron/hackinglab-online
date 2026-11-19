@@ -47,7 +47,7 @@ hub: true
 - `js/url.js`: Pure functions for URLs (DOM-free); tested by `test/url.test.js`. `readState()` reads the list state from the URL (`?book=`, `?cat=`, `?q=`, `?tab=dashboard`; books and categories that do not exist are ignored) and `buildUrl()` writes it back in that fixed order, followed by `lang` (only the given keys change; other parameters are kept after them; an empty query leaves no `?`; changing the book drops the `#book-group-…` hash). The progress filter is never put in the URL. `js/main.js` uses `?q=` and `?tab=dashboard` when the page opens, without waiting for the data: the search box gets the words of `?q=` (and is emptied when there is none) unless it already holds the same words or the user has started typing, and the dashboard tab opens; the box is not overwritten when the data arrives, so text typed meanwhile is kept. The book and the category are read when the data has loaded, and `commitUrl()` is called before the state changes. `repoLink()` and `demoLink()` give the card links in English view only: "GitHub" opens the English README (`blob/HEAD/README.en.md`, so both `main` and `master` work) and an `ipusiron.github.io` demo gets `?lang=en` (other hosts such as Google Colab, and the Japanese view, keep the links as they are). `withLang()` adds `?lang=en` in English to the "Start here" entries, the dashboard's book rows and the URL shared on X
 - `js/storage.js`: Safe localStorage wrapper (never throws; falls back to in-memory when storage is unavailable)
 - `js/tabs.js`: Pure keyboard logic for the tabs (←/→/Home/End)
-- `test/*.test.js` + `package.json`: `node --test`, no dependencies. `npm test` runs all seven files (the list is in `package.json`; add a new test file there too):
+- `test/*.test.js` + `package.json`: `node --test`, no dependencies. `npm test` runs all nine Node test files (the list is in `package.json`; add a new test file there too):
   - `books.test.js`: the real `data/books.json` and `data/tools.json` (D1–D15, S1), the category ids of `data/categories.json` and the ones used in `tools.json` (C1), and the pure functions in `js/books.js` on synthetic data (F1–F6)
   - `site.test.js`: `js/storage.js` and `js/tabs.js` (U1–U2); static checks of `index.html`, `js/main.js` and `css/style.css` (H1–H15: ARIA references, tabs, dialog, h1, CSP, no inline styles/scripts, help dialog, forced colors, reduced motion); the data loading rules (H16–H20, see "Loading data"); the search input, the filters and the list (H21–H24: no filtering while Japanese text is still being composed, searching with the text the browser put back in the field on Back or reload, the contrast of the placeholder and the field borders, and keeping the card width when only one tool matches); progress changed in another tab (H25); the list state in the URL, Back and Forward, and the "Start here" entries (H26–H28, see "Back and Forward"); the card links in English view (H29); remembering the chosen language (H30); where the focus goes when Back or Forward switches the tab (H31) and when the list, the book banner or the dashboard's book rows are rebuilt (H32, see "Back and Forward"); the header and the touch targets (H33–H36, see "Header and touch targets": the round "?" in `rem`, fixing the header only on wide and tall screens, 44px targets and their place after the "?" rule, and where the site title, the tabs and the dashboard numbers may break); what "Start here" remembers (H37, see "Start here"); the dashboard's share and reset buttons waiting for the data (H38)
   - `scroll_focus.test.js`: where jumps and focus stop under the header (0.5rem below the top of the screen where the header is not fixed), keeping the reading position when switching languages, and keeping the changed filter at the same height on screen (SF1–SF8); restoring the reading position with fixed and non-fixed headers by executing the restoration function (SF9)
@@ -93,8 +93,8 @@ The list state is kept in the URL (`js/url.js`), and `js/main.js` decides when a
 
 ### Generate tools.json locally
 ```bash
-pip install pyyaml
-python scripts/update_tools.py
+python -m pip install PyYAML==6.0.3
+python scripts/update_tools.py --check-demos --summary catalog-summary.md
 ```
 
 ### Local development
@@ -114,9 +114,11 @@ GitHub Actions workflow (`.github/workflows/update-tools.yml`) automatically reg
 - `repos.txt` is modified
 - `data/categories.json` is modified
 - `scripts/update_tools.py` is modified
+- `data/added.json` is modified
+- Every Monday at 06:17 JST (the start may be delayed)
 - Manually triggered via workflow_dispatch
 
-`.github/workflows/test.yml` runs `npm test` on push to `main`, on pull requests, and after the tools.json regeneration (`workflow_run`). When a run is red, open the log and find the failing test's ID; its message says which rule broke and why:
+`.github/workflows/test.yml` runs `npm run test:generator` (Python unittest, mocked network) and `npm test` on push to `main`, on pull requests, and after the tools.json regeneration (`workflow_run`). When a run is red, open the log and find the failing test's ID; its message says which rule broke and why:
 - `D*` or `S1` (`books.test.js`), typically right after a regeneration: `data/books.json` refers to a tool id that is no longer in `tools.json`, or a book entry is broken. Fix `data/books.json`. If D1 reports a BOM in `tools.json`, fix `scripts/update_tools.py` instead. Never edit `tools.json` by hand
 - `C1` (`books.test.js`): a category id in `data/categories.json` uses characters other than lower-case letters, digits and hyphens or appears twice, or `tools.json` has a category id that is not in `categories.json` (an id was renamed or removed without regenerating `tools.json`). Regenerate `tools.json` in the same change. If the change reached `main` without it, the regeneration workflow fixes it and the test run after it passes
 - `H19` (`site.test.js`): `tools.json` grew past 80 KB gzipped. Revisit how the list is loaded, or the limit (see "Loading data"); it is not a reason to stop adding tools
@@ -145,3 +147,12 @@ When another tab of the same browser changes the progress, the open page redraws
 2. Reference tools by `id` (`dayNNN`); every `id` must already exist in `tools.json`
 3. If the book maps tools to chapters, add `chapters` and `refs`
 4. Run `npm test`, then open a PR (data-only change; `tools.json` is not touched)
+
+## Catalog regeneration and first-listed dates
+
+- `scripts/update_tools.py` reads README metadata with a timeout, trying `master` only after a 404 on `main`. Existing entries retain their previous valid metadata after an ordinary fetch or YAML failure; failures for a new repository stop generation. HTTP 401 stops all processing immediately with no output file changes.
+- `repos.txt` is authoritative: removal and a valid `hub: false` are intentional. Reject empty or duplicate ids/slugs and non-HTTPS links before writing. Warn about unknown categories and missing/out-of-range difficulty; use null for invalid difficulty. Keep category order from the Japanese array, then the English array, with first-occurrence deduplication.
+- `data/added.json` is an append-only mapping of tool id to the first listed JST date. Never reset existing dates or remove an entry. `scripts/init_added.py` initializes it once from first-parent Git history (visible tools only) and refuses to overwrite an existing file. The date describes presence in the main catalog, not the exact live deployment time. Normal updates fail if the stored dates are missing or invalid.
+- An unchanged catalog keeps its existing `generated_at`. The update workflow serializes runs, checks out current main, uses PyYAML 6.0.3, validates before committing, rebases and validates again before pushing. The Step Summary includes retention, category/difficulty warnings, slug changes and optional GET results for demos.
+- `test/catalog.test.js` checks schema, raw category mappings and first-listed dates; `test/render.test.js` executes the real page scripts with a small DOM against all tools and books, including blocked storage. Unknown raw category names are always warnings. `AFTER_REGEN=1` also allows an empty mapped category list and invalid difficulty as warnings; structural and rendering errors still fail. PR checks reject lost mappings for previously recognized raw category names. The rendered card omits an unknown difficulty rather than displaying one star. `HLO_BASE_COMMIT` enables immutable-date comparisons; a base without added.json is allowed only for its initial introduction.
+- Pages currently publishes from the main branch. GITHUB_TOKEN bot pushes do not start a Pages build, so successful scheduled regeneration guarantees the repository update only. Verify Pages deployment separately; do not claim automatic live publication from the update job alone.
