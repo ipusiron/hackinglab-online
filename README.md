@@ -408,11 +408,12 @@ python scripts/update_tools.py --check-demos --summary catalog-summary.md
 GitHub Actionsはこれらの検査をコミット前に実行します。
 `init_added.py`は履歴からの初期復元専用で、既存の`added.json`を上書きしません。
 
+画面の配色はOSのライト・ダーク設定に合わせて変わります。手動の切り替えは設けていません。
+
 ## 🚀 今後の改善予定
 
 * category aliasの完全サポート
 * カードUIのさらなる改善
-* Dark Mode対応
 
 ---
 
