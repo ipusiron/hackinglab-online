@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-11-19T14:49:35Z",
+  "generated_at": "2026-11-19T18:21:56Z",
   "tools": [
     {
       "id": "day001",
@@ -529,6 +529,7 @@
         "CTF"
       ],
       "category_ids": [
+        "attack-detection",
         "forensics"
       ],
       "difficulty": 2,
@@ -1754,7 +1755,8 @@
         "crockford"
       ],
       "category_ids": [
-        "encoding"
+        "encoding",
+        "data-representation"
       ],
       "difficulty": 3,
       "repo_url": "https://github.com/ipusiron/basexx-visualizer",
@@ -1789,7 +1791,8 @@
         "rfc8725"
       ],
       "category_ids": [
-        "web-security"
+        "web-security",
+        "authorization"
       ],
       "difficulty": 3,
       "repo_url": "https://github.com/ipusiron/jwt-inspector",
@@ -1824,7 +1827,8 @@
         "security-awareness"
       ],
       "category_ids": [
-        "deception"
+        "deception",
+        "attack-detection"
       ],
       "difficulty": 4,
       "repo_url": "https://github.com/ipusiron/canary-file-generator",
@@ -1933,6 +1937,7 @@
         "education"
       ],
       "category_ids": [
+        "machine-learning",
         "modern-crypto"
       ],
       "difficulty": 3,
@@ -2162,6 +2167,7 @@
         "smudge-attack"
       ],
       "category_ids": [
+        "mobile-hacking",
         "authentication"
       ],
       "difficulty": 4,
@@ -2492,7 +2498,8 @@
         "education"
       ],
       "category_ids": [
-        "qr-code"
+        "qr-code",
+        "phishing"
       ],
       "difficulty": 2,
       "repo_url": "https://github.com/ipusiron/qr-risk-radar",
@@ -2744,7 +2751,8 @@
         "client-side"
       ],
       "category_ids": [
-        "social-engineering"
+        "social-engineering",
+        "phishing"
       ],
       "difficulty": 2,
       "repo_url": "https://github.com/ipusiron/emotion-based-scam-detector",
@@ -2985,7 +2993,8 @@
         "canvas"
       ],
       "category_ids": [
-        "authentication"
+        "authentication",
+        "password-analysis"
       ],
       "difficulty": 5,
       "repo_url": "https://github.com/ipusiron/pin-threat-simulator",
@@ -3129,8 +3138,8 @@
         "fingerprinting"
       ],
       "category_ids": [
-        "privacy",
-        "web-security"
+        "web-security",
+        "privacy"
       ],
       "difficulty": 3,
       "repo_url": "https://github.com/ipusiron/browser-permission-radar",
@@ -3198,7 +3207,8 @@
         "javascript"
       ],
       "category_ids": [
-        "modern-crypto"
+        "modern-crypto",
+        "block-cipher"
       ],
       "difficulty": 4,
       "repo_url": "https://github.com/ipusiron/toyspn-builder",
@@ -3239,7 +3249,8 @@
       "category_ids": [
         "classic-crypto",
         "transposition-cipher",
-        "modern-crypto"
+        "modern-crypto",
+        "block-cipher"
       ],
       "difficulty": 4,
       "repo_url": "https://github.com/ipusiron/permutation-cipherlab",
@@ -3279,8 +3290,8 @@
         "localstorage"
       ],
       "category_ids": [
-        "disaster-prevention",
-        "prepper"
+        "prepper",
+        "disaster-prevention"
       ],
       "difficulty": 2,
       "repo_url": "https://github.com/ipusiron/rollingstock-planner",
@@ -3799,7 +3810,7 @@
         "visualization"
       ],
       "category_ids": [
-        "learning-support"
+        "machine-learning"
       ],
       "difficulty": 1,
       "repo_url": "https://github.com/ipusiron/softmax-confidence-meter",
@@ -4381,7 +4392,7 @@
       ],
       "category_ids": [
         "visualization",
-        "learning-support"
+        "machine-learning"
       ],
       "difficulty": 2,
       "repo_url": "https://github.com/ipusiron/vision-trap-atlas",

@@ -68,6 +68,7 @@ class RegenerationTests(unittest.TestCase):
         self.root = Path(self.temp.name)
         (self.root / "data").mkdir()
         self.write("data/categories.json", CATEGORIES)
+        self.write("data/category_groups.json", {"schema_version": 1, "groups": [{"id": "example", "ja": "例", "en": "Example", "description_ja": "説明", "description_en": "Description", "category_ids": ["z-first", "a-second"]}], "category_descriptions": [], "ignored_raw_names": []})
         self.install([tool()])
 
     def write(self, name, value):

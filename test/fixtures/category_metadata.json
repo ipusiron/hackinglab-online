@@ -1,0 +1,1856 @@
+[
+  {
+    "name": "valid ungrouped category and exact language names",
+    "valid": true,
+    "categories": [
+      {
+        "id": "one",
+        "ja": "一",
+        "en": "One",
+        "aliases_ja": [
+          "壱"
+        ]
+      },
+      {
+        "id": "two",
+        "ja": "二",
+        "en": "Two"
+      }
+    ],
+    "groups": {
+      "schema_version": 1,
+      "groups": [
+        {
+          "id": "example",
+          "ja": "例",
+          "en": "Example",
+          "description_ja": "説明",
+          "description_en": "Description",
+          "category_ids": [
+            "one"
+          ]
+        }
+      ],
+      "category_descriptions": [
+        {
+          "category_id": "two",
+          "ja": "二の説明",
+          "en": "Two description"
+        }
+      ],
+      "ignored_raw_names": [
+        {
+          "lang": "ja",
+          "name": "未登録"
+        },
+        {
+          "lang": "en",
+          "name": "Unregistered"
+        }
+      ]
+    }
+  },
+  {
+    "name": "unknown root property",
+    "valid": false,
+    "categories": [
+      {
+        "id": "one",
+        "ja": "一",
+        "en": "One",
+        "aliases_ja": [
+          "壱"
+        ]
+      },
+      {
+        "id": "two",
+        "ja": "二",
+        "en": "Two"
+      }
+    ],
+    "groups": {
+      "schema_version": 1,
+      "groups": [
+        {
+          "id": "example",
+          "ja": "例",
+          "en": "Example",
+          "description_ja": "説明",
+          "description_en": "Description",
+          "category_ids": [
+            "one"
+          ]
+        }
+      ],
+      "category_descriptions": [
+        {
+          "category_id": "two",
+          "ja": "二の説明",
+          "en": "Two description"
+        }
+      ],
+      "ignored_raw_names": [
+        {
+          "lang": "ja",
+          "name": "未登録"
+        },
+        {
+          "lang": "en",
+          "name": "Unregistered"
+        }
+      ],
+      "extra": 1
+    }
+  },
+  {
+    "name": "missing root property",
+    "valid": false,
+    "categories": [
+      {
+        "id": "one",
+        "ja": "一",
+        "en": "One",
+        "aliases_ja": [
+          "壱"
+        ]
+      },
+      {
+        "id": "two",
+        "ja": "二",
+        "en": "Two"
+      }
+    ],
+    "groups": {
+      "schema_version": 1,
+      "groups": [
+        {
+          "id": "example",
+          "ja": "例",
+          "en": "Example",
+          "description_ja": "説明",
+          "description_en": "Description",
+          "category_ids": [
+            "one"
+          ]
+        }
+      ],
+      "category_descriptions": [
+        {
+          "category_id": "two",
+          "ja": "二の説明",
+          "en": "Two description"
+        }
+      ]
+    }
+  },
+  {
+    "name": "unsupported version",
+    "valid": false,
+    "categories": [
+      {
+        "id": "one",
+        "ja": "一",
+        "en": "One",
+        "aliases_ja": [
+          "壱"
+        ]
+      },
+      {
+        "id": "two",
+        "ja": "二",
+        "en": "Two"
+      }
+    ],
+    "groups": {
+      "schema_version": 2,
+      "groups": [
+        {
+          "id": "example",
+          "ja": "例",
+          "en": "Example",
+          "description_ja": "説明",
+          "description_en": "Description",
+          "category_ids": [
+            "one"
+          ]
+        }
+      ],
+      "category_descriptions": [
+        {
+          "category_id": "two",
+          "ja": "二の説明",
+          "en": "Two description"
+        }
+      ],
+      "ignored_raw_names": [
+        {
+          "lang": "ja",
+          "name": "未登録"
+        },
+        {
+          "lang": "en",
+          "name": "Unregistered"
+        }
+      ]
+    }
+  },
+  {
+    "name": "boolean version",
+    "valid": false,
+    "categories": [
+      {
+        "id": "one",
+        "ja": "一",
+        "en": "One",
+        "aliases_ja": [
+          "壱"
+        ]
+      },
+      {
+        "id": "two",
+        "ja": "二",
+        "en": "Two"
+      }
+    ],
+    "groups": {
+      "schema_version": true,
+      "groups": [
+        {
+          "id": "example",
+          "ja": "例",
+          "en": "Example",
+          "description_ja": "説明",
+          "description_en": "Description",
+          "category_ids": [
+            "one"
+          ]
+        }
+      ],
+      "category_descriptions": [
+        {
+          "category_id": "two",
+          "ja": "二の説明",
+          "en": "Two description"
+        }
+      ],
+      "ignored_raw_names": [
+        {
+          "lang": "ja",
+          "name": "未登録"
+        },
+        {
+          "lang": "en",
+          "name": "Unregistered"
+        }
+      ]
+    }
+  },
+  {
+    "name": "invalid groups type",
+    "valid": false,
+    "categories": [
+      {
+        "id": "one",
+        "ja": "一",
+        "en": "One",
+        "aliases_ja": [
+          "壱"
+        ]
+      },
+      {
+        "id": "two",
+        "ja": "二",
+        "en": "Two"
+      }
+    ],
+    "groups": {
+      "schema_version": 1,
+      "groups": {},
+      "category_descriptions": [
+        {
+          "category_id": "two",
+          "ja": "二の説明",
+          "en": "Two description"
+        }
+      ],
+      "ignored_raw_names": [
+        {
+          "lang": "ja",
+          "name": "未登録"
+        },
+        {
+          "lang": "en",
+          "name": "Unregistered"
+        }
+      ]
+    }
+  },
+  {
+    "name": "empty groups",
+    "valid": false,
+    "categories": [
+      {
+        "id": "one",
+        "ja": "一",
+        "en": "One",
+        "aliases_ja": [
+          "壱"
+        ]
+      },
+      {
+        "id": "two",
+        "ja": "二",
+        "en": "Two"
+      }
+    ],
+    "groups": {
+      "schema_version": 1,
+      "groups": [],
+      "category_descriptions": [
+        {
+          "category_id": "two",
+          "ja": "二の説明",
+          "en": "Two description"
+        }
+      ],
+      "ignored_raw_names": [
+        {
+          "lang": "ja",
+          "name": "未登録"
+        },
+        {
+          "lang": "en",
+          "name": "Unregistered"
+        }
+      ]
+    }
+  },
+  {
+    "name": "duplicate group id",
+    "valid": false,
+    "categories": [
+      {
+        "id": "one",
+        "ja": "一",
+        "en": "One",
+        "aliases_ja": [
+          "壱"
+        ]
+      },
+      {
+        "id": "two",
+        "ja": "二",
+        "en": "Two"
+      }
+    ],
+    "groups": {
+      "schema_version": 1,
+      "groups": [
+        {
+          "id": "example",
+          "ja": "例",
+          "en": "Example",
+          "description_ja": "説明",
+          "description_en": "Description",
+          "category_ids": [
+            "one"
+          ]
+        },
+        {
+          "id": "example",
+          "ja": "例",
+          "en": "Example",
+          "description_ja": "説明",
+          "description_en": "Description",
+          "category_ids": [
+            "one"
+          ]
+        }
+      ],
+      "category_descriptions": [
+        {
+          "category_id": "two",
+          "ja": "二の説明",
+          "en": "Two description"
+        }
+      ],
+      "ignored_raw_names": [
+        {
+          "lang": "ja",
+          "name": "未登録"
+        },
+        {
+          "lang": "en",
+          "name": "Unregistered"
+        }
+      ]
+    }
+  },
+  {
+    "name": "unknown group property",
+    "valid": false,
+    "categories": [
+      {
+        "id": "one",
+        "ja": "一",
+        "en": "One",
+        "aliases_ja": [
+          "壱"
+        ]
+      },
+      {
+        "id": "two",
+        "ja": "二",
+        "en": "Two"
+      }
+    ],
+    "groups": {
+      "schema_version": 1,
+      "groups": [
+        {
+          "id": "example",
+          "ja": "例",
+          "en": "Example",
+          "description_ja": "説明",
+          "description_en": "Description",
+          "category_ids": [
+            "one"
+          ],
+          "extra": 1
+        }
+      ],
+      "category_descriptions": [
+        {
+          "category_id": "two",
+          "ja": "二の説明",
+          "en": "Two description"
+        }
+      ],
+      "ignored_raw_names": [
+        {
+          "lang": "ja",
+          "name": "未登録"
+        },
+        {
+          "lang": "en",
+          "name": "Unregistered"
+        }
+      ]
+    }
+  },
+  {
+    "name": "untrimmed group description",
+    "valid": false,
+    "categories": [
+      {
+        "id": "one",
+        "ja": "一",
+        "en": "One",
+        "aliases_ja": [
+          "壱"
+        ]
+      },
+      {
+        "id": "two",
+        "ja": "二",
+        "en": "Two"
+      }
+    ],
+    "groups": {
+      "schema_version": 1,
+      "groups": [
+        {
+          "id": "example",
+          "ja": "例",
+          "en": "Example",
+          "description_ja": "説明",
+          "description_en": " Text",
+          "category_ids": [
+            "one"
+          ]
+        }
+      ],
+      "category_descriptions": [
+        {
+          "category_id": "two",
+          "ja": "二の説明",
+          "en": "Two description"
+        }
+      ],
+      "ignored_raw_names": [
+        {
+          "lang": "ja",
+          "name": "未登録"
+        },
+        {
+          "lang": "en",
+          "name": "Unregistered"
+        }
+      ]
+    }
+  },
+  {
+    "name": "invalid group id",
+    "valid": false,
+    "categories": [
+      {
+        "id": "one",
+        "ja": "一",
+        "en": "One",
+        "aliases_ja": [
+          "壱"
+        ]
+      },
+      {
+        "id": "two",
+        "ja": "二",
+        "en": "Two"
+      }
+    ],
+    "groups": {
+      "schema_version": 1,
+      "groups": [
+        {
+          "id": "bad id",
+          "ja": "例",
+          "en": "Example",
+          "description_ja": "説明",
+          "description_en": "Description",
+          "category_ids": [
+            "one"
+          ]
+        }
+      ],
+      "category_descriptions": [
+        {
+          "category_id": "two",
+          "ja": "二の説明",
+          "en": "Two description"
+        }
+      ],
+      "ignored_raw_names": [
+        {
+          "lang": "ja",
+          "name": "未登録"
+        },
+        {
+          "lang": "en",
+          "name": "Unregistered"
+        }
+      ]
+    }
+  },
+  {
+    "name": "unknown member",
+    "valid": false,
+    "categories": [
+      {
+        "id": "one",
+        "ja": "一",
+        "en": "One",
+        "aliases_ja": [
+          "壱"
+        ]
+      },
+      {
+        "id": "two",
+        "ja": "二",
+        "en": "Two"
+      }
+    ],
+    "groups": {
+      "schema_version": 1,
+      "groups": [
+        {
+          "id": "example",
+          "ja": "例",
+          "en": "Example",
+          "description_ja": "説明",
+          "description_en": "Description",
+          "category_ids": [
+            "one",
+            "missing"
+          ]
+        }
+      ],
+      "category_descriptions": [
+        {
+          "category_id": "two",
+          "ja": "二の説明",
+          "en": "Two description"
+        }
+      ],
+      "ignored_raw_names": [
+        {
+          "lang": "ja",
+          "name": "未登録"
+        },
+        {
+          "lang": "en",
+          "name": "Unregistered"
+        }
+      ]
+    }
+  },
+  {
+    "name": "object member",
+    "valid": false,
+    "categories": [
+      {
+        "id": "one",
+        "ja": "一",
+        "en": "One",
+        "aliases_ja": [
+          "壱"
+        ]
+      },
+      {
+        "id": "two",
+        "ja": "二",
+        "en": "Two"
+      }
+    ],
+    "groups": {
+      "schema_version": 1,
+      "groups": [
+        {
+          "id": "example",
+          "ja": "例",
+          "en": "Example",
+          "description_ja": "説明",
+          "description_en": "Description",
+          "category_ids": [
+            "one",
+            {}
+          ]
+        }
+      ],
+      "category_descriptions": [
+        {
+          "category_id": "two",
+          "ja": "二の説明",
+          "en": "Two description"
+        }
+      ],
+      "ignored_raw_names": [
+        {
+          "lang": "ja",
+          "name": "未登録"
+        },
+        {
+          "lang": "en",
+          "name": "Unregistered"
+        }
+      ]
+    }
+  },
+  {
+    "name": "duplicate member",
+    "valid": false,
+    "categories": [
+      {
+        "id": "one",
+        "ja": "一",
+        "en": "One",
+        "aliases_ja": [
+          "壱"
+        ]
+      },
+      {
+        "id": "two",
+        "ja": "二",
+        "en": "Two"
+      }
+    ],
+    "groups": {
+      "schema_version": 1,
+      "groups": [
+        {
+          "id": "example",
+          "ja": "例",
+          "en": "Example",
+          "description_ja": "説明",
+          "description_en": "Description",
+          "category_ids": [
+            "one",
+            "one"
+          ]
+        }
+      ],
+      "category_descriptions": [
+        {
+          "category_id": "two",
+          "ja": "二の説明",
+          "en": "Two description"
+        }
+      ],
+      "ignored_raw_names": [
+        {
+          "lang": "ja",
+          "name": "未登録"
+        },
+        {
+          "lang": "en",
+          "name": "Unregistered"
+        }
+      ]
+    }
+  },
+  {
+    "name": "member in two groups",
+    "valid": false,
+    "categories": [
+      {
+        "id": "one",
+        "ja": "一",
+        "en": "One",
+        "aliases_ja": [
+          "壱"
+        ]
+      },
+      {
+        "id": "two",
+        "ja": "二",
+        "en": "Two"
+      }
+    ],
+    "groups": {
+      "schema_version": 1,
+      "groups": [
+        {
+          "id": "example",
+          "ja": "例",
+          "en": "Example",
+          "description_ja": "説明",
+          "description_en": "Description",
+          "category_ids": [
+            "one"
+          ]
+        },
+        {
+          "id": "another",
+          "ja": "例",
+          "en": "Example",
+          "description_ja": "説明",
+          "description_en": "Description",
+          "category_ids": [
+            "one"
+          ]
+        }
+      ],
+      "category_descriptions": [
+        {
+          "category_id": "two",
+          "ja": "二の説明",
+          "en": "Two description"
+        }
+      ],
+      "ignored_raw_names": [
+        {
+          "lang": "ja",
+          "name": "未登録"
+        },
+        {
+          "lang": "en",
+          "name": "Unregistered"
+        }
+      ]
+    }
+  },
+  {
+    "name": "unknown description category",
+    "valid": false,
+    "categories": [
+      {
+        "id": "one",
+        "ja": "一",
+        "en": "One",
+        "aliases_ja": [
+          "壱"
+        ]
+      },
+      {
+        "id": "two",
+        "ja": "二",
+        "en": "Two"
+      }
+    ],
+    "groups": {
+      "schema_version": 1,
+      "groups": [
+        {
+          "id": "example",
+          "ja": "例",
+          "en": "Example",
+          "description_ja": "説明",
+          "description_en": "Description",
+          "category_ids": [
+            "one"
+          ]
+        }
+      ],
+      "category_descriptions": [
+        {
+          "category_id": "missing",
+          "ja": "二の説明",
+          "en": "Two description"
+        }
+      ],
+      "ignored_raw_names": [
+        {
+          "lang": "ja",
+          "name": "未登録"
+        },
+        {
+          "lang": "en",
+          "name": "Unregistered"
+        }
+      ]
+    }
+  },
+  {
+    "name": "duplicate description category",
+    "valid": false,
+    "categories": [
+      {
+        "id": "one",
+        "ja": "一",
+        "en": "One",
+        "aliases_ja": [
+          "壱"
+        ]
+      },
+      {
+        "id": "two",
+        "ja": "二",
+        "en": "Two"
+      }
+    ],
+    "groups": {
+      "schema_version": 1,
+      "groups": [
+        {
+          "id": "example",
+          "ja": "例",
+          "en": "Example",
+          "description_ja": "説明",
+          "description_en": "Description",
+          "category_ids": [
+            "one"
+          ]
+        }
+      ],
+      "category_descriptions": [
+        {
+          "category_id": "two",
+          "ja": "二の説明",
+          "en": "Two description"
+        },
+        {
+          "category_id": "two",
+          "ja": "二の説明",
+          "en": "Two description"
+        }
+      ],
+      "ignored_raw_names": [
+        {
+          "lang": "ja",
+          "name": "未登録"
+        },
+        {
+          "lang": "en",
+          "name": "Unregistered"
+        }
+      ]
+    }
+  },
+  {
+    "name": "missing description language",
+    "valid": false,
+    "categories": [
+      {
+        "id": "one",
+        "ja": "一",
+        "en": "One",
+        "aliases_ja": [
+          "壱"
+        ]
+      },
+      {
+        "id": "two",
+        "ja": "二",
+        "en": "Two"
+      }
+    ],
+    "groups": {
+      "schema_version": 1,
+      "groups": [
+        {
+          "id": "example",
+          "ja": "例",
+          "en": "Example",
+          "description_ja": "説明",
+          "description_en": "Description",
+          "category_ids": [
+            "one"
+          ]
+        }
+      ],
+      "category_descriptions": [
+        {
+          "category_id": "two",
+          "ja": "二の説明"
+        }
+      ],
+      "ignored_raw_names": [
+        {
+          "lang": "ja",
+          "name": "未登録"
+        },
+        {
+          "lang": "en",
+          "name": "Unregistered"
+        }
+      ]
+    }
+  },
+  {
+    "name": "invalid ignored language",
+    "valid": false,
+    "categories": [
+      {
+        "id": "one",
+        "ja": "一",
+        "en": "One",
+        "aliases_ja": [
+          "壱"
+        ]
+      },
+      {
+        "id": "two",
+        "ja": "二",
+        "en": "Two"
+      }
+    ],
+    "groups": {
+      "schema_version": 1,
+      "groups": [
+        {
+          "id": "example",
+          "ja": "例",
+          "en": "Example",
+          "description_ja": "説明",
+          "description_en": "Description",
+          "category_ids": [
+            "one"
+          ]
+        }
+      ],
+      "category_descriptions": [
+        {
+          "category_id": "two",
+          "ja": "二の説明",
+          "en": "Two description"
+        }
+      ],
+      "ignored_raw_names": [
+        {
+          "lang": "EN",
+          "name": "未登録"
+        },
+        {
+          "lang": "en",
+          "name": "Unregistered"
+        }
+      ]
+    }
+  },
+  {
+    "name": "object ignored language",
+    "valid": false,
+    "categories": [
+      {
+        "id": "one",
+        "ja": "一",
+        "en": "One",
+        "aliases_ja": [
+          "壱"
+        ]
+      },
+      {
+        "id": "two",
+        "ja": "二",
+        "en": "Two"
+      }
+    ],
+    "groups": {
+      "schema_version": 1,
+      "groups": [
+        {
+          "id": "example",
+          "ja": "例",
+          "en": "Example",
+          "description_ja": "説明",
+          "description_en": "Description",
+          "category_ids": [
+            "one"
+          ]
+        }
+      ],
+      "category_descriptions": [
+        {
+          "category_id": "two",
+          "ja": "二の説明",
+          "en": "Two description"
+        }
+      ],
+      "ignored_raw_names": [
+        {
+          "lang": {},
+          "name": "未登録"
+        },
+        {
+          "lang": "en",
+          "name": "Unregistered"
+        }
+      ]
+    }
+  },
+  {
+    "name": "untrimmed ignored name",
+    "valid": false,
+    "categories": [
+      {
+        "id": "one",
+        "ja": "一",
+        "en": "One",
+        "aliases_ja": [
+          "壱"
+        ]
+      },
+      {
+        "id": "two",
+        "ja": "二",
+        "en": "Two"
+      }
+    ],
+    "groups": {
+      "schema_version": 1,
+      "groups": [
+        {
+          "id": "example",
+          "ja": "例",
+          "en": "Example",
+          "description_ja": "説明",
+          "description_en": "Description",
+          "category_ids": [
+            "one"
+          ]
+        }
+      ],
+      "category_descriptions": [
+        {
+          "category_id": "two",
+          "ja": "二の説明",
+          "en": "Two description"
+        }
+      ],
+      "ignored_raw_names": [
+        {
+          "lang": "ja",
+          "name": " Name"
+        },
+        {
+          "lang": "en",
+          "name": "Unregistered"
+        }
+      ]
+    }
+  },
+  {
+    "name": "duplicate ignored pair",
+    "valid": false,
+    "categories": [
+      {
+        "id": "one",
+        "ja": "一",
+        "en": "One",
+        "aliases_ja": [
+          "壱"
+        ]
+      },
+      {
+        "id": "two",
+        "ja": "二",
+        "en": "Two"
+      }
+    ],
+    "groups": {
+      "schema_version": 1,
+      "groups": [
+        {
+          "id": "example",
+          "ja": "例",
+          "en": "Example",
+          "description_ja": "説明",
+          "description_en": "Description",
+          "category_ids": [
+            "one"
+          ]
+        }
+      ],
+      "category_descriptions": [
+        {
+          "category_id": "two",
+          "ja": "二の説明",
+          "en": "Two description"
+        }
+      ],
+      "ignored_raw_names": [
+        {
+          "lang": "ja",
+          "name": "未登録"
+        },
+        {
+          "lang": "en",
+          "name": "Unregistered"
+        },
+        {
+          "lang": "ja",
+          "name": "未登録"
+        }
+      ]
+    }
+  },
+  {
+    "name": "registered ignored name",
+    "valid": false,
+    "categories": [
+      {
+        "id": "one",
+        "ja": "一",
+        "en": "One",
+        "aliases_ja": [
+          "壱"
+        ]
+      },
+      {
+        "id": "two",
+        "ja": "二",
+        "en": "Two"
+      }
+    ],
+    "groups": {
+      "schema_version": 1,
+      "groups": [
+        {
+          "id": "example",
+          "ja": "例",
+          "en": "Example",
+          "description_ja": "説明",
+          "description_en": "Description",
+          "category_ids": [
+            "one"
+          ]
+        }
+      ],
+      "category_descriptions": [
+        {
+          "category_id": "two",
+          "ja": "二の説明",
+          "en": "Two description"
+        }
+      ],
+      "ignored_raw_names": [
+        {
+          "lang": "ja",
+          "name": "未登録"
+        },
+        {
+          "lang": "en",
+          "name": "One"
+        }
+      ]
+    }
+  },
+  {
+    "name": "registered ignored alias",
+    "valid": false,
+    "categories": [
+      {
+        "id": "one",
+        "ja": "一",
+        "en": "One",
+        "aliases_ja": [
+          "壱"
+        ]
+      },
+      {
+        "id": "two",
+        "ja": "二",
+        "en": "Two"
+      }
+    ],
+    "groups": {
+      "schema_version": 1,
+      "groups": [
+        {
+          "id": "example",
+          "ja": "例",
+          "en": "Example",
+          "description_ja": "説明",
+          "description_en": "Description",
+          "category_ids": [
+            "one"
+          ]
+        }
+      ],
+      "category_descriptions": [
+        {
+          "category_id": "two",
+          "ja": "二の説明",
+          "en": "Two description"
+        }
+      ],
+      "ignored_raw_names": [
+        {
+          "lang": "ja",
+          "name": "壱"
+        },
+        {
+          "lang": "en",
+          "name": "Unregistered"
+        }
+      ]
+    }
+  },
+  {
+    "name": "unknown category property",
+    "valid": false,
+    "categories": [
+      {
+        "id": "one",
+        "ja": "一",
+        "en": "One",
+        "aliases_ja": [
+          "壱"
+        ],
+        "extra": 1
+      },
+      {
+        "id": "two",
+        "ja": "二",
+        "en": "Two"
+      }
+    ],
+    "groups": {
+      "schema_version": 1,
+      "groups": [
+        {
+          "id": "example",
+          "ja": "例",
+          "en": "Example",
+          "description_ja": "説明",
+          "description_en": "Description",
+          "category_ids": [
+            "one"
+          ]
+        }
+      ],
+      "category_descriptions": [
+        {
+          "category_id": "two",
+          "ja": "二の説明",
+          "en": "Two description"
+        }
+      ],
+      "ignored_raw_names": [
+        {
+          "lang": "ja",
+          "name": "未登録"
+        },
+        {
+          "lang": "en",
+          "name": "Unregistered"
+        }
+      ]
+    }
+  },
+  {
+    "name": "duplicate category id",
+    "valid": false,
+    "categories": [
+      {
+        "id": "one",
+        "ja": "一",
+        "en": "One",
+        "aliases_ja": [
+          "壱"
+        ]
+      },
+      {
+        "id": "one",
+        "ja": "二",
+        "en": "Two"
+      }
+    ],
+    "groups": {
+      "schema_version": 1,
+      "groups": [
+        {
+          "id": "example",
+          "ja": "例",
+          "en": "Example",
+          "description_ja": "説明",
+          "description_en": "Description",
+          "category_ids": [
+            "one"
+          ]
+        }
+      ],
+      "category_descriptions": [
+        {
+          "category_id": "two",
+          "ja": "二の説明",
+          "en": "Two description"
+        }
+      ],
+      "ignored_raw_names": [
+        {
+          "lang": "ja",
+          "name": "未登録"
+        },
+        {
+          "lang": "en",
+          "name": "Unregistered"
+        }
+      ]
+    }
+  },
+  {
+    "name": "untrimmed category name",
+    "valid": false,
+    "categories": [
+      {
+        "id": "one",
+        "ja": "一",
+        "en": " One",
+        "aliases_ja": [
+          "壱"
+        ]
+      },
+      {
+        "id": "two",
+        "ja": "二",
+        "en": "Two"
+      }
+    ],
+    "groups": {
+      "schema_version": 1,
+      "groups": [
+        {
+          "id": "example",
+          "ja": "例",
+          "en": "Example",
+          "description_ja": "説明",
+          "description_en": "Description",
+          "category_ids": [
+            "one"
+          ]
+        }
+      ],
+      "category_descriptions": [
+        {
+          "category_id": "two",
+          "ja": "二の説明",
+          "en": "Two description"
+        }
+      ],
+      "ignored_raw_names": [
+        {
+          "lang": "ja",
+          "name": "未登録"
+        },
+        {
+          "lang": "en",
+          "name": "Unregistered"
+        }
+      ]
+    }
+  },
+  {
+    "name": "same category duplicate alias",
+    "valid": false,
+    "categories": [
+      {
+        "id": "one",
+        "ja": "一",
+        "en": "One",
+        "aliases_ja": [
+          "壱"
+        ],
+        "aliases_en": [
+          "One"
+        ]
+      },
+      {
+        "id": "two",
+        "ja": "二",
+        "en": "Two"
+      }
+    ],
+    "groups": {
+      "schema_version": 1,
+      "groups": [
+        {
+          "id": "example",
+          "ja": "例",
+          "en": "Example",
+          "description_ja": "説明",
+          "description_en": "Description",
+          "category_ids": [
+            "one"
+          ]
+        }
+      ],
+      "category_descriptions": [
+        {
+          "category_id": "two",
+          "ja": "二の説明",
+          "en": "Two description"
+        }
+      ],
+      "ignored_raw_names": [
+        {
+          "lang": "ja",
+          "name": "未登録"
+        },
+        {
+          "lang": "en",
+          "name": "Unregistered"
+        }
+      ]
+    }
+  },
+  {
+    "name": "cross category duplicate alias",
+    "valid": false,
+    "categories": [
+      {
+        "id": "one",
+        "ja": "一",
+        "en": "One",
+        "aliases_ja": [
+          "壱"
+        ]
+      },
+      {
+        "id": "two",
+        "ja": "二",
+        "en": "Two",
+        "aliases_en": [
+          "One"
+        ]
+      }
+    ],
+    "groups": {
+      "schema_version": 1,
+      "groups": [
+        {
+          "id": "example",
+          "ja": "例",
+          "en": "Example",
+          "description_ja": "説明",
+          "description_en": "Description",
+          "category_ids": [
+            "one"
+          ]
+        }
+      ],
+      "category_descriptions": [
+        {
+          "category_id": "two",
+          "ja": "二の説明",
+          "en": "Two description"
+        }
+      ],
+      "ignored_raw_names": [
+        {
+          "lang": "ja",
+          "name": "未登録"
+        },
+        {
+          "lang": "en",
+          "name": "Unregistered"
+        }
+      ]
+    }
+  },
+  {
+    "name": "null aliases",
+    "valid": false,
+    "categories": [
+      {
+        "id": "one",
+        "ja": "一",
+        "en": "One",
+        "aliases_ja": [
+          "壱"
+        ],
+        "aliases_en": null
+      },
+      {
+        "id": "two",
+        "ja": "二",
+        "en": "Two"
+      }
+    ],
+    "groups": {
+      "schema_version": 1,
+      "groups": [
+        {
+          "id": "example",
+          "ja": "例",
+          "en": "Example",
+          "description_ja": "説明",
+          "description_en": "Description",
+          "category_ids": [
+            "one"
+          ]
+        }
+      ],
+      "category_descriptions": [
+        {
+          "category_id": "two",
+          "ja": "二の説明",
+          "en": "Two description"
+        }
+      ],
+      "ignored_raw_names": [
+        {
+          "lang": "ja",
+          "name": "未登録"
+        },
+        {
+          "lang": "en",
+          "name": "Unregistered"
+        }
+      ]
+    }
+  },
+  {
+    "name": "whitespace alias",
+    "valid": false,
+    "categories": [
+      {
+        "id": "one",
+        "ja": "一",
+        "en": "One",
+        "aliases_ja": [
+          "壱"
+        ],
+        "aliases_en": [
+          " "
+        ]
+      },
+      {
+        "id": "two",
+        "ja": "二",
+        "en": "Two"
+      }
+    ],
+    "groups": {
+      "schema_version": 1,
+      "groups": [
+        {
+          "id": "example",
+          "ja": "例",
+          "en": "Example",
+          "description_ja": "説明",
+          "description_en": "Description",
+          "category_ids": [
+            "one"
+          ]
+        }
+      ],
+      "category_descriptions": [
+        {
+          "category_id": "two",
+          "ja": "二の説明",
+          "en": "Two description"
+        }
+      ],
+      "ignored_raw_names": [
+        {
+          "lang": "ja",
+          "name": "未登録"
+        },
+        {
+          "lang": "en",
+          "name": "Unregistered"
+        }
+      ]
+    }
+  },
+  {
+    "name": "BOM whitespace alias",
+    "valid": false,
+    "categories": [
+      {
+        "id": "one",
+        "ja": "一",
+        "en": "One",
+        "aliases_ja": [
+          "壱"
+        ],
+        "aliases_en": [
+          "﻿name"
+        ]
+      },
+      {
+        "id": "two",
+        "ja": "二",
+        "en": "Two"
+      }
+    ],
+    "groups": {
+      "schema_version": 1,
+      "groups": [
+        {
+          "id": "example",
+          "ja": "例",
+          "en": "Example",
+          "description_ja": "説明",
+          "description_en": "Description",
+          "category_ids": [
+            "one"
+          ]
+        }
+      ],
+      "category_descriptions": [
+        {
+          "category_id": "two",
+          "ja": "二の説明",
+          "en": "Two description"
+        }
+      ],
+      "ignored_raw_names": [
+        {
+          "lang": "ja",
+          "name": "未登録"
+        },
+        {
+          "lang": "en",
+          "name": "Unregistered"
+        }
+      ]
+    }
+  },
+  {
+    "name": "NEL is a literal alias",
+    "valid": true,
+    "categories": [
+      {
+        "id": "one",
+        "ja": "一",
+        "en": "One",
+        "aliases_ja": [
+          "壱"
+        ],
+        "aliases_en": [
+          "name"
+        ]
+      },
+      {
+        "id": "two",
+        "ja": "二",
+        "en": "Two"
+      }
+    ],
+    "groups": {
+      "schema_version": 1,
+      "groups": [
+        {
+          "id": "example",
+          "ja": "例",
+          "en": "Example",
+          "description_ja": "説明",
+          "description_en": "Description",
+          "category_ids": [
+            "one"
+          ]
+        }
+      ],
+      "category_descriptions": [
+        {
+          "category_id": "two",
+          "ja": "二の説明",
+          "en": "Two description"
+        }
+      ],
+      "ignored_raw_names": [
+        {
+          "lang": "ja",
+          "name": "未登録"
+        },
+        {
+          "lang": "en",
+          "name": "Unregistered"
+        }
+      ]
+    }
+  },
+  {
+    "name": "category id newline",
+    "valid": false,
+    "categories": [
+      {
+        "id": "one\n",
+        "ja": "一",
+        "en": "One",
+        "aliases_ja": [
+          "壱"
+        ]
+      },
+      {
+        "id": "two",
+        "ja": "二",
+        "en": "Two"
+      }
+    ],
+    "groups": {
+      "schema_version": 1,
+      "groups": [
+        {
+          "id": "example",
+          "ja": "例",
+          "en": "Example",
+          "description_ja": "説明",
+          "description_en": "Description",
+          "category_ids": [
+            "one"
+          ]
+        }
+      ],
+      "category_descriptions": [
+        {
+          "category_id": "two",
+          "ja": "二の説明",
+          "en": "Two description"
+        }
+      ],
+      "ignored_raw_names": [
+        {
+          "lang": "ja",
+          "name": "未登録"
+        },
+        {
+          "lang": "en",
+          "name": "Unregistered"
+        }
+      ]
+    }
+  },
+  {
+    "name": "group id newline",
+    "valid": false,
+    "categories": [
+      {
+        "id": "one",
+        "ja": "一",
+        "en": "One",
+        "aliases_ja": [
+          "壱"
+        ]
+      },
+      {
+        "id": "two",
+        "ja": "二",
+        "en": "Two"
+      }
+    ],
+    "groups": {
+      "schema_version": 1,
+      "groups": [
+        {
+          "id": "example\n",
+          "ja": "例",
+          "en": "Example",
+          "description_ja": "説明",
+          "description_en": "Description",
+          "category_ids": [
+            "one"
+          ]
+        }
+      ],
+      "category_descriptions": [
+        {
+          "category_id": "two",
+          "ja": "二の説明",
+          "en": "Two description"
+        }
+      ],
+      "ignored_raw_names": [
+        {
+          "lang": "ja",
+          "name": "未登録"
+        },
+        {
+          "lang": "en",
+          "name": "Unregistered"
+        }
+      ]
+    }
+  },
+  {
+    "name": "JSON numeric version one",
+    "valid": true,
+    "categories": [
+      {
+        "id": "one",
+        "ja": "一",
+        "en": "One",
+        "aliases_ja": [
+          "壱"
+        ]
+      },
+      {
+        "id": "two",
+        "ja": "二",
+        "en": "Two"
+      }
+    ],
+    "groups": {
+      "schema_version": 1.0,
+      "groups": [
+        {
+          "id": "example",
+          "ja": "例",
+          "en": "Example",
+          "description_ja": "説明",
+          "description_en": "Description",
+          "category_ids": [
+            "one"
+          ]
+        }
+      ],
+      "category_descriptions": [
+        {
+          "category_id": "two",
+          "ja": "二の説明",
+          "en": "Two description"
+        }
+      ],
+      "ignored_raw_names": [
+        {
+          "lang": "ja",
+          "name": "未登録"
+        },
+        {
+          "lang": "en",
+          "name": "Unregistered"
+        }
+      ]
+    }
+  }
+]

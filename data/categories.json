@@ -2,31 +2,31 @@
   {
     "id": "classic-crypto",
     "ja": "古典暗号",
-    "en": "Classical cryptography",
-    "aliases_ja": ["古典的暗号", "クラシカル暗号"],
-    "aliases_en": ["Classical Cryptography", "Classical Cipher", "classic crypto"]
+    "en": "Classical Cryptography",
+    "aliases_ja": ["古典的暗号", "クラシカル暗号", "機械式暗号"],
+    "aliases_en": ["Classical Cipher", "classic crypto", "Classical cryptography", "Mechanised Cryptography"]
   },
   {
     "id": "modern-crypto",
     "ja": "現代暗号",
-    "en": "Modern cryptography",
+    "en": "Modern Cryptography",
     "aliases_ja": ["現代的暗号"],
-    "aliases_en": ["Modern Cryptography", "Mordern cryptography", "Mordern Cryptography", "Mordern Cipher", "mordern crypto"]
+    "aliases_en": ["Mordern cryptography", "Mordern Cryptography", "Mordern Cipher", "mordern crypto", "Modern cryptography"]
   },
 
   {
     "id": "substitution-cipher",
     "ja": "換字式暗号",
-    "en": "Substitution cipher",
+    "en": "Substitution Cipher",
     "aliases_ja": ["換字暗号", "置換暗号"],
-    "aliases_en": ["Substitution Cipher"]
+    "aliases_en": ["Substitution cipher"]
   },
   {
     "id": "transposition-cipher",
     "ja": "転置式暗号",
-    "en": "Transposition cipher",
+    "en": "Transposition Cipher",
     "aliases_ja": ["転置暗号"],
-    "aliases_en": ["Transposition Cipher"]
+    "aliases_en": ["Transposition cipher"]
   },
 
   { "id": "color-theory", "ja": "色彩理論", "en": "Color Theory" },
@@ -37,48 +37,52 @@
   { "id": "hash-function", "ja": "ハッシュ関数", "en": "Hash Function" },
   { "id": "anti-tamper", "ja": "耐タンパー", "en": "Anti-Tamper" },
 
-  { "id": "web-security", "ja": "Webセキュリティ", "en": "Web Security" },
+  { "id": "web-security", "ja": "Webセキュリティ", "en": "Web Security", "aliases_ja": ["ブラウザーセキュリティ"], "aliases_en": ["Browser Security"] },
   { "id": "authentication", "ja": "認証", "en": "Authentication" },
-  { "id": "password-analysis", "ja": "パスワード解析", "en": "Password Analysis", "aliases_ja": ["パスワード分析", "パスワード解読"], "aliases_en": ["Password Cracking"] },
+  { "id": "password-analysis", "ja": "パスワード解析", "en": "Password Analysis", "aliases_ja": ["パスワード分析", "パスワード解読", "PIN解析"], "aliases_en": ["Password Cracking", "PIN Cracking"] },
   { "id": "network", "ja": "ネットワーク", "en": "Networking" },
   { "id": "hardening", "ja": "ハードニング", "en": "System Hardening" },
-  { "id": "forensics", "ja": "フォレンジック", "en": "Digital Forensics", "aliases_ja": ["デジタルフォレンジック"], "aliases_en": ["Forensics"] },
+  { "id": "forensics", "ja": "フォレンジック", "en": "Digital Forensics", "aliases_ja": ["デジタルフォレンジック", "バイナリ解析", "ログ解析", "画像解析"], "aliases_en": ["Forensics", "Binary Analysis", "Log Analysis", "Image Analysis"] },
   { "id": "malware-analysis", "ja": "マルウェア解析", "en": "Malware Analysis" },
   { "id": "reverse-engineering", "ja": "リバースエンジニアリング", "en": "Reverse Engineering" },
   { "id": "vulnerability-research", "ja": "脆弱性調査", "en": "Vulnerability Research" },
   { "id": "exploit-development", "ja": "エクスプロイト開発", "en": "Exploit Development" },
   { "id": "cryptanalysis", "ja": "暗号解析", "en": "Cryptanalysis", "aliases_ja": ["暗号解読"] },
 
-  { "id": "social-engineering", "ja": "ソーシャルエンジニアリング", "en": "Social Engineering" },
+  { "id": "social-engineering", "ja": "ソーシャルエンジニアリング", "en": "Social Engineering", "aliases_ja": ["詐欺検出"], "aliases_en": ["Scam Detection"] },
   { "id": "communication-tech", "ja": "通信技術", "en": "Communication Technologies" },
-  { "id": "physical-security", "ja": "物理的セキュリティ", "en": "Physical Security", "aliases_ja": ["物理セキュリティ"] },
-  { "id": "prepper", "ja": "プレッパー", "en": "Prepping / Survival" },
+  { "id": "physical-security", "ja": "物理的セキュリティ", "en": "Physical Security", "aliases_ja": ["物理セキュリティ", "HID", "錠前"], "aliases_en": ["HID", "Lock"] },
+  { "id": "prepper", "ja": "プレッパー", "en": "Prepping / Survival", "aliases_ja": ["サバイバル"], "aliases_en": ["Survival"] },
   { "id": "lockpicking", "ja": "鍵開け", "en": "Lockpicking" },
   { "id": "computer-science", "ja": "コンピューターサイエンス", "en": "Computer Science" },
-  { "id": "attack-detection", "ja": "攻撃検知", "en": "Attack Detection" },
+  { "id": "attack-detection", "ja": "攻撃検知", "en": "Attack Detection", "aliases_ja": ["侵入検知", "脅威インテリジェンス"], "aliases_en": ["Intrusion Detection", "Threat Intelligence"] },
   { "id": "deep-learning", "ja": "ディープラーニング", "en": "Deep Learning" },
-  { "id": "security-management", "ja": "セキュリティマネジメント", "en": "Security Management", "aliases_ja": ["セキュリティ管理"] },
-  { "id": "cyber-ninjutsu", "ja": "サイバー忍術", "en": "Cyber Ninjutsu" },
-  { "id": "mobile-hacking", "ja": "モバイルハッキング", "en": "Mobile Hacking" },
+  { "id": "security-management", "ja": "セキュリティマネジメント", "en": "Security Management", "aliases_ja": ["セキュリティ管理", "資産管理"], "aliases_en": ["Asset Management"] },
+  { "id": "cyber-ninjutsu", "ja": "サイバー忍術", "en": "Cyber Ninjutsu", "aliases_ja": ["スパイ"], "aliases_en": ["Spy"] },
+  { "id": "mobile-hacking", "ja": "モバイルハッキング", "en": "Mobile Hacking", "aliases_ja": ["モバイルセキュリティ"], "aliases_en": ["Mobile Security"] },
   { "id": "information-theory", "ja": "情報理論", "en": "Information Theory" },
   { "id": "hacker-culture", "ja": "ハッカー文化", "en": "Hacker Culture" },
   { "id": "disaster-prevention", "ja": "防災", "en": "Disaster Preparedness" },
-  { "id": "privacy", "ja": "プライバシー", "en": "Privacy" },
+  { "id": "privacy", "ja": "プライバシー", "en": "Privacy", "aliases_ja": ["ブラウザー指紋"], "aliases_en": ["Browser Fingerprinting"] },
   { "id": "design-failure-visualization", "ja": "設計ミス可視化", "en": "Design Failure Visualization" },
   { "id": "async-security", "ja": "非同期セキュリティ", "en": "Asynchronous Security" },
   { "id": "air-gap", "ja": "エアギャップ", "en": "Air Gap" },
 
-  { "id": "steganography", "ja": "ステガノグラフィー", "en": "Steganography", "aliases_en": ["steganography"] },
-  { "id": "osint", "ja": "OSINT", "en": "OSINT" },
-  { "id": "encoding", "ja": "符号化", "en": "Encoding", "aliases_ja": ["エンコーディング"] },
+  { "id": "steganography", "ja": "ステガノグラフィー", "en": "Steganography", "aliases_en": ["steganography", "concealment-cipher"], "aliases_ja": ["分置式暗号"] },
+  { "id": "osint", "ja": "OSINT", "en": "OSINT", "aliases_ja": ["Googleハッキング", "地理情報"], "aliases_en": ["Google Hacking", "Geospatial"] },
+  { "id": "encoding", "ja": "符号化", "en": "Encoding", "aliases_ja": ["エンコーディング", "テキスト変換", "モールス信号"], "aliases_en": ["Text Conversion", "Morse Code"] },
   { "id": "email-security", "ja": "メールセキュリティ", "en": "Email Security" },
   { "id": "deception", "ja": "欺瞞技術", "en": "Deception Technology", "aliases_ja": ["ハニーポット"], "aliases_en": ["Honeypot"] },
-  { "id": "data-representation", "ja": "データ表現", "en": "Data Representation" },
+  { "id": "data-representation", "ja": "データ表現", "en": "Data Representation", "aliases_ja": ["表現変換"], "aliases_en": ["Representation Conversion"] },
   { "id": "visual-cryptography", "ja": "視覚暗号", "en": "Visual Cryptography" },
-  { "id": "learning-support", "ja": "学習支援", "en": "Learning Support" },
+  { "id": "machine-learning", "ja": "機械学習", "en": "Machine Learning", "aliases_ja": ["学習支援"], "aliases_en": ["Learning Support"] },
   { "id": "acoustic-surveillance", "ja": "音響監視", "en": "Acoustic Surveillance" },
   { "id": "optical-surveillance", "ja": "光学監視", "en": "Optical Surveillance" },
 
   { "id": "lab-experiment", "ja": "実験ツール", "en": "Lab Experiments" },
-  { "id": "misc", "ja": "その他", "en": "Miscellaneous" }
+  { "id": "misc", "ja": "その他", "en": "Miscellaneous" },
+
+  { "id": "block-cipher", "ja": "ブロック暗号", "en": "Block Cipher" },
+  { "id": "phishing", "ja": "フィッシング", "en": "Phishing", "aliases_ja": ["フィッシング詐欺", "フィッシング対策"], "aliases_en": ["phishing", "Anti-Phishing"] },
+  { "id": "authorization", "ja": "認可", "en": "Authorization" }
 ]

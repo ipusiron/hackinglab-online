@@ -1,0 +1,366 @@
+{
+  "schema_version": 1,
+  "groups": [
+    {
+      "id": "cryptography",
+      "ja": "暗号",
+      "en": "Cryptography",
+      "description_ja": "鍵を使ってメッセージを隠す方法と、鍵を知らずに解く方法を扱います。",
+      "description_en": "Covers hiding messages with a key, and breaking them without it.",
+      "category_ids": [
+        "classic-crypto",
+        "modern-crypto",
+        "substitution-cipher",
+        "transposition-cipher",
+        "cryptanalysis",
+        "hash-function",
+        "visual-cryptography",
+        "steganography",
+        "block-cipher"
+      ]
+    },
+    {
+      "id": "encoding-information",
+      "ja": "符号と情報",
+      "en": "Encoding & information",
+      "description_ja": "鍵を使わずに情報を別の形で表す方法と、情報の量や確からしさを数で測る方法を扱います。",
+      "description_en": "Covers representing information in other forms without a key, and measuring information and certainty as numbers.",
+      "category_ids": [
+        "encoding",
+        "coding-theory",
+        "data-representation",
+        "qr-code",
+        "information-theory",
+        "machine-learning"
+      ]
+    },
+    {
+      "id": "web-networks",
+      "ja": "Webとネットワーク",
+      "en": "Web & networks",
+      "description_ja": "Webサイトやブラウザー、ネットワークの通信で起きる攻撃と守りを扱います。",
+      "description_en": "Covers attacks and defenses around websites, browsers, and network traffic.",
+      "category_ids": [
+        "web-security",
+        "network",
+        "email-security",
+        "web-design",
+        "color-theory",
+        "design-failure-visualization",
+        "async-security"
+      ]
+    },
+    {
+      "id": "authentication",
+      "ja": "認証",
+      "en": "Authentication",
+      "description_ja": "パスワードやPINなどで本人を確かめる仕組みと、その破られ方を扱います。",
+      "description_en": "Covers how systems check who you are, with passwords, PINs, and more, and how those checks get broken.",
+      "category_ids": [
+        "authentication",
+        "password-analysis",
+        "authorization",
+        "mobile-hacking"
+      ]
+    },
+    {
+      "id": "investigation-detection",
+      "ja": "調査と検知",
+      "en": "Investigation & detection",
+      "description_ja": "残った痕跡や公開情報から何が起きたかを調べ、攻撃に気づく方法を扱います。",
+      "description_en": "Covers finding out what happened from traces and public information, and noticing attacks.",
+      "category_ids": [
+        "forensics",
+        "osint",
+        "deception",
+        "attack-detection"
+      ]
+    },
+    {
+      "id": "physical-communications",
+      "ja": "物理と通信",
+      "en": "Physical & communications",
+      "description_ja": "鍵や封印など物の守りと、音や光、電話の信号で情報が出入りする道すじを扱います。",
+      "description_en": "Covers protecting physical things such as locks and seals, and how information moves through sound, light, and phone signals.",
+      "category_ids": [
+        "physical-security",
+        "lockpicking",
+        "anti-tamper",
+        "air-gap",
+        "communication-tech",
+        "acoustic-surveillance",
+        "optical-surveillance",
+        "cyber-ninjutsu"
+      ]
+    },
+    {
+      "id": "people-daily-life",
+      "ja": "人と暮らし",
+      "en": "People & daily life",
+      "description_ja": "人をだます手口や個人の情報の守り方、災害への備えなど、暮らしの中の安全を扱います。",
+      "description_en": "Covers everyday safety: tricks aimed at people, protecting personal information, and preparing for disasters.",
+      "category_ids": [
+        "social-engineering",
+        "privacy",
+        "security-management",
+        "prepper",
+        "disaster-prevention",
+        "hacker-culture",
+        "phishing"
+      ]
+    }
+  ],
+  "category_descriptions": [
+    {
+      "category_id": "deception",
+      "ja": "偽のファイルなどのわなを置き、侵入者が触れたことに気づく仕組みを扱います。",
+      "en": "Covers decoys, such as fake files, that tell you when an intruder has touched them."
+    },
+    {
+      "category_id": "async-security",
+      "ja": "要求と応答が別々に届く通信（非同期の通信）で起きる、取り違えや遅れの問題を扱います。",
+      "en": "Covers problems such as mix-ups and late replies in communication where requests and replies travel separately (asynchronous communication)."
+    },
+    {
+      "category_id": "design-failure-visualization",
+      "ja": "設計の誤りがどんな失敗を生むかを、再現して目で確かめます。",
+      "en": "Reproduces the failures that design mistakes cause, so you can watch them happen."
+    },
+    {
+      "category_id": "anti-tamper",
+      "ja": "改ざんや破損に耐える作りと、手を加えられたことに気づく作りを扱います。",
+      "en": "Covers designs that withstand tampering or damage, and designs that show when someone has tampered with them."
+    },
+    {
+      "category_id": "air-gap",
+      "ja": "ネットワークから切り離した機器と、そこへデータを出し入れする方法を扱います。",
+      "en": "Covers machines cut off from any network, and the ways data still gets in and out."
+    },
+    {
+      "category_id": "cyber-ninjutsu",
+      "ja": "迷彩や持ち物の備えなど、忍者の技を今のセキュリティに置き換えて学びます。",
+      "en": "Covers ninja techniques, such as camouflage and gear planning, recast for today's security."
+    },
+    {
+      "category_id": "prepper",
+      "ja": "災害や非常時に備え、物資や大事な情報を守り、取り戻せるようにする考え方を扱います。",
+      "en": "Covers preparing for disasters and emergencies so you can protect, and later recover, supplies and key information."
+    },
+    {
+      "category_id": "data-representation",
+      "ja": "同じ値やデータを、グレイコードやBase64など別の形で表す方法を扱います。",
+      "en": "Covers writing the same value or data in other forms, such as Gray code or Base64."
+    },
+    {
+      "category_id": "visual-cryptography",
+      "ja": "画像を複数の紙（シェア）に分け、重ねたときだけ秘密が見える暗号です。",
+      "en": "Covers ciphers that split an image into several sheets (shares), so the secret appears only when they are stacked."
+    },
+    {
+      "category_id": "coding-theory",
+      "ja": "QRコードやバーコードのように情報を記号で表し、読み取りの誤りを見つけたり直したりする仕組みです。",
+      "en": "Covers how information is written as symbols, as in QR codes and barcodes, and how reading errors are detected and corrected."
+    },
+    {
+      "category_id": "information-theory",
+      "ja": "情報の量を数で測る考え方と、秘密を何人かに分けて持つ方法（秘密分散）を扱います。",
+      "en": "Covers measuring information as a number, and secret sharing, which splits a secret among several people."
+    },
+    {
+      "category_id": "acoustic-surveillance",
+      "ja": "マイクや音を通じて、情報がもれたり送られたりする道すじを扱います。",
+      "en": "Covers how information leaks or travels through microphones and sound."
+    },
+    {
+      "category_id": "optical-surveillance",
+      "ja": "光の点滅やカメラを通じて、情報がもれたり送られたりする道すじを扱います。",
+      "en": "Covers how information leaks or travels through flashing light and cameras."
+    },
+    {
+      "category_id": "hacker-culture",
+      "ja": "映画や取材で描かれるハッカーの画面など、ハッカーをめぐる文化を扱います。",
+      "en": "Covers the culture around hackers, such as the hacker screens shown in films and on TV."
+    },
+    {
+      "category_id": "osint",
+      "ja": "地図や画像、検索など、だれでも見られる公開情報から手がかりを集める調査です。",
+      "en": "Gathers clues from public sources anyone can see, such as maps, images, and search engines."
+    },
+    {
+      "category_id": "forensics",
+      "ja": "ファイルや画像、ログに残った痕跡から、何が起きたかを調べます。",
+      "en": "Investigates what happened from traces left in files, images, and logs."
+    },
+    {
+      "category_id": "steganography",
+      "ja": "文や画像の中に、別のメッセージがあること自体を隠す技法を扱います。",
+      "en": "Covers hiding the very existence of a message inside text or images."
+    },
+    {
+      "category_id": "encoding",
+      "ja": "モールス信号やBase64のように、決まった規則で文字を別の形に書き換えます。鍵を使わないので、暗号とは違います。",
+      "en": "Covers rewriting text in another form by a fixed rule, as in Morse code or Base64. No key is used, so it is not encryption."
+    },
+    {
+      "category_id": "substitution-cipher",
+      "ja": "文字を別の文字や記号に置き換えて隠す暗号です。シーザー暗号が代表です。",
+      "en": "Ciphers that hide text by replacing each letter with another letter or symbol. The Caesar cipher is the classic example."
+    },
+    {
+      "category_id": "transposition-cipher",
+      "ja": "文字はそのままで、並ぶ位置を入れ替えて隠す暗号です。",
+      "en": "Ciphers that keep the letters but hide the text by moving them to new positions."
+    },
+    {
+      "category_id": "cryptanalysis",
+      "ja": "鍵を知らずに暗号文を読む方法（頻度分析や総当たりなど）を扱います。",
+      "en": "Covers ways to read a ciphertext without knowing the key, such as frequency analysis and brute force."
+    }
+  ],
+  "ignored_raw_names": [
+    {
+      "lang": "ja",
+      "name": "シミュレーター"
+    },
+    {
+      "lang": "en",
+      "name": "Simulator"
+    },
+    {
+      "lang": "ja",
+      "name": "文字列解析"
+    },
+    {
+      "lang": "en",
+      "name": "String Analysis"
+    },
+    {
+      "lang": "ja",
+      "name": "コード"
+    },
+    {
+      "lang": "en",
+      "name": "Code Cipher"
+    },
+    {
+      "lang": "ja",
+      "name": "セキュリティ・アート"
+    },
+    {
+      "lang": "en",
+      "name": "Security Art"
+    },
+    {
+      "lang": "ja",
+      "name": "セキュリティ分析"
+    },
+    {
+      "lang": "en",
+      "name": "Security Analysis"
+    },
+    {
+      "lang": "ja",
+      "name": "セキュリティ可視化"
+    },
+    {
+      "lang": "en",
+      "name": "Security Visualization"
+    },
+    {
+      "lang": "ja",
+      "name": "テキスト処理"
+    },
+    {
+      "lang": "en",
+      "name": "Text Processing"
+    },
+    {
+      "lang": "ja",
+      "name": "テキスト解析"
+    },
+    {
+      "lang": "en",
+      "name": "Text Analysis"
+    },
+    {
+      "lang": "ja",
+      "name": "データベース"
+    },
+    {
+      "lang": "en",
+      "name": "Database"
+    },
+    {
+      "lang": "ja",
+      "name": "ワードパズル"
+    },
+    {
+      "lang": "en",
+      "name": "Word Puzzle"
+    },
+    {
+      "lang": "ja",
+      "name": "人的セキュリティ"
+    },
+    {
+      "lang": "en",
+      "name": "Human Security"
+    },
+    {
+      "lang": "ja",
+      "name": "分析・評価補助"
+    },
+    {
+      "lang": "en",
+      "name": "Analysis Aid"
+    },
+    {
+      "lang": "ja",
+      "name": "情報漏洩対策"
+    },
+    {
+      "lang": "en",
+      "name": "Information Leak Prevention"
+    },
+    {
+      "lang": "ja",
+      "name": "攻撃経路分析"
+    },
+    {
+      "lang": "en",
+      "name": "Attack Path Analysis"
+    },
+    {
+      "lang": "ja",
+      "name": "教育・デモ"
+    },
+    {
+      "lang": "en",
+      "name": "Education & Demo"
+    },
+    {
+      "lang": "ja",
+      "name": "数秘術"
+    },
+    {
+      "lang": "en",
+      "name": "Numerology"
+    },
+    {
+      "lang": "ja",
+      "name": "自然言語処理"
+    },
+    {
+      "lang": "en",
+      "name": "NLP"
+    },
+    {
+      "lang": "ja",
+      "name": "難読化"
+    },
+    {
+      "lang": "en",
+      "name": "Obfuscation"
+    }
+  ]
+}

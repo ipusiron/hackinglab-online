@@ -24,6 +24,7 @@ from urllib.parse import urlsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 import yaml
+from category_groups import MetadataError, validate_categories, validate_groups
 
 ROOT = Path(__file__).resolve().parents[1]
 JST = dt.timezone(dt.timedelta(hours=9))
@@ -98,31 +99,10 @@ def read_repos(path: Path) -> list[str]:
 
 
 def load_categories(path: Path) -> dict:
-    raw = read_json(path)
-    if not isinstance(raw, list) or not raw:
-        raise CatalogError("categories.json must be a nonempty array")
-    maps = {"ja": {}, "en": {}}
-    seen_ids = set()
-    for category in raw:
-        if not isinstance(category, dict):
-            raise CatalogError("Invalid category entry")
-        cid = category.get("id")
-        if not isinstance(cid, str) or not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", cid) or cid in seen_ids:
-            raise CatalogError("Invalid or duplicate category id")
-        seen_ids.add(cid)
-        for lang in ("ja", "en"):
-            name = category.get(lang)
-            aliases = category.get("aliases_" + lang, [])
-            if not isinstance(name, str) or not name or not isinstance(aliases, list):
-                raise CatalogError("Invalid category name or aliases: " + cid)
-            for label in [name, *aliases]:
-                if not isinstance(label, str) or not label:
-                    raise CatalogError("Invalid category alias: " + cid)
-                if label in maps[lang] and maps[lang][label] != cid:
-                    raise CatalogError("Category name resolves to two ids: " + label)
-                maps[lang][label] = cid
-    return maps
-
+    try:
+        return validate_categories(read_json(path))[1]
+    except MetadataError as exc:
+        raise CatalogError(str(exc)) from exc
 
 def fetch_readme(repo: str, timeout: float) -> str:
     for branch in ("main", "master"):
@@ -264,11 +244,11 @@ class Report:
     visible: int = 0
     changed: bool = False
 
-    def collect(self, entry: dict, maps: dict) -> None:
+    def collect(self, entry: dict, maps: dict, ignored=None) -> None:
         tid = entry["id"]
         for lang in ("ja", "en"):
             for name in entry["category_" + lang]:
-                if name not in maps[lang]:
+                if name not in maps[lang] and name not in (ignored or {}).get(lang, set()):
                     self.unknown.setdefault((lang, name), set()).add(tid)
         if not entry["category_ids"]:
             self.empty_categories.append(tid)
@@ -348,6 +328,10 @@ def regenerate(root: Path, *, timeout: float = 20, check_demos: bool = False,
     today = now.astimezone(JST).date()
     repos = read_repos(root / "repos.txt")
     maps = load_categories(root / "data/categories.json")
+    try:
+        ignored = validate_groups(read_json(root / "data/category_groups.json"), read_json(root / "data/categories.json"))
+    except MetadataError as exc:
+        raise CatalogError(str(exc)) from exc
     tools_path, added_path = root / "data/tools.json", root / "data/added.json"
     old_data, previous = load_previous(tools_path, maps)
     added = load_added(added_path, today, previous)
@@ -376,7 +360,7 @@ def regenerate(root: Path, *, timeout: float = 20, check_demos: bool = False,
             next_added[tid] = today.isoformat()
         if tid in next_added:
             entry["added"] = next_added[tid]
-        report.collect(entry, maps)
+        report.collect(entry, maps, ignored)
         candidates.append(entry)
     validate_unique(candidates)
     candidates.sort(key=lambda tool: tool["id"])

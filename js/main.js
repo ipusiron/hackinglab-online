@@ -5,10 +5,13 @@
 let currentLang = document.documentElement.lang === "en" ? "en" : "ja"; // "ja" | "en"
 let tools = [];
 let categories = [];
+const HG = typeof HLOCategoryGroups !== "undefined" ? HLOCategoryGroups : null;
+let categoryGroups = null;
 let books = [];
 let filters = {
   book: "",
   categoryId: "",
+  fieldId: "",
   progress: "all",
   search: ""
 };
@@ -276,12 +279,31 @@ function updateListCount() {
   const el = document.getElementById("list-count");
   if (!el || loadState !== "ready") return;
   const counts = listCounts();
+  updateCategoryGuidance(counts.shown);
   el.textContent = listText(counts.outside ? "outside_count" : counts.shown === counts.total ? "all_count" : "filtered_count", counts);
   // Reserve the longest possible outside count at the current width/font size.
   // Updating progress must not move the cards below this line.
   const space = document.getElementById("list-count-space");
   if (space) space.textContent = filters.progress !== "all" && !toolSet.ids.length && counts.shown
     ? listText("outside_count", { ...counts, outside: counts.shown }) : "";
+}
+
+function removeUnusedCategoryChoices() {
+  const available = new Set(tools.filter((t) => t.hub !== false).flatMap((t) => t.category_ids || []));
+  document.getElementById("filter-category")?.querySelectorAll("option").forEach((option) => {
+    if (option.value && !option.value.startsWith("field:") && option.value !== filters.categoryId && !available.has(option.value)) option.remove();
+  });
+}
+
+function updateCategoryGuidance(shown) {
+  const guidance = document.getElementById("category-guidance");
+  if (!guidance) return;
+  const field = categoryGroups?.byId.get(filters.fieldId);
+  const description = categoryGroups?.descriptions.get(filters.categoryId);
+  const message = field ? field[currentLang === "ja" ? "description_ja" : "description_en"]
+    : description ? description[currentLang] : "";
+  guidance.hidden = loadState !== "ready" || !shown || !!toolSet.ids.length || !message;
+  if (guidance.textContent !== message) guidance.textContent = message;
 }
 
 function announceListCount(delay = 0, userInitiated = false) {
@@ -636,8 +658,13 @@ function setupStaticUI() {
   categorySelect?.addEventListener("change", (e) => {
     keepInPlace(categorySelect, () => {
       clearToolHashForFilter();
-      commitUrl({ cat: e.target.value }, "push", "category");
-      filters.categoryId = e.target.value;
+      const value = e.target.value;
+      const field = value.startsWith("field:") ? value.slice(6) : "";
+      const nextField = field && categoryGroups?.byId.has(field) ? field : "";
+      const nextCategory = !nextField && categories.some((c) => c.id === value) ? value : "";
+      commitUrl({ cat: nextCategory, field: nextField }, "push", "category");
+      filters.categoryId = nextCategory;
+      filters.fieldId = nextField;
       renderToolList(undefined, false);
       announceListCount(0, true);
     });
@@ -1053,6 +1080,7 @@ async function fetchCatalogJson(url, controller) {
 }
 
 function validateRequiredCatalog(nextCategories, catalog) {
+  if (HG) HG.validateCategories(nextCategories);
   const text = (value) => typeof value === "string" && value.trim().length > 0;
   const strings = (value) => Array.isArray(value) && value.every((v) => typeof v === "string");
   const unique = (items, key) => new Set(items.map((item) => item[key])).size === items.length;
@@ -1105,13 +1133,14 @@ async function loadData() {
   const retry = document.getElementById("retry-data");
   const returnFocus = loadState === "error" && document.activeElement === retry;
   const focusGuard = { interaction: interactionVersion, navigation: navigationVersion, href: window.location.href };
-  const attempt = { required: new AbortController(), optional: new AbortController() };
+  const attempt = { required: new AbortController(), optional: new AbortController(), groups: new AbortController() };
   loadAttempt = attempt;
   urlStateReady = false;
   setLoadState("loading");
   setListBusy(true);
   reserveBookBanner();
   const booksPromise = fetchCatalogJson("./data/books.json", attempt.optional).catch(() => null);
+  const groupsPromise = fetchCatalogJson("./data/category_groups.json", attempt.groups).catch(() => null);
   const requiredPromise = Promise.all([
     fetchCatalogJson("./data/categories.json", attempt.required),
     fetchCatalogJson("./data/tools.json", attempt.required)
@@ -1119,9 +1148,14 @@ async function loadData() {
   try {
     const [nextCategories, toolsJson] = await boundedResult(requiredPromise, 20000, attempt.required, false);
     validateRequiredCatalog(nextCategories, toolsJson);
-    const bJson = await boundedResult(booksPromise, 3000, attempt.optional, true);
+    const [bJson, gJson] = await Promise.all([
+      boundedResult(booksPromise, 3000, attempt.optional, true),
+      boundedResult(groupsPromise, 3000, attempt.groups, true)
+    ]);
     if (loadAttempt !== attempt) return;
     categories = nextCategories;
+    categoryGroups = null;
+    try { if (HG) categoryGroups = HG.validateGroups(gJson, nextCategories); } catch (_) { /* Optional metadata: use flat categories. */ }
     tools = toolsJson.tools;
     searchEntries = null;
     books = usableBooks(bJson);
@@ -1136,6 +1170,7 @@ async function loadData() {
     const urlState = readUrlState();
     filters.book = urlState.book;
     filters.categoryId = urlState.cat;
+    filters.fieldId = urlState.field;
 
     // 検索欄：描く前に欄の値で絞り、欄の文字と一覧を食い違わせない。URL の ?q= は開いたときに欄へ入れてあり（setupStaticUI）、
     // ここでは欄を書き換えない（読み込み中に打った文字を消さない）。戻るボタンや Firefox の再読み込みで開き直すと、ブラウザーが
@@ -1150,8 +1185,8 @@ async function loadData() {
     applyToolLinks(queuedNavigation && hasSavedView(queuedNavigation.view));
 
     // 読めた条件だけを、URL に正規の形で書き直す（大文字や前後の空白・並びをそろえる。履歴は増やさない）。
-    // 存在しない本・カテゴリー・タブの値は書き換えずに残す（絞り込みを変えると、画面の条件で書き直すので外れる）
-    const tidy = { q: searchInput ? searchInput.value : "" };
+    // カテゴリーと分野は有効な一方だけを残す。本・タブの未知値は既存の通知/表示規則に委ねる。
+    const tidy = { q: searchInput ? searchInput.value : "", cat: filters.categoryId, field: filters.fieldId };
     if (urlState.book) tidy.book = filters.book;
     if (urlState.cat) tidy.cat = filters.categoryId;
     if (urlState.tab === "dashboard") tidy.tab = currentTab;
@@ -1192,6 +1227,7 @@ async function loadData() {
   } finally {
     attempt.required.abort();
     attempt.optional.abort();
+    attempt.groups.abort();
     if (loadAttempt === attempt) loadAttempt = null;
   }
 }
@@ -1481,14 +1517,33 @@ function setupFilterOptions() {
     optAll.textContent = currentLang === "ja" ? "すべて" : "All";
     categorySelect.appendChild(optAll);
 
-    categories.forEach((cat) => {
+    const available = new Set(tools.filter((t) => t.hub !== false).flatMap((t) => t.category_ids || []));
+    // Keep a URL-selected empty category visible so the active condition can be cleared.
+    const visible = (id) => available.has(id) || filters.categoryId === id;
+    const byId = new Map(categories.map((c) => [c.id, c]));
+    const grouped = new Set();
+    const addCategory = (parent, cat) => {
+      if (!cat || !visible(cat.id)) return;
       const opt = document.createElement("option");
       opt.value = cat.id;
       opt.textContent = currentLang === "ja" ? cat.ja : cat.en;
-      categorySelect.appendChild(opt);
+      parent.appendChild(opt);
+    };
+    if (categoryGroups) categoryGroups.groups.forEach((group) => {
+      group.category_ids.forEach((id) => grouped.add(id));
+      if (!group.category_ids.some(visible) && filters.fieldId !== group.id) return;
+      const optgroup = document.createElement("optgroup");
+      optgroup.label = currentLang === "ja" ? group.ja : group.en;
+      const all = document.createElement("option");
+      all.value = "field:" + group.id;
+      all.textContent = currentLang === "ja" ? group.ja + "（分野全体）" : group.en + " (all)";
+      optgroup.appendChild(all);
+      group.category_ids.forEach((id) => addCategory(optgroup, byId.get(id)));
+      categorySelect.appendChild(optgroup);
     });
+    categories.filter((cat) => !grouped.has(cat.id)).forEach((cat) => addCategory(categorySelect, cat));
 
-    categorySelect.value = filters.categoryId;
+    categorySelect.value = filters.categoryId || (filters.fieldId ? "field:" + filters.fieldId : "");
   }
 
   if (progressSelect) {
@@ -1522,12 +1577,14 @@ function readUrlState() {
   if (HU) {
     return HU.readState(window.location.search, {
       books: haveBooks ? books.map((b) => b.slug) : [],
-      categories: Array.isArray(categories) ? categories.map((c) => c.id) : []
+      categories: Array.isArray(categories) ? categories.map((c) => c.id) : [],
+      fields: categoryGroups ? categoryGroups.groups.map((g) => g.id) : []
     });
   }
   return {
     book: haveBooks ? HB.resolveBookParam(window.location.search, books) : "",
     cat: "",
+    field: "",
     q: "",
     tab: "tools"
   };
@@ -1539,6 +1596,7 @@ function currentUrlState() {
   return {
     book: filters.book,
     cat: filters.categoryId,
+    field: filters.fieldId,
     q: searchInput ? searchInput.value : "",
     tab: currentTab,
     tools: toolSet.ids.length ? toolSet.ids : null
@@ -1715,10 +1773,18 @@ function applyHistoryState(view) {
   if (next.tab !== currentTab) switchTab(next.tab === "dashboard" ? "tab-dashboard" : "tab-tools");
   filters.book = next.book;
   filters.categoryId = next.cat;
+  filters.fieldId = next.field;
   if (view && ["all", "0", "1", "2", "3"].includes(view.progress)) filters.progress = view.progress;
   if (searchInput && searchInput.value.trim() !== next.q) searchInput.value = next.q;
   setSearchQuery(next.q);
   applyToolLinks(hasSavedView(view));
+  // Canonicalize only these keys; unknown book values still drive their notice.
+  if (HU) {
+    try {
+      const url = HU.buildUrl(window.location.href, { cat: filters.categoryId, field: filters.fieldId });
+      if (url !== window.location.href) window.history.replaceState(window.history.state, "", url);
+    } catch (_) { /* Keep the restored state when history is unavailable. */ }
+  }
   setupFilterOptions();
   refreshBookTarget();
   renderToolList();
@@ -1891,7 +1957,7 @@ function openStartEntry(slug) {
     return;
   }
   const hadBook = !!filters.book;
-  commitUrl({ book: "", cat: "", q: "", tools: null, hash: "" }, "push");
+  commitUrl({ book: "", cat: "", field: "", q: "", tools: null, hash: "" }, "push");
   leaveToolSet();
   clearOtherFilters();
   setBookFilter("", { history: false, cleared: hadBook });
@@ -1900,6 +1966,7 @@ function openStartEntry(slug) {
 // カテゴリー・進捗・検索の条件と欄を空にする（描き直しはしない）
 function clearOtherFilters() {
   filters.categoryId = "";
+  filters.fieldId = "";
   filters.progress = "all";
   const c = document.getElementById("filter-category");
   const p = document.getElementById("filter-progress");
@@ -1968,7 +2035,7 @@ function applyToolLinks(preserveView) {
   refreshBookTarget();
   if (!filterByBook(tool)) { filters.book = ""; linkNotices.push("book"); }
   let cleared = false;
-  if (!filterByCategory(tool)) { filters.categoryId = ""; cleared = true; }
+  if (!filterByCategory(tool)) { filters.categoryId = ""; filters.fieldId = ""; cleared = true; }
   if (!filterByProgress(tool)) { filters.progress = "all"; cleared = true; }
   if (!filterBySearch(tool)) {
     const input = document.getElementById("filter-search-input");
@@ -2187,6 +2254,7 @@ function renderToolList(retainedIds, announceBookNotice = true) {
   if (loadState !== "ready") return;
 
   refreshBookTarget();
+  removeUnusedCategoryChoices();
   const book = toolSet.ids.length ? null : currentBook();
   renderSetBanner();
   renderLinkStatus();
@@ -2208,6 +2276,7 @@ function renderToolList(retainedIds, announceBookNotice = true) {
     currentLang,
     filters.book,
     filters.categoryId,
+    filters.fieldId,
     filters.progress,
     filters.search,
     toolSet.ids.join(","),
@@ -2300,10 +2369,11 @@ function appendEmptyState(listEl, book) {
   clear.textContent = listText(book ? "clear_except_book" : "clear_all");
   clear.addEventListener("click", () => {
     cancelListStatus();
-    commitUrl({ cat: "", q: "", hash: "" }, "push");
+    commitUrl({ cat: "", field: "", q: "", hash: "" }, "push");
     linkedToolId = "";
     linkNotices = [];
     filters.categoryId = "";
+    filters.fieldId = "";
     filters.progress = "all";
     setSearchQuery("");
     document.getElementById("filter-category").value = "";
@@ -2548,9 +2618,10 @@ function filterByBook(tool) {
 }
 
 function filterByCategory(tool) {
-  if (!filters.categoryId) return true;
   const ids = tool.category_ids || [];
-  return ids.includes(filters.categoryId);
+  if (filters.categoryId) return ids.includes(filters.categoryId);
+  const field = categoryGroups?.byId.get(filters.fieldId);
+  return !field || field.category_ids.some((id) => ids.includes(id));
 }
 
 function filterByProgress(tool) {
