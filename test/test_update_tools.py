@@ -1,0 +1,427 @@
+"""Catalog generation failure and history tests; every HTTP request is mocked."""
+import contextlib
+import datetime as dt
+import io
+import json
+import tempfile
+import unittest
+from pathlib import Path
+from unittest import mock
+from urllib.error import HTTPError, URLError
+from http.client import BadStatusLine, IncompleteRead
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+import update_tools as catalog
+import init_added
+import yaml
+
+NOW = dt.datetime(2026, 11, 19, 15, 1, tzinfo=dt.timezone.utc)
+DATE = "2026-01-01"
+CATEGORIES = [
+    {"id": "z-first", "ja": "最初", "en": "First", "aliases_ja": ["別名"]},
+    {"id": "a-second", "ja": "次", "en": "Second"},
+]
+
+
+def tool(tid="day001", repo="one", *, visible=True, added=DATE):
+    value = {
+        "id": tid, "slug": repo, "title": repo.title(),
+        "subtitle_ja": "", "subtitle_en": "", "description_ja": "", "description_en": "",
+        "category_ja": ["最初"], "category_en": ["First"], "category_ids": ["z-first"],
+        "difficulty": 2, "tags": [], "repo_url": "https://github.com/example/" + repo,
+        "demo_url": "https://example.github.io/" + repo + "/", "hub": visible,
+    }
+    if added is not None:
+        value["added"] = added
+    return value
+
+
+def readme(value):
+    value = {key: val for key, val in value.items() if key not in ("category_ids", "added")}
+    return "<!--\n---\n" + yaml.safe_dump(value, allow_unicode=True) + "---\n-->\n"
+
+
+class Response:
+    status = 200
+
+    def __init__(self, url, body="", status=200):
+        self.url, self.body, self.status = url, body, status
+
+    def geturl(self):
+        return self.url
+
+    def read(self):
+        return self.body.encode("utf-8")
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        return False
+
+
+class RegenerationTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        (self.root / "data").mkdir()
+        self.write("data/categories.json", CATEGORIES)
+        self.install([tool()])
+
+    def write(self, name, value):
+        (self.root / name).write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+    def install(self, values):
+        self.values = values
+        self.write("data/tools.json", {"schema_version": 1, "generated_at": "2026-01-01T00:00:00Z", "tools": values})
+        self.write("data/added.json", {value["id"]: value["added"] for value in values if "added" in value})
+        (self.root / "repos.txt").write_text("\n".join(value["repo_url"] for value in values) + "\n", encoding="utf-8")
+
+    def outputs(self):
+        return {name: (self.root / name).read_bytes() for name in ("data/tools.json", "data/added.json")}
+
+    def data(self, name="tools"):
+        return json.loads((self.root / ("data/" + name + ".json")).read_text(encoding="utf-8"))
+
+    def serve(self, values=None):
+        entries = self.values if values is None else values
+        lookup = {catalog.repo_key(entry["repo_url"]): readme(entry) for entry in entries}
+
+        def request(req, *, timeout):
+            self.assertGreater(timeout, 0)
+            self.assertEqual(req.get_method(), "GET")
+            for repo, body in lookup.items():
+                if req.full_url == f"https://raw.githubusercontent.com/{repo}/main/README.md":
+                    return Response(req.full_url, body)
+            raise AssertionError("Unexpected request: " + req.full_url)
+        return request
+
+    def regenerate(self, side_effect=None, **kwargs):
+        with mock.patch.object(catalog, "urlopen", side_effect=side_effect or self.serve()) as http, contextlib.redirect_stderr(io.StringIO()):
+            report = catalog.regenerate(self.root, now=NOW, **kwargs)
+        return report, http
+
+    def append_repo(self, repo):
+        with (self.root / "repos.txt").open("a", encoding="utf-8") as stream:
+            stream.write("https://github.com/example/" + repo + "\n")
+
+    def test_same_content_keeps_bytes_and_generation_timestamp(self):
+        before = self.outputs()
+        report, _ = self.regenerate()
+        self.assertFalse(report.changed)
+        self.assertEqual(self.outputs(), before)
+
+    def test_only_real_metadata_change_updates_generation_time(self):
+        changed = tool()
+        changed["description_ja"] = "新しい説明"
+        self.regenerate(self.serve([changed]))
+        self.assertEqual(self.data()["generated_at"], "2026-11-19T15:01:00Z")
+        self.assertEqual(self.data()["tools"][0]["description_ja"], "新しい説明")
+        self.assertEqual(self.data("added"), {"day001": DATE})
+
+    def test_timeout_keeps_existing_but_does_not_block_a_valid_new_repo(self):
+        self.append_repo("two")
+        new = tool("day002", "two", added=None)
+        serve = self.serve([new])
+
+        def request(req, **kwargs):
+            if "/one/" in req.full_url:
+                raise TimeoutError("test timeout")
+            return serve(req, **kwargs)
+        report, http = self.regenerate(request)
+        self.assertEqual(http.call_count, 2)
+        self.assertEqual(report.retained[0][0], "example/one")
+        self.assertEqual([value["id"] for value in self.data()["tools"]], ["day001", "day002"])
+        self.assertEqual(self.data("added"), {"day001": DATE, "day002": "2026-11-20"})
+
+    def test_read_interrupted_keeps_existing_and_adds_next_valid_repo(self):
+        self.append_repo("two")
+        new = tool("day002", "two", added=None)
+        serve = self.serve([new])
+
+        class InterruptedResponse(Response):
+            def read(self):
+                raise IncompleteRead(b"partial body", 100)
+
+        def request(req, **kwargs):
+            if "/one/" in req.full_url:
+                return InterruptedResponse(req.full_url)
+            return serve(req, **kwargs)
+
+        report, http = self.regenerate(request)
+        self.assertEqual(http.call_count, 2)
+        self.assertEqual(report.retained, [("example/one", "README read failed: IncompleteRead")])
+        self.assertEqual(self.data()["tools"][0], tool())
+        self.assertEqual([entry["id"] for entry in self.data()["tools"]], ["day001", "day002"])
+        self.assertEqual(self.data("added"), {"day001": DATE, "day002": "2026-11-20"})
+
+    def test_only_404_tries_master(self):
+        def request(req, **kwargs):
+            if "/main/" in req.full_url:
+                raise HTTPError(req.full_url, 404, "Not found", {}, None)
+            return Response(req.full_url, readme(tool()))
+        report, http = self.regenerate(request)
+        self.assertFalse(report.changed)
+        self.assertEqual(http.call_count, 2)
+        self.assertIn("/master/", http.call_args.args[0].full_url)
+
+    def test_server_error_does_not_try_another_branch(self):
+        before = self.outputs()
+        report, http = self.regenerate(HTTPError("https://example.com", 503, "Unavailable", {}, None))
+        self.assertEqual(http.call_count, 1)
+        self.assertEqual(self.outputs(), before)
+        self.assertEqual(len(report.retained), 1)
+
+    def test_both_404_keep_previous(self):
+        before = self.outputs()
+        report, http = self.regenerate(HTTPError("https://example.com", 404, "Not found", {}, None))
+        self.assertEqual(http.call_count, 2)
+        self.assertEqual(self.outputs(), before)
+        self.assertEqual(len(report.retained), 1)
+
+    def test_malformed_existing_readme_retains_valid_previous(self):
+        before = self.outputs()
+        for body in ("no metadata", "<!--\n---\nid: [\n---\n-->", "<!--\n---\n- a\n---\n-->"):
+            with self.subTest(body=body):
+                report, _ = self.regenerate(lambda req, **kwargs: Response(req.full_url, body))
+                self.assertEqual(self.outputs(), before)
+                self.assertEqual(len(report.retained), 1)
+
+    def test_new_invalid_metadata_is_fatal_and_writes_nothing(self):
+        self.append_repo("two")
+        before = self.outputs()
+        new = tool("day002", "two", added=None)
+        good = self.serve()
+        for body in ("bad metadata", readme({**new, "id": ""}), readme({**new, "hub": "false"})):
+            def request(req, **kwargs):
+                if "/two/" in req.full_url:
+                    return Response(req.full_url, body)
+                return good(req, **kwargs)
+            with self.subTest(body=body), self.assertRaises(catalog.CatalogError):
+                self.regenerate(request)
+            self.assertEqual(self.outputs(), before)
+
+    def test_new_unavailable_repo_is_fatal(self):
+        self.append_repo("two")
+        before = self.outputs()
+        good = self.serve()
+
+        def request(req, **kwargs):
+            if "/two/" in req.full_url:
+                raise URLError("offline")
+            return good(req, **kwargs)
+        with self.assertRaises(catalog.CatalogError):
+            self.regenerate(request)
+        self.assertEqual(self.outputs(), before)
+
+    def test_main_401_stops_before_next_request_and_preserves_summary(self):
+        self.append_repo("two")
+        summary = self.root / "summary.md"
+        summary.write_text("previous\n", encoding="utf-8")
+        before = self.outputs()
+        with mock.patch.object(catalog, "urlopen", side_effect=HTTPError("https://example.com", 401, "Unauthorized", {}, None)) as http:
+            with contextlib.redirect_stderr(io.StringIO()), contextlib.redirect_stdout(io.StringIO()):
+                result = catalog.main(["--root", str(self.root), "--summary", str(summary), "--check-demos"])
+        self.assertEqual(result, 2)
+        self.assertEqual(http.call_count, 1)
+        self.assertEqual(self.outputs(), before)
+        self.assertEqual(summary.read_text(encoding="utf-8"), "previous\n")
+
+    def test_master_401_is_fatal_and_preserves_files(self):
+        before = self.outputs()
+        def request(req, **kwargs):
+            raise HTTPError(req.full_url, 404 if "/main/" in req.full_url else 401, "Error", {}, None)
+        with self.assertRaises(catalog.UnauthorizedError):
+            self.regenerate(request)
+        self.assertEqual(self.outputs(), before)
+
+    def test_demo_get_401_stops_before_any_output(self):
+        changed = {**tool(), "description_en": "changed"}
+        good = self.serve([changed])
+        before = self.outputs()
+        def request(req, **kwargs):
+            if req.full_url.startswith("https://example.github.io"):
+                self.assertEqual(req.get_method(), "GET")
+                raise HTTPError(req.full_url, 401, "Unauthorized", {}, None)
+            return good(req, **kwargs)
+        with self.assertRaises(catalog.UnauthorizedError):
+            self.regenerate(request, check_demos=True)
+        self.assertEqual(self.outputs(), before)
+
+    def test_demo_404_is_reported_and_uses_get(self):
+        good = self.serve()
+        def request(req, **kwargs):
+            if req.full_url.startswith("https://example.github.io"):
+                self.assertEqual(req.get_method(), "GET")
+                raise HTTPError(req.full_url, 404, "Not found", {}, None)
+            return good(req, **kwargs)
+        report, _ = self.regenerate(request, check_demos=True)
+        self.assertEqual(report.demos[0][2], "HTTP 404")
+
+    def test_demo_connection_protocol_error_is_reported(self):
+        serve = self.serve()
+        before = self.outputs()
+        for failure in (BadStatusLine("incomplete status"), IncompleteRead(b"partial header", 10)):
+            def request(req, **kwargs):
+                if req.full_url.startswith("https://example.github.io"):
+                    self.assertEqual(req.get_method(), "GET")
+                    raise failure
+                return serve(req, **kwargs)
+
+            with self.subTest(failure=type(failure).__name__):
+                report, _ = self.regenerate(request, check_demos=True)
+                self.assertEqual(report.demos[0][2], type(failure).__name__)
+                self.assertEqual(self.outputs(), before)
+
+    def test_explicit_repo_removal_does_not_restore_old_tool_or_remove_date(self):
+        self.install([tool(), tool("day002", "two")])
+        (self.root / "repos.txt").write_text("https://github.com/example/one\n", encoding="utf-8")
+        report, http = self.regenerate()
+        self.assertEqual(http.call_count, 1)
+        self.assertEqual([value["id"] for value in self.data()["tools"]], ["day001"])
+        self.assertEqual(self.data("added"), {"day001": DATE, "day002": DATE})
+        self.assertEqual(report.removed, [("example/two", "day002")])
+
+    def test_explicit_hub_false_then_true_keeps_initial_date(self):
+        self.regenerate(self.serve([tool(visible=False)]))
+        self.assertFalse(self.data()["tools"][0]["hub"])
+        self.assertEqual(self.data("added")["day001"], DATE)
+        self.regenerate(self.serve([tool()]))
+        self.assertTrue(self.data()["tools"][0]["hub"])
+        self.assertEqual(self.data("added")["day001"], DATE)
+
+    def test_never_visible_tool_gets_date_only_when_first_visible(self):
+        self.install([tool(visible=False, added=None)])
+        self.regenerate()
+        self.assertEqual(self.data("added"), {})
+        self.assertNotIn("added", self.data()["tools"][0])
+        self.regenerate(self.serve([tool(added=None)]))
+        self.assertEqual(self.data("added"), {"day001": "2026-11-20"})
+
+    def test_readded_tool_reuses_retained_history(self):
+        self.write("data/added.json", {"day001": DATE, "day002": "2025-12-25"})
+        self.append_repo("two")
+        self.regenerate(self.serve([tool(), tool("day002", "two", added=None)]))
+        self.assertEqual(self.data("added")["day002"], "2025-12-25")
+
+    def test_duplicate_candidate_id_or_slug_is_fatal(self):
+        self.append_repo("two")
+        before = self.outputs()
+        for new in (tool("day001", "two"), {**tool("day002", "two"), "slug": "one"}):
+            with self.subTest(new=new), self.assertRaises(catalog.CatalogError):
+                self.regenerate(self.serve([tool(), new]))
+            self.assertEqual(self.outputs(), before)
+
+    def test_unsafe_url_never_falls_back_or_gets_fetched(self):
+        before = self.outputs()
+        for url in ("javascript:alert(1)", "http://example.com/", "https://user:pass@example.com/", "https://example.com/\n"):
+            with self.subTest(url=url), self.assertRaises(catalog.CatalogError):
+                self.regenerate(self.serve([{**tool(), "demo_url": url}]), check_demos=True)
+            self.assertEqual(self.outputs(), before)
+
+    def test_category_order_and_unknown_and_difficulty_are_reported(self):
+        changed = {**tool(), "category_ja": ["最初", "別名", "未知"], "category_en": ["Second", "First"], "difficulty": "2"}
+        report, _ = self.regenerate(self.serve([changed]))
+        entry = self.data()["tools"][0]
+        self.assertEqual(entry["category_ids"], ["z-first", "a-second"])
+        self.assertIsNone(entry["difficulty"])
+        self.assertEqual(report.unknown, {("ja", "未知"): {"day001"}})
+        self.assertEqual(report.difficulty, ["day001"])
+
+    def test_missing_categories_warn_but_do_not_drop_tool(self):
+        changed = {**tool(), "category_ja": ["未知"], "category_en": []}
+        report, _ = self.regenerate(self.serve([changed]))
+        self.assertEqual(report.empty_categories, ["day001"])
+        self.assertEqual(self.data()["tools"][0]["category_ids"], [])
+
+    def test_slug_change_is_reported(self):
+        report, _ = self.regenerate(self.serve([{**tool(), "slug": "renamed"}]))
+        self.assertEqual(report.slug_changes, [("day001", "one", "renamed")])
+
+    def test_missing_broken_future_or_changed_added_stops_before_network(self):
+        path = self.root / "data/added.json"
+        for text in (None, "broken", "{}", '{"day001":"2099-01-01"}', '{"day001":"2026-01-02"}', '{"day001":"2026-02-30"}'):
+            if text is None:
+                path.unlink(missing_ok=True)
+            else:
+                path.write_text(text, encoding="utf-8")
+            with self.subTest(text=text), mock.patch.object(catalog, "urlopen") as http:
+                with self.assertRaises(catalog.CatalogError):
+                    catalog.regenerate(self.root, now=NOW)
+                http.assert_not_called()
+            if text is not None:
+                self.assertEqual(path.read_text(encoding="utf-8"), text)
+
+    def test_invalid_previous_metadata_or_duplicate_repos_stops_before_network(self):
+        self.append_repo("one")
+        before = self.outputs()
+        with mock.patch.object(catalog, "urlopen") as http, self.assertRaises(catalog.CatalogError):
+            catalog.regenerate(self.root, now=NOW)
+        http.assert_not_called()
+        self.assertEqual(self.outputs(), before)
+
+    def test_summary_escapes_untrusted_cells(self):
+        report = catalog.Report()
+        report.unknown[("ja", "<script>|\nname")] = {"day001"}
+        text = report.markdown()
+        self.assertNotIn("<script>", text)
+        self.assertIn("&lt;script&gt;\\| name", text)
+        self.assertIn("does not confirm a GitHub Pages deployment", text)
+
+
+class FirstSeenTests(unittest.TestCase):
+    def history(self):
+        return {
+            "aaa": {"generated_at": "2026-10-15T15:38:40Z", "tools": [tool(), tool("day114", "hidden", visible=False, added=None)]},
+            "bbb": {"generated_at": "2026-10-15T15:56:34Z", "tools": [tool("day114", "hidden", added=None)]},
+            "ccc": {"generated_at": "2026-10-31T17:00:03Z", "tools": [tool(), tool("day114", "hidden", added=None), tool("day127", "new", added=None)]},
+        }
+
+    def git_stub(self, history=None, shallow=False):
+        history = self.history() if history is None else history
+        def git(root, *args):
+            if args == ("rev-parse", "--is-shallow-repository"):
+                return "true\n" if shallow else "false\n"
+            if args[:2] == ("rev-parse", "--verify"):
+                return "ccc\n"
+            if args[0] == "log":
+                self.assertIn("--first-parent", args)
+                self.assertIn("--reverse", args)
+                return "\n".join(sha + "\t2026-11-01T00:00:00+00:00" for sha in history)
+            if args[0] == "show":
+                return json.dumps(history[args[1].split(":")[0]])
+            raise AssertionError(args)
+        return git
+
+    def test_first_visible_jst_day_and_reappearance_preserves_date(self):
+        with mock.patch.object(init_added, "git", side_effect=self.git_stub()):
+            added = init_added.first_seen(Path("unused"), today=dt.date(2026, 11, 20))
+        self.assertEqual(added, {"day001": "2026-10-16", "day114": "2026-10-16", "day127": "2026-11-01"})
+
+    def test_shallow_history_is_rejected(self):
+        with mock.patch.object(init_added, "git", side_effect=self.git_stub(shallow=True)), self.assertRaises(catalog.CatalogError):
+            init_added.first_seen(Path("unused"))
+
+    def test_future_history_and_naive_timestamp_are_rejected(self):
+        for stamp in ("2099-01-01T00:00:00Z", "2026-01-01T00:00:00"):
+            history = self.history()
+            history["aaa"]["generated_at"] = stamp
+            with mock.patch.object(init_added, "git", side_effect=self.git_stub(history)), self.assertRaises(catalog.CatalogError):
+                init_added.first_seen(Path("unused"))
+
+    def test_initializer_never_overwrites_existing_history(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "data").mkdir()
+            (root / "data/added.json").write_text("existing history", encoding="utf-8")
+            with mock.patch.object(init_added, "first_seen") as first, contextlib.redirect_stderr(io.StringIO()):
+                result = init_added.main(["--root", tmp])
+            self.assertEqual(result, 1)
+            first.assert_not_called()
+            self.assertEqual((root / "data/added.json").read_text(encoding="utf-8"), "existing history")
+
+
+if __name__ == "__main__":
+    unittest.main()

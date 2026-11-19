@@ -38,20 +38,25 @@
 
 ## 🔄 自動更新フロー（GitHub Actions）
 
-このリポジトリは **セルフアップデート方式** を採用しています。
+`repos.txt`にツールのGitHub URLを追加すると、各READMEのYAMLマターからカタログを再生成します。
+毎週月曜日の6:17（日本時間）にも実行し、READMEの変更を取り込みます。GitHub Actionsの混雑などで開始が遅れる場合があります。
 
-`repos.txt`にツールのGitHub URLを1行追加してpushすると、自動的に`tools.json`が再生成され、GitHub Pagesが更新されます。
+1. READMEをタイムアウト付きで取得する。`main`が404の場合だけ`master`を探す。
+2. 登録済みツールの取得やYAML解析に失敗した場合は、前回の有効なデータを残して報告する。前回値のない新規ツールの失敗、IDやslugの重複、不正なURLなどは生成を中止する。
+3. カテゴリを日本語、英語の記載順で対応付け、重複するIDを除く。
+4. はじめて掲載するIDに日本時間の日付を付け、`data/added.json`と`tools.json`に記録する。以前の日付は書き換えず、非掲載になっても履歴を残す。
+5. データと全カードの描画を検査する。内容が変わった場合だけ、生成日時を更新してコミットする。
+6. 最新のmainを取り込んだあとに再検査し、成功した場合だけpushする。
 
-### フロー全体
+HTTP 401を受けた場合は、代替ブランチや次のURLへ進まず中止し、生成ファイルも更新しません。
+`repos.txt`からの削除や有効な`hub: false`は、意図的な非掲載として反映します。
+未知のカテゴリと不正な難易度は実行結果に警告を出し、難易度は`null`にします。PRではカテゴリの名前や別名の変更による対応漏れも検査します。
 
-1. `repos.txt` にURLを追加
-2. `git push`
-3. GitHub Actions（`update-tools.yml`）が起動
-4. 各ツールリポジトリのREADME内のYAMLマターを抽出
-5. `categories.json`と照合して`category_ids`を付与
-6. `data/tools.json`を自動生成
-7. GitHub Actions Botが`tools.json`を自動コミット
-8. GitHub Pagesが再ビルドされサイトに反映
+GitHub ActionsのStep Summaryには、件数、前回値を保持したツール、slugの変更、未登録カテゴリ、難易度の警告、デモURLをGETで確認した結果を出します。
+デモのHTTP応答は通信の確認であり、ツール内の動作を保証する検査ではありません。
+
+現在のPages公開元はmainブランチです。`GITHUB_TOKEN`を使った自動コミットではPagesのビルドが始まらないため、週次処理が保証するのはリポジトリの更新までです。
+サイトへの反映は、Pagesの公開ジョブと公開URLで別に確認します（[GitHubの公開元設定の説明](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)）。
 
 ---
 
@@ -73,6 +78,7 @@
 ├ data/
 │   ├ categories.json       # カテゴリマスター（手動管理）
 │   ├ books.json            # 書籍・シリーズ定義（手動管理）
+│   ├ added.json            # IDごとの初掲載日（自動管理・既存日付を保持）
 │   └ tools.json            # 自動生成ファイル（手動編集禁止）
 ├ repos.txt                 # ツールリポジトリ一覧（1行1URL）
 ├ package.json              # テスト設定（依存なし・node --test）
@@ -83,9 +89,13 @@
 │   ├ robust.test.js        # 遅い回線・遅い端末で読み込みの途中に画面がずれたり固まったりしないこと（閉じて始める「はじめ方」を描く前に畳むことを含む）、一覧の一番下へ飛んだときにフッターまで届くこと、JavaScript が動かないときの表示、結果が少ないときにフッターが画面の途中に出ないことの検査
 │   ├ search.test.js        # search.js の検査（全角と半角・前後の空白・複数の語・Day 番号・カテゴリー名とその別名で探せるか。実データの検査は探す語も実データから選ぶ）
 │   ├ url.test.js           # url.js の検査（絞り込みの条件を URL から読む・URL へ書く・英語表示のときのカードのリンク・?lang=）
+│   ├ catalog.test.js       # カタログとカテゴリ対応、初掲載日の検査
+│   ├ render.test.js        # 依存を足さずに実データで全カードと各書籍を描画
+│   ├ test_update_tools.py  # 通信失敗、401、初掲載日と生成結果の保全
 │   └ lang.test.js          # lang.js の検査（言語と「はじめ方」の開閉を決める順・保存できない環境）
 ├ scripts/
-│   └ update_tools.py       # README からメタ情報を抽出して tools.json を生成
+│   ├ init_added.py         # 初掲載日をmainのGit履歴から一度だけ復元
+│   └ update_tools.py       # READMEからカタログを生成（取得失敗時は前回値を保持）
 └ .github/
     └ workflows/
         ├ update-tools.yml  # tools.json の自動再生成（CI）
@@ -120,13 +130,21 @@
       "tags": ["color", "javascript"],
       "repo_url": "https://github.com/ipusiron/color-hack-box",
       "demo_url": "https://ipusiron.github.io/color-hack-box/",
-      "hub": true
+      "hub": true,
+      "added": "2025-01-01"
     }
   ]
 }
 ```
 
 ---
+
+### ▶ added.json（自動管理）
+
+`data/added.json`は、`{"day001": "2025-11-24"}`のようにIDと初掲載日を記録します。
+日付はmainのカタログで表示対象になった日（日本時間）であり、ツールの制作日や、公開サイトで最初に表示された時刻とは異なります。
+既存分はmainのGit履歴から復元し、追加後は説明の変更や再掲載でも日付を変えません。
+通常の更新でファイルが欠けたり壊れたりした場合は中止するため、すべてのツールが当日の新着になることを防げます。
 
 ### ▶ categories.json（手動管理）
 
@@ -375,6 +393,20 @@ $ npm test
 ```
 
 ---
+
+### カタログ生成の確認
+
+生成処理にはPythonとPyYAML 6.0.3を使います。導入済みの環境では、次のコマンドで通信を使わない失敗時の検査と実際の再生成を実行できます。
+
+```bash
+npm run test:generator
+python scripts/update_tools.py --check-demos --summary catalog-summary.md
+```
+
+再生成後は`AFTER_REGEN=1`を設定して`npm test`を実行します。
+`HLO_BASE_COMMIT`に比較元のコミットを指定すると、既存の初掲載日が変更、削除されていないことも確認できます。
+GitHub Actionsはこれらの検査をコミット前に実行します。
+`init_added.py`は履歴からの初期復元専用で、既存の`added.json`を上書きしません。
 
 ## 🚀 今後の改善予定
 
