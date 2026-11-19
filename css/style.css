@@ -699,6 +699,7 @@ html[lang="en"] #lang-en {
 /* 章の見出し（グループ） */
 .book-group-heading {
   grid-column: 1 / -1;
+  overflow-wrap: anywhere;
   margin: 0.5rem 0 0;
   font-size: 0.95rem;
   font-weight: 700;
