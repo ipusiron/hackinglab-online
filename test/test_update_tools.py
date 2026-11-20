@@ -116,6 +116,22 @@ class RegenerationTests(unittest.TestCase):
         report, _ = self.regenerate()
         self.assertFalse(report.changed)
         self.assertEqual(self.outputs(), before)
+        self.assertEqual(report.added, [])
+        summary = report.markdown()
+        counts = summary.split("<details>", 1)[0]
+        self.assertIn("unchanged (generation timestamp preserved)", counts)
+        for label in ("Previous metadata retained", "Repositories added to catalog",
+                      "Repositories removed from repos.txt", "Unknown category names",
+                      "Tools without a mapped category", "Unknown difficulty (stored as null)",
+                      "Slug changes", "Usage metadata retained or unavailable", "Confirmed missing README files"):
+            self.assertIn("| " + label + " | 0 |", counts)
+        self.assertIn("| Demo GET checks | Not run |", counts)
+        self.assertEqual(summary.count("<details>"), 10)
+        self.assertEqual(summary.count("</details>"), 10)
+        self.assertNotIn("<details open", summary)
+        self.assertIn("<summary>Repositories added to catalog (0 rows)</summary>\n\n| Repository | Tool |", summary)
+        self.assertIn("| None | — |", summary)
+        self.assertIn("| Not run | — | — |", summary)
 
     def test_only_real_metadata_change_updates_generation_time(self):
         changed = tool()
@@ -137,8 +153,42 @@ class RegenerationTests(unittest.TestCase):
         report, http = self.regenerate(request)
         self.assertEqual(http.call_count, 3)
         self.assertEqual(report.retained[0][0], "example/one")
+        self.assertEqual(report.added, [("example/two", "day002")])
         self.assertEqual([value["id"] for value in self.data()["tools"]], ["day001", "day002"])
         self.assertEqual(self.data("added"), {"day001": DATE, "day002": "2026-11-20"})
+
+    def test_summary_distinguishes_added_removed_and_retained_repositories(self):
+        self.install([tool(), tool("day002", "two")])
+        # A repository replacement can reuse a Day ID; count repositories, not new IDs.
+        replacement = tool("day002", "replacement", added=None)
+        hidden = tool("day003", "hidden", visible=False, added=None)
+        (self.root / "repos.txt").write_text("\n".join(value["repo_url"] for value in (tool(), replacement, hidden)) + "\n", encoding="utf-8")
+        serve = self.serve([replacement, hidden])
+
+        def request(req, **kwargs):
+            if "/one/" in req.full_url:
+                raise TimeoutError("offline")
+            return serve(req, **kwargs)
+
+        report, http = self.regenerate(request)
+        self.assertEqual(http.call_count, 5)
+        self.assertEqual(report.added, [("example/replacement", "day002"), ("example/hidden", "day003")])
+        self.assertEqual(report.removed, [("example/two", "day002")])
+        self.assertEqual(report.retained, [("example/one", "README read failed: TimeoutError")])
+        self.assertEqual(self.data()["tools"][0], tool())
+        self.assertFalse(self.data()["tools"][2]["hub"])
+        self.assertEqual(self.data("added"), {"day001": DATE, "day002": DATE})
+        summary = report.markdown()
+        counts = summary.split("<details>", 1)[0]
+        self.assertIn("Tools: **3**; visible: **2**; hidden: **1**.", counts)
+        self.assertIn("| Previous metadata retained | 1 | of 3 current repositories |", counts)
+        self.assertIn("| Repositories added to catalog | 2 | repositories absent from the previous catalog |", counts)
+        self.assertIn("| Repositories removed from repos.txt | 1 | of 2 previous repositories |", counts)
+        self.assertIn("| Slug changes | 0 | of 1 repositories present in both catalogs |", counts)
+        self.assertIn("repository-language pairs; 2 English README files checked", counts)
+        self.assertIn("| example/replacement | day002 |", summary)
+        self.assertIn("| example/two | day002 |", summary)
+        self.assertIn("| example/hidden | day003 |", summary)
 
     def test_read_interrupted_keeps_existing_and_adds_next_valid_repo(self):
         self.append_repo("two")
@@ -289,10 +339,12 @@ class RegenerationTests(unittest.TestCase):
         self.assertEqual(report.removed, [("example/two", "day002")])
 
     def test_explicit_hub_false_then_true_keeps_initial_date(self):
-        self.regenerate(self.serve([tool(visible=False)]))
+        report, _ = self.regenerate(self.serve([tool(visible=False)]))
+        self.assertEqual(report.added, [])
         self.assertFalse(self.data()["tools"][0]["hub"])
         self.assertEqual(self.data("added")["day001"], DATE)
-        self.regenerate(self.serve([tool()]))
+        report, _ = self.regenerate(self.serve([tool()]))
+        self.assertEqual(report.added, [])
         self.assertTrue(self.data()["tools"][0]["hub"])
         self.assertEqual(self.data("added")["day001"], DATE)
 
@@ -343,6 +395,85 @@ class RegenerationTests(unittest.TestCase):
     def test_slug_change_is_reported(self):
         report, _ = self.regenerate(self.serve([{**tool(), "slug": "renamed"}]))
         self.assertEqual(report.slug_changes, [("day001", "one", "renamed")])
+        self.assertIn("| Slug changes | 1 | of 1 repositories present in both catalogs |", report.markdown())
+
+    def test_summary_aggregates_many_warnings_and_escapes_detail_cells(self):
+        values = [tool(f"day{number:03d}", f"tool-{number}", visible=number % 2 == 0)
+                  for number in range(1, 41)]
+        self.install(values)
+        raw_name = "<details open>\\|[click](https://example.invalid/)\n`code` *bold* ~~raw~~"
+        changed = [{**value, "category_ja": [raw_name, raw_name], "category_en": ["Unmapped"], "difficulty": None}
+                   for value in values]
+        report, http = self.regenerate(self.serve(changed))
+        self.assertEqual(http.call_count, 80)
+        self.assertEqual(len(self.data()["tools"]), 40)
+        self.assertEqual(report.unknown, {("ja", raw_name): {value["id"] for value in values},
+                                          ("en", "Unmapped"): {value["id"] for value in values}})
+        summary = report.markdown()
+        counts = summary.split("<details>", 1)[0]
+        self.assertIn("Tools: **40**; visible: **20**; hidden: **20**.", counts)
+        self.assertIn("| Unknown category names | 2 | distinct (language, name) pairs affecting 40 of 40 tools |", counts)
+        self.assertIn("| Tools without a mapped category | 40 | of 40 tools |", counts)
+        self.assertIn("| Unknown difficulty (stored as null) | 40 | of 40 tools |", counts)
+        self.assertNotIn(raw_name, summary)
+        self.assertNotIn("<details open>", summary)
+        self.assertIn(r"&lt;details open&gt;\\\|\[click\](https://example.invalid/) \`code\` \*bold\* \~\~raw\~\~", summary)
+        self.assertIn("<summary>Unknown category names (2 rows)</summary>", summary)
+        self.assertIn("<summary>Tools without a mapped category (40 rows)</summary>", summary)
+        self.assertIn(", ".join(value["id"] for value in values), summary)
+        self.assertEqual(summary.count("</details>"), 10)
+
+    def test_summary_counts_usage_failures_and_demo_results_with_explicit_units(self):
+        values = [tool(f"day{number:03d}", f"tool-{number}") for number in range(1, 6)]
+        values[2]["readme_usage"] = {"ja": {"status": "top"}}
+        values[3]["demo_url"] = ""
+        self.install(values)
+        serve = self.serve()
+
+        def request(req, **kwargs):
+            if req.full_url.startswith("https://example.github.io/"):
+                self.assertEqual(req.get_method(), "GET")
+                if "/tool-2/" in req.full_url:
+                    raise HTTPError(req.full_url, 404, "Not found", {}, None)
+                if "/tool-3/" in req.full_url:
+                    raise URLError("offline")
+                return Response(req.full_url, status=204)
+            if req.full_url.endswith("README.en.md"):
+                if "/tool-2/" in req.full_url:
+                    raise HTTPError(req.full_url, 404, "Not found", {}, None)
+                if "/tool-1/" in req.full_url or "/tool-3/" in req.full_url:
+                    raise TimeoutError("offline")
+            return serve(req, **kwargs)
+
+        report, http = self.regenerate(request, check_demos=True)
+        self.assertEqual(http.call_count, 15)
+        self.assertEqual(len(report.usage_retained), 2)
+        self.assertEqual(report.usage_missing, [("example/tool-2", "en")])
+        self.assertEqual(self.data()["tools"][0]["readme_usage"]["en"], {"status": "top"})
+        self.assertNotIn("en", self.data()["tools"][2]["readme_usage"])
+        counts = report.markdown().split("<details>", 1)[0]
+        for row in (
+            "| Usage metadata retained or unavailable | 2 | repository-language pairs; 5 English README files checked |",
+            "| Confirmed missing README files | 1 | repository-language pairs; 5 English README files checked |",
+            "| Demo GET checks | 4 | of 5 tools; tools without a URL are not requested |",
+            "| Demo HTTP 2xx | 2 | of 4 checked demo URLs |",
+            "| Demo non-2xx or read failures | 2 | of 4 checked demo URLs |",
+            "| Tools without a demo URL | 1 | of 5 tools |",
+        ):
+            self.assertIn(row, counts)
+        self.assertIn("<summary>Demo GET results (5 rows)</summary>", report.markdown())
+
+    def test_demo_checks_without_urls_are_distinct_from_checks_not_run(self):
+        self.install([{**tool(), "demo_url": ""}])
+        before = self.outputs()
+        report, http = self.regenerate(check_demos=True)
+        self.assertEqual(http.call_count, 2)
+        self.assertEqual(self.outputs(), before)
+        counts = report.markdown().split("<details>", 1)[0]
+        self.assertIn("| Demo GET checks | 0 | of 1 tools; tools without a URL are not requested |", counts)
+        self.assertIn("| Demo HTTP 2xx | 0 | of 0 checked demo URLs |", counts)
+        self.assertIn("| Tools without a demo URL | 1 | of 1 tools |", counts)
+        self.assertNotIn("Not run", report.markdown())
 
     def test_missing_broken_future_or_changed_added_stops_before_network(self):
         path = self.root / "data/added.json"
