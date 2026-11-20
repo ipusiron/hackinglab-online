@@ -129,9 +129,9 @@ test("SH10: composing Escape preserves text, URL and cards; blur resets only the
   }
 });
 
-test("SH11: help has eight ordered sections, retains progress/storage deep links, and Escape returns focus", async () => {
+test("SH11: help has nine ordered sections, retains progress/storage deep links, and Escape returns focus", async () => {
   const p=await runPage(); const dialog=el(p,"help-dialog");
-  assert.deepEqual(dialog.querySelectorAll("h3").map(n=>n.id),["help-usage","help-stuck","help-progress","help-storage","help-list","help-keyboard","help-approach","help-admin"]);
+  assert.deepEqual(dialog.querySelectorAll("h3").map(n=>n.id),["help-usage","help-stuck","help-progress","help-later","help-storage","help-list","help-keyboard","help-approach","help-admin"]);
   el(p,"help-button").focus();el(p,"help-button").click(); assert.equal(el(p,"help-modal").hidden,false);assert.equal(p.document.activeElement,el(p,"help-body"));
   p.document.dispatch("keydown",{key:"Escape"});assert.equal(el(p,"help-modal").hidden,true);assert.equal(p.document.activeElement,el(p,"help-button"));
   assert.match(el(p,"help-storage").closest("section").textContent,/click, tap, or type/);assert.match(el(p,"help-storage").closest("section").textContent,/Start here.*open or closed/);
@@ -143,8 +143,8 @@ test("SH12: later storage failure updates the Start sentence in both languages w
   let fail=false;const p=await runPage({storageHooks:{write(){if(fail)throw new Error("blocked");}}});
   el(p,"start-books-button").click();fail=true;
   chooseProgress(el(p,"tool-list").querySelector('[data-part="progress"]'),1);
-  assert.match(el(p,"record-location").textContent,/このブラウザーでは進捗を保存できない/);assert.equal(el(p,"storage-warning").hidden,false);
-  el(p,"lang-en").click();assert.match(el(p,"record-location").textContent,/This browser can't save your progress/);assert.equal(el(p,"start-books-panel").hidden,false);
+  assert.match(el(p,"record-location").textContent,/このブラウザーでは記録を保存できない/);assert.equal(el(p,"storage-warning").hidden,false);
+  el(p,"lang-en").click();assert.match(el(p,"record-location").textContent,/This browser can't save your records/);assert.equal(el(p,"start-books-panel").hidden,false);
   el(p,"storage-warning-help").click();assert.equal(p.document.activeElement,el(p,"help-storage"));el(p,"help-close").click();assert.equal(p.document.activeElement,el(p,"storage-warning-help"));
 });
 

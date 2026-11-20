@@ -1,8 +1,8 @@
-// Local progress backup format and merge decisions. No DOM or storage access.
+// Local progress / try-later backup format and merge decisions. No DOM or storage access.
 (function (root) {
   "use strict";
   const APP = "hackinglab-online";
-  const SCHEMA_VERSION = 1;
+  const SCHEMA_VERSION = 2;
   const MAX_BYTES = 65536;
   const MAX_ENTRIES = 1000;
   const ROOT_KEYS = ["app", "progress", "saved_at", "schema_version"];
@@ -26,7 +26,8 @@
     if (!isObject(file) || file.app !== APP || !Number.isInteger(file.schema_version) || file.schema_version < 1) return invalid();
     if (file.schema_version > SCHEMA_VERSION) return { ok: false, reason: "new-version" };
     const keys = Object.keys(file).sort();
-    if (keys.length !== ROOT_KEYS.length || keys.some((key, i) => key !== ROOT_KEYS[i])) return invalid();
+    const expectedKeys = file.schema_version === 1 ? ROOT_KEYS : [...ROOT_KEYS, "try_later"];
+    if (keys.length !== expectedKeys.length || keys.some((key, i) => key !== expectedKeys[i])) return invalid();
     if (!validDate(file.saved_at) || !isObject(file.progress)) return invalid();
     const entries = Object.entries(file.progress);
     if (entries.length > MAX_ENTRIES) return invalid();
@@ -35,19 +36,31 @@
       if (!validId(id) || !validLevel(level)) return invalid();
       if (knownIds.has(id)) progress.set(id, level);
     }
-    return { ok: true, savedAt: file.saved_at, progress };
+    const tryLater = new Set();
+    if (file.schema_version === 2) {
+      if (!Array.isArray(file.try_later) || file.try_later.length > MAX_ENTRIES) return invalid();
+      const seen = new Set();
+      for (const id of file.try_later) {
+        if (!validId(id) || seen.has(id)) return invalid();
+        seen.add(id);
+        if (knownIds.has(id)) tryLater.add(id);
+      }
+    }
+    return { ok: true, savedAt: file.saved_at, progress, tryLater };
   }
 
   // Caller supplies current visible catalog IDs only, never storage key strings.
-  function createRecords(progressById, savedAtISO) {
+  function createRecords(progressById, savedAtISO, tryLater = new Set()) {
     if (!(progressById instanceof Map) || !validDate(savedAtISO) || progressById.size > MAX_ENTRIES) return null;
+    if (!(tryLater instanceof Set) || tryLater.size > MAX_ENTRIES || [...tryLater].some(id => !validId(id))) return null;
     const entries = [...progressById];
     if (entries.some(([id, level]) => !validId(id) || !validLevel(level))) return null;
     const nonzero = entries.filter(([, level]) => level > 0).sort(([a], [b]) => a.localeCompare(b));
-    if (!nonzero.length) return null;
-    const json = JSON.stringify({ app: APP, schema_version: SCHEMA_VERSION, saved_at: savedAtISO, progress: Object.fromEntries(nonzero) }, null, 2) + "\n";
+    const laterIds = [...tryLater].sort();
+    if (!nonzero.length && !laterIds.length) return null;
+    const json = JSON.stringify({ app: APP, schema_version: SCHEMA_VERSION, saved_at: savedAtISO, progress: Object.fromEntries(nonzero), try_later: laterIds }, null, 2) + "\n";
     if (new TextEncoder().encode(json).length > MAX_BYTES) return null;
-    return { json, count: nonzero.length };
+    return { json, count: new Set([...nonzero.map(([id]) => id), ...laterIds]).size };
   }
 
   function levelAt(values, id) {
@@ -83,7 +96,27 @@
     return { updates, count: updates.length };
   }
 
-  const api = { APP, SCHEMA_VERSION, MAX_BYTES, MAX_ENTRIES, parseRecords, createRecords, planImport, recheckImport };
+  // Restoring is additive: a backup never clears another local try-later entry.
+  function planTryLaterImport(fileTryLater, currentTryLater) {
+    return new Set([...fileTryLater].filter(id => !currentTryLater.has(id)));
+  }
+
+  // Only the additions confirmed by the user are eligible. A failed disk read
+  // permits memory-only rescue, just as it does for progress above.
+  function recheckTryLaterImport(candidates, effectiveTryLater, durableById) {
+    const updates = [];
+    for (const id of candidates) {
+      if (effectiveTryLater.has(id)) continue;
+      const durable = durableById.get(id);
+      const known = Boolean(durable && durable.ok === true && typeof durable.value === "boolean");
+      // An explicit restore also undoes a memory-only removal. Rewriting "1"
+      // when disk is already saved clears that dirty value without a downgrade.
+      updates.push({ id, persist: known });
+    }
+    return { updates, count: updates.length };
+  }
+
+  const api = { APP, SCHEMA_VERSION, MAX_BYTES, MAX_ENTRIES, parseRecords, createRecords, planImport, recheckImport, planTryLaterImport, recheckTryLaterImport };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.HLORecords = api;
 })(typeof globalThis !== "undefined" ? globalThis : this);

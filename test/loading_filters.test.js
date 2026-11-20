@@ -191,7 +191,7 @@ test("LF11: zero-result clear preserves the selected book, clears other filters,
     selected(p, "filter-progress", "1");
     assert.equal(cards(p).length, 0);
     const clear = el(p, "clear-filters"); assert.ok(clear);
-    assert.equal(clear.textContent, book ? "Clear category, progress, and search" : "Clear all filters");
+    assert.equal(clear.textContent, book ? "Clear filters except book" : "Clear all filters");
     clear.focus(); clear.dispatch("click");
     assert.equal(el(p, "filter-book").value, book); assert.equal(el(p, "filter-progress").value, "all");
     assert.equal(el(p, "filter-category").value, ""); assert.equal(el(p, "filter-search-input").value, "");
