@@ -981,12 +981,16 @@ html[lang="en"] #lang-en {
   border-color: var(--secondary-hover-border);
 }
 
-.tool-footer button.tool-later-toggle {
+.tool-footer button.tool-button.tool-later-toggle {
   min-height: 2.75rem;
   min-width: 2.75rem;
   flex: 1 1 auto;
   font-size: 0.875rem;
+  border-color: var(--field-border);
   overflow-wrap: anywhere;
+}
+.tool-footer button.tool-button.tool-later-toggle:hover {
+  border-color: var(--field-border);
 }
 .tool-later-toggle::before {
   content: "✓";
@@ -996,7 +1000,7 @@ html[lang="en"] #lang-en {
   visibility: hidden;
 }
 .tool-later-toggle[aria-pressed="true"]::before { visibility: visible; }
-.tool-footer .tool-later-toggle[aria-pressed="true"] {
+.tool-footer button.tool-button.tool-later-toggle[aria-pressed="true"] {
   border-color: var(--text);
   color: var(--text);
   background-color: var(--subtle-bg);
