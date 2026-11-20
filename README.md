@@ -577,7 +577,7 @@ Nodeの検査は保存拒否・読取り拒否・部分的な書込み失敗・�
 |---|---|
 | おすすめ（分野横断） | Day003 Caesar Cipher Wheel Tool、Day050 DialSafe Simulator、Day077 Browser Fingerprint Mirror |
 | 暗号 | Day003 Caesar Cipher Wheel Tool、Day008 Caesar Cipher Breaker、Day034 RailFence CipherLab |
-| Web | Day077 Browser Fingerprint Mirror、Day058 Invisible Clicks、Day068 PathEscape |
+| Web | Day077 Browser Fingerprint Mirror、Day023 WeirdString Inspector、Day075 CAPTCHA Art Generator |
 | 物理的セキュリティ | Day050 DialSafe Simulator、Day061 Seal Tamper Lab、Day083 Intrusion Path Mapper |
 | 身近な仕組み | Day102 QRCrashTest、Day116 Codabar Lens、Day025 MorseTree Visualizer |
 
