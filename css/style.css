@@ -1698,6 +1698,15 @@ html.js-ready #slow-loading { display: none; }
 #list-summary { display: grid; }
 #list-count, #list-count-space { grid-area: 1 / 1; margin: 0; overflow-wrap: anywhere; }
 #list-count-space { visibility: hidden; }
+.active-filter-summary {
+  grid-area: 2 / 1;
+  min-width: 0;
+  margin: 0.25rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
 
 
 /* Local record controls and the one-time, dismissible storage notice. */
