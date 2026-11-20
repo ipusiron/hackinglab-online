@@ -10,7 +10,7 @@ const links = p => p.document.querySelectorAll(".start-demo");
 const starterGroups = {
   recommended: ["day003", "day050", "day077"],
   crypto: ["day003", "day008", "day034"],
-  web: ["day077", "day058", "day068"],
+  web: ["day077", "day023", "day075"],
   physical: ["day050", "day061", "day083"],
   everyday: ["day102", "day116", "day025"]
 };
