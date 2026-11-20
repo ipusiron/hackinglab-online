@@ -338,3 +338,116 @@ test("LF20: count reservation stays hidden and native options stay in place acro
   }
   assert.match(read("css/style.css"), /#list-count-space\s*\{\s*visibility: hidden/);
 });
+
+test("LF21: active filters stay absent for loading, errors and all tools, then appear after retry", async () => {
+  const pending = await runPage({ deferData: true, search: "?q=day003" });
+  const summary = el(pending, "active-filter-summary");
+  assert.equal(summary.hidden, true); assert.equal(summary.textContent, "");
+  el(pending, "lang-en").click();
+  assert.equal(summary.hidden, true);
+  await pending.releaseData();
+  assert.equal(summary.textContent, "Filters: Search “day003”");
+  assert.equal(summary.hidden, false);
+  const p = await runPage({ search: "?q=day003", allowLoadFailure: true, fetchResponse(name, _, attempt) {
+    if (name === "data/tools.json" && attempt === 1) return { ok: false, status: 503 };
+  } });
+  assert.equal(state(p), "error");
+  assert.equal(el(p, "active-filter-summary").hidden, true);
+  assert.equal(el(p, "active-filter-summary").textContent, "");
+  el(p, "retry-data").click(); await p.flush();
+  assert.equal(el(p, "active-filter-summary").textContent, "絞り込み：検索「day003」");
+  search(p, "");
+  assert.equal(el(p, "active-filter-summary").hidden, true);
+  assert.equal(el(p, "active-filter-summary").textContent, "");
+});
+
+test("LF22: active filters describe combined zero-result conditions, language, clear and Back/Forward", async () => {
+  const time = clock();
+  const p = await runPage({ clock: time, search: "?book=genai-crypto&field=cryptography&q=unmatchable" });
+  const book = books.find((item) => item.slug === "genai-crypto");
+  const summary = el(p, "active-filter-summary");
+  selected(p, "filter-progress", "0");
+  el(p, "filter-later").checked = true; el(p, "filter-later").dispatch("change");
+  assert.equal(cards(p).length, 0);
+  assert.equal(summary.hidden, false);
+  assert.equal(summary.textContent, `絞り込み：${book.title_ja} / 暗号 / 未着手 / あとで試す / 検索「unmatchable」`);
+  el(p, "lang-en").click();
+  const combined = `Filters: ${book.title_en} / Cryptography / Not started / Try later / Search “unmatchable”`;
+  assert.equal(summary.textContent, combined);
+  el(p, "clear-filters").click();
+  assert.equal(summary.textContent, `Filters: ${book.title_en}`);
+  assert.equal(p.document.activeElement, el(p, "filter-search-input"));
+  // The real clear path scrolls to search. Model its settled scroll event so
+  // the existing history handler records the cleared personal conditions.
+  p.dispatch("scroll"); await time.advance(300, p);
+  await p.back();
+  assert.equal(summary.textContent, combined);
+  await p.forward();
+  assert.equal(summary.textContent, `Filters: ${book.title_en}`);
+  assert.equal(el(p, "filter-progress").value, "all");
+  assert.equal(el(p, "filter-later").checked, false);
+  selected(p, "filter-book", "");
+  assert.equal(summary.hidden, true);
+});
+
+test("LF23: summaries follow category, set and Day precedence, including unavailable optional data", async () => {
+  const category = categories.find((item) => item.id === "classic-crypto");
+  const book = books.find((item) => item.slug === "genai-crypto");
+  const selectedCategory = await runPage({ search: "?cat=classic-crypto&field=cryptography&lang=en" });
+  assert.equal(el(selectedCategory, "active-filter-summary").textContent, `Filters: ${category.en}`);
+  const set = await runPage({ search: "?tools=3,8&book=genai-crypto&cat=classic-crypto&q=unmatchable" });
+  selected(set, "filter-progress", "3");
+  assert.equal(el(set, "active-filter-summary").hidden, true);
+  assert.equal(el(set, "active-filter-summary").textContent, "");
+  const clearedDay = await runPage({ search: "?book=genai-crypto&cat=classic-crypto&q=unmatchable#day077" });
+  assert.equal(el(clearedDay, "active-filter-summary").hidden, true);
+  const retainedDay = await runPage({ search: "?book=genai-crypto&cat=classic-crypto&q=day003&lang=en#day003" });
+  assert.equal(el(retainedDay, "active-filter-summary").textContent, `Filters: ${book.title_en} / ${category.en} / Search “day003”`);
+  for (const options of [
+    { search: "?book=unknown&cat=unknown&field=unknown&q=day003" },
+    { search: "?book=genai-crypto&field=cryptography&q=day003", dataFailures: { "data/books.json": 503, "data/category_groups.json": 503 } }
+  ]) {
+    const p = await runPage(options);
+    assert.equal(el(p, "active-filter-summary").textContent, "絞り込み：検索「day003」");
+  }
+});
+
+test("LF24: unchanged conditions preserve cards, focused controls and summary through local and cross-tab records", async () => {
+  const time = clock();
+  const p = await runPage({ clock: time, storedValues: { later_day003: "1" } });
+  selected(p, "filter-progress", "0");
+  el(p, "filter-later").checked = true; el(p, "filter-later").dispatch("change");
+  const before = cards(p); const control = before[0].querySelector('[data-part="progress"]');
+  const summary = el(p, "active-filter-summary");
+  const text = summary.textContent;
+  assert.equal(text, "絞り込み：未着手 / あとで試す");
+  control.focus(); chooseProgress(control, 1);
+  assert.deepEqual(cards(p), before); assert.equal(p.document.activeElement, control);
+  assert.equal(summary.textContent, text);
+  p.values.set("later_day003", "0"); p.dispatch("storage", { key: "later_day003" });
+  await time.advance(100, p);
+  assert.deepEqual(cards(p), before); assert.equal(p.document.activeElement, control);
+  assert.equal(summary.textContent, text);
+  p.context.renderToolList();
+  assert.equal(cards(p).length, 0); assert.equal(summary.textContent, text);
+  assert.equal(summary.hasAttribute("aria-live"), false); assert.equal(summary.hasAttribute("role"), false);
+});
+
+test("LF25: summaries use applied IME queries and render long markup-like search as plain text", async () => {
+  const p = await runPage({ search: "?q=day003" });
+  const input = el(p, "filter-search-input"); const summary = el(p, "active-filter-summary");
+  input.focus(); input.dispatch("compositionstart");
+  input.value = "未確定"; input.dispatch("input", { isComposing: true });
+  assert.equal(summary.textContent, "絞り込み：検索「day003」");
+  input.value = "Ｄａｙ００８"; input.dispatch("compositionend");
+  assert.equal(summary.textContent, "絞り込み：検索「day008」");
+  const longQuery = '<img src=x onerror=alert(1)> ' + 'a'.repeat(300);
+  search(p, longQuery);
+  assert.equal(summary.textContent, `絞り込み：検索「${longQuery}」`);
+  assert.equal(summary.querySelector("img"), null);
+  assert.equal(p.document.activeElement, input);
+  assert.equal(summary.hidden, false);
+  input.dispatch("keydown", { key: "Escape" });
+  assert.equal(summary.hidden, true); assert.equal(summary.textContent, "");
+  assert.match(read("css/style.css"), /\.active-filter-summary\s*\{[^}]*min-width:\s*0[^}]*overflow-wrap:\s*anywhere/s);
+});

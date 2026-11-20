@@ -290,6 +290,7 @@ function listCounts() {
 
 function updateListCount() {
   updateTryLaterCount();
+  updateActiveFilterSummary();
   const el = document.getElementById("list-count");
   if (!el || loadState !== "ready") return;
   const counts = listCounts();
@@ -300,6 +301,29 @@ function updateListCount() {
   const space = document.getElementById("list-count-space");
   if (space) space.textContent = (filters.progress !== "all" || filters.later) && !toolSet.ids.length && counts.shown
     ? listText("outside_count", { ...counts, outside: counts.shown }) : "";
+}
+
+function updateActiveFilterSummary() {
+  const summary = document.getElementById("active-filter-summary");
+  if (!summary) return;
+  const parts = [];
+  // A valid set bypasses normal filters. Day links have already cleared only
+  // the conflicting conditions, so describe the remaining effective state.
+  if (loadState === "ready" && !toolSet.ids.length) {
+    const book = currentBook();
+    if (book) parts.push(book[currentLang === "ja" ? "title_ja" : "title_en"]);
+    const category = categories.find((item) => item.id === filters.categoryId);
+    const field = categoryGroups?.byId.get(filters.fieldId);
+    if (category) parts.push(category[currentLang]);
+    else if (field) parts.push(field[currentLang]);
+    if (/^[0-3]$/.test(filters.progress)) parts.push(PROGRESS_LABELS[currentLang][Number(filters.progress)]);
+    if (filters.later) parts.push(currentLang === "ja" ? "あとで試す" : "Try later");
+    // Use the applied query, not uncommitted IME text in the input.
+    if (filters.search) parts.push(currentLang === "ja" ? `検索「${filters.search}」` : `Search “${filters.search}”`);
+  }
+  const text = parts.length ? (currentLang === "ja" ? "絞り込み：" : "Filters: ") + parts.join(" / ") : "";
+  summary.hidden = !text;
+  if (summary.textContent !== text) summary.textContent = text;
 }
 
 function removeUnusedCategoryChoices() {
@@ -1228,6 +1252,7 @@ function setLoadState(state) {
   updateRecordsUI();
   updateStartEntries();
   updateTryLaterCount();
+  updateActiveFilterSummary();
 }
 
 async function loadData() {
@@ -1549,6 +1574,7 @@ function updateLanguageUI() {
   updateStartEntries();
   updateRecordsUI();
   updateTryLaterCount();
+  updateActiveFilterSummary();
   updateCatalogDate();
   updateLinkedTitle();
 }
