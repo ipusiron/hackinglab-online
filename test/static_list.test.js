@@ -117,3 +117,14 @@ test("SL8: the static layout keeps one tool per row and all links at least 44px"
   assert.match(css, /overflow-wrap:\s*anywhere/);
   assert.doesNotMatch(css, /label-ja|label-en|display:\s*none|#[0-9a-f]{3,8}\b/i);
 });
+
+test("SL9: each title has its own language without changing bilingual subtitles or escaping", () => {
+  const tools=structuredClone(toolsData);
+  const examples=[["Cipher & <Tool>","en"],["暗号 Tool","ja"],["ひらがな Tool","ja"],["カタカナ Tool","ja"],["ｶﾅ Tool","ja"],["\u{20000} Tool","ja"]];
+  examples.forEach(([title],index)=>{tools.tools[index].title=title;});
+  const result=buildPage(tools,booksData);
+  for(const [title,lang] of examples)assert.ok(result.includes(`<strong lang="${lang}">${escapeHtml(title)}</strong>`),title);
+  assert.equal((result.match(/<strong lang="(?:ja|en)">/g)||[]).length,(result.match(/class="sl-row"/g)||[]).length);
+  assert.match(result,/<div class="sl-subtitle"><span lang="ja">/);
+  assert.doesNotMatch(result,/<(?:li|div)[^>]*\blang=/);
+});

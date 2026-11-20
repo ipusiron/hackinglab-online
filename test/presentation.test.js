@@ -103,3 +103,56 @@ test("P7: standalone recovery page is bilingual, script-free and resolves its re
     assert.match(raw,/^\/(?!\/)/);const u=new URL(raw,origin);assert.ok(fs.existsSync(path.join(ROOT,u.pathname)));
   }
 });
+
+test("P8: the tab list starts the main landmark and filters have one localized search landmark", async () => {
+  for(const language of ["ja","en"]){
+    const p=await runPage({search:`?lang=${language}`,deferData:true});
+    assert.equal(p.document.querySelectorAll("main").length,1);
+    assert.equal(el(p,"main-content").firstElementChild.id,"tab-nav");
+    assert.equal(el(p,"tab-nav").getAttribute("role"),"tablist");
+    const filters=el(p,"tool-filters");
+    assert.equal(p.document.querySelectorAll('[role="search"]').length,1);
+    assert.equal(filters.getAttribute("role"),"search");
+    assert.equal(filters.getAttribute("aria-label"),language==="ja"?"絞り込みの条件":"Filters");
+    await p.releaseData();
+    el(p,language==="ja"?"lang-en":"lang-ja").click();
+    assert.equal(filters.getAttribute("aria-label"),language==="ja"?"Filters":"絞り込みの条件");
+  }
+  const book=await runPage({search:"?book=genai-crypto",width:320});
+  assert.equal(el(book,"tool-filters").getClientRects().length,0,"Folded filters must not expose a landmark");
+  el(book,"filter-toggle").click();
+  assert.ok(el(book,"tool-filters").getClientRects().length>0);
+  const set=await runPage({search:"?tools=3,8"});
+  assert.equal(el(set,"tool-filters").getClientRects().length,0,"Sets exclude filters and their landmark");
+});
+
+test("P9: title language follows title text in flat, book and set cards while subtitles follow the view", async () => {
+  const data=catalog();
+  const examples=[
+    ["Cipher Tool","en"],["暗号 Tool","ja"],["ひらがな Tool","ja"],
+    ["カタカナ Tool","ja"],["ｶﾅ Tool","ja"],["\u{20000} Tool","ja"]
+  ];
+  const expected=new Map(examples.map(([title,lang],index)=>{
+    const tool=data.tools[index];tool.title=title;tool.subtitle_ja="日本語の副題";tool.subtitle_en="English subtitle";
+    return [tool.id,{title,lang}];
+  }));
+  for(const search of ["","?book=genai-crypto","?tools="+[...expected.keys()].join(",")]){
+    const p=await runPage({search,dataOverrides:{"data/tools.json":data}});
+    for(const language of ["ja","en"]){
+      el(p,`lang-${language}`).click();
+      const cards=p.document.querySelectorAll(".tool-card").filter(card=>expected.has(card.dataset.toolId));
+      assert.ok(cards.length>0);
+      for(const card of cards){
+        const value=expected.get(card.dataset.toolId),heading=card.querySelector(".tool-title"),subtitle=card.querySelector(".tool-subtitle");
+        assert.equal(heading.lang,value.lang);
+        assert.equal(heading.textContent,value.title);
+        assert.equal(heading.getAttribute("aria-label"),`Day${card.dataset.toolId.slice(3)} ${value.title}`);
+        assert.equal(heading.tagName,search.includes("book=")?"H4":"H3");
+        assert.equal(card.getAttribute("lang"),null,"Title language must not reach the whole card");
+        assert.equal(subtitle.getAttribute("lang"),null);
+        assert.equal(subtitle.textContent,language==="ja"?"日本語の副題":"English subtitle");
+        assert.equal(p.document.documentElement.lang,language);
+      }
+    }
+  }
+});

@@ -2758,6 +2758,7 @@ function createToolCard(tool, book) {
   titleSpan.tabIndex = -1;
   titleSpan.dataset.part = "title";
   titleSpan.textContent = tool.title || "";
+  titleSpan.lang = /[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}]/u.test(tool.title || "") ? "ja" : "en";
   titleSpan.setAttribute("aria-label", `Day${dayNumber} ${tool.title || ""}`);
 
   if (toolSet.ids.length) {
