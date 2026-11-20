@@ -58,8 +58,17 @@ HTTP 401を受けた場合は、代替ブランチや次のURLへ進まず中止
 GitHub ActionsのStep Summaryには、件数、前回値を保持したツール、英語READMEの取得失敗や欠落、slugの変更、未登録カテゴリ、難易度の警告、デモURLをGETで確認した結果を出します。
 デモのHTTP応答は通信の確認であり、ツール内の動作を保証する検査ではありません。
 
-現在のPages公開元はmainブランチです。`GITHUB_TOKEN`を使った自動コミットではPagesのビルドが始まらないため、週次処理が保証するのはリポジトリの更新までです。
-サイトへの反映は、Pagesの公開ジョブと公開URLで別に確認します（[GitHubの公開元設定の説明](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)）。
+Pagesの公開元（Settings → Pages → Source）はGitHub Actionsです。
+[deploy-pages.yml](.github/workflows/deploy-pages.yml)の「Deploy site」が、mainへのpush、mainからの手動実行、または「Update tools.json」の成功後に現在のmainを検査して公開します。
+カタログの自動コミットが別のpushワークフローを起動しない場合も、更新処理の成功を受けて公開処理が始まります。
+
+公開前にPythonとNodeのテスト、静的一覧とデータの一致を確認します。
+合格したHTML、CSS、JavaScript、データ、画像などの公開用ファイルをまとめ、同じ実行のデプロイ処理へ渡します。
+検査に失敗した場合は公開しません。
+
+サイトへの反映は、Actionsで「Deploy site」のbuildとdeployが両方成功したことと、公開URLの内容で確認します。
+実際に公開するコミットは、buildのStep Summaryに記録したSHAで確認できます。実行開始のきっかけになったコミットと異なる場合があります。
+公開元の設定方法は[GitHubの説明](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)を参照してください。
 
 ---
 
@@ -119,6 +128,7 @@ GitHub ActionsのStep Summaryには、件数、前回値を保持したツール
 │   └ update_tools.py       # READMEからカタログを生成（取得失敗時は前回値を保持）
 └ .github/
     └ workflows/
+        ├ deploy-pages.yml  # 検査済みの公開用ファイルをGitHub Pagesへ配信
         ├ update-tools.yml  # tools.json の自動再生成（CI）
         └ test.yml          # books.json とテストの検証（CI）
 ```
