@@ -239,6 +239,7 @@ def load_added(path: Path, today: dt.date, previous: dict) -> dict:
 @dataclass
 class Report:
     retained: list = field(default_factory=list)
+    added: list = field(default_factory=list)
     removed: list = field(default_factory=list)
     unknown: dict = field(default_factory=dict)
     empty_categories: list = field(default_factory=list)
@@ -247,8 +248,10 @@ class Report:
     demos: list = field(default_factory=list)
     usage_retained: list = field(default_factory=list)
     usage_missing: list = field(default_factory=list)
+    previous_total: int = 0
     total: int = 0
     visible: int = 0
+    demos_checked: bool = False
     changed: bool = False
 
     def collect(self, entry: dict, maps: dict, ignored=None) -> None:
@@ -264,29 +267,63 @@ class Report:
 
     def markdown(self) -> str:
         def cell(value):
-            return html.escape(str(value), quote=False).replace("|", "\\|").replace("\r", " ").replace("\n", " ")
+            value = html.escape(str(value), quote=False).replace("\r", " ").replace("\n", " ")
+            return re.sub(r"([\\`*_~\[\]|])", r"\\\1", value)
 
-        def table(title, headers, rows):
-            lines = ["", "### " + title, "", "| " + " | ".join(headers) + " |",
+        def table(headers, rows, empty="None"):
+            lines = ["| " + " | ".join(headers) + " |",
                      "| " + " | ".join("---" for _ in headers) + " |"]
             lines += ["| " + " | ".join(cell(v) for v in row) + " |" for row in rows]
             if not rows:
-                lines.append("| None |" + " — |" * (len(headers) - 1))
+                lines.append("| " + cell(empty) + " |" + " — |" * (len(headers) - 1))
             return lines
+
+        def details(title, headers, rows, empty="None"):
+            return ["", "<details>", f"<summary>{title} ({len(rows)} rows)</summary>", "", *table(headers, rows, empty), "", "</details>"]
+
+        unknown_tools = set().union(*self.unknown.values()) if self.unknown else set()
+        english_checks = self.total - len(self.retained)
+        counts = [
+            ("Previous metadata retained", len(self.retained), f"of {self.total} current repositories"),
+            ("Repositories added to catalog", len(self.added), "repositories absent from the previous catalog"),
+            ("Repositories removed from repos.txt", len(self.removed), f"of {self.previous_total} previous repositories"),
+            ("Unknown category names", len(self.unknown), f"distinct (language, name) pairs affecting {len(unknown_tools)} of {self.total} tools"),
+            ("Tools without a mapped category", len(self.empty_categories), f"of {self.total} tools"),
+            ("Unknown difficulty (stored as null)", len(self.difficulty), f"of {self.total} tools"),
+            ("Slug changes", len(self.slug_changes), f"of {self.total - len(self.added)} repositories present in both catalogs"),
+            ("Usage metadata retained or unavailable", len(self.usage_retained), f"repository-language pairs; {english_checks} English README files checked"),
+            ("Confirmed missing README files", len(self.usage_missing), f"repository-language pairs; {english_checks} English README files checked"),
+        ]
+        if self.demos_checked:
+            no_demo = sum(result == "No demo" for _, _, result in self.demos)
+            checked = len(self.demos) - no_demo
+            successful = sum(bool(re.fullmatch(r"HTTP 2[0-9]{2}", result)) for _, _, result in self.demos)
+            counts += [
+                ("Demo GET checks", checked, f"of {self.total} tools; tools without a URL are not requested"),
+                ("Demo HTTP 2xx", successful, f"of {checked} checked demo URLs"),
+                ("Demo non-2xx or read failures", checked - successful, f"of {checked} checked demo URLs"),
+                ("Tools without a demo URL", no_demo, f"of {self.total} tools"),
+            ]
+        else:
+            counts.append(("Demo GET checks", "Not run", "enable with --check-demos"))
 
         lines = ["## Catalog regeneration", "", f"Tools: **{self.total}**; visible: **{self.visible}**; hidden: **{self.total-self.visible}**.",
                  "", "Repository data: " + ("updated." if self.changed else "unchanged (generation timestamp preserved)."),
+                 "", *table(["Check", "Count", "Unit / scope"], counts),
+                 "", "Counts include hidden tools; warning categories can overlap.",
                  "", "This result does not confirm a GitHub Pages deployment."]
-        lines += table("Previous metadata retained", ["Repository", "Reason"], self.retained)
-        lines += table("Repositories removed from repos.txt", ["Repository", "Tool"], self.removed)
-        lines += table("Unknown category names", ["Language", "Name", "Tools"],
+        lines += details("Previous metadata retained", ["Repository", "Reason"], self.retained)
+        lines += details("Repositories added to catalog", ["Repository", "Tool"], self.added)
+        lines += details("Repositories removed from repos.txt", ["Repository", "Tool"], self.removed)
+        lines += details("Unknown category names", ["Language", "Name", "Tools"],
                        [(lang, name, ", ".join(sorted(ids))) for (lang, name), ids in sorted(self.unknown.items())])
-        lines += table("Tools without a mapped category", ["Tool"], [(tid,) for tid in self.empty_categories])
-        lines += table("Unknown difficulty (stored as null)", ["Tool"], [(tid,) for tid in self.difficulty])
-        lines += table("Slug changes (saved progress uses the slug)", ["Tool", "Previous", "Current"], self.slug_changes)
-        lines += table("Usage metadata retained or unavailable", ["Repository", "Language", "Reason"], self.usage_retained)
-        lines += table("Confirmed missing README files", ["Repository", "Language"], self.usage_missing)
-        lines += table("Demo GET results", ["Tool", "URL", "Result"], self.demos)
+        lines += details("Tools without a mapped category", ["Tool"], [(tid,) for tid in self.empty_categories])
+        lines += details("Unknown difficulty (stored as null)", ["Tool"], [(tid,) for tid in self.difficulty])
+        lines += details("Slug changes (saved progress uses the slug)", ["Tool", "Previous", "Current"], self.slug_changes)
+        lines += details("Usage metadata retained or unavailable", ["Repository", "Language", "Reason"], self.usage_retained)
+        lines += details("Confirmed missing README files", ["Repository", "Language"], self.usage_missing)
+        lines += details("Demo GET results", ["Tool", "URL", "Result"], self.demos,
+                         empty="None" if self.demos_checked else "Not run")
         return "\n".join(lines) + "\n"
 
 
@@ -345,7 +382,7 @@ def regenerate(root: Path, *, timeout: float = 20, check_demos: bool = False,
     old_data, previous = load_previous(tools_path, maps)
     added = load_added(added_path, today, previous)
     next_added = dict(added)
-    report = Report()
+    report = Report(previous_total=len(previous), demos_checked=check_demos)
     report.removed = [(repo, tool["id"]) for repo, tool in previous.items() if repo not in set(repos)]
     candidates = []
     for repo in repos:
@@ -383,6 +420,8 @@ def regenerate(root: Path, *, timeout: float = 20, check_demos: bool = False,
             entry["readme_usage"] = usage
         if old and old["id"] != entry["id"]:
             raise CatalogError("Tool id changed for an existing repository: " + repo)
+        if old is None:
+            report.added.append((repo, entry["id"]))
         if old and old["slug"] != entry["slug"]:
             report.slug_changes.append((entry["id"], old["slug"], entry["slug"]))
         tid = entry["id"]
