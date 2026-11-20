@@ -965,6 +965,7 @@ function releaseReservedSpace() {
 function setupHelpModal() {
   const helpModal = document.getElementById("help-modal");
   const helpDialog = document.getElementById("help-dialog");
+  const helpBody = document.getElementById("help-body");
   const helpButton = document.getElementById("help-button");
   const helpClose = document.getElementById("help-close");
 
@@ -986,9 +987,9 @@ function setupHelpModal() {
     const root = document.documentElement;
     root.classList.toggle("keep-gutter", window.innerWidth - root.clientWidth > 1);
     root.classList.add("help-open");
-    // ダイアログの中へフォーカスを移す（ダイアログ名が読み上げられる）
-    (helpDialog || helpClose)?.focus();
-    if (helpDialog) helpDialog.scrollTop = 0;
+    // Focus the named scroll region so Arrow/Page keys can read the help immediately.
+    (helpBody || helpDialog || helpClose)?.focus({ preventScroll: true });
+    if (helpBody) helpBody.scrollTop = 0;
   };
 
   const closeHelp = () => {

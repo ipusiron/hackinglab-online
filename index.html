@@ -418,6 +418,11 @@
         aria-labelledby="help-title"
         tabindex="-1"
       >
+        <div class="modal-header">
+        <h2 id="help-title">
+          <span class="label-ja">ヘルプ</span>
+          <span class="label-en">Help</span>
+        </h2>
         <button
           type="button"
           id="help-close"
@@ -426,11 +431,9 @@
           data-aria-label-ja="閉じる"
           data-aria-label-en="Close"
         >×</button>
+        </div>
 
-        <h2 id="help-title">
-          <span class="label-ja">ヘルプ</span>
-          <span class="label-en">Help</span>
-        </h2>
+        <div id="help-body" class="modal-body" tabindex="0" role="region" aria-labelledby="help-title">
 
           <p><span class="label-ja">「生成AIで作るセキュリティツール」プロジェクトのツールを探して試し、進捗を記録できるサイトです。</span><span class="label-en">On this site you can find and try the tools from the “Security Tools with Generative AI” project and keep track of your progress.</span></p>
         <section aria-labelledby="help-usage">
@@ -584,6 +587,7 @@
           </p>
           </div>
         </section>
+        </div>
       </div>
     </div>
 

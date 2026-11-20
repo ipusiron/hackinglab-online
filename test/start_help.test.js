@@ -132,7 +132,7 @@ test("SH10: composing Escape preserves text, URL and cards; blur resets only the
 test("SH11: help has eight ordered sections, retains progress/storage deep links, and Escape returns focus", async () => {
   const p=await runPage(); const dialog=el(p,"help-dialog");
   assert.deepEqual(dialog.querySelectorAll("h3").map(n=>n.id),["help-usage","help-stuck","help-progress","help-storage","help-list","help-keyboard","help-approach","help-admin"]);
-  el(p,"help-button").focus();el(p,"help-button").click(); assert.equal(el(p,"help-modal").hidden,false);assert.equal(p.document.activeElement,dialog);
+  el(p,"help-button").focus();el(p,"help-button").click(); assert.equal(el(p,"help-modal").hidden,false);assert.equal(p.document.activeElement,el(p,"help-body"));
   p.document.dispatch("keydown",{key:"Escape"});assert.equal(el(p,"help-modal").hidden,true);assert.equal(p.document.activeElement,el(p,"help-button"));
   assert.match(el(p,"help-storage").closest("section").textContent,/click, tap, or type/);assert.match(el(p,"help-storage").closest("section").textContent,/Start here.*open or closed/);
   assert.match(el(p,"help-approach").closest("section").textContent,/Most tools live on GitHub Pages/);
@@ -172,7 +172,11 @@ test("SH14: every modal Tab moves explicitly, even when native Tab would skip li
   const p=await runPage(), dialog=el(p,"help-dialog"), close=el(p,"help-close"), opener=el(p,"help-button");
   opener.focus();opener.click();
   const anchors=dialog.querySelectorAll("a[href]");assert.ok(anchors.length>=2);
-  const order=[close,...anchors];
+  const body=el(p,"help-body");
+  const order=[close,body,...anchors];
+  // Opening focuses the scroll region for immediate Arrow/Page navigation.
+  assert.equal(p.document.activeElement,body);
+  dialog.focus();
   const tab=(shiftKey=false)=> {
     const event=p.document.dispatch("keydown",{key:"Tab",shiftKey});
     // Model the browser setting that skips anchors and would otherwise reach the page.
@@ -197,6 +201,7 @@ test("SH15: modal Tab recomputes hidden and disabled controls and keeps focus in
   el(p,"help-button").click();
   const anchors=dialog.querySelectorAll("a[href]");
   anchors.forEach(a=>{a.hidden=true;});
+  el(p,"help-body").setAttribute("tabindex","-1");
   const disabled=p.document.createElement("button");disabled.disabled=true;dialog.appendChild(disabled);
   for(const shiftKey of [false,true]) {
     assert.equal(p.document.dispatch("keydown",{key:"Tab",shiftKey}).defaultPrevented,true);
@@ -208,5 +213,23 @@ test("SH15: modal Tab recomputes hidden and disabled controls and keeps focus in
   for(const shiftKey of [false,true]) {
     assert.equal(p.document.dispatch("keydown",{key:"Tab",shiftKey}).defaultPrevented,true);
     assert.equal(p.document.activeElement,dialog);
+  }
+});
+
+test("SH16: reopening help resets its body scroll and every close path restores the opener", async () => {
+  const p=await runPage(), body=el(p,"help-body"), close=el(p,"help-close"), modal=el(p,"help-modal"), opener=el(p,"help-button");
+  assert.equal(body.contains(close),false);
+  assert.equal(body.getAttribute("role"),"region");
+  assert.equal(body.getAttribute("aria-labelledby"),"help-title");
+  for (const dismiss of [()=>close.click(),()=>p.document.dispatch("keydown",{key:"Escape"}),()=>modal.click()]) {
+    body.scrollTop=500;
+    opener.focus();opener.click();
+    assert.equal(p.document.activeElement,body);
+    assert.equal(body.scrollTop,0);
+    body.scrollTop=500;
+    dismiss();
+    assert.equal(modal.hidden,true);
+    assert.equal(p.document.activeElement,opener);
+    assert.equal(p.document.documentElement.classList.contains("help-open"),false);
   }
 });

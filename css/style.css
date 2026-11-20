@@ -1235,7 +1235,7 @@ html[lang="en"] #lang-en {
   background: var(--overlay);
   justify-content: center;
   align-items: center;
-  padding: 1rem;
+  padding: 0.5rem;
 }
 
 /* hidden のときは必ず非表示 */
@@ -1263,32 +1263,57 @@ html.help-open.keep-gutter {
   background: var(--surface-bg);
   max-width: 600px;
   width: 100%;
-  max-height: calc(100vh - 2rem);
-  max-height: calc(100dvh - 2rem); /* スマホのアドレスバーが出ているときも画面に収める */
-  overflow-y: auto;
-  overscroll-behavior: contain; /* 本文の端まで送っても、後ろのページへスクロールを渡さない */
-  padding: 1.5rem;
+  max-height: calc(100vh - 1rem);
+  max-height: calc(100dvh - 1rem); /* スマホのアドレスバーが出ているときも画面に収める */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   border-radius: 0.75rem;
   position: relative;
   color: var(--text);
 }
 
-/* 半透明の幕に左右されないよう、ダイアログのフォーカス枠は背景色のある内側に出す。 */
-.modal-content:focus-visible {
+/* The header stays outside the scrolling text so Close never covers it. */
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 0 0 auto;
+  gap: 0.5rem;
+  padding: 0.5rem;
+}
+
+.modal-header h2 {
+  min-width: 0;
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.modal-body {
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.5rem 1rem 1rem;
+  scroll-padding-block: 0.5rem;
+}
+
+/* A single link box lets native focus scrolling reveal every wrapped line. */
+.modal-body a {
+  display: inline-block;
+  max-width: 100%;
+}
+
+/* Keep the keyboard focus ring inside the opaque dialog and scroll region. */
+.modal-content:focus-visible,
+.modal-body:focus-visible {
   outline-offset: -3px;
 }
 
-/* 「×」は本文と一緒に流れないよう、右上に残す（sticky）。押せる大きさは、画面の幅にかかわらず 44px（2.75rem。
-   文字を大きくしたときは一緒に大きくなる）。
-   sticky の基準は本文の余白（1.5rem）の内側なので、top と margin を -1rem にして、角から8pxの位置に置く */
 .modal-close {
-  position: sticky;
-  top: -1rem;
-  float: right;
-  z-index: 1;
+  flex: 0 0 auto;
   width: 2.75rem;
   height: 2.75rem;
-  margin: -1rem -1rem 0 0.5rem;
   background: var(--surface-bg);
   border: none;
   border-radius: 50%;
