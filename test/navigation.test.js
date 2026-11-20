@@ -153,9 +153,10 @@ test("N10: hash normalization is applied once and unrelated chapter hashes retai
   assert.equal(q.context.location.hash,"#book-group-ch02");
 });
 
-for(const mode of ["success","reject"])test(`N11 ${mode}: set copy allowlists IDs/language and supports denied clipboard`,async()=>{
+for(const mode of ["success","reject","absent"])test(`N11 ${mode}: set copy allowlists IDs/language and supports denied clipboard`,async()=>{
   const p=await runPage({search:"?lang=en&tools=8,3,8&book=genai-crypto&secret=not-copied#day008",clipboard:mode});
-  p.document.getElementById("set-banner-copy").dispatch("click");await p.flush();
+  if(mode==="absent")p.context.navigator.clipboard=undefined;
+  const copy=p.document.getElementById("set-banner-copy");copy.focus();copy.click();await p.flush();
   const expected="https://hackinglab.online/?tools=day008%2Cday003&lang=en";
   if(mode==="success"){
     assert.deepEqual(p.copied,[expected]);assert.match(status(p),/Link copied\./);
@@ -400,4 +401,66 @@ test("N27: empty-set cleanup does not discard a valid ordered set",async()=>{
   assert.deepEqual(ids(p),["day008","day003"]);
   assert.equal(status(p),before);
   assert.equal(p.document.getElementById("set-banner").hidden,false);
+});
+
+test("N28: late set clipboard success or failure leaves open help and its focus alone",async()=>{
+  for(const reject of [false,true]){
+    const p=await runPage({search:"?tools=3,8"});let finish;
+    p.context.navigator.clipboard.writeText=()=>new Promise((resolve,no)=>{finish=()=>reject?no(Error("denied")):resolve();});
+    const copy=p.document.getElementById("set-banner-copy");copy.focus();copy.click();
+    const help=p.document.getElementById("help-button");help.focus();help.click();
+    const focus=p.document.activeElement;
+    assert.equal(focus.id,"help-body");
+    finish();await p.flush();
+    assert.equal(p.document.getElementById("help-modal").hidden,false);
+    assert.equal(p.document.activeElement.id,focus.id);
+    assert.equal(p.document.getElementById("set-banner-copy-url"),null);
+    assert.equal(status(p),"");
+  }
+});
+
+test("N29: stale set clipboard results yield to tab, history, interaction and focus changes",async()=>{
+  const actions={
+    tab:p=>p.document.getElementById("tab-dashboard-label").click(),
+    "tab round trip":p=>{p.document.getElementById("tab-dashboard-label").click();p.document.getElementById("tab-tools-label").click();},
+    history:async p=>{p.context.history.pushState(null,"","?tools=3,8&ref=next");p.dispatch("popstate",{state:null});await p.flush();},
+    wheel:p=>p.dispatch("wheel"),
+    "keyboard return":p=>{p.dispatch("keydown",{key:"Tab"});p.document.getElementById("set-banner-details-summary").focus();p.document.getElementById("set-banner-copy").focus();},
+    focus:p=>p.document.getElementById("set-banner-details-summary").focus()
+  };
+  for(const [name,action] of Object.entries(actions))for(const reject of [false,true]){
+    const p=await runPage({search:"?tools=3,8"});let finish;
+    p.context.navigator.clipboard.writeText=()=>new Promise((resolve,no)=>{finish=()=>reject?no(Error("denied")):resolve();});
+    const copy=p.document.getElementById("set-banner-copy");copy.focus();copy.click();
+    await action(p);const focus=p.document.activeElement;
+    finish();await p.flush();
+    assert.equal(p.document.activeElement.id,focus.id,name);
+    assert.equal(p.document.getElementById("set-banner-copy-url"),null,name);
+    assert.equal(status(p),"",name);
+  }
+});
+
+test("N30: latest set copy wins when an earlier request completes later",async()=>{
+  const p=await runPage({search:"?tools=3,8"}),pending=[];
+  p.context.navigator.clipboard.writeText=()=>new Promise((resolve,reject)=>pending.push({resolve,reject}));
+  const copy=p.document.getElementById("set-banner-copy");copy.focus();copy.click();copy.click();
+  pending[1].reject(Error("denied"));await p.flush();
+  const field=p.document.getElementById("set-banner-copy-url"),message=status(p);
+  assert.equal(field.hidden,false);assert.equal(p.document.activeElement,field);
+  pending[0].resolve();await p.flush();
+  assert.equal(field.hidden,false);assert.equal(p.document.activeElement,field);
+  assert.equal(status(p),message);
+});
+
+test("N31: successful set copy retry rescues focus before hiding its manual field",async()=>{
+  const p=await runPage({search:"?tools=3,8",clipboard:"reject"});
+  const copy=p.document.getElementById("set-banner-copy");copy.focus();copy.click();await p.flush();
+  const field=p.document.getElementById("set-banner-copy-url");
+  assert.equal(p.document.activeElement,field);
+  p.context.navigator.clipboard.writeText=async()=>{};
+  // Native pointer activation can leave the manual input focused.
+  copy.click();await p.flush();
+  assert.equal(field.hidden,true);
+  assert.equal(p.document.activeElement.id,copy.id);
+  assert.equal(status(p),"リンクをコピーしました。");
 });

@@ -1463,7 +1463,10 @@ function tabName(targetId) {
 }
 
 function switchTab(targetId) {
-  if (currentTab !== tabName(targetId)) clearShareFeedback(false);
+  if (currentTab !== tabName(targetId)) {
+    copyGeneration++;
+    clearShareFeedback(false);
+  }
   cancelListStatus();
   currentTab = tabName(targetId);
   const panels = document.querySelectorAll(".tab-panel");
@@ -2166,24 +2169,33 @@ function renderSetBanner() {
 }
 
 async function copySetLink() {
-  if (!toolSet.ids.length) return;
+  if (currentTab !== "tools" || loadState !== "ready" || !toolSet.ids.length) return;
   // 共有する URL は公開先・検証済みの番号・言語だけ。現在の未知 query や # はコピーしない。
   const url = new URL(window.location.pathname, window.location.origin);
   url.searchParams.set("tools", toolSet.ids.join(","));
   url.searchParams.set("lang", currentLang);
   const value = url.toString();
-  const generation = ++copyGeneration;
+  const guard = { generation: ++copyGeneration, navigation: navigationVersion,
+    interaction: interactionVersion, focus: document.activeElement };
   let copied = false;
   try {
     await navigator.clipboard.writeText(value);
     copied = true;
   } catch (e) { /* 読み取り専用の欄からコピーできる */ }
-  if (generation !== copyGeneration || !toolSet.ids.length) return;
+  if (guard.generation !== copyGeneration || guard.navigation !== navigationVersion ||
+      guard.interaction !== interactionVersion || guard.focus !== document.activeElement ||
+      currentTab !== "tools" || loadState !== "ready" || !toolSet.ids.length) return;
   linkNotices = linkNotices.filter((key) => key !== "copied" && key !== "copyFailed");
   linkNotices.push(copied ? "copied" : "copyFailed");
   renderLinkStatus();
   let field = document.getElementById("set-banner-copy-url");
-  if (copied) { if (field) field.hidden = true; return; }
+  if (copied) {
+    if (field) {
+      if (document.activeElement === field) document.getElementById("set-banner-copy")?.focus({ preventScroll: true });
+      field.hidden = true;
+    }
+    return;
+  }
   if (!field) {
     field = document.createElement("input");
     field.id = "set-banner-copy-url";
