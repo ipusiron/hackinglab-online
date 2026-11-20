@@ -50,6 +50,7 @@ function external(url, kind, label) {
 }
 
 function toolRow(tool, id, book) {
+  const titleLang = /[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}]/u.test(tool.title) ? "ja" : "en";
   const links = [];
   if (tool.demo_url) links.push(external(tool.demo_url, "demo", bilingual("デモ", "Demo")));
   links.push(external(HU.repoLink(tool.repo_url, "ja", tool.readme_usage), "repo", "GitHub README"));
@@ -58,7 +59,7 @@ function toolRow(tool, id, book) {
   const refs = book ? [HB.formatRef(book, tool.id, "ja"), HB.formatRef(book, tool.id, "en")] : [[], []];
   const references = refs[0].length || refs[1].length
     ? `<div class="sl-reference">${bilingual(refs[0].join("、"), refs[1].join("; "))}</div>` : "";
-  return `          <li class="sl-row" id="${escapeHtml(id)}"><div class="sl-content"><div class="sl-tool-title"><span class="sl-day">Day${tool.id.slice(3)}</span> <strong>${escapeHtml(tool.title)}</strong></div>${subtitle}${references}</div><div class="sl-links">${links.join("")}</div></li>`;
+  return `          <li class="sl-row" id="${escapeHtml(id)}"><div class="sl-content"><div class="sl-tool-title"><span class="sl-day">Day${tool.id.slice(3)}</span> <strong lang="${titleLang}">${escapeHtml(tool.title)}</strong></div>${subtitle}${references}</div><div class="sl-links">${links.join("")}</div></li>`;
 }
 
 function buildPage(toolsData, booksData) {

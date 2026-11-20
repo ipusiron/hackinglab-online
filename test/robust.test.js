@@ -220,14 +220,14 @@ test("RB7: JavaScript が動かないときは、押しても動かない部品�
   assert.match(m[1], /#tool-list\[aria-busy="true"\][^{]*\{[^}]*min-height:\s*0/);
 });
 
-test("RB8: 絞り込みの結果が少ないときもフッターが画面の途中に上がってこないよう、main は固定ヘッダーを除いた1画面分の高さを取る（JavaScript が動かないときは取らない）", () => {
-  const main = cssNoComments.match(/(?:^|\n)#main-content\s*\{([^}]*)\}/);
-  assert.ok(main, "#main-content の規則がない");
+test("RB8: 絞り込みの結果が少ないときもフッターが画面の途中に上がってこないよう、main本文は固定ヘッダーを除いた1画面分の高さを取る（JavaScript が動かないときは取らない）", () => {
+  const main = cssNoComments.match(/(?:^|\n)\.main-body\s*\{([^}]*)\}/);
+  assert.ok(main, ".main-body の規則がない");
   assert.match(main[1], /min-height:\s*calc\(100vh\s*-\s*var\(--header-h,\s*\d+px\)\)/, "main が1画面分の高さを取っていない（結果が0〜1件のとき、フッターが画面の途中に出る）");
   // JavaScript が動かないときは一覧を描かないので、高さを取らない（フッターを「はじめ方」のすぐ下に出す）
   const nojs = cssNoComments.match(/@media \(scripting: none\)\s*\{([\s\S]*?)\n\}/);
   assert.ok(nojs, "@media (scripting: none) がない");
-  assert.match(nojs[1], /#main-content\s*\{[^}]*min-height:\s*0/, "JavaScript が動かないときも main が1画面分の高さを取っている");
+  assert.match(nojs[1], /\.main-body\s*\{[^}]*min-height:\s*0/, "JavaScript が動かないときも main本文が1画面分の高さを取っている");
   // 高さの計算に使う --header-h は、データを読み込む前に main.js が書く（SF7）
   assert.match(mainJs, /setProperty\(\s*"--header-h"/);
 });

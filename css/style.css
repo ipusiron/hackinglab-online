@@ -408,7 +408,8 @@ html[lang="en"] #lang-en {
  * メイン
  * -------------------------------- */
 
-#main-content {
+/* Keep the original content box below the tabs, now inside the same main landmark. */
+.main-body {
   max-width: 960px;
   margin: 0 auto;
   padding: 0.75rem 1rem 2.5rem;
@@ -1500,7 +1501,7 @@ html.help-open.keep-gutter {
   }
 
   #tool-list[aria-busy="true"],
-  #main-content {
+  .main-body {
     min-height: 0;
   }
 }

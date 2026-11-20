@@ -82,6 +82,7 @@
       </div>
     </header>
 
+    <main id="main-content" data-load-state="loading">
     <!-- タブナビゲーション -->
     <nav
       id="tab-nav"
@@ -118,7 +119,7 @@
       </button>
     </nav>
 
-    <main id="main-content" data-load-state="loading">
+    <div class="main-body">
       <noscript>
         <p><span lang="ja">ツールの一覧と絞り込みはJavaScriptで表示しています。ブラウザーでJavaScriptを有効にしてから、このページを読み込み直してください。</span><br /><span lang="en">The tool list and filters need JavaScript. Turn on JavaScript in your browser, then reload this page.</span></p>
         <p class="static-list-fallback">
@@ -190,7 +191,7 @@
         <button id="filter-toggle" type="button" aria-controls="tool-filters" aria-expanded="false" disabled hidden>
           <span class="label-ja">絞り込みの条件</span><span class="label-en">Filters</span>
         </button>
-        <div id="tool-filters">
+        <div id="tool-filters" role="search" aria-label="絞り込みの条件" data-aria-label-ja="絞り込みの条件" data-aria-label-en="Filters">
           <!-- 書籍・プロジェクトフィルター（最初から場所を取る。books.json か一覧のデータを読めなかったときは JS が隠す） -->
           <div class="filter-group" id="filter-book-group">
             <label for="filter-book">
@@ -366,6 +367,7 @@
           </button>
         </section>
       </section>
+    </div>
     </main>
 
     <!-- フッター -->
