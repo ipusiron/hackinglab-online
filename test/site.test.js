@@ -915,6 +915,6 @@ test("H37: 「はじめ方」の開閉は、利用者が開閉したらその形
   const click = card.slice(card.indexOf('progressSelect.addEventListener("change"'));
   assert.match(click.slice(0, click.indexOf("\n  });")), /setProgress\(tool\.slug, level\);\s*markStartSeen\(\);/, "進捗を付けても残していない");
   // 開いただけ・見ただけでは残さない（開いて見せた「はじめ方」が、読む前に次から閉じてしまわない）
-  assert.equal((blankComments(mainJs).match(/markStartSeen\(\)/g) || []).length, 7 + 1, "Panel, all, demo and book entries plus existing book/dashboard/progress actions and declaration");
+  assert.equal((blankComments(mainJs).match(/markStartSeen\(\)/g) || []).length, 8 + 1, "Genre, panel, all, demo and book entries plus existing book/dashboard/progress actions and declaration");
   assert.equal((blankComments(mainJs).match(/setItem\(START_KEY/g) || []).length, 2, "開閉を覚えるのは、開閉の見出しを押したときと markStartSeen の2か所だけ");
 });

@@ -819,8 +819,49 @@ function setupStaticUI() {
 
 // Start panels are visit-local. Keep their controls and focused links across language changes.
 let startBooksSource = null;
+const START_GENRES = {
+  recommended: ["おすすめ（分野横断）", "Recommended (mixed topics)"],
+  crypto: ["暗号", "Cryptography"],
+  web: ["Web", "Web"],
+  physical: ["物理的セキュリティ", "Physical security"],
+  everyday: ["身近な仕組み", "Everyday mechanisms"]
+};
+let startGenre = "recommended";
+
+function updateStartGenre() {
+  const select = document.getElementById("start-genre");
+  if (!select) return;
+  select.disabled = loadState !== "ready";
+  select.querySelectorAll("option").forEach((option) => {
+    const labels = START_GENRES[option.value];
+    if (labels) option.textContent = labels[currentLang === "ja" ? 0 : 1];
+  });
+  select.value = startGenre;
+  document.querySelectorAll(".start-first-tools[data-start-genre]").forEach((list) => {
+    list.hidden = list.dataset.startGenre !== startGenre;
+  });
+  // Keep the full selection readable when the native select clips long text.
+  const label = START_GENRES[startGenre][currentLang === "ja" ? 0 : 1];
+  const message = currentLang === "ja" ? `${label}の3本` : `3 tools: ${label}`;
+  const status = document.getElementById("start-genre-status");
+  if (status.textContent !== message) status.textContent = message;
+}
 
 function setupStartEntries(keepInPlace) {
+  const genre = document.getElementById("start-genre");
+  genre?.addEventListener("change", () => {
+    if (loadState !== "ready") return;
+    const next = genre.value;
+    if (!Object.prototype.hasOwnProperty.call(START_GENRES, next) || next === startGenre) {
+      genre.value = startGenre;
+      return;
+    }
+    markStartSeen();
+    keepInPlace(genre, () => {
+      startGenre = next;
+      updateStartGenre();
+    });
+  });
   const choose = (panel, button) => {
     if (loadState !== "ready") return;
     markStartSeen();
@@ -866,6 +907,7 @@ function setupStartEntries(keepInPlace) {
 
 function updateStartEntries() {
   const ready = loadState === "ready";
+  updateStartGenre();
   document.getElementById("start-first-button").disabled = !ready;
   document.getElementById("start-all-button").disabled = !ready;
   document.getElementById("start-books-button").disabled = !ready || !HB || !books.length;

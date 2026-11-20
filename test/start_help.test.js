@@ -7,6 +7,16 @@ const tools = JSON.parse(read("data/tools.json")).tools;
 const books = JSON.parse(read("data/books.json")).books;
 const el = (p, id) => p.document.getElementById(id);
 const links = p => p.document.querySelectorAll(".start-demo");
+const starterGroups = {
+  recommended: ["day003", "day050", "day077"],
+  crypto: ["day003", "day008", "day034"],
+  web: ["day077", "day058", "day068"],
+  physical: ["day050", "day061", "day083"],
+  everyday: ["day102", "day116", "day025"]
+};
+const starterList = (p, group) => p.document.querySelector(`.start-first-tools[data-start-genre="${group}"]`);
+const visibleDemos = p => links(p).filter(a => a.closest(".start-first-tools").hidden === false);
+const chooseGenre = (p, value) => { const select=el(p,"start-genre"); select.value=value; select.dispatch("change"); };
 const buttons = p => ["first", "books", "all"].map(name => el(p, `start-${name}-button`));
 const state = p => el(p, "main-content").dataset.loadState;
 const chooseBook = (p, link, fields = {}) => el(p, "start-book-links").dispatch("click", { target: link, ...fields });
@@ -40,33 +50,50 @@ test("SH2: panel choice keeps the current Start open, URL/history and focused co
   assert.equal(p.document.activeElement,first); assert.equal(p.context.location.href,href); assert.equal(p.context.history.length,length);
 });
 
-test("SH3: the three ordered demo links come from public catalog data and use current language and safe new tabs", async () => {
+test("SH3: every starter group has three public catalog links in order, in both languages and safe new tabs", async () => {
   const data=JSON.parse(read("data/tools.json"));
   data.tools.find(t=>t.id==="day003").demo_url="https://ipusiron.github.io/example/?mode=test#sample";
   data.tools.find(t=>t.id==="day003").title='A <script> & "quoted" tool';
   const p=await runPage({dataOverrides:{"data/tools.json":data}});
-  const demos=links(p); assert.deepEqual(demos.map(a=>a.dataset.toolId),["day003","day008","day034"]);
+  const demos=links(p); assert.equal(demos.length,15);
+  assert.deepEqual(el(p,"start-genre").options.map(o=>o.value),Object.keys(starterGroups));
+  assert.equal(el(p,"start-genre").value,"recommended");
   for (const language of ["en","ja"]) {
     el(p,`lang-${language}`).click();
-    for (const link of demos) { const tool=data.tools.find(t=>t.id===link.dataset.toolId);
-      assert.equal(link.href,HU.demoLink(tool.demo_url,language)); assert.equal(link.target,"_blank"); assert.equal(link.rel,"noopener");
-      assert.equal(link.getAttribute("aria-label"),language==="ja" ? `デモを開く（${tool.title}、新しいタブ）` : `Open demo (${tool.title}, new tab)`);
-      assert.equal(link.hasAttribute("aria-disabled"),false); assert.equal(link.hasAttribute("tabindex"),false);
+    for (const [group, ids] of Object.entries(starterGroups)) {
+      chooseGenre(p,group);
+      const label=el(p,"start-genre").options.find(o=>o.value===group).textContent;
+      assert.ok(el(p,"start-genre-status").textContent.includes(label),"Full selected topic is missing from the visible text");
+      assert.deepEqual(visibleDemos(p).map(a=>a.dataset.toolId),ids);
+      assert.equal(p.document.querySelectorAll(".start-first-tools").filter(list=>!list.hidden).length,1);
+      for (const link of visibleDemos(p)) { const tool=data.tools.find(t=>t.id===link.dataset.toolId);
+        assert.ok(tool && tool.hub!==false);
+        assert.equal(link.href,HU.demoLink(tool.demo_url,language)); assert.equal(link.target,"_blank"); assert.equal(link.rel,"noopener");
+        assert.equal(link.getAttribute("aria-label"),language==="ja" ? `デモを開く（${tool.title}、新しいタブ）` : `Open demo (${tool.title}, new tab)`);
+        assert.equal(link.hasAttribute("aria-disabled"),false); assert.equal(link.hasAttribute("tabindex"),false);
+      }
     }
   }
   assert.equal(el(p,"start-first-panel").querySelector("script"),null);
-  assert.match(demos[0].closest("li").textContent,/KHOOR ZRUOG\./); assert.match(demos[1].closest("li").textContent,/Rank 1/); assert.match(demos[2].closest("li").textContent,/HOELL/);
+  const crypto=starterList(p,"crypto").querySelectorAll(".start-demo");
+  assert.match(crypto[0].closest("li").textContent,/KHOOR ZRUOG\./); assert.match(crypto[1].closest("li").textContent,/Rank 1/); assert.match(crypto[2].closest("li").textContent,/HOELL/);
 });
 
 test("SH4: loading and required failure disable entries and remove demo navigation; retry enables them once", async () => {
   const pending=await runPage({deferData:true});
+  assert.equal(el(pending,"start-genre").disabled,true);
   for (const b of buttons(pending)) assert.equal(b.disabled,true);
   for (const a of links(pending)) { assert.equal(a.hasAttribute("href"),false); assert.equal(a.dispatch("click").defaultPrevented,true); }
   el(pending,"start-all-button").dispatch("click"); assert.equal(pending.context.history.length,1);
   await pending.releaseData(); for (const b of buttons(pending)) assert.equal(b.disabled,false);
+  assert.equal(el(pending,"start-genre").disabled,false);
   const p=await runPage({allowLoadFailure:true,fetchResponse(name,_,attempt) { if(name==="data/tools.json"&&attempt===1)return {ok:false,status:503}; }});
   assert.equal(state(p),"error"); for(const b of buttons(p))assert.equal(b.disabled,true);
+  assert.equal(el(p,"start-genre").disabled,true);
+  for(const a of links(p))assert.equal(a.hasAttribute("href"),false);
   el(p,"retry-data").click(); await p.flush(); assert.equal(state(p),"ready");
+  assert.equal(el(p,"start-genre").disabled,false);
+  for(const [group,ids] of Object.entries(starterGroups)) { chooseGenre(p,group);assert.deepEqual(visibleDemos(p).map(a=>a.dataset.toolId),ids);assert.ok(visibleDemos(p).every(a=>a.hasAttribute("href"))); }
   el(p,"start-books-button").click(); const link=el(p,"start-book-links").querySelector("a");
   const length=p.context.history.length; chooseBook(p,link); assert.equal(p.context.history.length,length+1);
 });
@@ -76,16 +103,26 @@ test("SH5: optional book failure cannot disable the first three or all-tools nav
     const p=await runPage({search:"?book=unknown&q=day003&lang=en",...failure});
     assert.equal(state(p),"ready"); assert.equal(el(p,"start-books-button").disabled,true);
     assert.equal(el(p,"start-first-button").disabled,false); assert.equal(el(p,"start-all-button").disabled,false);
+    assert.equal(el(p,"start-genre").disabled,false);
+    for(const [group,ids] of Object.entries(starterGroups)) { chooseGenre(p,group);assert.deepEqual(visibleDemos(p).map(a=>a.dataset.toolId),ids); }
     assert.equal(links(p).every(a=>a.hasAttribute("href")),true);
     el(p,"start-all-button").click(); assert.equal(el(p,"filter-search-input").value,"");
     assert.equal(el(p,"tool-list").querySelectorAll(".tool-card").length,tools.filter(t=>t.hub!==false).length);
   }
 });
 
-test("SH6: missing or hidden starter tools never acquire a demo href", async () => {
-  const data=JSON.parse(read("data/tools.json")); data.tools.find(t=>t.id==="day003").hub=false; data.tools.find(t=>t.id==="day008").demo_url="";
-  const p=await runPage({dataOverrides:{"data/tools.json":data}});
-  assert.equal(links(p)[0].hasAttribute("href"),false); assert.equal(links(p)[1].hasAttribute("href"),false); assert.equal(links(p)[2].hasAttribute("href"),true);
+test("SH6: every group refuses navigation for absent, hidden and empty-demo catalog entries", async () => {
+  for(const [group,ids] of Object.entries(starterGroups)) {
+    const data=JSON.parse(read("data/tools.json"));
+    data.tools=data.tools.filter(t=>t.id!==ids[0]);
+    data.tools.find(t=>t.id===ids[1]).hub=false;
+    data.tools.find(t=>t.id===ids[2]).demo_url="";
+    const p=await runPage({dataOverrides:{"data/tools.json":data}}); chooseGenre(p,group);
+    for(const a of visibleDemos(p)) {
+      assert.equal(a.hasAttribute("href"),false);assert.equal(a.getAttribute("aria-disabled"),"true");
+      assert.equal(a.getAttribute("tabindex"),"-1");assert.equal(a.dispatch("click").defaultPrevented,true);
+    }
+  }
 });
 
 test("SH7: book links use all existing short names, language-safe URLs and modified-click behavior", async () => {
@@ -232,4 +269,45 @@ test("SH16: reopening help resets its body scroll and every close path restores 
     assert.equal(p.document.activeElement,opener);
     assert.equal(p.document.documentElement.classList.contains("help-open"),false);
   }
+});
+
+test("SH17: genre selection preserves focused select, open panel, list filters, URL, history and stored records", async () => {
+  const p=await runPage({search:"?book=genai-crypto&cat=classic-crypto&q=day003",storedValues:{hlo_start_here:"open",later_day003:"1",progress_caesar:"2"}});
+  el(p,"start-here").open=true;
+  const progress=el(p,"filter-progress");progress.value="0";progress.dispatch("change");
+  const later=el(p,"filter-later");later.checked=true;later.dispatch("change");
+  const href=p.context.location.href, history=p.context.history.length, disk=[...p.values], writes=p.storageCalls.write;
+  const cards=el(p,"tool-list").children.slice(), fields=p.evaluate("JSON.stringify(filters)");
+  const select=el(p,"start-genre"), lists=p.document.querySelectorAll(".start-first-tools");
+  assert.equal(select.tagName,"SELECT");assert.equal(select.getAttribute("aria-controls"),"start-first-lists");
+  assert.ok(p.document.querySelector('label[for="start-genre"]'));
+  for(const group of Object.keys(starterGroups)) {
+    select.focus();chooseGenre(p,group);
+    assert.equal(p.document.activeElement,select);assert.equal(el(p,"start-here").open,true);
+    assert.equal(el(p,"start-first-panel").hidden,false);assert.equal(el(p,"start-books-panel").hidden,true);
+    assert.equal(p.context.location.href,href);assert.equal(p.context.history.length,history);
+    assert.equal(p.evaluate("JSON.stringify(filters)"),fields);assert.deepEqual(el(p,"tool-list").children,cards);
+    assert.deepEqual(p.document.querySelectorAll(".start-first-tools"),lists);
+    assert.deepEqual([...p.values],disk);assert.equal(p.storageCalls.write,writes);
+  }
+  chooseGenre(p,"unknown");assert.equal(select.value,"everyday");assert.equal(p.document.activeElement,select);
+});
+
+test("SH18: genre and existing demo focus survive language and panel changes, while a fresh visit starts recommended", async () => {
+  const p=await runPage(), select=el(p,"start-genre");
+  assert.match(el(p,"start-genre-status").textContent,/おすすめ（分野横断）/);
+  assert.equal(el(p,"start-genre-status").classList.contains("visually-hidden"),false);
+  select.focus();chooseGenre(p,"physical");
+  assert.equal(p.values.get("hlo_start_here"),"closed");assert.equal(el(p,"start-here").open,true);
+  assert.deepEqual([...p.values.keys()],["hlo_start_here"]);
+  assert.equal(el(p,"start-genre-status").getAttribute("aria-live"),"polite");
+  assert.match(el(p,"start-genre-status").textContent,/物理的セキュリティ/);
+  const link=visibleDemos(p)[1];link.focus();el(p,"lang-en").click();
+  assert.equal(p.document.activeElement,link);assert.equal(select.value,"physical");
+  assert.match(el(p,"start-genre-status").textContent,/Physical security/);
+  assert.equal(link.href,HU.demoLink(tools.find(t=>t.id===link.dataset.toolId).demo_url,"en"));
+  el(p,"start-books-button").click();el(p,"start-first-button").click();
+  assert.equal(select.value,"physical");assert.deepEqual(visibleDemos(p).map(a=>a.dataset.toolId),starterGroups.physical);
+  const next=await runPage({storedValues:Object.fromEntries(p.values)});
+  assert.equal(el(next,"start-genre").value,"recommended");assert.deepEqual(visibleDemos(next).map(a=>a.dataset.toolId),starterGroups.recommended);
 });

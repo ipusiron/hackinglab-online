@@ -161,11 +161,119 @@
             </div>
             <section id="start-first-panel" aria-labelledby="start-first-heading">
               <h2 id="start-first-heading"><span class="label-ja">作者が選んだ、最初に試す3本</span><span class="label-en">Three tools to try first, picked by the author</span></h2>
-              <ol class="start-first-tools">
-                <li><p><span class="label-ja">Caesar Cipher Wheel Tool（Day003）：ずらす数を3にし、最初から入っている<code>hello world.</code>が<code>KHOOR ZRUOG.</code>になるか確かめる</span><span class="label-en">Caesar Cipher Wheel Tool (Day003): set the shift to 3 and check that the preset <code>hello world.</code> becomes <code>KHOOR ZRUOG.</code></span></p><a class="start-demo" data-tool-id="day003" target="_blank" rel="noopener" aria-disabled="true" tabindex="-1"><span class="label-ja">デモを開く</span><span class="label-en">Open demo</span></a></li>
-                <li><p><span class="label-ja">Caesar Cipher Breaker（Day008）：入力欄の文を1本目で出た<code>KHOOR ZRUOG.</code>に入れ替えて「総当たり解読」を押し、候補1が鍵3の<code>HELLO WORLD.</code>になるか確かめる</span><span class="label-en">Caesar Cipher Breaker (Day008): replace the input with <code>KHOOR ZRUOG.</code> (the result from tool 1), press “Brute-force,” and check that the line marked “Rank 1” is <code>HELLO WORLD.</code> with key 3</span></p><a class="start-demo" data-tool-id="day008" target="_blank" rel="noopener" aria-disabled="true" tabindex="-1"><span class="label-ja">デモを開く</span><span class="label-en">Open demo</span></a></li>
-                <li><p><span class="label-ja">RailFence CipherLab（Day034）：平文に<code>HELLO</code>を入れ、レール数を3、方式を「方式2（交互）」にして、<code>HOELL</code>になるか確かめる（文字は変わらず、並びだけが変わる）</span><span class="label-en">RailFence CipherLab (Day034): type <code>HELLO</code> as the plaintext, choose 3 rails and Method 2 (zigzag), and check that it becomes <code>HOELL</code> (same letters, new order)</span></p><a class="start-demo" data-tool-id="day034" target="_blank" rel="noopener" aria-disabled="true" tabindex="-1"><span class="label-ja">デモを開く</span><span class="label-en">Open demo</span></a></li>
-              </ol>
+              <div class="start-genre-control">
+                <label for="start-genre"><span class="label-ja">ジャンル</span><span class="label-en">Topic</span></label>
+                <select id="start-genre" aria-controls="start-first-lists" disabled>
+                  <option value="recommended"></option>
+                  <option value="crypto"></option>
+                  <option value="web"></option>
+                  <option value="physical"></option>
+                  <option value="everyday"></option>
+                </select>
+              </div>
+              <p id="start-genre-status" class="start-genre-status" role="status" aria-live="polite" aria-atomic="true"></p>
+              <div id="start-first-lists">
+                <ol class="start-first-tools" data-start-genre="recommended">
+                  <li>
+                    <h3><span lang="en">Caesar Cipher Wheel Tool</span> <span class="start-tool-day">(Day003)</span></h3>
+                    <p><span class="label-ja">円盤を回すと文字がずれ、シーザー暗号で秘密の文を作る仕組みが見えます。</span><span class="label-en">Turn the wheel to shift letters and see how the Caesar cipher makes a secret message.</span></p>
+                    <p><span class="label-ja">ずらす数を3にし、最初から入っている<code>hello world.</code>が<code>KHOOR ZRUOG.</code>になるか確かめてください。</span><span class="label-en">Set the shift to 3 and check that the preset <code>hello world.</code> becomes <code>KHOOR ZRUOG.</code>.</span></p>
+                    <a class="start-demo" data-tool-id="day003" target="_blank" rel="noopener" aria-disabled="true" tabindex="-1"><span class="label-ja">デモを開く</span><span class="label-en">Open demo</span></a>
+                  </li>
+                  <li>
+                    <h3><span lang="en">DialSafe Simulator</span> <span class="start-tool-day">(Day050)</span></h3>
+                    <p><span class="label-ja">金庫のダイヤルを回すと、中の円盤が動いて錠が開く仕組みを見られます。</span><span class="label-en">Watch the discs inside a safe move as the dial turns, and see how the lock opens.</span></p>
+                    <p><span class="label-ja">「自動実演で動きを見る」を押し、「① 正確な操作」を再生してください。</span><span class="label-en">Select “See it in the demonstrations”, then play “① Correct”.</span></p>
+                    <a class="start-demo" data-tool-id="day050" target="_blank" rel="noopener" aria-disabled="true" tabindex="-1"><span class="label-ja">デモを開く</span><span class="label-en">Open demo</span></a>
+                  </li>
+                  <li>
+                    <h3><span lang="en">Browser Fingerprint Mirror</span> <span class="start-tool-day">(Day077)</span></h3>
+                    <p><span class="label-ja">サイトを開いただけで、ブラウザーからどんな情報が見えるかを確かめられます。</span><span class="label-en">Discover which details about your browser a website can read when you open it.</span></p>
+                    <p><span class="label-ja">「詳細・分析」を開き、「もう一度読む」で指紋IDや値が変わるか比べてください。</span><span class="label-en">Open “Details &amp; analysis” and select “Read again” to compare the fingerprint ID and values.</span></p>
+                    <a class="start-demo" data-tool-id="day077" target="_blank" rel="noopener" aria-disabled="true" tabindex="-1"><span class="label-ja">デモを開く</span><span class="label-en">Open demo</span></a>
+                  </li>
+                </ol>
+                <ol class="start-first-tools" data-start-genre="crypto" hidden>
+                  <li>
+                    <h3><span lang="en">Caesar Cipher Wheel Tool</span> <span class="start-tool-day">(Day003)</span></h3>
+                    <p><span class="label-ja">円盤を回すと文字がずれ、シーザー暗号で秘密の文を作る仕組みが見えます。</span><span class="label-en">Turn the wheel to shift letters and see how the Caesar cipher makes a secret message.</span></p>
+                    <p><span class="label-ja">ずらす数を3にし、最初から入っている<code>hello world.</code>が<code>KHOOR ZRUOG.</code>になるか確かめてください。</span><span class="label-en">Set the shift to 3 and check that the preset <code>hello world.</code> becomes <code>KHOOR ZRUOG.</code>.</span></p>
+                    <a class="start-demo" data-tool-id="day003" target="_blank" rel="noopener" aria-disabled="true" tabindex="-1"><span class="label-ja">デモを開く</span><span class="label-en">Open demo</span></a>
+                  </li>
+                  <li>
+                    <h3><span lang="en">Caesar Cipher Breaker</span> <span class="start-tool-day">(Day008)</span></h3>
+                    <p><span class="label-ja">暗号文を入れると、ずらした数を順番に試して元の文を探せます。</span><span class="label-en">Enter a ciphertext and try each possible shift to find the original message.</span></p>
+                    <p><span class="label-ja">入力欄の文を1本目で出た<code>KHOOR ZRUOG.</code>に入れ替えて「総当たり解読」を押し、候補1が鍵3の<code>HELLO WORLD.</code>になるか確かめてください。</span><span class="label-en">Replace the input with <code>KHOOR ZRUOG.</code> from tool 1, select “Brute-force”, and check that “Rank 1” is <code>HELLO WORLD.</code> with key 3.</span></p>
+                    <a class="start-demo" data-tool-id="day008" target="_blank" rel="noopener" aria-disabled="true" tabindex="-1"><span class="label-ja">デモを開く</span><span class="label-en">Open demo</span></a>
+                  </li>
+                  <li>
+                    <h3><span lang="en">RailFence CipherLab</span> <span class="start-tool-day">(Day034)</span></h3>
+                    <p><span class="label-ja">文字を変えずに並びだけを入れ替える暗号を、ジグザグの図で確かめられます。</span><span class="label-en">Follow a zigzag diagram to see how rearranging letters can make a cipher.</span></p>
+                    <p><span class="label-ja">平文に<code>HELLO</code>を入れ、レール数を3、方式を「方式2（交互）」にして、<code>HOELL</code>になるか確かめてください。</span><span class="label-en">Type <code>HELLO</code> as the plaintext, choose 3 rails and Method 2 (zigzag), and check that it becomes <code>HOELL</code>.</span></p>
+                    <a class="start-demo" data-tool-id="day034" target="_blank" rel="noopener" aria-disabled="true" tabindex="-1"><span class="label-ja">デモを開く</span><span class="label-en">Open demo</span></a>
+                  </li>
+                </ol>
+                <ol class="start-first-tools" data-start-genre="web" hidden>
+                  <li>
+                    <h3><span lang="en">Browser Fingerprint Mirror</span> <span class="start-tool-day">(Day077)</span></h3>
+                    <p><span class="label-ja">サイトを開いただけで、ブラウザーからどんな情報が見えるかを確かめられます。</span><span class="label-en">Discover which details about your browser a website can read when you open it.</span></p>
+                    <p><span class="label-ja">「詳細・分析」を開き、「もう一度読む」で指紋IDや値が変わるか比べてください。</span><span class="label-en">Open “Details &amp; analysis” and select “Read again” to compare the fingerprint ID and values.</span></p>
+                    <a class="start-demo" data-tool-id="day077" target="_blank" rel="noopener" aria-disabled="true" tabindex="-1"><span class="label-ja">デモを開く</span><span class="label-en">Open demo</span></a>
+                  </li>
+                  <li>
+                    <h3><span lang="en">Invisible Clicks</span> <span class="start-tool-day">(Day058)</span></h3>
+                    <p><span class="label-ja">「いいね！」を押したつもりが、別の操作につながる仕組みを模擬体験できます。</span><span class="label-en">Try a simulation where a click on “Like!” triggers a different action.</span></p>
+                    <p><span class="label-ja">「攻撃体験デモ」を開き、「いいね！」をクリックまたはタップしてログを見てください。</span><span class="label-en">Switch to EN if needed, open “Hands-on demo”, then click or tap “Like!” and read the log.</span></p>
+                    <a class="start-demo" data-tool-id="day058" target="_blank" rel="noopener" aria-disabled="true" tabindex="-1"><span class="label-ja">デモを開く</span><span class="label-en">Open demo</span></a>
+                  </li>
+                  <li>
+                    <h3><span lang="en">PathEscape</span> <span class="start-tool-day">(Day068)</span></h3>
+                    <p><span class="label-ja">パスの「../」で、見せるはずのないファイルへ届いてしまう仕組みを体験できます。</span><span class="label-en">See how “../” in a path can reach a file outside the intended folder.</span></p>
+                    <p><span class="label-ja">パス欄に「../../secrets/flag.txt」を入力して「Fetch」を押し、続いてSafeに切り替えて比べてください。</span><span class="label-en">Enter “../../secrets/flag.txt”, select “Fetch”, then switch to Safe and fetch it again.</span></p>
+                    <a class="start-demo" data-tool-id="day068" target="_blank" rel="noopener" aria-disabled="true" tabindex="-1"><span class="label-ja">デモを開く</span><span class="label-en">Open demo</span></a>
+                  </li>
+                </ol>
+                <ol class="start-first-tools" data-start-genre="physical" hidden>
+                  <li>
+                    <h3><span lang="en">DialSafe Simulator</span> <span class="start-tool-day">(Day050)</span></h3>
+                    <p><span class="label-ja">金庫のダイヤルを回すと、中の円盤が動いて錠が開く仕組みを見られます。</span><span class="label-en">Watch the discs inside a safe move as the dial turns, and see how the lock opens.</span></p>
+                    <p><span class="label-ja">「自動実演で動きを見る」を押し、「① 正確な操作」を再生してください。</span><span class="label-en">Select “See it in the demonstrations”, then play “① Correct”.</span></p>
+                    <a class="start-demo" data-tool-id="day050" target="_blank" rel="noopener" aria-disabled="true" tabindex="-1"><span class="label-ja">デモを開く</span><span class="label-en">Open demo</span></a>
+                  </li>
+                  <li>
+                    <h3><span lang="en">Seal Tamper Lab</span> <span class="start-tool-day">(Day061)</span></h3>
+                    <p><span class="label-ja">封印シールの種類や調べ方を変え、何が手掛かりになり、何が判断できないかを学べます。</span><span class="label-en">Compare seal types and inspections to learn which traces offer clues and what they cannot prove.</span></p>
+                    <p><span class="label-ja">「機器筐体（金属/樹脂）」→「透明テープ（番号なし）」→「温風で剥がし再接着」→「斜光観察」と選び、各段の「次へ」で結果まで進んでください。</span><span class="label-en">Switch to EN if needed, then choose “Device enclosure (metal/plastic)” → “Clear tape (no number)” → “Peel with warm air and re-adhere” → “Oblique-light observation”, using Next to reach the result.</span></p>
+                    <a class="start-demo" data-tool-id="day061" target="_blank" rel="noopener" aria-disabled="true" tabindex="-1"><span class="label-ja">デモを開く</span><span class="label-en">Open demo</span></a>
+                  </li>
+                  <li>
+                    <h3><span lang="en">Intrusion Path Mapper</span> <span class="start-tool-day">(Day083)</span></h3>
+                    <p><span class="label-ja">建物への侵入経路を図でたどり、どこを守ると道を断てるか考えられます。</span><span class="label-en">Trace possible routes into a building and consider which points could block them.</span></p>
+                    <p><span class="label-ja">「物理的侵入経路」を選んで「プリセット読込」を押し、「経路を探索」で道筋を調べてください。</span><span class="label-en">Choose “Physical intrusion”, select “Load preset”, then select “Find paths” to explore the routes.</span></p>
+                    <a class="start-demo" data-tool-id="day083" target="_blank" rel="noopener" aria-disabled="true" tabindex="-1"><span class="label-ja">デモを開く</span><span class="label-en">Open demo</span></a>
+                  </li>
+                </ol>
+                <ol class="start-first-tools" data-start-genre="everyday" hidden>
+                  <li>
+                    <h3><span lang="en">QRCrashTest</span> <span class="start-tool-day">(Day102)</span></h3>
+                    <p><span class="label-ja">QRコードに落書きし、どこまで汚しても読めるのかをその場で試せます。</span><span class="label-en">Draw over a QR code and test how much damage it can take before reading fails.</span></p>
+                    <p><span class="label-ja">「サンプル1（URL）」を選び、「ペン」でQRコードに線を引いてください。</span><span class="label-en">Switch to English if needed, choose “Sample 1 (URL)”, then draw a line over the QR code with “Pen”.</span></p>
+                    <a class="start-demo" data-tool-id="day102" target="_blank" rel="noopener" aria-disabled="true" tabindex="-1"><span class="label-ja">デモを開く</span><span class="label-en">Open demo</span></a>
+                  </li>
+                  <li>
+                    <h3><span lang="en">Codabar Lens</span> <span class="start-tool-day">(Day116)</span></h3>
+                    <p><span class="label-ja">バーコードの一部を隠して、番号が読める場合と読めなくなる場合を比べられます。</span><span class="label-en">Cover parts of a barcode and compare when its number remains readable and when it does not.</span></p>
+                    <p><span class="label-ja">「このサンプルを画像実験へ」を押し、加工を「上の部分を黒く隠す」に変えてください。</span><span class="label-en">Select “Use this sample in Image lab”, then choose “Cover the upper part in black”.</span></p>
+                    <a class="start-demo" data-tool-id="day116" target="_blank" rel="noopener" aria-disabled="true" tabindex="-1"><span class="label-ja">デモを開く</span><span class="label-en">Open demo</span></a>
+                  </li>
+                  <li>
+                    <h3><span lang="en">MorseTree Visualizer</span> <span class="start-tool-day">(Day025)</span></h3>
+                    <p><span class="label-ja">点と線の信号が枝をたどって文字になる様子を、動きで確かめられます。</span><span class="label-en">Follow dots and dashes through a tree to see how Morse code becomes letters.</span></p>
+                    <p><span class="label-ja">入力欄に「SOS」と入れて「エンコード＆表示」を押し、木の経路を見てください。</span><span class="label-en">Enter “SOS”, select “Encode &amp; show”, and follow the path through the tree.</span></p>
+                    <a class="start-demo" data-tool-id="day025" target="_blank" rel="noopener" aria-disabled="true" tabindex="-1"><span class="label-ja">デモを開く</span><span class="label-en">Open demo</span></a>
+                  </li>
+                </ol>
+              </div>
             </section>
             <section id="start-books-panel" aria-labelledby="start-books-heading" hidden>
               <h2 id="start-books-heading"><span class="label-ja">書籍／プロジェクト</span><span class="label-en">Books / Projects</span></h2>
