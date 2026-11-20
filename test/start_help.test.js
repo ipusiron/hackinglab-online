@@ -276,7 +276,7 @@ test("SH17: genre selection preserves focused select, open panel, list filters, 
   el(p,"start-here").open=true;
   const progress=el(p,"filter-progress");progress.value="0";progress.dispatch("change");
   const later=el(p,"filter-later");later.checked=true;later.dispatch("change");
-  const href=p.context.location.href, history=p.context.history.length, disk=[...p.values], writes=p.storageCalls.write;
+  const href=p.context.location.href, history=p.context.history.length, disk=[...p.values];
   const cards=el(p,"tool-list").children.slice(), fields=p.evaluate("JSON.stringify(filters)");
   const select=el(p,"start-genre"), lists=p.document.querySelectorAll(".start-first-tools");
   assert.equal(select.tagName,"SELECT");assert.equal(select.getAttribute("aria-controls"),"start-first-lists");
@@ -288,18 +288,21 @@ test("SH17: genre selection preserves focused select, open panel, list filters, 
     assert.equal(p.context.location.href,href);assert.equal(p.context.history.length,history);
     assert.equal(p.evaluate("JSON.stringify(filters)"),fields);assert.deepEqual(el(p,"tool-list").children,cards);
     assert.deepEqual(p.document.querySelectorAll(".start-first-tools"),lists);
-    assert.deepEqual([...p.values],disk);assert.equal(p.storageCalls.write,writes);
+    assert.deepEqual([...p.values].filter(([key])=>key!=="hlo_start_genre"),disk);
+    if(group!=="recommended")assert.equal(p.values.get("hlo_start_genre"),group);
   }
+  const writes=p.storageCalls.write;
   chooseGenre(p,"unknown");assert.equal(select.value,"everyday");assert.equal(p.document.activeElement,select);
+  chooseGenre(p,"everyday");assert.equal(p.storageCalls.write,writes);
 });
 
-test("SH18: genre and existing demo focus survive language and panel changes, while a fresh visit starts recommended", async () => {
+test("SH18: genre and demo focus survive language and panel changes, and a fresh visit restores the saved genre", async () => {
   const p=await runPage(), select=el(p,"start-genre");
   assert.match(el(p,"start-genre-status").textContent,/おすすめ（分野横断）/);
   assert.equal(el(p,"start-genre-status").classList.contains("visually-hidden"),false);
   select.focus();chooseGenre(p,"physical");
   assert.equal(p.values.get("hlo_start_here"),"closed");assert.equal(el(p,"start-here").open,true);
-  assert.deepEqual([...p.values.keys()],["hlo_start_here"]);
+  assert.deepEqual([...p.values.keys()],["hlo_start_here","hlo_start_genre"]);
   assert.equal(el(p,"start-genre-status").getAttribute("aria-live"),"polite");
   assert.match(el(p,"start-genre-status").textContent,/物理的セキュリティ/);
   const link=visibleDemos(p)[1];link.focus();el(p,"lang-en").click();
@@ -309,5 +312,51 @@ test("SH18: genre and existing demo focus survive language and panel changes, wh
   el(p,"start-books-button").click();el(p,"start-first-button").click();
   assert.equal(select.value,"physical");assert.deepEqual(visibleDemos(p).map(a=>a.dataset.toolId),starterGroups.physical);
   const next=await runPage({storedValues:Object.fromEntries(p.values)});
-  assert.equal(el(next,"start-genre").value,"recommended");assert.deepEqual(visibleDemos(next).map(a=>a.dataset.toolId),starterGroups.recommended);
+  assert.equal(el(next,"start-genre").value,"physical");assert.deepEqual(visibleDemos(next).map(a=>a.dataset.toolId),starterGroups.physical);
+});
+
+test("SH19: only the five saved genres restore, without rewriting storage or overriding Start disclosure", async () => {
+  for(const saved of [...Object.keys(starterGroups),"Web","web ","","unknown","__proto__","constructor"]) {
+    const p=await runPage({width:320,storedValues:{hlo_start_genre:saved,hlo_start_here:"closed"}});
+    const expected=Object.hasOwn(starterGroups,saved) ? saved : "recommended";
+    assert.equal(el(p,"start-genre").value,expected);
+    assert.deepEqual(visibleDemos(p).map(a=>a.dataset.toolId),starterGroups[expected]);
+    assert.equal(el(p,"start-here").open,false);
+    assert.equal(p.values.get("hlo_start_genre"),saved);assert.equal(p.storageCalls.write,0);
+  }
+});
+
+test("SH20: preference-only storage refusal keeps the page usable without a record-loss notice", async () => {
+  const unreadable=await runPage({storedValues:{hlo_start_genre:"web"},storageHooks:{read(key){if(key==="hlo_start_genre")throw Error("blocked preference read");}}});
+  assert.equal(state(unreadable),"ready");assert.equal(el(unreadable,"start-genre").value,"recommended");
+  assert.equal(el(unreadable,"storage-warning").hidden,true);
+  const p=await runPage({storedValues:{hlo_start_genre:"web"},storageHooks:{write(key){if(key==="hlo_start_genre")throw Error("blocked preference write");}}});
+  chooseGenre(p,"crypto");el(p,"lang-en").click();el(p,"start-books-button").click();el(p,"start-first-button").click();
+  assert.equal(el(p,"start-genre").value,"crypto");assert.deepEqual(visibleDemos(p).map(a=>a.dataset.toolId),starterGroups.crypto);
+  assert.equal(p.values.get("hlo_start_genre"),"web");assert.equal(el(p,"storage-warning").hidden,true);
+  const next=await runPage({storedValues:Object.fromEntries(p.values)});
+  assert.equal(el(next,"start-genre").value,"web");
+});
+
+test("SH21: another tab's saved genre and storage clear affect the next visit, not the current selection", async () => {
+  const p=await runPage({storedValues:{hlo_start_genre:"crypto"}}), select=el(p,"start-genre");select.focus();
+  p.values.set("hlo_start_genre","web");p.dispatch("storage",{key:"hlo_start_genre"});p.dispatch("pageshow",{persisted:true});
+  el(p,"lang-en").click();
+  assert.equal(select.value,"crypto");assert.equal(p.document.activeElement,select);
+  const next=await runPage({storedValues:Object.fromEntries(p.values)});assert.equal(el(next,"start-genre").value,"web");
+  p.values.clear();p.dispatch("storage",{key:null});p.dispatch("pageshow",{persisted:true});
+  el(p,"lang-ja").click();assert.equal(select.value,"crypto");
+  const cleared=await runPage({storedValues:Object.fromEntries(p.values)});assert.equal(el(cleared,"start-genre").value,"recommended");
+});
+
+test("SH22: remembered genre stays out of the record export and sharing URL", async () => {
+  const tool=tools.find(t=>t.id==="day003");
+  const p=await runPage({search:"?q=day003&lang=en",storedValues:{[`progress_${tool.slug}`]:"2",[`later_${tool.id}`]:"1"}});
+  const href=p.context.location.href,history=p.context.history.length;
+  chooseGenre(p,"everyday");el(p,"records-export").click();
+  const data=JSON.parse(await p.downloads[0].blob.text());
+  assert.equal(data.schema_version,2);assert.deepEqual(data.progress,{[tool.id]:2});assert.deepEqual(data.try_later,[tool.id]);
+  assert.deepEqual(Object.keys(data).sort(),["app","progress","saved_at","schema_version","try_later"]);
+  assert.equal(p.values.get("hlo_start_genre"),"everyday");
+  assert.equal(p.context.location.href,href);assert.equal(p.context.history.length,history);
 });

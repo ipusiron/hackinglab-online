@@ -289,6 +289,7 @@ function listCounts() {
 }
 
 function updateListCount() {
+  updateTryLaterCount();
   const el = document.getElementById("list-count");
   if (!el || loadState !== "ready") return;
   const counts = listCounts();
@@ -817,7 +818,8 @@ function setupStaticUI() {
   updateLanguageUI();
 }
 
-// Start panels are visit-local. Keep their controls and focused links across language changes.
+// Panel choice is visit-local; remember only the starter genre for the next visit.
+// Keep controls and focused links across language changes.
 let startBooksSource = null;
 const START_GENRES = {
   recommended: ["おすすめ（分野横断）", "Recommended (mixed topics)"],
@@ -826,7 +828,9 @@ const START_GENRES = {
   physical: ["物理的セキュリティ", "Physical security"],
   everyday: ["身近な仕組み", "Everyday mechanisms"]
 };
-let startGenre = "recommended";
+const START_GENRE_KEY = "hlo_start_genre";
+const savedStartGenre = progressStore.getItem(START_GENRE_KEY);
+let startGenre = Object.prototype.hasOwnProperty.call(START_GENRES, savedStartGenre) ? savedStartGenre : "recommended";
 
 function updateStartGenre() {
   const select = document.getElementById("start-genre");
@@ -859,6 +863,7 @@ function setupStartEntries(keepInPlace) {
     markStartSeen();
     keepInPlace(genre, () => {
       startGenre = next;
+      progressStore.setItem(START_GENRE_KEY, next);
       updateStartGenre();
     });
   });
@@ -1222,6 +1227,7 @@ function setLoadState(state) {
   if (state !== "ready") ["share-on-x", "share-copy-link", "reset-all-progress"].forEach((id) => { document.getElementById(id).disabled = true; });
   updateRecordsUI();
   updateStartEntries();
+  updateTryLaterCount();
 }
 
 async function loadData() {
@@ -1542,6 +1548,7 @@ function updateLanguageUI() {
 
   updateStartEntries();
   updateRecordsUI();
+  updateTryLaterCount();
   updateCatalogDate();
   updateLinkedTitle();
 }
@@ -3055,6 +3062,18 @@ function getTryLater(id) {
 function setTryLater(id, saved) {
   progressStore.setItem(`later_${id}`, saved ? "1" : "0");
   progressVersion++;
+}
+
+function updateTryLaterCount() {
+  const label = document.getElementById("filter-later-count");
+  if (!label) return;
+  label.hidden = loadState !== "ready";
+  if (label.hidden) return;
+  // Count saved public IDs, not rendered cards or the current filter results.
+  // Effective storage also includes changes that could not be written to disk.
+  const count = new Set(getRecordTools().filter((tool) => getTryLater(tool.id)).map((tool) => tool.id)).size;
+  const text = currentLang === "ja" ? `（保存${count}本）` : `(${count} saved)`;
+  if (label.textContent !== text) label.textContent = text;
 }
 
 function updateTryLaterButton(button, id) {

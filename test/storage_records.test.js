@@ -19,24 +19,33 @@ const laterKey = (tool) => `later_${tool.id}`;
 const later = (page, tool) => page.document.querySelector(`.tool-later-toggle[data-tool-id="${tool.id}"]`);
 const savedOnly = (page, checked = true) => { const filter = id(page, "filter-later"); filter.checked = checked; filter.dispatch("change"); };
 const laterFile = (progress, ids) => file(progress, { schema_version: 2, try_later: ids });
+function savedCount(page, count, language = "ja") {
+  const label = id(page, "filter-later-count");
+  assert.equal(label.hidden, false);
+  assert.equal(label.textContent, language === "ja" ? `（保存${count}本）` : `(${count} saved)`);
+}
 
 test("TL1: saved-only composes with search, keeps progress separate and never changes the URL", async () => {
   const page = await runPage();
+  savedCount(page, 0);
   const originalUrl = page.evaluate("location.href");
   const button = later(page, first); button.focus(); button.click();
   assert.equal(button.getAttribute("aria-pressed"), "true");
   assert.equal(page.values.get(laterKey(first)), "1");
   assert.equal(level(page, first), 0);
+  savedCount(page, 1);
   savedOnly(page);
   assert.deepEqual(page.document.querySelectorAll(".tool-card").map((card) => card.dataset.toolId), [first.id]);
   assert.equal(page.evaluate("location.href"), originalUrl);
   const input = id(page, "filter-search-input"); input.value = second.id; input.dispatch("input");
   assert.equal(page.document.querySelectorAll(".tool-card").length, 0);
+  savedCount(page, 1);
   assert.match(id(page, "tool-list").textContent, /条件に合うツールはありません/);
   assert.doesNotMatch(id(page, "tool-list").textContent, /追加したツールがありません/);
   id(page, "clear-filters").click();
   assert.equal(id(page, "filter-later").checked, false);
   assert.equal(later(page, first).getAttribute("aria-pressed"), "true");
+  savedCount(page, 1);
 });
 
 test("TL2: removing a saved chapter tool retains focused duplicate cards and language rebuild restores the toggle", async () => {
@@ -46,9 +55,11 @@ test("TL2: removing a saved chapter tool retains focused duplicate cards and lan
   const tool = catalog.find((item) => item.id === target.dataset.toolId);
   later(page, tool).click(); savedOnly(page);
   const kept = page.document.querySelectorAll(".tool-card");
+  assert.ok(kept.length > 1); savedCount(page, 1);
   const control = kept.at(-1).querySelector(".tool-later-toggle"); control.focus(); control.click();
   assert.equal(page.document.activeElement, control);
   assert.deepEqual(page.document.querySelectorAll(".tool-card"), kept);
+  savedCount(page, 0);
   for (const card of kept) {
     assert.equal(card.querySelector(".tool-later-toggle").getAttribute("aria-pressed"), "false");
     assert.equal(card.classList.contains("is-outside"), true);
@@ -58,6 +69,7 @@ test("TL2: removing a saved chapter tool retains focused duplicate cards and lan
   assert.equal(page.document.activeElement.dataset.part, "later");
   assert.equal(page.document.activeElement.closest(".tool-card").dataset.group, kept.at(-1).dataset.group);
   assert.match(page.document.querySelector(".tool-outside-label").textContent, /Removed from Try later/);
+  savedCount(page, 0, "en");
 });
 
 test("TL3: bookmark-only export works and progress reset preserves saved tools", async () => {
@@ -65,6 +77,7 @@ test("TL3: bookmark-only export works and progress reset preserves saved tools",
   id(page, "reset-all-progress").click();
   assert.equal(level(page, first), 0);
   assert.equal(page.values.get(laterKey(first)), "1");
+  savedCount(page, 1);
   id(page, "records-export").click();
   const data = JSON.parse(await page.downloads[0].blob.text());
   assert.equal(data.schema_version, 2);
@@ -80,8 +93,10 @@ test("TL4: bookmark restore is additive, counts each tool once and accepts legac
   assert.equal(level(page, first), 2);
   assert.match(page.confirmations[0], /2本の記録/);
   assert.equal(id(page, "records-status").textContent, "2本の記録をファイルから戻しました。");
+  savedCount(page, 3);
   await restore(page, file({ [second.id]: 1 }));
   assert.equal(page.values.get(laterKey(third)), "1");
+  savedCount(page, 3);
 });
 
 test("TL5: failed bookmark removal stays authoritative through storage clear and file export", async () => {
@@ -91,6 +106,7 @@ test("TL5: failed bookmark removal stays authoritative through storage clear and
   assert.equal(page.values.get(laterKey(first)), "1");
   page.dispatch("storage", { key: null }); page.evaluate("refreshProgressViews()");
   assert.equal(later(page, first).getAttribute("aria-pressed"), "false");
+  savedCount(page, 1);
   id(page, "records-export").click();
   const data = JSON.parse(await page.downloads[0].blob.text());
   assert.deepEqual(data.try_later, [second.id]);
@@ -103,6 +119,7 @@ test("TL6: cross-tab additions refresh an empty saved list and move lost empty-c
   page.evaluate("refreshProgressViews()");
   assert.equal(later(page, first).getAttribute("aria-pressed"), "true");
   assert.equal(page.document.activeElement, id(page, "filter-later"));
+  savedCount(page, 1);
 });
 
 test("TL7: confirmation rechecks bookmarks, skips candidates added elsewhere and does not restore removed non-candidates", async () => {
@@ -114,6 +131,7 @@ test("TL7: confirmation rechecks bookmarks, skips candidates added elsewhere and
   assert.equal(page.values.get(laterKey(second)), "0");
   assert.equal(page.values.get(laterKey(third)), "1");
   assert.equal(id(page, "records-status").textContent, "1本の記録をファイルから戻しました。");
+  savedCount(page, 2);
 });
 
 test("TL8: revoked bookmark reads after confirmation retain import in memory without writing unknown disk state", async () => {
@@ -124,6 +142,7 @@ test("TL8: revoked bookmark reads after confirmation retain import in memory wit
   assert.equal(page.storageCalls.write, before);
   assert.equal(later(page, first).getAttribute("aria-pressed"), "true");
   assert.equal(id(page, "storage-warning").hidden, false);
+  savedCount(page, 1);
 });
 
 test("TL9: a valid set clears saved-only and explicit see-all clears it without deleting bookmarks", async () => {
@@ -134,16 +153,19 @@ test("TL9: a valid set clears saved-only and explicit see-all clears it without 
   page.evaluate(`filters.later = true; history.replaceState(null, "", "?tools=${second.id}"); applyToolLinks(false); setupFilterOptions(); renderToolList();`);
   assert.equal(id(page, "filter-later").checked, false);
   assert.deepEqual(page.document.querySelectorAll(".tool-card").map((card) => card.dataset.toolId), [second.id]);
+  savedCount(page, 1);
 });
 
 test("TL10: explicit restore overrides a dirty removal even if older durable state was already saved", async () => {
   const page = await runPage({ confirmResult: true, storageFailure: "write", storedValues: { [laterKey(first)]: "1" } });
   later(page, first).click();
   assert.equal(later(page, first).getAttribute("aria-pressed"), "false");
+  savedCount(page, 0);
   await restore(page, laterFile({}, [first.id]));
   assert.equal(page.confirmations.length, 1);
   assert.equal(later(page, first).getAttribute("aria-pressed"), "true");
   assert.equal(id(page, "records-status").textContent, "1本の記録をファイルから戻しました。");
+  savedCount(page, 1);
 });
 
 test("TL11: returning from dashboard refreshes saved-only additions without background replacement", async () => {
@@ -152,8 +174,53 @@ test("TL11: returning from dashboard refreshes saved-only additions without back
   id(page, "tab-dashboard-label").click();
   await restore(page, laterFile({}, [second.id]));
   assert.equal(page.document.querySelector(".tool-card"), firstCard);
+  savedCount(page, 2);
   id(page, "tab-tools-label").click();
   assert.deepEqual(page.document.querySelectorAll(".tool-card").map((card) => card.dataset.toolId), [first.id, second.id]);
+});
+
+test("TL12: saved total ignores hidden and unknown IDs and invalid flags, regardless of active filters", async () => {
+  const hidden = { ...first, id: "day998", slug: "hidden-count-test", title: "Hidden fixture", hub: false };
+  const source = JSON.parse(read("data/tools.json")); source.tools.push(hidden);
+  const page = await runPage({ search: `?q=${second.id}`, dataOverrides: { "data/tools.json": source },
+    storedValues: { [laterKey(first)]: "1", [laterKey(second)]: "true", [laterKey(third)]: "01", [laterKey(hidden)]: "1", later_day999: "1" } });
+  savedCount(page, 1);
+  assert.deepEqual(page.document.querySelectorAll(".tool-card").map(card => card.dataset.toolId), [second.id]);
+  savedOnly(page); assert.equal(page.document.querySelectorAll(".tool-card").length, 0); savedCount(page, 1);
+  id(page, "lang-en").click(); savedCount(page, 1, "en");
+});
+
+test("TL13: saved total waits for required data, recovers after retry and survives optional book failure", async () => {
+  const storedValues = { [laterKey(first)]: "1" };
+  const pending = await runPage({ deferData: true, storedValues });
+  assert.equal(id(pending, "filter-later-count").hidden, true);
+  await pending.releaseData(); savedCount(pending, 1);
+  const failed = await runPage({ storedValues, allowLoadFailure: true,
+    fetchResponse(name, _, attempt) { if(name === "data/tools.json" && attempt === 1) return { ok: false, status: 503 }; } });
+  assert.equal(id(failed, "main-content").dataset.loadState, "error");
+  assert.equal(id(failed, "filter-later-count").hidden, true);
+  id(failed, "retry-data").click(); await failed.flush(); savedCount(failed, 1);
+  const optional = await runPage({ storedValues, dataFailures: { "data/books.json": 503 } }); savedCount(optional, 1);
+});
+
+test("TL14: storage and restored-page events update the global count without changing focus, cards or navigation", async () => {
+  let sequence = 0; const timers = new Map();
+  const clock = { setTimeout(fn, delay) { const token = ++sequence; timers.set(token, { fn, delay }); return token; }, clearTimeout(token) { timers.delete(token); } };
+  const page = await runPage({ clock, search: `?q=${second.id}`, storedValues: { [laterKey(first)]: "1" } });
+  const filter = id(page, "filter-later"), label = id(page, "filter-later-count"), cards = page.document.querySelectorAll(".tool-card");
+  const href = page.context.location.href, length = page.context.history.length; filter.focus();
+  page.values.set(laterKey(third), "1"); page.dispatch("storage", { key: laterKey(third) });
+  const sync = [...timers].find(([, timer]) => timer.delay === 100); assert.ok(sync);
+  timers.delete(sync[0]); sync[1].fn(); await page.flush(); savedCount(page, 2);
+  page.values.delete(laterKey(first)); page.dispatch("pageshow", { persisted: true }); savedCount(page, 1);
+  page.values.clear(); page.dispatch("storage", { key: null });
+  page.document.hidden = false; page.document.dispatch("visibilitychange"); savedCount(page, 0);
+  assert.deepEqual(page.document.querySelectorAll(".tool-card"), cards);
+  assert.equal(page.context.location.href, href); assert.equal(page.context.history.length, length);
+  id(page, "lang-en").click(); savedCount(page, 0, "en");
+  assert.equal(id(page, "filter-later"), filter); assert.equal(id(page, "filter-later-count"), label);
+  assert.equal(page.document.activeElement, filter);
+  assert.equal(page.context.history.length, length);
 });
 
 test("SR1: failed write stays ahead of old disk value and export can read it", () => {

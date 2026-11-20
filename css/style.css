@@ -454,6 +454,10 @@ html[lang="en"] #lang-en {
   margin: 0;
   accent-color: var(--primary-bg);
 }
+.filter-later-count {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+}
 
 .filter-group label {
   font-size: 0.8rem;
