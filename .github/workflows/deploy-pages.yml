@@ -1,0 +1,88 @@
+name: Deploy site
+
+on:
+  push:
+    branches: [main]
+  workflow_run:
+    workflows: ["Update tools.json"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  # Skipped runs must not replace a pending production deployment.
+  group: >-
+    ${{ github.ref == 'refs/heads/main' &&
+        (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success') &&
+        'pages' || format('pages-skip-{0}', github.run_id) }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    permissions:
+      contents: read
+      pages: read
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (github.event_name != 'workflow_run' ||
+       github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install pinned YAML parser
+        run: python -m pip install PyYAML==6.0.3
+      - name: Validate the exact source to deploy
+        env:
+          HLO_BASE_COMMIT: ${{ github.event_name == 'push' && github.event.before || github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || 'HEAD^' }}
+          AFTER_REGEN: ${{ github.event_name == 'workflow_run' && '1' || '' }}
+        run: |
+          npm run test:generator
+          npm test
+          node scripts/build_pages.js --check
+          git rev-parse HEAD >> "$GITHUB_STEP_SUMMARY"
+      - name: Validate repository membership separately
+        env:
+          AFTER_REGEN: '1'
+        run: node --test --test-name-pattern='CT4:' test/catalog.test.js
+      - name: Prepare public files
+        run: |
+          test -z "$(find index.html list.html 404.html CNAME css js data favicon -type l -print -quit)"
+          mkdir _site
+          cp index.html list.html 404.html CNAME _site/
+          cp -R css js data favicon _site/
+          test -z "$(find _site -type l -print -quit)"
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: false
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy tested artifact
+        id: deployment
+        uses: actions/deploy-pages@v4
