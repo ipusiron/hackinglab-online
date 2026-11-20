@@ -221,9 +221,12 @@ test("H10: 折りたたみの見出し（summary）は開閉の印を消さな�
 });
 
 test("H11: ヘルプを開いているあいだ後ろのページを動かさず、「×」は本文と一緒に流れない", () => {
-  assert.match(bodyOf(".modal-content"), /overscroll-behavior\s*:\s*contain/);
+  assert.match(bodyOf(".modal-body"), /overscroll-behavior\s*:\s*contain/);
+  assert.match(bodyOf(".modal-body"), /overflow-y\s*:\s*auto/);
+  assert.match(bodyOf(".modal-body"), /min-height\s*:\s*0/);
   assert.match(bodyOf("html.help-open"), /overflow\s*:\s*hidden/);
-  assert.match(bodyOf(".modal-close"), /position\s*:\s*sticky/);
+  assert.match(bodyOf(".modal-content"), /overflow\s*:\s*hidden/);
+  assert.match(bodyOf(".modal-header"), /flex\s*:\s*0 0 auto/);
   assert.match(mainJs, /classList\.add\("help-open"\)/);
   // 外すのは閉じる処理（closeHelp）の1か所だけ。ほかの経路で閉じると、ページがスクロールできないまま残る
   const removes = mainJs.match(/classList\.remove\("help-open"[,)]/g) || [];
