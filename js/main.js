@@ -13,6 +13,7 @@ let filters = {
   categoryId: "",
   fieldId: "",
   progress: "all",
+  later: false,
   search: ""
 };
 
@@ -195,8 +196,17 @@ const LIST_TEXT = {
     "Clear all filters"
   ],
   "clear_except_book": [
-    "カテゴリ・進捗・検索の条件を外す",
-    "Clear category, progress, and search"
+    "本以外の条件を外す",
+    "Clear filters except book"
+  ],
+  "empty_later": [
+    "「あとで試す」に追加したツールがありません。カードの「あとで試す」を押すと、ここで見返せます。",
+    "No tools saved for later yet. Press “Try later” on a card to find it here."
+  ],
+  "outside_later_label": ["「あとで試す」から解除済み", "Removed from Try later"],
+  "outside_later_announcement": [
+    "「あとで試す」から解除しました。カードは、絞り込みを変えるまで一覧に残ります。",
+    "Removed from Try later. This card stays in the list until you change the filters."
   ],
   "outside_label": [
     "「{progress}」の条件外",
@@ -287,7 +297,7 @@ function updateListCount() {
   // Reserve the longest possible outside count at the current width/font size.
   // Updating progress must not move the cards below this line.
   const space = document.getElementById("list-count-space");
-  if (space) space.textContent = filters.progress !== "all" && !toolSet.ids.length && counts.shown
+  if (space) space.textContent = (filters.progress !== "all" || filters.later) && !toolSet.ids.length && counts.shown
     ? listText("outside_count", { ...counts, outside: counts.shown }) : "";
 }
 
@@ -316,7 +326,7 @@ function announceListCount(delay = 0, userInitiated = false) {
   let message;
   if (!counts.shown) {
     const book = currentBook();
-    message = listText(book ? "empty_book" : "empty", { book: book && HB ? HB.bookLabel(book, currentLang) : "" });
+    message = emptyListText(book);
   } else if (counts.shown === counts.total && !counts.outside) {
     message = currentLang === "ja" ? `全${counts.total}本を表示しています。` : `Showing all ${counts.total} tools.`;
   } else message = listText("count_announcement", counts);
@@ -325,20 +335,20 @@ function announceListCount(delay = 0, userInitiated = false) {
 
 const RECORDS_TEXT = {
   "record_location": [
-    "進捗はこのブラウザーの中にだけ保存し、サーバーには送りません。ランキングも、他人との比較もありません。",
-    "Your progress is saved only in this browser and is never sent to a server. No rankings, no comparing yourself with others."
+    "進捗と「あとで試す」はこのブラウザーの中にだけ保存し、サーバーには送りません。ランキングも、他人との比較もありません。",
+    "Your progress and Try later list are saved only in this browser and are never sent to a server. No rankings, no comparing yourself with others."
   ],
   "record_location_failed": [
-    "このブラウザーでは進捗を保存できないため、ページを閉じると消えます。ランキングも、他人との比較もありません。",
-    "This browser can't save your progress, so it will be lost when you close the page. No rankings, no comparing yourself with others."
+    "このブラウザーでは記録を保存できないため、ページを閉じると消えます。ランキングも、他人との比較もありません。",
+    "This browser can't save your records, so they will be lost when you close the page. No rankings, no comparing yourself with others."
   ],
   "export_empty": [
-    "保存する記録はありません（すべて未着手です）。",
-    "Nothing to save. No tool has any progress recorded."
+    "保存する記録はありません。進捗や「あとで試す」を付けると保存できます。",
+    "Nothing to save. Record some progress or add a tool to Try later first."
   ],
   "import_empty": [
-    "戻す進捗はありません。このブラウザーの記録は、ファイルと同じか、ファイルより進んでいます。",
-    "Nothing to restore. This browser's records are the same as or further along than the file."
+    "戻す記録はありません。進捗はファイルと同じか、それより進んでいて、「あとで試す」も追加済みです。",
+    "Nothing to restore. Progress is the same or further along, and all Try later tools are already saved."
   ],
   "import_invalid": [
     "このファイルは読めません。「記録をファイルに保存」で作った.jsonのファイルを選んでください。",
@@ -376,7 +386,7 @@ function recordsResultText() {
   if (!recordsResult) return "";
   const { key, count } = recordsResult;
   if (key === "exported") return currentLang === "ja" ? `${count}本の記録をファイルに保存しました。` : `Saved records for ${count} ${count === 1 ? "tool" : "tools"} to a file.`;
-  if (key === "imported") return currentLang === "ja" ? `${count}本の進捗をファイルから戻しました。` : `Restored progress for ${count} ${count === 1 ? "tool" : "tools"} from the file.`;
+  if (key === "imported") return currentLang === "ja" ? `${count}本の記録をファイルから戻しました。` : `Restored records for ${count} ${count === 1 ? "tool" : "tools"} from the file.`;
   return recordsText(key);
 }
 
@@ -409,7 +419,7 @@ function updateStorageNoticeSpace() {
 }
 
 function noteStorageFailure(key) {
-  if (!String(key).startsWith("progress_") || storageWarningSeen) return;
+  if (!/^(progress_|later_)/.test(String(key)) || storageWarningSeen) return;
   storageWarningSeen = true;
   storageWarningFocus = document.activeElement;
   const notice = document.getElementById("storage-warning");
@@ -470,6 +480,19 @@ function recordProgressMaps(ids) {
   return { effective, durable };
 }
 
+function recordTryLaterMaps(ids) {
+  const effective = new Set();
+  const durable = new Map();
+  const wanted = ids ? new Set(ids) : null;
+  for (const tool of getRecordTools()) {
+    if (wanted && !wanted.has(tool.id)) continue;
+    if (getTryLater(tool.id)) effective.add(tool.id);
+    const result = progressStore.readFresh(`later_${tool.id}`);
+    durable.set(tool.id, { ok: result.ok, value: result.value === "1" });
+  }
+  return { effective, durable };
+}
+
 function handleRecordsExport() {
   if (recordsBusy || loadState !== "ready" || !RECORDS) return;
   recordsBusy = true;
@@ -482,7 +505,7 @@ function handleRecordsExport() {
   try {
     const now = new Date();
     const progress = new Map(getRecordTools().map((tool) => [tool.id, getProgress(tool.slug)]));
-    const result = RECORDS.createRecords(progress, now.toISOString());
+    const result = RECORDS.createRecords(progress, now.toISOString(), new Set(getRecordTools().filter((tool) => getTryLater(tool.id)).map((tool) => tool.id)));
     if (!result) { setRecordsResult("export_empty"); return; }
     const file = new Blob([result.json], { type: "application/json" });
     objectUrl = URL.createObjectURL(file);
@@ -510,8 +533,8 @@ function handleRecordsExport() {
 
 function importConfirmation(savedAt, count, localAhead) {
   const date = localRecordDate(savedAt);
-  if (currentLang === "ja") return `${date}に保存したファイルから、${count}本の進捗を戻します。このブラウザーのほうが進んでいる${localAhead}本は、そのままにします。よろしいですか？`;
-  return `This will restore progress for ${count} ${count === 1 ? "tool" : "tools"} from the file saved on ${date}. The ${localAhead} ${localAhead === 1 ? "tool that is" : "tools that are"} further along in this browser will stay as ${localAhead === 1 ? "it is" : "they are"}. Continue?`;
+  if (currentLang === "ja") return `${date}に保存したファイルから、${count}本の記録を戻します。このブラウザーのほうが進んでいる${localAhead}本の進捗は、そのままにします。「あとで試す」は追加だけ行い、今のリストから削除しません。よろしいですか？`;
+  return `This will restore records for ${count} ${count === 1 ? "tool" : "tools"} from the file saved on ${date}. The ${localAhead} ${localAhead === 1 ? "tool that is" : "tools that are"} further along in this browser will stay as ${localAhead === 1 ? "it is" : "they are"}. Try later tools will be added without removing any already saved here. Continue?`;
 }
 
 async function handleRecordsImport() {
@@ -531,8 +554,11 @@ async function handleRecordsImport() {
     const first = recordProgressMaps();
     const current = new Map([...first.effective].map(([id, value]) => [id, Math.max(value, first.durable.get(id)?.ok ? first.durable.get(id).value : 0)]));
     const plan = RECORDS.planImport(parsed.progress, current);
-    if (!plan.candidates.size) { setRecordsResult("import_empty"); return; }
-    if (!window.confirm(importConfirmation(parsed.savedAt, plan.candidates.size, plan.localAheadCount))) return;
+    const firstLater = recordTryLaterMaps();
+    const laterCandidates = RECORDS.planTryLaterImport(parsed.tryLater, firstLater.effective);
+    const candidateIds = new Set([...plan.candidates.keys(), ...laterCandidates]);
+    if (!candidateIds.size) { setRecordsResult("import_empty"); return; }
+    if (!window.confirm(importConfirmation(parsed.savedAt, candidateIds.size, plan.localAheadCount))) return;
     // A native confirm can delay cross-tab storage visibility. In browser tests,
     // one task exposed only part of the queued changes; give two task opportunities
     // before re-reading the fixed candidates. This is not a transaction or CAS guarantee.
@@ -546,8 +572,16 @@ async function handleRecordsImport() {
       if (update.persist) progressStore.setItem(key, String(update.level));
       else progressStore.setMemory(key, String(update.level));
     }
-    if (result.count) refreshProgressViews();
-    setRecordsResult(result.count ? "imported" : "import_empty", result.count);
+    const latestLater = recordTryLaterMaps(laterCandidates);
+    const laterResult = RECORDS.recheckTryLaterImport(laterCandidates, latestLater.effective, latestLater.durable);
+    for (const update of laterResult.updates) {
+      const key = `later_${update.id}`;
+      if (update.persist) progressStore.setItem(key, "1");
+      else progressStore.setMemory(key, "1");
+    }
+    const affected = new Set([...result.updates, ...laterResult.updates].map((update) => update.id));
+    if (affected.size) refreshProgressViews();
+    setRecordsResult(affected.size ? "imported" : "import_empty", affected.size);
   } catch (_) {
     setRecordsResult("import_invalid");
   } finally {
@@ -620,6 +654,7 @@ function setupStaticUI() {
       const targetId = btn.getAttribute("data-tab-target");
       commitUrl({ tab: tabName(targetId) }, "push");
       switchTab(targetId);
+      if (targetId === "tab-tools" && filters.later && loadState === "ready") renderToolList();
     });
     btn.addEventListener("keydown", (e) => {
       const next = nextTabIndex(e.key, i, tabButtons.length);
@@ -629,6 +664,7 @@ function setupStaticUI() {
       const targetId = nextBtn.getAttribute("data-tab-target");
       commitUrl({ tab: tabName(targetId) });
       switchTab(targetId);
+      if (targetId === "tab-tools" && filters.later && loadState === "ready") renderToolList();
       nextBtn.focus();
     });
   });
@@ -680,6 +716,18 @@ function setupStaticUI() {
       filters.progress = e.target.value;
       renderToolList(undefined, false);
       announceListCount(0, true);
+    });
+  });
+
+  // Personal bookmarks, like progress, never become shared URL conditions.
+  const laterFilter = document.getElementById("filter-later");
+  laterFilter?.addEventListener("change", () => {
+    keepInPlace(laterFilter, () => {
+      clearToolHashForFilter();
+      filters.later = laterFilter.checked;
+      renderToolList(undefined, false);
+      announceListCount(0, true);
+      saveViewInHistory();
     });
   });
 
@@ -896,7 +944,7 @@ function backToFilters() {
   filterDisclosureUsed = true;
   filtersExpanded = true;
   updateFilterVisibility();
-  const target = ["filter-book", "filter-category", "filter-progress", "filter-search-input"]
+  const target = ["filter-book", "filter-category", "filter-progress", "filter-search-input", "filter-later"]
     .map((id) => document.getElementById(id)).find((el) => isShown(el) && !el.disabled);
   if (!target) return;
   // The document's scroll-padding keeps the region below a fixed header.
@@ -1125,7 +1173,7 @@ function setLoadState(state) {
   document.getElementById("catalog-error").hidden = state !== "error";
   document.getElementById("load-fallback").hidden = state !== "error";
   document.getElementById("list-summary").hidden = state !== "ready";
-  ["filter-book", "filter-category", "filter-progress", "filter-search-input"].forEach((id) => {
+  ["filter-book", "filter-category", "filter-progress", "filter-search-input", "filter-later"].forEach((id) => {
     document.getElementById(id).disabled = state !== "ready";
   });
   document.getElementById("retry-data").disabled = state !== "error";
@@ -1189,6 +1237,7 @@ async function loadData() {
     const queuedNavigation = pendingNavigation;
     pendingNavigation = null;
     if (queuedNavigation && queuedNavigation.view && ["all", "0", "1", "2", "3"].includes(queuedNavigation.view.progress)) filters.progress = queuedNavigation.view.progress;
+    if (queuedNavigation?.view && typeof queuedNavigation.view.later === "boolean") filters.later = queuedNavigation.view.later;
     applyToolLinks(queuedNavigation && hasSavedView(queuedNavigation.view));
 
     // 読めた条件だけを、URL に正規の形で書き直す（大文字や前後の空白・並びをそろえる。履歴は増やさない）。
@@ -1557,6 +1606,8 @@ function setupFilterOptions() {
     categorySelect.value = filters.categoryId || (filters.fieldId ? "field:" + filters.fieldId : "");
   }
 
+  const laterFilter = document.getElementById("filter-later");
+  if (laterFilter) laterFilter.checked = filters.later;
   if (progressSelect) {
     progressSelect.innerHTML = "";
 
@@ -1713,7 +1764,7 @@ function syncLangParam() {
 function saveViewInHistory() {
   if (!urlStateReady) return;
   try {
-    const view = { y: Math.round(window.scrollY), anchor: captureReadingAnchor(), focus: focusKey(document.activeElement), progress: filters.progress };
+    const view = { y: Math.round(window.scrollY), anchor: captureReadingAnchor(), focus: focusKey(document.activeElement), progress: filters.progress, later: filters.later };
     window.history.replaceState(Object.assign({}, window.history.state, view), "");
   } catch (e) {
     /* 無視 */
@@ -1786,6 +1837,7 @@ function applyHistoryState(view) {
   filters.categoryId = next.cat;
   filters.fieldId = next.field;
   if (view && ["all", "0", "1", "2", "3"].includes(view.progress)) filters.progress = view.progress;
+  if (view && typeof view.later === "boolean") filters.later = view.later;
   if (searchInput && searchInput.value.trim() !== next.q) searchInput.value = next.q;
   setSearchQuery(next.q);
   applyToolLinks(hasSavedView(view));
@@ -1979,6 +2031,9 @@ function clearOtherFilters() {
   filters.categoryId = "";
   filters.fieldId = "";
   filters.progress = "all";
+  filters.later = false;
+  const later = document.getElementById("filter-later");
+  if (later) later.checked = false;
   const c = document.getElementById("filter-category");
   const p = document.getElementById("filter-progress");
   const s = document.getElementById("filter-search-input");
@@ -2015,7 +2070,7 @@ function applyToolLinks(preserveView) {
   if (preserveView && hash.kind === "known") {
     refreshBookTarget();
     const target = tools.find((tool) => tool.id === hash.id);
-    if (toolSet.ids.length ? toolSet.ids.includes(hash.id) : filterByBook(target) && filterByCategory(target) && filterByProgress(target) && filterBySearch(target)) linkedToolId = hash.id;
+    if (toolSet.ids.length ? toolSet.ids.includes(hash.id) : filterByBook(target) && filterByCategory(target) && filterByProgress(target) && filterByTryLater(target) && filterBySearch(target)) linkedToolId = hash.id;
     return;
   }
   if (toolSet.ids.length) {
@@ -2048,6 +2103,7 @@ function applyToolLinks(preserveView) {
   let cleared = false;
   if (!filterByCategory(tool)) { filters.categoryId = ""; filters.fieldId = ""; cleared = true; }
   if (!filterByProgress(tool)) { filters.progress = "all"; cleared = true; }
+  if (!filterByTryLater(tool)) { filters.later = false; cleared = true; }
   if (!filterBySearch(tool)) {
     const input = document.getElementById("filter-search-input");
     if (input) input.value = "";
@@ -2286,6 +2342,7 @@ function renderToolList(retainedIds, announceBookNotice = true) {
     filterByBook(t) &&
     filterByCategory(t) &&
     filterByProgress(t) &&
+    filterByTryLater(t) &&
     filterBySearch(t);
 
   const byId = new Map(tools.filter((t) => t.hub !== false).map((t) => [t.id, t]));
@@ -2299,6 +2356,7 @@ function renderToolList(retainedIds, announceBookNotice = true) {
     filters.categoryId,
     filters.fieldId,
     filters.progress,
+    filters.later,
     filters.search,
     toolSet.ids.join(","),
     progressVersion,
@@ -2379,11 +2437,16 @@ function renderToolList(retainedIds, announceBookNotice = true) {
   updateBookViewMetadata(announceBookNotice);
 }
 
+function emptyListText(book) {
+  if (filters.later && !getRecordTools().some((tool) => getTryLater(tool.id))) return listText("empty_later");
+  return listText(book ? "empty_book" : "empty", { book: book && HB ? HB.bookLabel(book, currentLang) : "" });
+}
+
 function appendEmptyState(listEl, book) {
   const box = document.createElement("div");
   box.className = "list-empty";
   const p = document.createElement("p");
-  p.textContent = listText(book ? "empty_book" : "empty", { book: book && HB ? HB.bookLabel(book, currentLang) : "" });
+  p.textContent = emptyListText(book);
   const clear = document.createElement("button");
   clear.id = "clear-filters";
   clear.type = "button";
@@ -2396,6 +2459,8 @@ function appendEmptyState(listEl, book) {
     filters.categoryId = "";
     filters.fieldId = "";
     filters.progress = "all";
+    filters.later = false;
+    document.getElementById("filter-later").checked = false;
     setSearchQuery("");
     document.getElementById("filter-category").value = "";
     document.getElementById("filter-progress").value = "all";
@@ -2651,6 +2716,10 @@ function filterByProgress(tool) {
   return String(level) === filters.progress;
 }
 
+function filterByTryLater(tool) {
+  return !filters.later || getTryLater(tool.id);
+}
+
 function filterBySearch(tool) {
   if (!filters.search) return true;
 
@@ -2734,11 +2803,11 @@ function createToolCard(tool, book) {
   outside.className = "tool-outside-label";
   outside.hidden = true;
   card.appendChild(outside);
-  if (!toolSet.ids.length && filters.progress !== "all") {
+  if (!toolSet.ids.length && (filters.progress !== "all" || filters.later)) {
     const space = document.createElement("span");
     space.className = "tool-outside-space";
     space.setAttribute("aria-hidden", "true");
-    space.textContent = listText("outside_label", { progress: PROGRESS_LABELS[currentLang][Number(filters.progress)] });
+    space.textContent = [filters.progress !== "all" ? listText("outside_label", { progress: PROGRESS_LABELS[currentLang][Number(filters.progress)] }) : "", filters.later ? listText("outside_later_label") : ""].filter(Boolean).join(" / ");
     card.appendChild(space);
   }
 
@@ -2883,6 +2952,19 @@ function createToolCard(tool, book) {
 
   if (demoBtn) footer.appendChild(demoBtn);
   footer.appendChild(repoBtn);
+  const laterButton = document.createElement("button");
+  laterButton.type = "button";
+  laterButton.className = "tool-button secondary tool-later-toggle";
+  laterButton.dataset.part = "later";
+  laterButton.dataset.slug = tool.slug;
+  laterButton.dataset.toolId = tool.id;
+  laterButton.setAttribute("aria-label", currentLang === "ja" ? `あとで試す（${tool.title}）` : `Try later (${tool.title})`);
+  updateTryLaterButton(laterButton, tool.id);
+  laterButton.addEventListener("click", () => {
+    setTryLater(tool.id, !getTryLater(tool.id));
+    syncTryLaterControls(tool.id);
+  });
+  footer.appendChild(laterButton);
   footer.appendChild(progressLabel);
 
   card.appendChild(header);
@@ -2920,6 +3002,30 @@ function getCategoryLabels(tool) {
   });
 
   return labels;
+}
+
+// Try later is independent of learning progress; removals write "0" so failed
+// writes remain authoritative in safe storage's dirty map until they can be saved.
+function getTryLater(id) {
+  return progressStore.getItem(`later_${id}`) === "1";
+}
+
+function setTryLater(id, saved) {
+  progressStore.setItem(`later_${id}`, saved ? "1" : "0");
+  progressVersion++;
+}
+
+function updateTryLaterButton(button, id) {
+  const saved = getTryLater(id);
+  button.setAttribute("aria-pressed", String(saved));
+  button.textContent = currentLang === "ja" ? "あとで試す" : "Try later";
+}
+
+function syncTryLaterControls(id) {
+  document.querySelectorAll(".tool-later-toggle").forEach((button) => {
+    if (button.dataset.toolId === id) updateTryLaterButton(button, id);
+  });
+  updateOutsideCards();
 }
 
 // ---- 進捗管理（localStorage） ----
@@ -2966,12 +3072,15 @@ function updateOutsideCards(announce = true) {
   if (loadState !== "ready") return;
   const next = new Set();
   const progress = PROGRESS_LABELS[currentLang][Number(filters.progress)];
+  let newlyRemovedLater = false;
   document.querySelectorAll("#tool-list .tool-card").forEach((card) => {
-    const outside = !toolSet.ids.length && filters.progress !== "all" && String(getProgress(card.dataset.slug)) !== filters.progress;
+    const outsideLater = !toolSet.ids.length && filters.later && !getTryLater(card.dataset.toolId);
+    const outside = outsideLater || (!toolSet.ids.length && filters.progress !== "all" && String(getProgress(card.dataset.slug)) !== filters.progress);
+    if (outsideLater && !outsideToolIds.has(card.dataset.toolId)) newlyRemovedLater = true;
     const label = card.querySelector(".tool-outside-label");
     card.classList.toggle("is-outside", outside);
     label.hidden = !outside;
-    label.textContent = outside ? listText("outside_label", { progress }) : "";
+    label.textContent = outside ? listText(outsideLater ? "outside_later_label" : "outside_label", { progress }) : "";
     if (outside) next.add(card.dataset.toolId);
   });
   const newlyOutside = [...next].some((id) => !outsideToolIds.has(id));
@@ -2979,7 +3088,7 @@ function updateOutsideCards(announce = true) {
   outsideToolIds = next;
   updateListCount();
   updateBookViewMetadata();
-  if (newlyOutside && announce) announceListStatus(listText("outside_announcement", { progress }));
+  if (newlyOutside && announce) announceListStatus(listText(newlyRemovedLater ? "outside_later_announcement" : "outside_announcement", { progress }));
 }
 
 // ---- 別のタブの進捗 ----
@@ -2995,7 +3104,7 @@ function setupProgressSync() {
     try { if (e.storageArea && e.storageArea !== window.localStorage) return; } catch (_) { /* Invalidate clean cache even if access was revoked. */ }
     progressStore.invalidate(e.key);
     // key が null のときは、別のタブで保存した値がまとめて消された
-    if (e.key !== null && String(e.key).indexOf("progress_") !== 0) return;
+    if (e.key !== null && !/^(progress_|later_)/.test(String(e.key))) return;
     clearTimeout(progressSyncTimer);
     progressSyncTimer = setTimeout(refreshProgressViews, PROGRESS_SYNC_DELAY_MS);
   });
@@ -3017,8 +3126,22 @@ function refreshProgressViews() {
   document.querySelectorAll(".tool-progress-select").forEach((b) => {
     if (b.dataset.slug) updateProgressSelect(b, b.dataset.slug);
   });
+  document.querySelectorAll(".tool-later-toggle").forEach((button) => {
+    if (button.dataset.toolId) updateTryLaterButton(button, button.dataset.toolId);
+  });
   updateOutsideCards();
   progressVersion++;
+  // An empty saved list has no card controls to preserve. Re-evaluate it when
+  // another tab or an import adds records; never leave a stale "nothing saved".
+  if (filters.later && !toolSet.ids.length && !shownToolIds.size) {
+    const clearFocused = document.activeElement?.id === "clear-filters" && currentTab === "tools";
+    renderToolList(undefined, false);
+    if (clearFocused) {
+      const clear = document.getElementById("clear-filters");
+      if (clear) clear.focus({ preventScroll: true });
+      else focusFilter("filter-later", { preventScroll: true });
+    }
+  }
   // 作り直す前にフォーカスしている部品と目印を覚え、作り直したあとに同じ部品へ戻す（スクロールはしない）
   const focused = document.activeElement;
   const focusedKey = focusKey(focused);

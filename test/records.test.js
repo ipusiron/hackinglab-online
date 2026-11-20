@@ -13,7 +13,7 @@ test("RC1: export sorts nonzero catalog IDs and round-trips all four stages", ()
   const result = R.createRecords(original, DATE);
   assert.equal(result.count, 2);
   assert.deepEqual(Object.keys(JSON.parse(result.json).progress), ["day001", "day003"]);
-  assert.deepEqual(parse(result.json), { ok: true, savedAt: DATE, progress: map([["day001", 1], ["day003", 3]]) });
+  assert.deepEqual(parse(result.json), { ok: true, savedAt: DATE, progress: map([["day001", 1], ["day003", 3]]), tryLater: new Set() });
   assert.deepEqual([...original], [["day003", 3], ["day001", 1], ["day002", 0]]);
   assert.deepEqual([...parse(file({ day001: 0, day002: 2 })).progress], [["day001", 0], ["day002", 2]]);
 });
@@ -40,7 +40,7 @@ test("RC4: malformed roots and incorrect metadata fail before any merge", () => 
     const obj = JSON.parse(file()); delete obj[key]; invalid(JSON.stringify(obj));
   }
   for (const value of [null, [], "oops", 1]) invalid(file(value));
-  assert.deepEqual(parse(file({}, { schema_version: 2 })), { ok: false, reason: "new-version" });
+  assert.deepEqual(parse(file({}, { schema_version: 3 })), { ok: false, reason: "new-version" });
   invalid(file({}, { app: "other", schema_version: 2 }));
 });
 
@@ -116,5 +116,64 @@ test("RC13: all 64 effective, durable and file stage combinations respect both l
   for (let saved = 0; saved <= 3; saved++) for (let effective = 0; effective <= 3; effective++) for (let durable = 0; durable <= 3; durable++) {
     const result = R.recheckImport(map([["day001", saved]]), map([["day001", effective]]), map([["day001", { ok: true, value: durable }]]));
     assert.equal(result.count, saved > effective && saved > durable ? 1 : 0);
+  }
+});
+
+test("RC14: v2 exports bookmarked-only tools, sorts IDs and counts the union once", () => {
+  const progress = map([["day001", 2], ["day002", 0]]);
+  const later = new Set(["day003", "day001"]);
+  const output = R.createRecords(progress, DATE, later);
+  assert.equal(output.count, 2);
+  assert.deepEqual(JSON.parse(output.json), {
+    app: R.APP, schema_version: 2, saved_at: DATE,
+    progress: { day001: 2 }, try_later: ["day001", "day003"]
+  });
+  assert.deepEqual(parse(output.json), { ok: true, savedAt: DATE, progress: map([["day001", 2]]), tryLater: new Set(["day001", "day003"]) });
+  const bookmarksOnly = R.createRecords(new Map(), DATE, new Set(["day002"]));
+  assert.equal(bookmarksOnly.count, 1);
+  assert.deepEqual(JSON.parse(bookmarksOnly.json).progress, {});
+  assert.deepEqual([...later], ["day003", "day001"]);
+});
+
+test("RC15: v1 records stay readable; versions require their exact fields", () => {
+  assert.deepEqual([...parse(file()).tryLater], []);
+  invalid(file({}, { try_later: [] }));
+  invalid(file({}, { schema_version: 2 }));
+  invalid(file({}, { schema_version: 2, try_later: [], extra: true }));
+  assert.equal(parse(file({}, { schema_version: 2, try_later: [] })).ok, true);
+  assert.deepEqual(parse(file({}, { schema_version: 99 })), { ok: false, reason: "new-version" });
+});
+
+test("RC16: v2 validates every bookmark before ignoring unknown catalog IDs", () => {
+  const v2 = try_later => file({}, { schema_version: 2, try_later });
+  for (const value of [null, {}, "day001", 1, true, [null], [1], ["day000"], ["day1"], ["Day001"], ["day001 "], ["__proto__"], ["later_day001"], ["day001", "day001"], ["day999", "day999"]]) invalid(v2(value));
+  invalid(v2(Array(R.MAX_ENTRIES + 1).fill("day001")));
+  const parsed = parse(v2(["day999", "day002"]));
+  assert.deepEqual([...parsed.tryLater], ["day002"]);
+  for (const value of [[], {}, null, new Set(["day000"]), new Set(["__proto__"]), new Set([false])]) {
+    assert.equal(R.createRecords(new Map(), DATE, value), null);
+  }
+});
+
+test("RC17: bookmark import adds only confirmed file IDs and preserves local-only entries", () => {
+  const fileSet = new Set(["day001", "day002"]), local = new Set(["day002", "day003"]);
+  const candidates = R.planTryLaterImport(fileSet, local);
+  assert.deepEqual([...candidates], ["day001"]);
+  assert.deepEqual([...local], ["day002", "day003"]);
+  assert.deepEqual([...fileSet], ["day001", "day002"]);
+  assert.deepEqual([...R.planTryLaterImport(parse(file()).tryLater, local)], []);
+  // A local-only removal after confirmation must not be resurrected.
+  const result = R.recheckTryLaterImport(candidates, new Set(), map([["day001", { ok: true, value: false }], ["day003", { ok: true, value: false }]]));
+  assert.deepEqual(result, { updates: [{ id: "day001", persist: true }], count: 1 });
+});
+
+test("RC18: bookmark recheck honors explicit restores after dirty removals and unreadable disk", () => {
+  for (const effective of [false, true]) for (const durable of [false, true]) {
+    const result = R.recheckTryLaterImport(new Set(["day001"]), new Set(effective ? ["day001"] : []), map([["day001", { ok: true, value: durable }]]));
+    assert.deepEqual(result, effective ? { updates: [], count: 0 } : { updates: [{ id: "day001", persist: true }], count: 1 });
+  }
+  for (const record of [undefined, { ok: false, value: null }, { ok: true, value: "1" }]) {
+    const result = R.recheckTryLaterImport(new Set(["day001"]), new Set(), map([["day001", record]]));
+    assert.deepEqual(result, { updates: [{ id: "day001", persist: false }], count: 1 });
   }
 });

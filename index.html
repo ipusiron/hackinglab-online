@@ -172,7 +172,7 @@
               <p><span class="label-ja">書籍やプロジェクトを選ぶと、それに関係するツールだけを並べます。</span><span class="label-en">Pick a book or project to list only the tools related to it.</span></p>
               <ul id="start-book-links"></ul>
             </section>
-            <p id="record-location" class="start-here-note start-here-nocompare"><span class="label-ja">進捗はこのブラウザーの中にだけ保存し、サーバーには送りません。ランキングも、他人との比較もありません。</span><span class="label-en">Your progress is saved only in this browser and is never sent to a server. No rankings, no comparing yourself with others.</span></p>
+            <p id="record-location" class="start-here-note start-here-nocompare"><span class="label-ja">進捗と「あとで試す」はこのブラウザーの中にだけ保存し、サーバーには送りません。ランキングも、他人との比較もありません。</span><span class="label-en">Your progress and Try later list are saved only in this browser and are never sent to a server. No rankings, no comparing yourself with others.</span></p>
           </div>
         </details>
 
@@ -238,6 +238,10 @@
               disabled
             />
           </div>
+          <label class="filter-later-choice" for="filter-later">
+            <input id="filter-later" type="checkbox" disabled />
+            <span><span class="label-ja">「あとで試す」だけ表示</span><span class="label-en">Show only tools saved in Try later</span></span>
+          </label>
         </div>
 
         <div id="list-summary" hidden>
@@ -347,7 +351,7 @@
 
         <section id="dashboard-records" aria-labelledby="records-title">
           <h2 id="records-title"><span class="label-ja">記録の控え</span><span class="label-en">Backup</span></h2>
-          <p><span class="label-ja">ファイルに控えておくと、ブラウザーのデータが消えたときや、別のブラウザー・端末で開いたときに、記録を戻せます。ファイルはこの端末に保存するだけで、どこにも送りません。</span><span class="label-en">With a copy saved to a file, you can bring your records back if browser data is cleared, or in another browser or on another device. The file stays on your device and is never sent anywhere.</span></p>
+          <p><span class="label-ja">進捗と「あとで試す」をファイルに控えておくと、ブラウザーのデータが消えたときや、別のブラウザー・端末で開いたときに、記録を戻せます。ファイルはこの端末に保存するだけで、どこにも送りません。</span><span class="label-en">With progress and your Try later list saved to a file, you can bring your records back if browser data is cleared, or in another browser or on another device. The file stays on your device and is never sent anywhere.</span></p>
           <div class="records-controls">
             <button type="button" id="records-export" disabled><span class="label-ja">記録をファイルに保存</span><span class="label-en">Save records to a file</span></button>
             <button type="button" id="records-import" disabled><span class="label-ja">ファイルから戻す</span><span class="label-en">Restore from a file</span></button>
@@ -402,7 +406,7 @@
 
     <aside id="storage-warning" class="storage-warning" hidden>
       <div class="storage-warning-body" tabindex="0" role="status" aria-live="polite" aria-atomic="true">
-        <p><span class="label-ja">このブラウザーでは進捗を保存できません。サイトのデータの保存が止められているか、保存できる容量がいっぱいです。このページを閉じると、付けた進捗は消えます。</span><span class="label-en">This browser can&#x27;t save your progress. Site data may be blocked, or storage may be full. Your progress will be lost when you close this page.</span></p>
+        <p><span class="label-ja">このブラウザーでは記録を保存できません。サイトのデータの保存が止められているか、保存できる容量がいっぱいです。このページを閉じると、付けた進捗や「あとで試す」は消えます。</span><span class="label-en">This browser can&#x27;t save your records. Site data may be blocked, or storage may be full. Your progress and Try later changes will be lost when you close this page.</span></p>
         <p><span class="label-ja">このページを閉じる前なら、学習ダッシュボードの「記録をファイルに保存」で控えを残せます。</span><span class="label-en">Before you close this page, you can keep a copy with “Save records to a file” on the Dashboard.</span></p>
       <button type="button" id="storage-warning-help"><span class="label-ja">記録の残り方</span><span class="label-en">How your records are saved</span></button>
       </div>
@@ -473,13 +477,19 @@
           </ul>
         </section>
 
+        <section aria-labelledby="help-later">
+          <h3 id="help-later" tabindex="-1"><span class="label-ja">あとで試す</span><span class="label-en">Try later</span></h3>
+          <p><span class="label-ja">気になるツールは、カードの「あとで試す」で追加できます。もう一度押すと解除します。絞り込みで「あとで試す」だけを表示すると、まとめて見返せます。進捗の段階は変わりません。</span><span class="label-en">Press “Try later” on a card to save a tool, and press it again to remove it. Use the Try later filter to review your saved tools together. This does not change their progress.</span></p>
+          <p><span class="label-ja">「あとで試す」は記録のファイルにも含まれます。ファイルから戻すときは追加だけを行い、今のリストからは削除しません。「すべて未着手にリセット」しても残ります。</span><span class="label-en">The backup file includes your Try later list. Restoring a file adds saved tools without removing any already on your list. Resetting all progress leaves this list unchanged.</span></p>
+        </section>
+
         <section aria-labelledby="help-storage">
           <h3 id="help-storage" tabindex="-1"><span class="label-ja">記録の残り方</span><span class="label-en">How your records are saved</span></h3>
-          <p><span class="label-ja">進捗はこのブラウザーの中にだけ保存し、サーバーには送りません。</span><span class="label-en">Your progress is saved only in this browser and is never sent to a server.</span></p>
+          <p><span class="label-ja">進捗と「あとで試す」はこのブラウザーの中にだけ保存し、サーバーには送りません。</span><span class="label-en">Your progress and Try later list are saved only in this browser and are never sent to a server.</span></p>
           <p><span class="label-ja">別のブラウザーや端末、プライベートウィンドウには引き継がれません。</span><span class="label-en">It does not carry over to other browsers, other devices, or private windows.</span></p>
-          <p><span class="label-ja">ブラウザーでこのサイトのデータを消すと、進捗の記録も消えます。</span><span class="label-en">Clearing this site&#x27;s data in your browser erases your progress.</span></p>
-          <p><span class="label-ja">サイトのデータの保存を止めている設定や、保存の容量がいっぱいのときは、ページを閉じると進捗が消えます（そのときは画面の下に知らせが出ます）。</span><span class="label-en">If your browser blocks site data or its storage is full, your progress is lost when you close the page (a notice appears at the bottom of the screen).</span></p>
-          <p><span class="label-ja">iPhone・iPad・MacのSafariは、「サイト越えトラッキングを防ぐ」がオン（初期設定）のとき、Safariを使った日で数えて7日のあいだ、このサイトで1回もクリック・タップ・文字入力をしないと、進捗の記録を消すことがあります。</span><span class="label-en">Safari on iPhone, iPad, and Mac may erase your progress if you don&#x27;t click, tap, or type anything on this site over 7 days of using Safari, while “Prevent Cross-Site Tracking” is on (it is on by default).</span></p>
+          <p><span class="label-ja">ブラウザーでこのサイトのデータを消すと、進捗と「あとで試す」も消えます。</span><span class="label-en">Clearing this site&#x27;s data in your browser erases your progress and Try later list.</span></p>
+          <p><span class="label-ja">サイトのデータの保存を止めている設定や、保存の容量がいっぱいのときは、ページを閉じると進捗と「あとで試す」が消えます（そのときは画面の下に知らせが出ます）。</span><span class="label-en">If your browser blocks site data or its storage is full, your progress and Try later changes are lost when you close the page (a notice appears at the bottom of the screen).</span></p>
+          <p><span class="label-ja">iPhone・iPad・MacのSafariは、「サイト越えトラッキングを防ぐ」がオン（初期設定）のとき、Safariを使った日で数えて7日のあいだ、このサイトで1回もクリック・タップ・文字入力をしないと、進捗と「あとで試す」を消すことがあります。</span><span class="label-en">Safari on iPhone, iPad, and Mac may erase your progress and Try later list if you don&#x27;t click, tap, or type anything on this site over 7 days of using Safari, while “Prevent Cross-Site Tracking” is on (it is on by default).</span></p>
           <p><span class="label-ja">学習ダッシュボードの「記録をファイルに保存」で控えのファイルを作っておくと、別のブラウザーや端末でも「ファイルから戻す」で記録を戻せます。ファイルはこの端末に保存するだけで、どこにも送りません。</span><span class="label-en">On the Dashboard tab, “Save records to a file” makes a backup file, and “Restore from a file” brings your records back, even in another browser or on another device. The file is only saved on your device and is never sent anywhere.</span></p>
           <p><span class="label-ja">「はじめ方」を開いたか閉じたかも、このブラウザーにだけ残ります。</span><span class="label-en">Whether “Start here” is open or closed is also saved only in this browser.</span></p>
         </section>

@@ -15,6 +15,147 @@ async function restore(page, text, size = Buffer.byteLength(text)) {
 }
 function writeProgress(page, tool, value) { page.evaluate(`setProgress(${JSON.stringify(tool.slug)},${value}); refreshProgressViews();`); }
 
+const laterKey = (tool) => `later_${tool.id}`;
+const later = (page, tool) => page.document.querySelector(`.tool-later-toggle[data-tool-id="${tool.id}"]`);
+const savedOnly = (page, checked = true) => { const filter = id(page, "filter-later"); filter.checked = checked; filter.dispatch("change"); };
+const laterFile = (progress, ids) => file(progress, { schema_version: 2, try_later: ids });
+
+test("TL1: saved-only composes with search, keeps progress separate and never changes the URL", async () => {
+  const page = await runPage();
+  const originalUrl = page.evaluate("location.href");
+  const button = later(page, first); button.focus(); button.click();
+  assert.equal(button.getAttribute("aria-pressed"), "true");
+  assert.equal(page.values.get(laterKey(first)), "1");
+  assert.equal(level(page, first), 0);
+  savedOnly(page);
+  assert.deepEqual(page.document.querySelectorAll(".tool-card").map((card) => card.dataset.toolId), [first.id]);
+  assert.equal(page.evaluate("location.href"), originalUrl);
+  const input = id(page, "filter-search-input"); input.value = second.id; input.dispatch("input");
+  assert.equal(page.document.querySelectorAll(".tool-card").length, 0);
+  assert.match(id(page, "tool-list").textContent, /条件に合うツールはありません/);
+  assert.doesNotMatch(id(page, "tool-list").textContent, /追加したツールがありません/);
+  id(page, "clear-filters").click();
+  assert.equal(id(page, "filter-later").checked, false);
+  assert.equal(later(page, first).getAttribute("aria-pressed"), "true");
+});
+
+test("TL2: removing a saved chapter tool retains focused duplicate cards and language rebuild restores the toggle", async () => {
+  const page = await runPage({ search: "?book=genai-crypto" });
+  const cards = page.document.querySelectorAll(".tool-card");
+  const target = cards.find((card) => cards.filter((other) => other.dataset.toolId === card.dataset.toolId).length > 1);
+  const tool = catalog.find((item) => item.id === target.dataset.toolId);
+  later(page, tool).click(); savedOnly(page);
+  const kept = page.document.querySelectorAll(".tool-card");
+  const control = kept.at(-1).querySelector(".tool-later-toggle"); control.focus(); control.click();
+  assert.equal(page.document.activeElement, control);
+  assert.deepEqual(page.document.querySelectorAll(".tool-card"), kept);
+  for (const card of kept) {
+    assert.equal(card.querySelector(".tool-later-toggle").getAttribute("aria-pressed"), "false");
+    assert.equal(card.classList.contains("is-outside"), true);
+    assert.match(card.querySelector(".tool-outside-label").textContent, /解除済み/);
+  }
+  id(page, "lang-en").click();
+  assert.equal(page.document.activeElement.dataset.part, "later");
+  assert.equal(page.document.activeElement.closest(".tool-card").dataset.group, kept.at(-1).dataset.group);
+  assert.match(page.document.querySelector(".tool-outside-label").textContent, /Removed from Try later/);
+});
+
+test("TL3: bookmark-only export works and progress reset preserves saved tools", async () => {
+  const page = await runPage({ confirmResult: true, storedValues: { [laterKey(first)]: "1", [key(first)]: "2" } });
+  id(page, "reset-all-progress").click();
+  assert.equal(level(page, first), 0);
+  assert.equal(page.values.get(laterKey(first)), "1");
+  id(page, "records-export").click();
+  const data = JSON.parse(await page.downloads[0].blob.text());
+  assert.equal(data.schema_version, 2);
+  assert.deepEqual(data.progress, {});
+  assert.deepEqual(data.try_later, [first.id]);
+  assert.match(id(page, "records-status").textContent, /^1本/);
+});
+
+test("TL4: bookmark restore is additive, counts each tool once and accepts legacy progress files", async () => {
+  const page = await runPage({ confirmResult: true, storedValues: { [laterKey(third)]: "1" } });
+  await restore(page, laterFile({ [first.id]: 2 }, [first.id, second.id]));
+  for (const tool of [first, second, third]) assert.equal(page.values.get(laterKey(tool)), "1");
+  assert.equal(level(page, first), 2);
+  assert.match(page.confirmations[0], /2本の記録/);
+  assert.equal(id(page, "records-status").textContent, "2本の記録をファイルから戻しました。");
+  await restore(page, file({ [second.id]: 1 }));
+  assert.equal(page.values.get(laterKey(third)), "1");
+});
+
+test("TL5: failed bookmark removal stays authoritative through storage clear and file export", async () => {
+  const page = await runPage({ storageFailure: "write", storedValues: { [laterKey(first)]: "1", [laterKey(second)]: "1" } });
+  later(page, first).click();
+  assert.equal(id(page, "storage-warning").hidden, false);
+  assert.equal(page.values.get(laterKey(first)), "1");
+  page.dispatch("storage", { key: null }); page.evaluate("refreshProgressViews()");
+  assert.equal(later(page, first).getAttribute("aria-pressed"), "false");
+  id(page, "records-export").click();
+  const data = JSON.parse(await page.downloads[0].blob.text());
+  assert.deepEqual(data.try_later, [second.id]);
+});
+
+test("TL6: cross-tab additions refresh an empty saved list and move lost empty-control focus to its filter", async () => {
+  const page = await runPage(); savedOnly(page);
+  id(page, "clear-filters").focus();
+  page.values.set(laterKey(first), "1"); page.dispatch("storage", { key: laterKey(first) });
+  page.evaluate("refreshProgressViews()");
+  assert.equal(later(page, first).getAttribute("aria-pressed"), "true");
+  assert.equal(page.document.activeElement, id(page, "filter-later"));
+});
+
+test("TL7: confirmation rechecks bookmarks, skips candidates added elsewhere and does not restore removed non-candidates", async () => {
+  const page = await runPage({ storedValues: { [laterKey(second)]: "1" }, confirmResult: (_, disk) => {
+    disk.set(laterKey(first), "1"); disk.set(laterKey(second), "0"); return true;
+  } });
+  await restore(page, laterFile({}, [first.id, second.id, third.id]));
+  assert.equal(page.values.get(laterKey(first)), "1");
+  assert.equal(page.values.get(laterKey(second)), "0");
+  assert.equal(page.values.get(laterKey(third)), "1");
+  assert.equal(id(page, "records-status").textContent, "1本の記録をファイルから戻しました。");
+});
+
+test("TL8: revoked bookmark reads after confirmation retain import in memory without writing unknown disk state", async () => {
+  let blocked = false;
+  const page = await runPage({ confirmResult: () => { blocked = true; return true; }, storageHooks: { read(k) { if (blocked && k.startsWith("later_")) throw Error("revoked"); } } });
+  const before = page.storageCalls.write;
+  await restore(page, laterFile({}, [first.id]));
+  assert.equal(page.storageCalls.write, before);
+  assert.equal(later(page, first).getAttribute("aria-pressed"), "true");
+  assert.equal(id(page, "storage-warning").hidden, false);
+});
+
+test("TL9: a valid set clears saved-only and explicit see-all clears it without deleting bookmarks", async () => {
+  const page = await runPage({ storedValues: { [laterKey(first)]: "1" } }); savedOnly(page);
+  id(page, "start-all-button").click();
+  assert.equal(id(page, "filter-later").checked, false);
+  assert.equal(later(page, first).getAttribute("aria-pressed"), "true");
+  page.evaluate(`filters.later = true; history.replaceState(null, "", "?tools=${second.id}"); applyToolLinks(false); setupFilterOptions(); renderToolList();`);
+  assert.equal(id(page, "filter-later").checked, false);
+  assert.deepEqual(page.document.querySelectorAll(".tool-card").map((card) => card.dataset.toolId), [second.id]);
+});
+
+test("TL10: explicit restore overrides a dirty removal even if older durable state was already saved", async () => {
+  const page = await runPage({ confirmResult: true, storageFailure: "write", storedValues: { [laterKey(first)]: "1" } });
+  later(page, first).click();
+  assert.equal(later(page, first).getAttribute("aria-pressed"), "false");
+  await restore(page, laterFile({}, [first.id]));
+  assert.equal(page.confirmations.length, 1);
+  assert.equal(later(page, first).getAttribute("aria-pressed"), "true");
+  assert.equal(id(page, "records-status").textContent, "1本の記録をファイルから戻しました。");
+});
+
+test("TL11: returning from dashboard refreshes saved-only additions without background replacement", async () => {
+  const page = await runPage({ confirmResult: true, storedValues: { [laterKey(first)]: "1" } }); savedOnly(page);
+  const firstCard = page.document.querySelector(".tool-card");
+  id(page, "tab-dashboard-label").click();
+  await restore(page, laterFile({}, [second.id]));
+  assert.equal(page.document.querySelector(".tool-card"), firstCard);
+  id(page, "tab-tools-label").click();
+  assert.deepEqual(page.document.querySelectorAll(".tool-card").map((card) => card.dataset.toolId), [first.id, second.id]);
+});
+
 test("SR1: failed write stays ahead of old disk value and export can read it", () => {
   const disk = new Map([["progress_a", "1"]]); let reject = true;
   const storage = createSafeStorage(() => ({ getItem: (k) => disk.get(k) ?? null, setItem(k, v) { if (reject) throw Error("quota"); disk.set(k, v); } }));
@@ -50,7 +191,7 @@ test("SR4: download is local JSON for known nonzero progress and starts before t
   assert.equal(page.downloads.length, 1);
   assert.match(page.downloads[0].filename, /^hackinglab-records-\d{4}-\d{2}-\d{2}\.json$/);
   const data = JSON.parse(await page.downloads[0].blob.text());
-  assert.equal(data.app, "hackinglab-online"); assert.equal(data.schema_version, 1);
+  assert.equal(data.app, "hackinglab-online"); assert.equal(data.schema_version, 2);
   assert.deepEqual(data.progress, { [first.id]: 2, [second.id]: 1 });
   assert.equal(page.values.get("hlo_records_last_export"), data.saved_at);
   assert.equal(id(page, "records-status").textContent, "Saved records for 2 tools to a file.");
@@ -61,7 +202,7 @@ test("SR4: download is local JSON for known nonzero progress and starts before t
 test("SR5: all-zero export and API exceptions create no success or saved date", async () => {
   const empty = await runPage(); id(empty, "records-export").click();
   assert.equal(empty.downloads.length, 0); assert.equal(empty.values.has("hlo_records_last_export"), false);
-  assert.equal(id(empty, "records-status").textContent, "保存する記録はありません（すべて未着手です）。");
+  assert.equal(id(empty, "records-status").textContent, "保存する記録はありません。進捗や「あとで試す」を付けると保存できます。");
   for (const downloadFailure of ["create", "click"]) {
     const page = await runPage({ downloadFailure, storedValues: { [key(first)]: "1" }, search: "?tab=dashboard" });
     const button = id(page, "records-export"); button.focus(); button.click();
@@ -104,7 +245,7 @@ test("SR8: invalid/oversized/new-format files validate before writing or confirm
   }
   let reads = 0; id(page, "records-file").files = [{ size: 65537, text: async () => { reads++; return "{}"; } }];
   await page.evaluate("handleRecordsImport()"); assert.equal(reads, 0);
-  await restore(page, file({}, { schema_version: 2 }));
+  await restore(page, file({}, { schema_version: 3 }));
   assert.match(id(page, "records-status").textContent, /新しい形式/);
 });
 
@@ -123,7 +264,7 @@ test("SR10: confirmation rechecks latest disk and never adds a new candidate", a
   await restore(page, file({ [first.id]: 2, [second.id]: 2, [third.id]: 1 }));
   assert.equal(page.confirmations.length, 1);
   assert.equal(level(page, first), 3); assert.equal(level(page, second), 0); assert.equal(level(page, third), 1);
-  assert.equal(id(page, "records-status").textContent, "1本の進捗をファイルから戻しました。");
+  assert.equal(id(page, "records-status").textContent, "1本の記録をファイルから戻しました。");
 });
 
 test("SR11: unreadable durable values import into memory only, without lowering hidden disk progress", async () => {
@@ -141,7 +282,7 @@ test("SR12: partial import writes retain all applied values and report actual co
   await restore(page, file({ [first.id]: 1, [second.id]: 2, [third.id]: 3 }));
   assert.equal(page.values.get(key(first)), "1"); assert.equal(page.values.has(key(second)), false); assert.equal(page.values.get(key(third)), "3");
   assert.equal(level(page, second), 2);
-  assert.equal(id(page, "records-status").textContent, "3本の進捗をファイルから戻しました。");
+  assert.equal(id(page, "records-status").textContent, "3本の記録をファイルから戻しました。");
   assert.equal(id(page, "storage-warning").hidden, false);
 });
 
@@ -155,7 +296,7 @@ test("SR13: import is single-flight, uses latest language, and does not steal fo
   assert.equal(reads, 1); assert.equal(id(page, "records-import").disabled, true);
   id(page, "lang-en").click(); id(page, "tab-tools-label").focus(); id(page, "tab-tools-label").click();
   release(file({ [first.id]: 1 })); await pending; await page.flush();
-  assert.match(page.confirmations[0], /^This will restore progress for 1 tool/);
+  assert.match(page.confirmations[0], /^This will restore records for 1 tool/);
   assert.equal(page.document.activeElement, id(page, "tab-tools-label"));
   assert.equal(id(page, "records-import").disabled, false); assert.equal(input.value, "");
 });
@@ -173,7 +314,7 @@ test("SR15: language change preserves results and first-warning dismissal", asyn
   id(page, "storage-warning-close").click(); id(page, "records-export").click(); id(page, "lang-en").click();
   assert.equal(id(page, "records-status").textContent, "Saved records for 1 tool to a file.");
   assert.equal(id(page, "storage-warning").hidden, true);
-  assert.match(id(page, "record-location").querySelector(".label-en").textContent, /can't save your progress/);
+  assert.match(id(page, "record-location").querySelector(".label-en").textContent, /can't save your records/);
 });
 
 test("SR16: read access lost during confirmation uses memory only and preserves durable data", async () => {
@@ -235,7 +376,7 @@ test("SR20: backup covers the public catalog independently of active filters and
   assert.equal(page.storageCalls.write, before); assert.equal(page.confirmations.length, 0);
   await restore(page, file({ [first.id]: 2 }));
   assert.equal(page.confirmations.length, 1);
-  assert.match(page.confirmations[0], /進んでいる1本は/);
+  assert.match(page.confirmations[0], /進んでいる1本の進捗は/);
   assert.equal(page.values.get(key(hidden)), "3");
 });
 
@@ -259,7 +400,7 @@ test("SR21: two task opportunities expose both queued durable updates before can
   assert.equal(page.storageCalls.write, writes, "Both original candidates became unnecessary; do not overwrite either one");
   assert.equal(level(page, first), 3); assert.equal(level(page, second), 3);
   assert.equal(level(page, third), 0, "A newly eligible record was not in the confirmed candidates");
-  assert.equal(page.confirmations.length, 1); assert.equal(id(page, "records-status").textContent, "戻す進捗はありません。このブラウザーの記録は、ファイルと同じか、ファイルより進んでいます。");
+  assert.equal(page.confirmations.length, 1); assert.equal(id(page, "records-status").textContent, "戻す記録はありません。進捗はファイルと同じか、それより進んでいて、「あとで試す」も追加済みです。");
   assert.equal(button.disabled, false); assert.equal(page.document.activeElement, button);
 });
 
@@ -285,7 +426,7 @@ test("SR22: delayed partial read failure stays memory-only while busy and post-c
   assert.equal(page.confirmations.length, 1); assert.equal(page.storageCalls.write, writes);
   assert.equal(page.values.get(key(first)), "3"); assert.equal(page.values.get(key(second)), "1");
   assert.equal(level(page, second), 2); assert.equal(id(page, "storage-warning").hidden, false);
-  assert.equal(id(page, "records-status").textContent, "1本の進捗をファイルから戻しました。");
+  assert.equal(id(page, "records-status").textContent, "1本の記録をファイルから戻しました。");
   assert.equal(page.document.activeElement, id(page, "tab-tools-label"));
   assert.equal(id(page, "records-import").disabled, false);
 });

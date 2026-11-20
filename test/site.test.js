@@ -501,20 +501,21 @@ test("H24: PC幅の一覧は auto-fill で列を作り（結果が1件でもカ�
 
 // ---- 進捗の記録 ----
 
-test("H25: 別のタブで進捗が変わったら（storage イベント）、進捗ボタンとダッシュボードを描き直す。続けて届く知らせは1回にまとめ、一覧は作り直さない", () => {
+test("H25: 別のタブで進捗が変わったら（storage イベント）、進捗・あとで試すとダッシュボードを同期し、空の保存リストだけ再評価する", () => {
   const setup = fnBody("setupProgressSync");
   const i = setup.indexOf('addEventListener("storage"');
   assert.ok(i >= 0, "storage イベントを受けていない（別のタブの変更を知らないまま押すと、1段飛んだり、別のタブの記録を消したりする）");
   const handler = setup.slice(i, setup.indexOf("\n  });", i));
-  // 進捗のキー（progress_…）と、まとめて消されたとき（key が null）だけを見る
-  assert.match(handler, /e\.key !== null && String\(e\.key\)\.indexOf\("progress_"\) !== 0\) return;/);
+  // 進捗・あとで試すのキーと、まとめて消されたとき（key が null）だけを見る
+  assert.ok(handler.includes('if (e.key !== null && !/^(progress_|later_)/.test(String(e.key))) return;'));
   // 全体のリセットで本数分届く知らせは、止まってから1回だけ描き直す（前の予約を取り消してから予約し直す）
   assert.match(handler, /clearTimeout\(progressSyncTimer\);\s*progressSyncTimer = setTimeout\(refreshProgressViews,/);
   assert.match(fnBody("setupStaticUI") + fnBody("setupHelpModal") + mainJs.match(/document\.addEventListener\("DOMContentLoaded"[\s\S]*?\n\}\);/)[0], /setupProgressSync\(\)/);
   const refresh = fnBody("refreshProgressViews");
   assert.match(refresh, /querySelectorAll\("\.tool-progress-select"\)[\s\S]*updateProgressSelect\(/, "進捗ボタンを描き直していない");
   assert.match(refresh, /renderDashboard\(\)/, "ダッシュボードを描き直していない");
-  assert.doesNotMatch(refresh, /renderToolList\(|renderAll\(/, "一覧を作り直している（フォーカスとスクロールの位置が動く）");
+  assert.match(refresh, /if \(filters\.later && !toolSet\.ids\.length && !shownToolIds\.size\) \{[\s\S]*renderToolList\(/, "空の保存リストだけを再評価する");
+  assert.match(refresh, /querySelectorAll\("\.tool-later-toggle"\)[\s\S]*updateTryLaterButton\(/);
   // ダッシュボードの本の行は作り直すので、作り直す前にフォーカスしている部品の目印を取り、作り直したあとに同じ行へ戻す（H32）
   assert.match(
     refresh,
