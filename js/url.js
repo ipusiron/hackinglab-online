@@ -5,14 +5,14 @@
 // 履歴（pushState・replaceState・popstate）の扱いと画面の描き直しは js/main.js が行う。
 //
 // 一覧の条件の URL の形（いつもこの順に並べ、値が空の条件は書かない）：
-//   ?book=<本の slug>（books.json）&cat=<カテゴリーの id>（categories.json）&field=<分野の id>（category_groups.json）&q=<検索欄の文字>&tools=day001,day002&tab=dashboard&lang=en
+//   ?book=<本の slug>（books.json）&cat=<カテゴリーの id>（categories.json）&field=<分野の id>（category_groups.json）&maxDifficulty=<1〜4>&q=<検索欄の文字>&tools=day001,day002&tab=dashboard&lang=en
 // 進捗の条件はこの端末の記録で決まるので、URL に入れない。表示の言語は英語のときだけ lang=en を書く（決めるのは js/lang.js）。
 
 (function (root) {
   "use strict";
 
   // URL に書く条件の名前（この順に並べる）
-  var KEYS = ["book", "cat", "field", "q", "tools", "tab", "lang"];
+  var KEYS = ["book", "cat", "field", "maxDifficulty", "q", "tools", "tab", "lang"];
   var MAX_TOOLS = 12;
 
   function lower(v) {
@@ -21,6 +21,13 @@
 
   function has(o, key) {
     return Object.prototype.hasOwnProperty.call(o, key);
+  }
+
+  // One inclusive upper limit. Invalid, missing and ★5 (equivalent to All)
+  // mean no limit; never coerce missing tool ratings into the lowest level.
+  function difficultyLimit(value) {
+    var text = typeof value === "string" || typeof value === "number" ? String(value).trim() : "";
+    return /^[1-4]$/.test(text) ? text : "";
   }
 
   // list（文字列の配列）の中から、大文字・小文字と前後の空白を無視して v と同じものを返す。無ければ ""。
@@ -53,6 +60,7 @@
       book: book === "all" ? "" : pick(k.books, book),
       cat: cat,
       field: cat ? "" : pick(k.fields, params.get("field")),
+      maxDifficulty: difficultyLimit(params.get("maxDifficulty")),
       q: q == null ? "" : String(q).trim(),
       tab: lower(params.get("tab")) === "dashboard" ? "dashboard" : "tools"
     };
@@ -145,6 +153,7 @@
     if (has(s, "book")) values.book = s.book ? String(s.book) : null;
     if (has(s, "cat")) values.cat = s.cat ? String(s.cat) : null;
     if (has(s, "field")) values.field = s.field ? String(s.field) : null;
+    if (has(s, "maxDifficulty")) values.maxDifficulty = difficultyLimit(s.maxDifficulty) || null;
     if (has(s, "q")) values.q = String(s.q == null ? "" : s.q).trim() || null;
     if (has(s, "tools")) {
       var ids = collectTools(Array.isArray(s.tools) ? s.tools : [], null).ids;
@@ -240,6 +249,7 @@
   var api = {
     KEYS: KEYS,
     readState: readState,
+    difficultyLimit: difficultyLimit,
     normalizeToolId: normalizeToolId,
     readTools: readTools,
     readToolHash: readToolHash,

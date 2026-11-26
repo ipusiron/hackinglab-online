@@ -635,7 +635,7 @@ test("H28: Start panels use native controls and book links preserve modified cli
   // Selection, focus and the all-tools history path are exercised by SH8 and the runtime selection test.
   const open = fnBody("openStartEntry");
   assert.match(open, /setBookFilter\(slug, \{ history: "push" \}\)/);
-  assert.match(open, /commitUrl\(\{ book: "", cat: "", field: "", q: "", tools: null, hash: "" \}, "push"\);\s*leaveToolSet\(\);\s*clearOtherFilters\(\);/);
+  assert.match(open, /commitUrl\(\{ book: "", cat: "", field: "", maxDifficulty: "", q: "", tools: null, hash: "" \}, "push"\);\s*leaveToolSet\(\);\s*clearOtherFilters\(\);/);
   for (const name of ["first", "books", "all"]) assert.match(html, new RegExp('<button id="start-' + name + '-button"[^>]*type="button"[^>]*disabled'));
   assert.match(fnBody("updateStartEntries"), /HU\.withLang\(url\.toString\(\), currentLang\)/);
 });

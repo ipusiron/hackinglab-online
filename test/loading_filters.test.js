@@ -38,7 +38,7 @@ test("LF1: HTML starts loading with disabled filters; all JSON starts in paralle
   const p = await runPage({ deferData: true });
   assert.equal(state(p), "loading");
   assert.deepEqual([...p.fetched].sort(), ["data/books.json", "data/categories.json", "data/category_groups.json", "data/tools.json"]);
-  for (const id of ["filter-book", "filter-category", "filter-progress", "filter-search-input", "share-on-x", "reset-all-progress"]) assert.equal(el(p, id).disabled, true);
+  for (const id of ["filter-book", "filter-category", "filter-progress", "filter-difficulty", "filter-search-input", "share-on-x", "reset-all-progress"]) assert.equal(el(p, id).disabled, true);
   assert.equal(el(p, "catalog-loading").hidden, false);
   el(p, "lang-en").dispatch("click");
   assert.equal(cards(p).length, 0);

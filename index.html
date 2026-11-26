@@ -337,15 +337,25 @@
             </select>
           </div>
 
-          <!-- 進捗フィルター -->
-          <div class="filter-group">
-            <label for="filter-progress">
-              <span class="label-ja">進捗</span>
-              <span class="label-en">Progress</span>
-            </label>
-            <select id="filter-progress" disabled>
-              <!-- JSで「すべて / 未着手 / 学習中 / 一周完了 / 定着済み」を生成 -->
-            </select>
+          <div class="filter-pair">
+            <div class="filter-group">
+              <label for="filter-progress">
+                <span class="label-ja">進捗</span>
+                <span class="label-en">Progress</span>
+              </label>
+              <select id="filter-progress" disabled>
+                <!-- JSで「すべて / 未着手 / 学習中 / 一周完了 / 定着済み」を生成 -->
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="filter-difficulty">
+                <span class="label-ja">難易度</span>
+                <span class="label-en">Difficulty</span>
+              </label>
+              <select id="filter-difficulty" disabled>
+                <!-- JSで「すべて / ★1まで / ★2まで / ★3まで / ★4まで」を生成 -->
+              </select>
+            </div>
           </div>
 
           <!-- 検索ボックス -->
@@ -646,6 +656,18 @@
             <li><span class="label-ja">Day番号：ツールを作った順に付けた通し番号です。これも学ぶ順ではありません。</span><span class="label-en">Day numbers: serial numbers given in the order the tools were made. They do not show a learning order either.</span></li>
             <li><span class="label-ja">ツール100・ツール200：「生成AIで作るセキュリティツール」の2つのプロジェクトです。ツール100はDay001〜Day100で完結しました。ツール200はDay200まで作っている途中で、新しいツールは公開するたびに一覧に加わります。</span><span class="label-en">Tools 100 and Tools 200: the two projects of “Security Tools with Generative AI”. Tools 100 (Day001–Day100) is complete. Tools 200 is in progress toward Day200, and each new tool joins the list when it is published.</span></li>
           </ul>
+          <details id="help-difficulty" class="help-difficulty">
+            <summary id="help-difficulty-summary"><span class="label-ja">難易度の目安</span><span class="label-en">Difficulty guide</span></summary>
+            <p><span class="label-ja">付属の例と説明を使って、基本操作を行い、結果の意味を理解する難しさを表します。</span><span class="label-en">The rating describes how hard it is to perform the basic tasks and understand the results using the included examples and instructions.</span></p>
+            <ul>
+              <li><span class="label-ja">★1：専門的な前提なしで、身近な入力や付属例から結果を理解できる。</span><span class="label-en">★1: Understand the results from familiar inputs or included examples, without specialist knowledge.</span></li>
+              <li><span class="label-ja">★2：一つの技術概念や短い手順を学べば、基本的な結果を説明できる。</span><span class="label-en">★2: Learn one technical concept or a short procedure to explain the basic results.</span></li>
+              <li><span class="label-ja">★3：複数の概念・比較・設定を結び付けて、結果を読み取る。</span><span class="label-en">★3: Connect several concepts, comparisons or settings to interpret the results.</span></li>
+              <li><span class="label-ja">★4：専門的な仕組み・数式・コード・複数条件を理解して分析し、妥当性を判断する。</span><span class="label-en">★4: Analyze specialist mechanisms, equations, code or multiple conditions to judge whether a result is valid.</span></li>
+              <li><span class="label-ja">★5：高度な専門知識を基に、自分で仮説・モデル・検証条件を組み立てる。</span><span class="label-en">★5: Use advanced specialist knowledge to develop your own hypotheses, models and validation conditions.</span></li>
+            </ul>
+            <p><span class="label-ja">発展機能の難しさや機材の準備、学ぶ順番は別です。「★2まで」を選ぶと、★1と★2のツールを表示します。</span><span class="label-en">Advanced features, equipment setup and learning order are separate considerations. “Up to ★2” shows tools rated ★1 or ★2.</span></p>
+          </details>
         </section>
 
         <section aria-labelledby="help-keyboard">

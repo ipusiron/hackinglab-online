@@ -2,6 +2,15 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+### Difficulty filter and guide
+
+- Keep difficulty within the existing filter area: one native select, `#filter-difficulty`, paired with progress through the responsive `.filter-pair`. Do not add a new home section or button row. The ordinary narrow layout shares one row; enlarged text stacks the pair when needed. Preserve the common label size and 1rem form text. Book/category/pair/search remain the four wide-screen slots, including a usable optional-books-failure layout.
+- The select offers All and inclusive upper limits 1–4. All includes unknown ratings; limited results require an integer difficulty of at least 1. Preserve catalog and chapter order. Category/field/book/search/progress/Try later conditions combine with the limit. No new storage key or difficulty sorting.
+- `maxDifficulty` is a public URL condition between `field` and `q`. Accept only trimmed single digits 1–4; invalid values (including 5) mean All. Canonicalize on load and history restoration, preserving unrelated parameters. Selection uses the existing push/coalescing/focus rules. Read the latest URL after loading/retry; Back/Forward and language changes retain the effective limit. URL-helper failure still leaves local select filtering usable.
+- See all tools, empty-result recovery and set precedence clear the limit in both URL and state. A Day link clears only a conflicting limit; starter progress navigation follows the same rule. Saved-selection/set/progress share URLs continue to use their fresh allowlists and never include the difficulty or other current filters.
+- Keep the star explanation in the existing help-list section, inside the initially closed `#help-difficulty` details. The author rating means the effort to perform basic tasks and understand results using supplied examples/instructions, separately from advanced features, equipment setup and learning order. The native summary belongs in the modal's explicit Tab cycle. Keep all nine help sections and existing focus-return behavior.
+- `test/difficulty.test.js` exercises strict URL values, unknown ratings, every upper limit, filter combinations/order, coalesced history, clearing, Day/set precedence, loading/retry and privacy. Browser checks establish responsive geometry, native keyboard behavior and selected-text visibility separately.
+
 ## Project Overview
 
 Hacking Lab Online is a bilingual (Japanese/English) self-learning platform that aggregates security education tools created by IPUSIRON through the "Security Tools with Generative AI" project (100 and 200). It's a static web application hosted on GitHub Pages.
