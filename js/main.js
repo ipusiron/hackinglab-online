@@ -742,6 +742,7 @@ function setupStaticUI() {
       filters.progress = e.target.value;
       renderToolList(undefined, false);
       announceListCount(0, true);
+      saveViewInHistory();
     });
   });
 

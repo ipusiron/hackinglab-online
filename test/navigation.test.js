@@ -464,3 +464,28 @@ test("N31: successful set copy retry rescues focus before hiding its manual fiel
   assert.equal(p.document.activeElement.id,copy.id);
   assert.equal(status(p),"リンクをコピーしました。");
 });
+
+for (const lang of ["ja", "en"]) test(`N32 ${lang}: progress filters survive immediate Back and Forward without scrolling`, async () => {
+  const tool = visible.find((t) => t.id === "day001");
+  const p = await runPage({ search: `?lang=${lang}`, storedValues: { [`progress_${tool.slug}`]: "3" } });
+  selected(p, "filter-category", "authentication");
+  const control = p.document.getElementById("filter-progress");
+  control.focus();
+  const url = p.context.location.href;
+  assert.equal(new URL(url).searchParams.get("cat"), "authentication");
+  const length = p.context.history.length;
+  const records = [...p.values];
+  for (const stage of ["3", "0", "2", "1", "all"]) {
+    selected(p, "filter-progress", stage);
+    const expectedIds = ids(p);
+    assert.equal(p.context.location.href, url, "Personal filters must not enter the URL");
+    assert.equal(p.context.history.length, length, "Changing progress must not add a history entry");
+    await p.back();
+    assert.equal(p.document.getElementById("filter-progress").value, "all");
+    await p.forward();
+    assert.equal(p.document.getElementById("filter-category").value, "authentication");
+    assert.equal(p.document.getElementById("filter-progress").value, stage);
+    assert.deepEqual(ids(p), expectedIds);
+    assert.deepEqual([...p.values], records, "Filtering must not change saved records");
+  }
+});
