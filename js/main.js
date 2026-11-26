@@ -926,6 +926,17 @@ function setupStartEntries(keepInPlace) {
       else markStartSeen();
     });
   });
+  document.querySelectorAll(".start-progress").forEach((link) => {
+    link.addEventListener("click", (e) => {
+      if (loadState !== "ready" || !link.hasAttribute("href")) { e.preventDefault(); return; }
+      if (e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || !HU) return;
+      e.preventDefault();
+      markStartSeen();
+      // Save this stable source link even where pointer activation does not focus links.
+      link.focus({ preventScroll: true });
+      openStarterProgress(link);
+    });
+  });
   // Book links keep the browser's modified-click behavior and use one in-page history entry.
   const list = document.getElementById("start-book-links");
   list.addEventListener("click", (e) => {
@@ -1438,11 +1449,11 @@ function readingTop(header) {
 }
 
 // 初回・URL 移動の #day / #book-group を、描いた見出しへ一度だけ移す。
-function maybeScrollToHash() {
+function maybeScrollToHash(focusProgress = false) {
   const h = window.location.hash;
   if (!h) return;
   const card = linkedToolId && document.getElementById(linkedToolId);
-  const el = card ? card.querySelector(".tool-title") : h.indexOf("#book-group-") === 0 ? document.getElementById(h.slice(1)) : null;
+  const el = card ? card.querySelector(focusProgress ? '[data-part="progress"]' : ".tool-title") : h.indexOf("#book-group-") === 0 ? document.getElementById(h.slice(1)) : null;
   if (el) {
     try {
       // 遠いカードと直前の項目を先に描き、content-visibility の仮の高さに着地しないようにする。
@@ -1465,6 +1476,7 @@ function maybeScrollToHash() {
           // native fragment の既定処理が、popstate 内の focus のあとで body に戻すブラウザーがある。
           // 利用者がほかを操作していない場合だけ、同じ見出しへ戻す（URL の再解決はしない）。
           if (active === document.body) el.focus({ preventScroll: true });
+          if (focusProgress) saveViewInHistory();
         }
       };
       requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -1820,6 +1832,7 @@ function finishDropPush() {
   // 外しているあいだに言語を切り替えていたら ?lang= を合わせ、条件を変えていたら書く（どちらもなければ何もしない）
   syncLangParam();
   commitUrl({}, d.how === "push" ? "push" : undefined, d.source || undefined);
+  if (d.after) d.after();
 }
 
 // URL の ?lang= を今の言語に合わせる（英語なら lang=en、日本語なら付けない。?lang=ja で開いたときは残す。js/url.js）。
@@ -1886,7 +1899,7 @@ function setupHistory() {
 
 // 戻る・進むで来た履歴の URL から、一覧の条件（本・カテゴリー・検索・タブ）を戻して描き直し、その履歴で見ていた位置を出す。
 // 条件が同じでも hash を解決する。保存位置があれば、hash への移動よりそちらを優先する。
-function applyHistoryState(view) {
+function applyHistoryState(view, focusProgress = false) {
   cancelListStatus();
   lastPush = null; // 戻ったあとの変更は、まとめずに積む
   // 言語は戻る・進むで変えない。前の言語のときに積んだ履歴へ来たら、URL の ?lang= を今の言語に直す
@@ -1933,6 +1946,8 @@ function applyHistoryState(view) {
   refreshBookTarget();
   renderToolList();
   updateBookStatus();
+  // Resolve the URL before the landing correction captures it as its navigation guard.
+  if (focusProgress) commitUrl({});
   lastNavigationHref = window.location.href;
   if (hasSavedView(view)) {
     restoreView(view, filtersTop);
@@ -1940,7 +1955,7 @@ function applyHistoryState(view) {
   } else {
     restoreView(view, filtersTop);
     settleFocus(view, focused, focusPanel, focusedKey);
-    maybeScrollToHash();
+    maybeScrollToHash(focusProgress);
   }
 }
 
@@ -2049,6 +2064,14 @@ function fallbackFocusTarget(key) {
 function restoreFocus(view) {
   let target = revealFilterTarget(elementForFocusKey(view && view.focus));
   if (!target || !panelOf(target) || panelOf(target).hidden || !target.getClientRects().length) {
+    // A progress change can exclude the saved card when history reapplies its filters.
+    // Keep the empty result's recovery action in view instead of focusing an off-screen tab.
+    const clear = document.getElementById("clear-filters");
+    if (currentTab === "tools" && view && typeof view.focus === "string" && view.focus.startsWith("tool:") && isShown(clear)) {
+      clear.scrollIntoView({ behavior: "instant", block: "nearest" });
+      clear.focus({ preventScroll: true });
+      return;
+    }
     target = document.querySelector('.tab-button[aria-selected="true"]');
   }
   if (target) target.focus({ preventScroll: true });
@@ -2092,6 +2115,21 @@ function restoreView(view, filtersTop) {
 // （覚えた開閉があるとき）は変えない。保存できない環境では、このページを開いているあいだだけ覚える（js/storage.js）
 function markStartSeen() {
   if (progressStore.getItem(START_KEY) === null) progressStore.setItem(START_KEY, "closed");
+}
+
+function openStarterProgress(link) {
+  if (loadState !== "ready" || !link.hasAttribute("href") || !isShown(link)) return;
+  if (droppingPush) {
+    // A merged select change may still be waiting for history.back(); let it settle first.
+    const version = navigationVersion, interaction = interactionVersion;
+    droppingPush.after = () => {
+      if (version === navigationVersion && interaction === interactionVersion) openStarterProgress(link);
+    };
+    return;
+  }
+  commitUrl({ hash: `#${link.dataset.toolId}` }, "push");
+  applyHistoryState(null, true);
+  saveViewInHistory();
 }
 
 // 「はじめ方」の入口で本を選ぶ（slug が "" の「すべてのツール」は、カテゴリー・進捗・検索の条件も外す）。履歴を1つ積む
@@ -3145,6 +3183,15 @@ function updateStarterProgress() {
     label.hidden = !tool;
     const text = tool ? `${currentLang === "ja" ? "進捗：" : "Progress: "}${PROGRESS_LABELS[currentLang][getProgress(tool.slug)]}` : "";
     if (label.textContent !== text) label.textContent = text;
+    if (tool) {
+      label.href = `#${tool.id}`;
+      label.setAttribute("aria-label", currentLang === "ja"
+        ? `${text}（${tool.title}、Day${tool.id.slice(3)}の進捗欄へ移動）`
+        : `${text} (Go to progress for ${tool.title}, Day${tool.id.slice(3)})`);
+    } else {
+      label.removeAttribute("href");
+      label.removeAttribute("aria-label");
+    }
   });
 }
 

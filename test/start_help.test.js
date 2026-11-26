@@ -20,6 +20,10 @@ const chooseGenre = (p, value) => { const select=el(p,"start-genre"); select.val
 const buttons = p => ["first", "books", "all"].map(name => el(p, `start-${name}-button`));
 const state = p => el(p, "main-content").dataset.loadState;
 const starterProgress = p => p.document.querySelectorAll(".start-progress");
+const recordValues = p => [...p.values].filter(([key]) => /^(progress_|later_)/.test(key)).sort(([a],[b])=>a.localeCompare(b));
+const progressLink = (p, group, id) => starterList(p,group).querySelector(`.start-progress[data-tool-id="${id}"]`);
+const progressControl = (p, id) => p.document.querySelectorAll(".tool-card").find(card=>card.dataset.toolId===id)?.querySelector('[data-part="progress"]');
+const activateProgressLink = async (p, link, fields = {}) => { const event=link.dispatch("click",fields);await p.flush();return event; };
 const chooseBook = (p, link, fields = {}) => el(p, "start-book-links").dispatch("click", { target: link, ...fields });
 function clock() {
   let now=0, seq=0; const tasks=new Map();
@@ -36,11 +40,12 @@ test("starter progress mirrors every stage and duplicate without replacing links
   for(const [level,text] of [[1,"学習中"],[2,"一周完了"],[3,"定着済み"],[0,"未着手"]]) {
     chooseProgress(select,level);
     assert.ok(labels.filter(n=>n.dataset.toolId===tool.id).every(n=>n.textContent===`進捗：${text}`));
-    assert.equal(p.document.activeElement,select);assert.deepEqual(links(p),demos);
+    assert.equal(p.document.activeElement,select);assert.deepEqual(links(p),demos);assert.deepEqual(starterProgress(p),labels);
   }
   p.values.set(`progress_${tool.slug}`,"2");p.dispatch("storage",{key:`progress_${tool.slug}`});p.dispatch("pageshow",{persisted:true});
   assert.ok(labels.filter(n=>n.dataset.toolId===tool.id).every(n=>n.textContent==="進捗：一周完了"));
   el(p,"lang-en").click();assert.ok(labels.filter(n=>n.dataset.toolId===tool.id).every(n=>n.textContent==="Progress: First pass"));
+  assert.deepEqual(starterProgress(p),labels);
 });
 
 test("starter progress hides during loading and preserves effective failed writes through refresh and reset", async () => {
@@ -421,3 +426,281 @@ test("SH22: remembered genre stays out of the record export and sharing URL", as
   assert.equal(p.values.get("hlo_start_genre"),"everyday");
   assert.equal(p.context.location.href,href);assert.equal(p.context.history.length,history);
 });
+
+for(const language of ["ja","en"]) {
+  test(`SH23 ${language}: all fifteen named progress links reach the native control without changing records`, async () => {
+    const tool=tools.find(t=>t.id==="day003");
+    const p=await runPage({search:`?lang=${language}`,storedValues:{[`progress_${tool.slug}`]:"2",later_day003:"1"}});
+    const nodes=starterProgress(p),ids=nodes.map(link=>link.id),records=recordValues(p);
+    assert.equal(nodes.length,15);assert.equal(new Set(ids).size,15);
+    for(const [group,toolIds] of Object.entries(starterGroups)) {
+      chooseGenre(p,group);
+      for(const id of toolIds) {
+        const link=progressLink(p,group,id),target=tools.find(t=>t.id===id);
+        assert.equal(link.tagName,"A");assert.equal(link.hidden,false);
+        assert.ok(link.id.includes(group)&&link.id.includes(id),"Source links need distinct genre and Day identities for Back focus");
+        assert.equal(link.getAttribute("href"),`#${id}`);
+        const name=link.getAttribute("aria-label");
+        assert.ok(name.includes(target.title)&&name.includes(`Day${id.slice(3)}`)&&name.includes(link.textContent));
+        assert.match(name,language==="ja" ? /進捗欄へ移動/ : /[Gg]o to progress/);
+        const before=p.document.scrollCalls?.length || 0;
+        assert.equal((await activateProgressLink(p,link)).defaultPrevented,true);
+        const control=progressControl(p,id);
+        assert.equal(control.tagName,"SELECT");assert.equal(p.document.activeElement,control);
+        assert.equal(p.context.location.hash,`#${id}`);
+        assert.ok(p.document.scrollCalls.slice(before).some(call=>call.element===control),"The destination control must be scrolled into view");
+        assert.deepEqual(recordValues(p),records);assert.deepEqual(starterProgress(p),nodes);
+      }
+    }
+  });
+
+  test(`SH24 ${language}: a progress link keeps matching filters and reaches the first duplicate book card`, async () => {
+    const book=books.find(b=>b.slug==="genai-crypto"),grouped=HB.buildGroups(book,tools).flatMap(g=>g.items);
+    const id=starterGroups.crypto.find(id=>grouped.filter(t=>t.id===id).length>1);
+    assert.ok(id,"Fixture needs a starter that occurs in multiple chapters");
+    const tool=tools.find(t=>t.id===id),cat=tool.category_ids[0];
+    const p=await runPage({search:`?lang=${language}&book=${book.slug}&cat=${cat}&q=${id}`,storedValues:{[`progress_${tool.slug}`]:"2",[`later_${id}`]:"1"}});
+    chooseGenre(p,"crypto");
+    const filter=el(p,"filter-progress");filter.value="2";filter.dispatch("change");
+    const later=el(p,"filter-later");later.checked=true;later.dispatch("change");
+    const records=recordValues(p),link=progressLink(p,"crypto",id);
+    await activateProgressLink(p,link,{detail:0}); // A native Enter activation dispatches a click with detail 0.
+    assert.equal(el(p,"filter-book").value,book.slug);assert.equal(el(p,"filter-category").value,cat);
+    assert.equal(el(p,"filter-search-input").value,id);assert.equal(filter.value,"2");assert.equal(later.checked,true);
+    const matches=p.document.querySelectorAll(".tool-card").filter(card=>card.dataset.toolId===id);
+    assert.ok(matches.length>1);assert.equal(p.document.activeElement,matches[0].querySelector('[data-part="progress"]'));
+    const url=new URL(p.context.location.href);assert.equal(url.searchParams.has("progress"),false);assert.equal(url.searchParams.has("later"),false);
+    assert.deepEqual(recordValues(p),records);
+  });
+}
+
+test("SH25: progress navigation clears only conflicts; Back restores every condition and the originating duplicate link", async () => {
+  const tool=tools.find(t=>t.id==="day050"),cat=tool.category_ids[0];
+  const p=await runPage({search:`?book=genai-crypto&cat=${cat}&q=no-starter-can-match-this&lang=en`,storedValues:{progress_caesar:"2",later_day003:"1"}});
+  el(p,"start-here").open=true;chooseGenre(p,"physical");
+  const progress=el(p,"filter-progress");progress.value="3";progress.dispatch("change");
+  const later=el(p,"filter-later");later.checked=true;later.dispatch("change");
+  const link=progressLink(p,"physical",tool.id),before=p.context.location.href,length=p.context.history.length,records=recordValues(p);
+  link.focus();p.context.scrollY=284;
+  await activateProgressLink(p,link);
+  assert.equal(p.context.history.length,length+1);assert.equal(el(p,"filter-book").value,"");
+  assert.equal(el(p,"filter-category").value,cat,"The matching category must survive unrelated conflicts");
+  assert.equal(el(p,"filter-search-input").value,"");assert.equal(progress.value,"all");assert.equal(later.checked,false);
+  assert.equal(p.document.activeElement,progressControl(p,tool.id));
+  const destination=p.context.location.href;
+  for(let i=0;i<2;i++) {
+    await p.back();
+    assert.equal(p.context.location.href,before);assert.equal(el(p,"filter-book").value,"genai-crypto");
+    assert.equal(el(p,"filter-category").value,cat);assert.equal(el(p,"filter-search-input").value,"no-starter-can-match-this");
+    assert.equal(progress.value,"3");assert.equal(later.checked,true);
+    assert.equal(p.document.activeElement,link,"Back must restore the physical link, not the recommended duplicate");
+    assert.equal(p.context.scrollY,284);assert.deepEqual(recordValues(p),records);
+    await p.forward();
+    assert.equal(p.context.location.href,destination);assert.equal(el(p,"filter-book").value,"");
+    assert.equal(el(p,"filter-search-input").value,"");assert.equal(progress.value,"all");assert.equal(later.checked,false);
+    assert.equal(p.document.activeElement,progressControl(p,tool.id));assert.deepEqual(recordValues(p),records);
+  }
+  assert.equal(p.context.history.length,length+1);
+});
+
+test("SH26: ordinary hashes keep heading focus; repeated progress activation focuses the control without another history entry", async () => {
+  const p=await runPage({search:"?lang=en#day003"}),link=progressLink(p,"recommended","day003"),records=recordValues(p);
+  el(p,"start-here").open=true;
+  assert.equal(p.document.activeElement,el(p,"day003").querySelector(".tool-title"));
+  const length=p.context.history.length;
+  for(const fields of [{},{detail:0},{}]) {
+    link.focus();const before=p.document.scrollCalls.length;
+    assert.equal((await activateProgressLink(p,link,fields)).defaultPrevented,true);
+    assert.equal(p.context.history.length,length);assert.equal(p.document.activeElement,progressControl(p,"day003"));
+    assert.ok(p.document.scrollCalls.slice(before).some(call=>call.element===progressControl(p,"day003")));
+  }
+  await p.navigateHash("#day008");
+  assert.equal(p.document.activeElement,el(p,"day008").querySelector(".tool-title"));
+  assert.deepEqual(recordValues(p),records);
+});
+
+test("SH27: progress links preserve native modified/middle activation and respect an already cancelled click", async () => {
+  const p=await runPage({search:"?q=day008"}),link=progressLink(p,"recommended","day003");
+  el(p,"start-here").open=true;
+  const href=p.context.location.href,length=p.context.history.length,records=recordValues(p),writes=p.storageCalls.write;
+  el(p,"filter-search-input").focus();const focused=p.document.activeElement;
+  for(const fields of [{ctrlKey:true},{metaKey:true},{shiftKey:true},{altKey:true},{button:1},{defaultPrevented:true}]) {
+    assert.equal((await activateProgressLink(p,link,fields)).defaultPrevented,!!fields.defaultPrevented);
+    assert.equal(link.getAttribute("href"),"#day003");assert.equal(p.context.location.href,href);assert.equal(p.context.history.length,length);
+    assert.equal(p.document.activeElement,focused);assert.deepEqual(recordValues(p),records);assert.equal(p.storageCalls.write,writes);
+  }
+});
+
+test("SH28: loading and nonpublic starters cannot navigate; retry reuses the same links and public tools do not require demos", async () => {
+  const pending=await runPage({deferData:true}),nodes=starterProgress(pending);
+  for(const link of nodes) { assert.equal(link.hidden,true);assert.equal(link.hasAttribute("href"),false);assert.equal(link.dispatch("click").defaultPrevented,true); }
+  assert.equal(pending.context.history.length,1);await pending.releaseData();
+  assert.deepEqual(starterProgress(pending),nodes);assert.ok(nodes.every(link=>!link.hidden&&link.hasAttribute("href")));
+  const failed=await runPage({allowLoadFailure:true,fetchResponse(name,_,attempt){if(name==="data/tools.json"&&attempt===1)return {ok:false,status:503};}});
+  const failedNodes=starterProgress(failed);
+  assert.ok(failedNodes.every(link=>link.hidden&&!link.hasAttribute("href")));
+  for(const link of failedNodes)assert.equal(link.dispatch("click").defaultPrevented,true);
+  el(failed,"retry-data").click();await failed.flush();assert.deepEqual(starterProgress(failed),failedNodes);
+  el(failed,"start-here").open=true;
+  await activateProgressLink(failed,failedNodes[0]);assert.equal(failed.document.activeElement,progressControl(failed,failedNodes[0].dataset.toolId));
+  const data=JSON.parse(read("data/tools.json"));
+  data.tools=data.tools.filter(t=>t.id!=="day003");data.tools.find(t=>t.id==="day050").hub=false;data.tools.find(t=>t.id==="day077").demo_url="";
+  const p=await runPage({dataOverrides:{"data/tools.json":data}});
+  el(p,"start-here").open=true;
+  for(const id of ["day003","day050"])for(const link of starterProgress(p).filter(link=>link.dataset.toolId===id)) {
+    assert.equal(link.hidden,true);assert.equal(link.hasAttribute("href"),false);assert.equal(link.dispatch("click").defaultPrevented,true);
+  }
+  const publicLink=progressLink(p,"recommended","day077");assert.equal(publicLink.hidden,false);
+  await activateProgressLink(p,publicLink);assert.equal(p.document.activeElement,progressControl(p,"day077"));
+});
+
+test("SH29: progress links preserve node identity and focused source across language, storage and record import", async () => {
+  const tool=tools.find(t=>t.id==="day003"),p=await runPage({search:"?q=day003",confirmResult:true});
+  el(p,"start-here").open=true;
+  const nodes=starterProgress(p),link=progressLink(p,"recommended",tool.id),control=progressControl(p,tool.id);
+  chooseProgress(control,1);link.focus();el(p,"lang-en").click();
+  assert.equal(p.document.activeElement,link);assert.deepEqual(starterProgress(p),nodes);
+  p.values.set(`progress_${tool.slug}`,"2");p.dispatch("storage",{key:`progress_${tool.slug}`});p.dispatch("pageshow",{persisted:true});
+  assert.equal(p.document.activeElement,link);assert.deepEqual(starterProgress(p),nodes);
+  const text=JSON.stringify({app:"hackinglab-online",schema_version:2,saved_at:"2026-11-07T00:00:00.000Z",progress:{[tool.id]:3},try_later:[tool.id]});
+  el(p,"records-file").files=[{size:Buffer.byteLength(text),text:async()=>text}];
+  await p.evaluate("handleRecordsImport()");await p.flush();
+  assert.equal(p.document.activeElement,link);assert.deepEqual(starterProgress(p),nodes);
+  for(const node of nodes.filter(node=>node.dataset.toolId===tool.id)) {
+    assert.equal(node.textContent,"Progress: Mastered");assert.ok(node.getAttribute("aria-label").includes(node.textContent));assert.equal(node.getAttribute("href"),`#${tool.id}`);
+  }
+  assert.equal(p.values.get(`progress_${tool.slug}`),"3");assert.equal(p.values.get(`later_${tool.id}`),"1");
+  el(p,"records-export").click();const saved=JSON.parse(await p.downloads[0].blob.text());
+  assert.deepEqual(saved.progress,{[tool.id]:3});assert.deepEqual(saved.try_later,[tool.id]);
+  const records=recordValues(p);await activateProgressLink(p,link);
+  assert.equal(p.document.activeElement,progressControl(p,tool.id));assert.equal(p.document.activeElement.value,"3");assert.deepEqual(recordValues(p),records);
+});
+
+test("SH30: a starter inside a shared set keeps its order; an outside starter leaves the set and Back restores it", async () => {
+  const p=await runPage({search:"?tools=8,3&lang=en"}),records=recordValues(p);
+  el(p,"start-here").open=true;
+  const inside=progressLink(p,"recommended","day003");
+  await activateProgressLink(p,inside);
+  assert.deepEqual(p.document.querySelectorAll(".tool-card").map(card=>card.dataset.toolId),["day008","day003"]);
+  assert.equal(p.document.activeElement,progressControl(p,"day003"));assert.equal(new URL(p.context.location.href).searchParams.get("tools"),"day008,day003");
+  const before=p.context.location.href,outside=progressLink(p,"recommended","day050");
+  await activateProgressLink(p,outside);
+  assert.equal(el(p,"set-banner").hidden,true);assert.equal(new URL(p.context.location.href).searchParams.has("tools"),false);
+  assert.equal(p.document.activeElement,progressControl(p,"day050"));
+  await p.back();assert.equal(p.context.location.href,before);assert.equal(p.document.activeElement,outside);
+  assert.deepEqual(p.document.querySelectorAll(".tool-card").map(card=>card.dataset.toolId),["day008","day003"]);
+  await p.forward();assert.equal(p.document.activeElement,progressControl(p,"day050"));assert.deepEqual(recordValues(p),records);
+});
+
+test("SH31: progress activation waits for rapid category cancellation and keeps a single restorable destination", async () => {
+  const p=await runPage({search:"?lang=en",storedValues:{progress_caesar:"2",later_day008:"1"}}),records=recordValues(p);
+  el(p,"start-here").open=true;
+  const progress=el(p,"filter-progress");progress.value="3";progress.dispatch("change");
+  const category=el(p,"filter-category"),link=progressLink(p,"recommended","day003");
+  category.value="authentication";category.dispatch("change");
+  category.value="";category.dispatch("change");
+  assert.ok(p.evaluate("!!droppingPush"),"Fixture must activate before the pending history.back resolves");
+  assert.equal(link.dispatch("click").defaultPrevented,true);await p.flush();
+  assert.equal(p.context.location.hash,"#day003");assert.equal(new URL(p.context.location.href).searchParams.has("cat"),false);
+  assert.equal(category.value,"");assert.equal(progress.value,"all");assert.equal(p.document.activeElement,progressControl(p,"day003"));
+  assert.equal(p.context.history.length,2);assert.deepEqual(recordValues(p),records);
+  await p.back();
+  assert.equal(p.context.location.hash,"");assert.equal(category.value,"");assert.equal(progress.value,"3");assert.equal(p.document.activeElement,link);
+  await p.forward();assert.equal(p.context.location.hash,"#day003");assert.equal(p.document.activeElement,progressControl(p,"day003"));
+  assert.deepEqual(recordValues(p),records);
+});
+
+test("SH32: a queued progress activation yields to later keyboard, pointer or wheel interaction", async () => {
+  for(const action of ["keydown","pointerdown","wheel"]) {
+    const p=await runPage(),records=recordValues(p),category=el(p,"filter-category"),link=progressLink(p,"recommended","day003");
+    el(p,"start-here").open=true;
+    category.value="authentication";category.dispatch("change");
+    category.value="";category.dispatch("change");
+    assert.ok(p.evaluate("!!droppingPush"));assert.equal(link.dispatch("click").defaultPrevented,true);
+    const search=el(p,"filter-search-input");search.focus();p.dispatch(action,{key:"d"});
+    if(action==="keydown") { search.value="day008";search.dispatch("input"); }
+    await p.flush();
+    assert.equal(p.context.location.hash,"",`A stale progress activation changed the URL after ${action}`);
+    assert.equal(category.value,"");assert.equal(p.document.activeElement,search,`A stale progress activation stole focus after ${action}`);
+    assert.equal(new URL(p.context.location.href).searchParams.get("q"),action==="keydown" ? "day008" : null);
+    assert.deepEqual(recordValues(p),records);
+  }
+});
+
+test("SH33: clearing a conflicting search retains post-layout correction and saves the final progress-control location", async () => {
+  const p=await runPage({search:"?q=no-starter-can-match-this&lang=en"}),records=recordValues(p);
+  el(p,"start-here").open=true;const link=progressLink(p,"recommended","day003");
+  const before=p.document.scrollCalls?.length || 0;
+  assert.equal(link.dispatch("click").defaultPrevented,true);
+  const control=progressControl(p,"day003"),card=control.closest(".tool-card");
+  control.getBoundingClientRect=()=>({top:-p.context.scrollY,bottom:44-p.context.scrollY});
+  let released=false;const remove=card.classList.remove;
+  card.classList.remove=(...names)=>{
+    remove(...names);
+    if(names.includes("cv-hold")) { released=true;p.context.scrollY+=394; }
+  };
+  await p.flush();
+  assert.equal(released,true);assert.equal(el(p,"filter-search-input").value,"");
+  assert.equal(new URL(p.context.location.href).searchParams.has("q"),false);
+  assert.ok(Math.abs(control.getBoundingClientRect().top)<1,"Canonicalizing the cleared query must not disable the later position correction");
+  assert.equal(p.document.activeElement,control);assert.equal(p.document.scrollCalls.length,before+1);
+  assert.equal(p.document.querySelectorAll(".cv-hold").length,0);assert.equal(p.context.history.state.y,p.context.scrollY);
+  await p.back();assert.equal(el(p,"filter-search-input").value,"no-starter-can-match-this");assert.equal(p.document.activeElement,link);
+  await p.forward();assert.equal(p.document.activeElement,progressControl(p,"day003"));assert.equal(p.context.scrollY,0);
+  assert.deepEqual(recordValues(p),records);
+});
+
+test("SH34: progress-control layout correction yields to later user scrolling or focus changes", async () => {
+  for(const action of ["wheel","focus"]) {
+    const p=await runPage({search:"?q=no-starter-can-match-this"});el(p,"start-here").open=true;
+    const link=progressLink(p,"recommended","day003");link.dispatch("click");
+    const control=progressControl(p,"day003"),card=control.closest(".tool-card"),remove=card.classList.remove;
+    control.getBoundingClientRect=()=>({top:-p.context.scrollY,bottom:44-p.context.scrollY});
+    card.classList.remove=(...names)=>{
+      remove(...names);
+      if(names.includes("cv-hold")) {
+        p.context.scrollY=394;
+        if(action==="wheel")p.dispatch("wheel");
+        else el(p,"filter-search-input").focus();
+      }
+    };
+    await p.flush();assert.equal(p.context.scrollY,394,`Progress-link correction stole scrolling after ${action}`);
+    if(action==="focus")assert.equal(p.document.activeElement,el(p,"filter-search-input"));
+  }
+});
+
+for(const language of ["ja","en"]) {
+  test(`SH35 ${language}: Forward to a now-excluded progress card preserves filters and offers visible empty-result recovery`, async () => {
+    const tool=tools.find(t=>t.id==="day003");
+    const p=await runPage({search:`?lang=${language}&book=genai-crypto&cat=classic-crypto&q=day003`,storedValues:{later_day008:"1"}});
+    el(p,"start-here").open=true;chooseGenre(p,"crypto");
+    const progress=el(p,"filter-progress");progress.value="0";progress.dispatch("change");
+    const source=progressLink(p,"crypto",tool.id),origin=p.context.location.href;
+    await activateProgressLink(p,source);
+    const control=progressControl(p,tool.id),duplicates=p.document.querySelectorAll(".tool-card");
+    assert.equal(duplicates.length,2);assert.ok(duplicates.every(card=>card.dataset.toolId===tool.id));
+    chooseProgress(control,2);
+    assert.deepEqual(p.document.querySelectorAll(".tool-card"),duplicates,"Changing progress must keep both live chapter cards in place until navigation");
+    assert.ok(duplicates.every(card=>card.querySelector('[data-part="progress"]').value==="2"));
+    assert.equal(p.document.activeElement,control);assert.equal(progress.value,"0");
+    const records=recordValues(p),destination=p.context.location.href;
+    await p.back();assert.equal(p.context.location.href,origin);assert.equal(p.document.activeElement,source);
+    const before=p.document.scrollCalls.length;
+    await p.forward();
+    assert.equal(p.context.location.href,destination);assert.equal(el(p,"filter-book").value,"genai-crypto");
+    assert.equal(el(p,"filter-category").value,"classic-crypto");assert.equal(el(p,"filter-search-input").value,"day003");assert.equal(progress.value,"0");
+    assert.equal(p.document.querySelectorAll(".tool-card").length,0);
+    const clear=el(p,"clear-filters");assert.ok(clear&&clear.getClientRects().length>0);assert.equal(p.document.activeElement,clear);
+    const scroll=p.document.scrollCalls.slice(before).find(call=>call.element===clear);
+    assert.ok(scroll,"An unavailable saved card must lead to the empty result's visible recovery control");
+    assert.equal(scroll.options.behavior,"instant");assert.equal(scroll.options.block,"nearest");
+    assert.equal(p.document.focusCalls.filter(call=>call.element===clear).at(-1).options.preventScroll,true);
+    assert.deepEqual(recordValues(p),records);
+    clear.click();await p.flush();
+    assert.equal(el(p,"filter-book").value,"genai-crypto");assert.equal(el(p,"filter-category").value,"");
+    assert.equal(el(p,"filter-search-input").value,"");assert.equal(progress.value,"all");assert.equal(p.context.location.hash,"");
+    const recovered=p.document.querySelectorAll(".tool-card").filter(card=>card.dataset.toolId===tool.id);
+    assert.equal(recovered.length,2);assert.ok(recovered.every(card=>card.querySelector('[data-part="progress"]').value==="2"));
+    assert.equal(p.document.activeElement,el(p,"filter-search-input"));assert.deepEqual(recordValues(p),records);
+  });
+}
