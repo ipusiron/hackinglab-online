@@ -3773,6 +3773,7 @@ function updateLaterShare() {
     if (!row) {
       row = document.createElement("label"); row.dataset.toolId = tool.id;
       const check = document.createElement("input"), order = document.createElement("span"), text = document.createElement("span");
+      const caption = document.createElement("span"); caption.className = "later-share-text";
       check.type = "checkbox"; check.dataset.toolId = tool.id;
       order.className = "later-share-order"; order.setAttribute("aria-hidden", "true");
       text.className = "later-share-title";
@@ -3797,7 +3798,8 @@ function updateLaterShare() {
           if (check.isConnected && !panel.hidden && panel.open) scrollByInstant(check.getBoundingClientRect().top - before);
         }
       });
-      row.appendChild(check); row.appendChild(order); row.appendChild(text); list.appendChild(row);
+      caption.appendChild(order); caption.appendChild(text);
+      row.appendChild(check); row.appendChild(caption); list.appendChild(row);
     }
     const position = laterShareIds.indexOf(tool.id);
     const check = row.querySelector("input"), order = row.querySelector(".later-share-order");
