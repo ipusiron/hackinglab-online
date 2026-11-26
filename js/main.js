@@ -1543,10 +1543,22 @@ function restoreReadingAnchor(anchor) {
   // 固定しないヘッダーは復元先で画面外へ流れるため、スクロール前の可視高さを引かない。
   const hb = getComputedStyle(header).position === "sticky" ? readingTop(header) : 0;
   scrollByInstant(el.getBoundingClientRect().top - hb - anchor.offset);
+  const href = window.location.href;
+  const version = navigationVersion;
+  const interaction = interactionVersion;
+  const correct = () => {
+    if (href !== window.location.href || version !== navigationVersion || interaction !== interactionVersion || !isShown(el) || listEl.children[anchor.index] !== el) return;
+    // Empty results can reuse index 0; keep their recovery button's chosen position.
+    if (!el.classList.contains("tool-card") && !el.classList.contains("book-group-header")) return;
+    const top = getComputedStyle(header).position === "sticky" ? readingTop(header) : 0;
+    scrollByInstant(el.getBoundingClientRect().top - top - anchor.offset);
+  };
   // 次の描画が終わってから外す（描いたときに、カードの高さが覚えられる）
-  requestAnimationFrame(() =>
-    setTimeout(() => held.forEach((c) => c.classList.remove("cv-hold")), 0)
-  );
+  requestAnimationFrame(() => setTimeout(() => {
+    held.forEach((c) => c.classList.remove("cv-hold"));
+    // Firefox may adjust its scroll anchor when the held cards are released.
+    requestAnimationFrame(() => requestAnimationFrame(correct));
+  }, 0));
 }
 
 // ---- UIレンダリング全体 ----

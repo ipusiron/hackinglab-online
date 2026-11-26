@@ -136,6 +136,10 @@ test("SF9: 履歴の読書位置は、復元後に残る固定ヘッダーだけ
       };
       const context = {
         document: { getElementById: (id) => id === "site-header" ? header : { children: [card] } },
+        window: { location: { href: "https://hackinglab.online/?q=day077#day077" } },
+        navigationVersion: 1,
+        interactionVersion: 0,
+        isShown: () => true,
         getComputedStyle: () => ({ position }),
         readingTop: (el) => Math.max(0, el.getBoundingClientRect().bottom),
         scrollByInstant: (dy) => { scrollY += dy; },

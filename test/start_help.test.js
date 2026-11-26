@@ -704,3 +704,65 @@ for(const language of ["ja","en"]) {
     assert.equal(p.document.activeElement,el(p,"filter-search-input"));assert.deepEqual(recordValues(p),records);
   });
 }
+
+async function savedStarterReadingPosition() {
+  const timer=clock(),p=await runPage({search:"?q=day077",clock:timer,storedValues:{later_day008:"1"}});
+  el(p,"start-here").open=true;
+  const source=progressLink(p,"recommended","day077"),card=p.document.querySelector(".tool-card"),control=progressControl(p,"day077");
+  el(p,"site-header").getBoundingClientRect=()=>({top:0,bottom:80,height:80});
+  el(p,"tool-list").getBoundingClientRect=()=>({top:1500-p.context.scrollY});
+  card.getBoundingClientRect=()=>({top:2000-p.context.scrollY,bottom:2300-p.context.scrollY,height:300});
+  control.getBoundingClientRect=()=>({top:2040-p.context.scrollY,bottom:2084-p.context.scrollY,height:44});
+  p.context.scrollY=1800;const origin=p.context.location.href;
+  await activateProgressLink(p,source);await timer.advance(0,p);
+  p.context.scrollY=1900;p.evaluate("saveViewInHistory()");
+  assert.equal(p.context.history.state.anchor.offset,20);
+  return {p,timer,card,control,source,origin,destination:p.context.location.href,records:recordValues(p)};
+}
+
+test("SH36: saved-view Back and Forward repair a release-time 81px shift without losing their reading offsets or focus", async () => {
+  const {p,timer,card,control,source,origin,destination,records}=await savedStarterReadingPosition();
+  const remove=card.classList.remove;let released=0;
+  card.classList.remove=(...names)=>{
+    const held=card.classList.contains("cv-hold");remove(...names);
+    if(held&&names.includes("cv-hold")) { p.context.scrollY+=81;released++; }
+  };
+  const scrollCalls=p.document.scrollCalls.length,length=p.context.history.length;
+  for(const [direction,href,y,offset,focus] of [["back",origin,1800,120,source],["forward",destination,1900,20,control]]) {
+    await p[direction]();
+    assert.equal(p.context.scrollY,y,"The existing immediate anchor restoration must still run");
+    const before=released;await timer.advance(0,p);
+    assert.equal(released,before+1,"Fixture must model the release after the initial restoration");
+    assert.equal(p.context.scrollY,y,`${direction} left the release-time adjustment uncorrected`);
+    assert.equal(card.getBoundingClientRect().top-80,offset);
+    assert.equal(p.context.location.href,href);assert.equal(p.document.activeElement,focus);
+    assert.equal(p.document.querySelectorAll(".cv-hold").length,0);assert.deepEqual(recordValues(p),records);
+  }
+  assert.equal(p.document.scrollCalls.length,scrollCalls,"Saved views must not jump to their hash again");
+  assert.equal(p.context.history.length,length);
+});
+
+test("SH37: saved-view release correction yields to newer wheel, keyboard and history navigation", async () => {
+  for(const action of ["wheel","keydown","navigation"]) {
+    const {p,timer,card,records}=await savedStarterReadingPosition();
+    const remove=card.classList.remove;let released=false;
+    card.classList.remove=(...names)=>{
+      const held=card.classList.contains("cv-hold");remove(...names);
+      if(!held||!names.includes("cv-hold"))return;
+      released=true;p.context.scrollY+=81;
+      if(action==="navigation") {
+        const view={y:p.context.scrollY,focus:"#filter-search-input",progress:"all",later:false};
+        p.context.history.pushState(view,"","?q=day077&navigation=newer");
+        p.dispatch("popstate",{state:view});
+      } else {
+        p.dispatch(action,{key:"ArrowDown"});
+        if(action==="keydown")el(p,"filter-search-input").focus();
+      }
+    };
+    await p.back();assert.equal(p.context.scrollY,1800);await timer.advance(0,p);
+    assert.equal(released,true);assert.equal(p.context.scrollY,1881,`An old correction overrode ${action}`);
+    assert.equal(p.document.querySelectorAll(".cv-hold").length,0);assert.deepEqual(recordValues(p),records);
+    if(action!=="wheel")assert.equal(p.document.activeElement,el(p,"filter-search-input"));
+    if(action==="navigation")assert.equal(new URL(p.context.location.href).searchParams.get("navigation"),"newer");
+  }
+});

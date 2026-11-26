@@ -160,7 +160,9 @@
 }
 
 /* ボタン・リンク・入力欄・summary・移動先の見出し・ダイアログで共通の枠を使う。 */
-:focus-visible {
+/* 履歴で空結果へ戻ったときの操作位置も、ブラウザーの入力方式判定によらず示す。 */
+:focus-visible,
+#clear-filters:focus {
   outline: 3px solid var(--focus);
   outline-offset: 3px;
 }
@@ -1494,7 +1496,8 @@ html.help-open.keep-gutter {
 /* 選ばれたタブを、色だけでなく下線の太さと字の太さでも示す。
    円グラフ・凡例の色見本・進捗の棒は、背景の色が消えないよう色を保ったまま枠を付ける */
 @media (forced-colors: active) {
-  :focus-visible {
+  :focus-visible,
+  #clear-filters:focus {
     outline-color: Highlight;
   }
 
