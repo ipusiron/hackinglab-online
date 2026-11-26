@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-11-19T19:23:12Z",
+  "generated_at": "2026-11-26T23:13:21Z",
   "tools": [
     {
       "id": "day001",
@@ -71,7 +71,7 @@
         "modern-crypto",
         "hash-function"
       ],
-      "difficulty": 1,
+      "difficulty": 2,
       "repo_url": "https://github.com/ipusiron/hash-detector",
       "demo_url": "https://ipusiron.github.io/hash-detector/",
       "hub": true,
@@ -637,7 +637,7 @@
       "category_ids": [
         "network"
       ],
-      "difficulty": 2,
+      "difficulty": 3,
       "repo_url": "https://github.com/ipusiron/doh-watcher",
       "demo_url": "https://colab.research.google.com/github/ipusiron/doh-watcher/blob/main/doh_watcher.ipynb",
       "hub": true,
@@ -726,7 +726,7 @@
         "classic-crypto",
         "substitution-cipher"
       ],
-      "difficulty": 3,
+      "difficulty": 2,
       "repo_url": "https://github.com/ipusiron/vigenere-cipher-tool",
       "demo_url": "https://ipusiron.github.io/vigenere-cipher-tool/",
       "hub": true,
@@ -775,7 +775,7 @@
         "cryptanalysis",
         "substitution-cipher"
       ],
-      "difficulty": 4,
+      "difficulty": 3,
       "repo_url": "https://github.com/ipusiron/cipherclimb",
       "demo_url": "https://ipusiron.github.io/cipherclimb/",
       "hub": true,
@@ -861,7 +861,7 @@
       "category_ids": [
         "osint"
       ],
-      "difficulty": 1,
+      "difficulty": 2,
       "repo_url": "https://github.com/ipusiron/dork-watcher",
       "demo_url": "https://ipusiron.github.io/dork-watcher/",
       "hub": true,
@@ -993,7 +993,7 @@
         "forensics",
         "web-security"
       ],
-      "difficulty": 4,
+      "difficulty": 2,
       "repo_url": "https://github.com/ipusiron/weirdstring-inspector",
       "demo_url": "https://ipusiron.github.io/weirdstring-inspector/",
       "hub": true,
@@ -1036,7 +1036,7 @@
         "classic-crypto",
         "transposition-cipher"
       ],
-      "difficulty": 3,
+      "difficulty": 2,
       "repo_url": "https://github.com/ipusiron/grille-cipherlab",
       "demo_url": "https://ipusiron.github.io/grille-cipherlab/",
       "hub": true,
@@ -1203,7 +1203,7 @@
         "cryptanalysis",
         "classic-crypto"
       ],
-      "difficulty": 4,
+      "difficulty": 3,
       "repo_url": "https://github.com/ipusiron/repeatseq-analyzer",
       "demo_url": "https://ipusiron.github.io/repeatseq-analyzer/",
       "hub": true,
@@ -1421,7 +1421,7 @@
         "web-security",
         "social-engineering"
       ],
-      "difficulty": 3,
+      "difficulty": 2,
       "repo_url": "https://github.com/ipusiron/clipthreat-studio",
       "demo_url": "https://ipusiron.github.io/clipthreat-studio/",
       "hub": true,
@@ -1766,7 +1766,7 @@
         "physical-security",
         "acoustic-surveillance"
       ],
-      "difficulty": 3,
+      "difficulty": 2,
       "repo_url": "https://github.com/ipusiron/mic-gain-logger",
       "demo_url": "https://ipusiron.github.io/mic-gain-logger/",
       "hub": true,
@@ -1987,7 +1987,7 @@
         "classic-crypto",
         "cryptanalysis"
       ],
-      "difficulty": 1,
+      "difficulty": 3,
       "repo_url": "https://github.com/ipusiron/alphaloom",
       "demo_url": "https://ipusiron.github.io/alphaloom/",
       "hub": true,
@@ -2082,7 +2082,7 @@
         "authentication",
         "password-analysis"
       ],
-      "difficulty": 4,
+      "difficulty": 3,
       "repo_url": "https://github.com/ipusiron/token-entropy-estimator",
       "demo_url": "https://ipusiron.github.io/token-entropy-estimator/",
       "hub": true,
@@ -2354,7 +2354,7 @@
         "deception",
         "attack-detection"
       ],
-      "difficulty": 4,
+      "difficulty": 2,
       "repo_url": "https://github.com/ipusiron/canary-file-generator",
       "demo_url": "https://ipusiron.github.io/canary-file-generator/",
       "hub": true,
@@ -2534,7 +2534,7 @@
       "category_ids": [
         "web-security"
       ],
-      "difficulty": 3,
+      "difficulty": 2,
       "repo_url": "https://github.com/ipusiron/invisible-clicks",
       "demo_url": "https://ipusiron.github.io/invisible-clicks/",
       "hub": true,
@@ -2794,7 +2794,7 @@
         "mobile-hacking",
         "authentication"
       ],
-      "difficulty": 4,
+      "difficulty": 3,
       "repo_url": "https://github.com/ipusiron/patternlock-security-trainer",
       "demo_url": "https://ipusiron.github.io/patternlock-security-trainer/",
       "hub": true,
@@ -2837,7 +2837,7 @@
       "category_ids": [
         "web-security"
       ],
-      "difficulty": 3,
+      "difficulty": 2,
       "repo_url": "https://github.com/ipusiron/idor-clinic",
       "demo_url": "https://ipusiron.github.io/idor-clinic/",
       "hub": true,
@@ -3047,7 +3047,7 @@
       "category_ids": [
         "visual-cryptography"
       ],
-      "difficulty": 3,
+      "difficulty": 2,
       "repo_url": "https://github.com/ipusiron/visual-cryptography-cipherlab",
       "demo_url": "https://ipusiron.github.io/visual-cryptography-cipherlab/",
       "hub": true,
@@ -3088,7 +3088,7 @@
         "classic-crypto",
         "substitution-cipher"
       ],
-      "difficulty": 1,
+      "difficulty": 2,
       "repo_url": "https://github.com/ipusiron/strip-cipherlab",
       "demo_url": "https://ipusiron.github.io/strip-cipherlab/",
       "hub": true,
@@ -3408,7 +3408,7 @@
         "classic-crypto",
         "substitution-cipher"
       ],
-      "difficulty": 4,
+      "difficulty": 2,
       "repo_url": "https://github.com/ipusiron/beaufort-cipherlab",
       "demo_url": "https://ipusiron.github.io/beaufort-cipherlab/",
       "hub": true,
@@ -3584,7 +3584,7 @@
       "category_ids": [
         "social-engineering"
       ],
-      "difficulty": 4,
+      "difficulty": 2,
       "repo_url": "https://github.com/ipusiron/global-cultural-scam-atlas",
       "demo_url": "https://ipusiron.github.io/global-cultural-scam-atlas/",
       "hub": true,
@@ -3850,7 +3850,7 @@
         "authentication",
         "password-analysis"
       ],
-      "difficulty": 5,
+      "difficulty": 3,
       "repo_url": "https://github.com/ipusiron/pin-threat-simulator",
       "demo_url": "https://ipusiron.github.io/pin-threat-simulator/",
       "hub": true,
@@ -4172,7 +4172,7 @@
         "modern-crypto",
         "block-cipher"
       ],
-      "difficulty": 4,
+      "difficulty": 2,
       "repo_url": "https://github.com/ipusiron/permutation-cipherlab",
       "demo_url": "https://ipusiron.github.io/permutation-cipherlab/",
       "hub": true,
@@ -4320,7 +4320,7 @@
         "cyber-ninjutsu",
         "prepper"
       ],
-      "difficulty": 3,
+      "difficulty": 2,
       "repo_url": "https://github.com/ipusiron/ops-loadout",
       "demo_url": "https://ipusiron.github.io/ops-loadout/",
       "hub": true,
@@ -4882,7 +4882,7 @@
       "category_ids": [
         "machine-learning"
       ],
-      "difficulty": 1,
+      "difficulty": 2,
       "repo_url": "https://github.com/ipusiron/softmax-confidence-meter",
       "demo_url": "https://ipusiron.github.io/softmax-confidence-meter/",
       "hub": true,
@@ -5015,7 +5015,7 @@
       "category_ids": [
         "network"
       ],
-      "difficulty": 1,
+      "difficulty": 2,
       "repo_url": "https://github.com/ipusiron/hex-dump-trainer",
       "demo_url": "https://ipusiron.github.io/hex-dump-trainer/",
       "hub": true,
