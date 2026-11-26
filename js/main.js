@@ -3772,28 +3772,44 @@ function updateLaterShare() {
     let row = rows.get(tool.id);
     if (!row) {
       row = document.createElement("label"); row.dataset.toolId = tool.id;
-      const check = document.createElement("input"), text = document.createElement("span");
+      const check = document.createElement("input"), order = document.createElement("span"), text = document.createElement("span");
+      const caption = document.createElement("span"); caption.className = "later-share-text";
       check.type = "checkbox"; check.dataset.toolId = tool.id;
+      order.className = "later-share-order"; order.setAttribute("aria-hidden", "true");
+      text.className = "later-share-title";
       check.addEventListener("change", () => {
-        const requested = check.checked;
-        // Read current saved state again: another tab may have removed a candidate.
-        updateLaterShare();
-        if (!getTryLater(tool.id)) return;
-        if (requested && !laterShareIds.includes(tool.id)) {
-          if (laterShareIds.length === 12) {
-            check.checked = false;
-            document.getElementById("later-share-status").textContent = currentLang === "ja" ? "共有できるのは12本までです。先に選択を1本外してください。" : "You can share up to 12 tools. Deselect one before adding another.";
-            return;
-          }
-          laterShareIds.push(tool.id);
-        } else if (!requested) laterShareIds = laterShareIds.filter((id) => id !== tool.id);
-        updateLaterShare();
+        const before = check.getBoundingClientRect().top;
+        try {
+          const requested = check.checked;
+          // Read current saved state again: another tab may have removed a candidate.
+          updateLaterShare();
+          if (!getTryLater(tool.id)) return;
+          if (requested && !laterShareIds.includes(tool.id)) {
+            if (laterShareIds.length === 12) {
+              check.checked = false;
+              document.getElementById("later-share-status").textContent = currentLang === "ja" ? "共有できるのは12本までです。先に選択を1本外してください。" : "You can share up to 12 tools. Deselect one before adding another.";
+              return;
+            }
+            laterShareIds.push(tool.id);
+          } else if (!requested) laterShareIds = laterShareIds.filter((id) => id !== tool.id);
+          updateLaterShare();
+        } finally {
+          // The output and feedback above the list must not move the operated choice.
+          if (check.isConnected && !panel.hidden && panel.open) scrollByInstant(check.getBoundingClientRect().top - before);
+        }
       });
-      row.appendChild(check); row.appendChild(text); list.appendChild(row);
+      caption.appendChild(order); caption.appendChild(text);
+      row.appendChild(check); row.appendChild(caption); list.appendChild(row);
     }
-    row.querySelector("input").checked = laterShareIds.includes(tool.id);
+    const position = laterShareIds.indexOf(tool.id);
+    const check = row.querySelector("input"), order = row.querySelector(".later-share-order");
+    check.checked = position >= 0;
+    order.hidden = position < 0;
+    order.textContent = position >= 0 ? `${position + 1}.` : "";
     const text = `${tool.title} (Day${tool.id.slice(3)})`;
-    if (row.querySelector("span").textContent !== text) row.querySelector("span").textContent = text;
+    const title = row.querySelector(".later-share-title");
+    if (title.textContent !== text) title.textContent = text;
+    check.setAttribute("aria-label", position >= 0 ? `${text}, ${currentLang === "ja" ? "共有順" : "Share order"} ${position + 1}` : text);
   });
   const url = laterSelectionUrl();
   const signature = JSON.stringify([visible, currentLang, laterShareIds]);
