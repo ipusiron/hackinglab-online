@@ -602,7 +602,12 @@ test("H27: 本・カテゴリー・タブを選んで切り替えたら履歴を
   assert.match(apply, /const next = readUrlState\(\);/);
   assert.match(apply, /filters\.book = next\.book;/);
   assert.match(apply, /restoreView\(view, filtersTop\)/);
-  assert.doesNotMatch(apply, /commitUrl\(/, "戻る・進むで一覧の条件を URL に書いている（戻る・進むの行き先がずれる）");
+  // 通常の popstate/hashchange は既定値 false。進捗リンクを明示して押したときだけ、解除した条件を到達先 URL に反映する。
+  assert.match(apply, /^function applyHistoryState\(view, focusProgress = false\)/);
+  assert.doesNotMatch(fnBody("setupHistory"), /applyHistoryState\([^)]*,/, "通常の履歴イベントで進捗リンク専用の URL 更新を有効にしている");
+  const progressCommit = /if \(focusProgress\) commitUrl\(\{\}\);/;
+  assert.match(apply, progressCommit, "進捗リンクの URL 更新は focusProgress のときだけ行う");
+  assert.doesNotMatch(apply.replace(progressCommit, ""), /commitUrl\(/, "戻る・進むで一覧の条件を URL に書いている（戻る・進むの行き先がずれる）");
   // 条件の一致だけでは early return しない。#day/hash-only の移動も同じ入口で処理する。
   const iTab = apply.indexOf('if (next.tab !== currentTab) switchTab(');
   const iCat = apply.indexOf("filters.categoryId = next.cat;");
@@ -915,6 +920,6 @@ test("H37: 「はじめ方」の開閉は、利用者が開閉したらその形
   const click = card.slice(card.indexOf('progressSelect.addEventListener("change"'));
   assert.match(click.slice(0, click.indexOf("\n  });")), /setProgress\(tool\.slug, level\);\s*markStartSeen\(\);/, "進捗を付けても残していない");
   // 開いただけ・見ただけでは残さない（開いて見せた「はじめ方」が、読む前に次から閉じてしまわない）
-  assert.equal((blankComments(mainJs).match(/markStartSeen\(\)/g) || []).length, 7 + 1, "Genre, shared panel/all, demo and book entries plus existing book/dashboard/progress actions and declaration");
+  assert.equal((blankComments(mainJs).match(/markStartSeen\(\)/g) || []).length, 8 + 1, "Genre, shared panel/all, demo, starter progress and book entries plus existing book/dashboard/progress actions and declaration");
   assert.equal((blankComments(mainJs).match(/setItem\(START_KEY/g) || []).length, 2, "開閉を覚えるのは、開閉の見出しを押したときと markStartSeen の2か所だけ");
 });

@@ -26,8 +26,9 @@ test("SF1: scrollIntoView() のすぐ後の focus() は preventScroll 付き（�
   const bad = mainJs.match(/scrollIntoView\([^)]*\);\s*(?:\/\/[^\n]*\n\s*)*[\w.]+\.focus\(\s*\)/g) || [];
   assert.equal(bad.length, 0, `preventScroll のない focus(): ${bad.join(" / ")}`);
   // 章の位置つき URL で開いたときも見出しへフォーカスを移す（Firefox・Safari で次の Tab がページの先頭から始まらないように）
-  const fn = mainJs.match(/function maybeScrollToHash\(\)\s*\{[\s\S]*?\n\}/);
-  assert.ok(fn, "maybeScrollToHash がない");
+  const fn = mainJs.match(/function maybeScrollToHash\(focusProgress = false\)\s*\{[\s\S]*?\n\}/);
+  assert.ok(fn, "通常の hash は見出しへ移す既定値 focusProgress = false を保つ");
+  assert.match(fn[0], /card\.querySelector\(focusProgress \? '\[data-part="progress"\]' : "\.tool-title"\)/);
   assert.match(fn[0], /\.focus\(\{\s*preventScroll:\s*true\s*\}\)/);
 });
 
@@ -135,6 +136,10 @@ test("SF9: 履歴の読書位置は、復元後に残る固定ヘッダーだけ
       };
       const context = {
         document: { getElementById: (id) => id === "site-header" ? header : { children: [card] } },
+        window: { location: { href: "https://hackinglab.online/?q=day077#day077" } },
+        navigationVersion: 1,
+        interactionVersion: 0,
+        isShown: () => true,
         getComputedStyle: () => ({ position }),
         readingTop: (el) => Math.max(0, el.getBoundingClientRect().bottom),
         scrollByInstant: (dy) => { scrollY += dy; },
