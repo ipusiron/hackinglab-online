@@ -75,3 +75,33 @@ test("history and share choices stay outside exported records, progress reset an
  el(p,"records-export").click();const data=JSON.parse(await p.downloads[0].blob.text());assert.deepEqual(Object.keys(data).sort(),["app","progress","saved_at","schema_version","try_later"]);
  p.evaluate('setLoadState("error")');assert.equal(el(p,"recent-tools").hidden,true);assert.equal(el(p,"later-share").hidden,true);
 });
+
+for (const lang of ["ja", "en"]) test(`saved share order ${lang} is visible and named without moving candidates`, async () => {
+ const ids=tools.slice(0,3).map(t=>t.id),p=await runPage({search:`?lang=${lang}`,storedValues:saved(ids)});shareOpen(p);
+ const original=candidates(p),chosen=[ids[2],ids[0],ids[1]];
+ const checkOrder=expected=>{
+  assert.deepEqual(candidates(p),original,"Candidate nodes and catalog order stay in place");
+  for(const check of original){
+   const position=expected.indexOf(check.dataset.toolId),badge=check.parentNode.querySelector(".later-share-order");
+   assert.equal(check.checked,position>=0);
+   assert.equal(badge.hidden,position<0);
+   assert.equal(badge.textContent,position<0?"":`${position+1}.`);
+   const name=check.getAttribute("aria-label");
+   assert.ok(name.includes(`Day${check.dataset.toolId.slice(3)}`));
+   if(position>=0)assert.ok(name.endsWith(`${lang==="ja"?"共有順":"Share order"} ${position+1}`));
+   else assert.ok(!name.includes(lang==="ja"?"共有順":"Share order"));
+  }
+  assert.equal(new URL(el(p,"later-share-url").value).searchParams.get("tools"),expected.join(","));
+ };
+ chosen.forEach(id=>select(p,id));checkOrder(chosen);
+ const focused=original[1];focused.focus();select(p,chosen[0],false);checkOrder(chosen.slice(1));
+ assert.equal(p.document.activeElement,focused);
+ select(p,chosen[0]);checkOrder([...chosen.slice(1),chosen[0]]);
+ p.values.set(`later_${chosen[1]}`,"0");p.dispatch("storage",{key:`later_${chosen[1]}`});p.dispatch("pageshow",{persisted:true});
+ assert.equal(p.document.activeElement,focused);
+ assert.equal(focused.parentNode.querySelector(".later-share-order").textContent,"1.");
+ assert.ok(focused.getAttribute("aria-label").endsWith(`${lang==="ja"?"共有順":"Share order"} 1`));
+ assert.equal(new URL(el(p,"later-share-url").value).searchParams.get("tools"),[chosen[2],chosen[0]].join(","));
+ el(p,lang==="ja"?"lang-en":"lang-ja").click();
+ assert.ok(focused.getAttribute("aria-label").endsWith(`${lang==="ja"?"Share order":"共有順"} 1`));
+});
