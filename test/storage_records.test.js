@@ -64,6 +64,31 @@ test("partial reset write failures retain effective zero progress without claimi
   }
 });
 
+test("reset feedback reveals the whole section above a storage warning without moving focus or overriding a later action", async () => {
+  for (const action of ["keyboard", "pointer", "wheel", "focus"]) {
+    const page = await runPage({ search: "?tab=dashboard", confirmResult: true, storageFailure: "write" });
+    const button = id(page, "reset-all-progress"), section = id(page, "dashboard-reset"), notice = id(page, "storage-warning");
+    button.rect = { top: 460, bottom: 504, height: 44 };
+    section.rect = { top: 448, bottom: 570, height: 122 };
+    notice.rect = { top: 514, bottom: 900, height: 386 };
+    if (action !== "pointer") button.focus();
+    const focused = page.document.activeElement;
+    button.click();
+    if (action === "wheel") page.dispatch("wheel");
+    if (action === "focus") id(page, "share-copy-link").focus();
+    await page.flush();
+    const moves = (page.document.scrollCalls || []).filter((call) => call.element === section);
+    const leave = action === "wheel" || action === "focus";
+    assert.equal(moves.length, leave ? 0 : 1);
+    if (!leave) {
+      assert.equal(moves[0].options.block, "nearest");
+      assert.equal(moves[0].options.behavior, "instant");
+      assert.equal(page.document.documentElement.style["--storage-notice-h"], "386px");
+    }
+    assert.equal(page.document.activeElement, action === "focus" ? id(page, "share-copy-link") : focused);
+  }
+});
+
 const laterKey = (tool) => `later_${tool.id}`;
 const later = (page, tool) => page.document.querySelector(`.tool-later-toggle[data-tool-id="${tool.id}"]`);
 const savedOnly = (page, checked = true) => { const filter = id(page, "filter-later"); filter.checked = checked; filter.dispatch("change"); };

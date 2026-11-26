@@ -4028,10 +4028,28 @@ function handleResetAllProgress() {
   renderToolList();
   renderDashboard();
   resetProgressResult = allSaved ? "saved" : "memory";
+  const view = { navigation: navigationVersion, interaction: interactionVersion, href: location.href, focus: document.activeElement };
+  const publish = () => {
+    if (generation !== resetProgressGeneration) return;
+    updateResetProgressStatus();
+    // The storage warning updates its reserved space on the next frame. Reveal
+    // the result together with its button after that update, keeping focus put.
+    requestAnimationFrame(() => {
+      if (generation !== resetProgressGeneration || currentTab !== "dashboard" ||
+        view.navigation !== navigationVersion || view.interaction !== interactionVersion ||
+        view.href !== location.href || document.activeElement !== view.focus) return;
+      updateStorageNoticeSpace();
+      const notice = document.getElementById("storage-warning");
+      const bottom = notice && !notice.hidden ? Math.min(window.innerHeight, notice.getBoundingClientRect().top) : window.innerHeight;
+      const header = document.getElementById("site-header");
+      const top = window.getComputedStyle(header).position === "sticky" ? readingTop(header) : 0;
+      const section = document.getElementById("dashboard-reset");
+      const rect = section.getBoundingClientRect();
+      if (rect.bottom > bottom - 16 || rect.top < top + 8) section.scrollIntoView({ block: "nearest", behavior: "instant" });
+    });
+  };
   if (previousResult === resetProgressResult) {
     // Give the polite region an empty state before announcing the same result again.
-    setTimeout(() => {
-      if (generation === resetProgressGeneration) updateResetProgressStatus();
-    }, 50);
-  } else updateResetProgressStatus();
+    setTimeout(publish, 50);
+  } else publish();
 }
