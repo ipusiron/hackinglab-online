@@ -18,12 +18,13 @@ test("UR1: readState は ?book=・?cat=・?q=・?tab= を読み、知ってい�
     book: "genai-crypto",
     cat: "forensics",
     field: "",
+    maxDifficulty: "",
     q: "caesar",
     tab: "dashboard"
   });
   // 何もなければ、条件なしの一覧
-  assert.deepEqual(U.readState("", KNOWN), { book: "", cat: "", field: "", q: "", tab: "tools" });
-  assert.deepEqual(U.readState(undefined, undefined), { book: "", cat: "", field: "", q: "", tab: "tools" });
+  assert.deepEqual(U.readState("", KNOWN), { book: "", cat: "", field: "", maxDifficulty: "", q: "", tab: "tools" });
+  assert.deepEqual(U.readState(undefined, undefined), { book: "", cat: "", field: "", maxDifficulty: "", q: "", tab: "tools" });
 });
 
 test("UR1: 大文字・小文字と前後の空白は直し、存在しない値と all は無視する", () => {
@@ -37,7 +38,7 @@ test("UR1: 大文字・小文字と前後の空白は直し、存在しない値
   assert.equal(U.readState("?tab=help", KNOWN).tab, "tools");
   assert.equal(U.readState("?tab=tools", KNOWN).tab, "tools");
   // データを読み込む前（知っている本・カテゴリーがない）は、本とカテゴリーを採らない
-  assert.deepEqual(U.readState("?book=genai-crypto&cat=forensics&tab=dashboard", {}), { book: "", cat: "", field: "", q: "", tab: "dashboard" });
+  assert.deepEqual(U.readState("?book=genai-crypto&cat=forensics&tab=dashboard", {}), { book: "", cat: "", field: "", maxDifficulty: "", q: "", tab: "dashboard" });
 });
 
 test("UR1: ?q= は検索欄の文字として読む（前後の空白だけを除き、+ と %20 は空白、全角はそのまま）", () => {
@@ -93,9 +94,9 @@ test("UR2: 本を変えるときだけ、前の本の章の位置（#book-group-
 
 test("UR2: パスと、読み直すと同じ条件になること（書いて読むと、渡した条件に戻る）", () => {
   const states = [
-    { book: "genai-crypto", cat: "", field: "", q: "", tab: "tools" },
-    { book: "", cat: "forensics", field: "", q: "Day50", tab: "tools" },
-    { book: "security-tools-100", cat: "classic-crypto", field: "", q: "暗号 解読", tab: "dashboard" }
+    { book: "genai-crypto", cat: "", field: "", maxDifficulty: "", q: "", tab: "tools" },
+    { book: "", cat: "forensics", field: "", maxDifficulty: "2", q: "Day50", tab: "tools" },
+    { book: "security-tools-100", cat: "classic-crypto", field: "", maxDifficulty: "4", q: "暗号 解読", tab: "dashboard" }
   ];
   for (const st of states) {
     const url = U.buildUrl("https://hackinglab.online/index.html?x=1", st);
@@ -233,7 +234,7 @@ test("UR8: tools未指定なら全パラメーターの値を保ち、検索・�
   assert.equal(url.hash, "#day003");
   assert.equal(url.searchParams.get("lang"), "ja");
   assert.deepEqual(U.readTools(url.search, VISIBLE_IDS), U.readTools(new URL(original).search, VISIBLE_IDS));
-  assert.deepEqual(U.readState(url.search, KNOWN), { book: "genai-crypto", cat: "forensics", field: "", q: "暗号", tab: "tools" });
+  assert.deepEqual(U.readState(url.search, KNOWN), { book: "genai-crypto", cat: "forensics", field: "", maxDifficulty: "", q: "暗号", tab: "tools" });
   assert.equal(new URL(U.buildUrl(original, { lang: "en" })).searchParams.get("lang"), "en");
 });
 

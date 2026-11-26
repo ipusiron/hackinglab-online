@@ -276,7 +276,10 @@ test("SH14: every modal Tab moves explicitly, even when native Tab would skip li
   opener.focus();opener.click();
   const anchors=dialog.querySelectorAll("a[href]");assert.ok(anchors.length>=2);
   const body=el(p,"help-body");
-  const order=[close,body,...anchors];
+  const summary=el(p,"help-difficulty-summary");
+  const order=[close,body,...dialog.querySelectorAll("a[href], summary")];
+  assert.equal(summary.closest("details").open,false);
+  assert.ok(order.includes(summary),"The new closed guide is keyboard reachable");
   // Opening focuses the scroll region for immediate Arrow/Page navigation.
   assert.equal(p.document.activeElement,body);
   dialog.focus();
@@ -304,6 +307,7 @@ test("SH15: modal Tab recomputes hidden and disabled controls and keeps focus in
   el(p,"help-button").click();
   const anchors=dialog.querySelectorAll("a[href]");
   anchors.forEach(a=>{a.hidden=true;});
+  el(p,"help-difficulty-summary").hidden=true;
   el(p,"help-body").setAttribute("tabindex","-1");
   const disabled=p.document.createElement("button");disabled.disabled=true;dialog.appendChild(disabled);
   for(const shiftKey of [false,true]) {

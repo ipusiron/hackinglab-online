@@ -466,6 +466,16 @@ html[lang="en"] #lang-en {
   color: var(--text-muted);
 }
 
+/* Keep the extra choice within the existing row; enlarged text can stack it. */
+.filter-pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(7.5rem, 100%), 1fr));
+  gap: 0.5rem;
+  align-items: end;
+  min-width: 0;
+}
+.filter-group { min-width: 0; }
+
 #tool-filters select,
 #tool-filters input[type="search"] {
   width: 100%;
@@ -1430,7 +1440,7 @@ html.help-open.keep-gutter {
 
   /* books.json が無いときは従来の3列（書籍フィルターの枠を作らない） */
   #tool-filters.no-books {
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr) minmax(0, 1.4fr);
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 2fr) minmax(0, 1.4fr);
   }
 
   /* ツールカードのグリッド：PC幅では2〜3列。結果が1件・2件でも列の幅は変えない
@@ -1472,11 +1482,11 @@ html.help-open.keep-gutter {
 @media (min-width: 1024px) {
   #tool-filters {
     grid-template-columns:
-      minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.3fr);
+      minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1.3fr);
   }
 
   #tool-filters.no-books {
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr) minmax(0, 1.4fr);
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 2fr) minmax(0, 1.4fr);
   }
 }
 
@@ -1798,9 +1808,11 @@ body { padding-bottom: var(--storage-notice-h, 0px); }
 }
 
 #help-dialog { overflow-wrap: anywhere; }
+.help-difficulty summary { min-height: 2.75rem; padding-block: 0.5rem; cursor: pointer; }
 
 /* Leave room for native arrows and the full stage name at narrow widths with enlarged text. */
 @media (max-width: 400px) {
+  #tool-filters #filter-progress { padding-inline: 0.3rem; }
   .tool-card { padding-inline: 0.6rem; }
   .tool-outside-label { right: 0.6rem; max-width: calc(100% - 1.2rem); }
 }

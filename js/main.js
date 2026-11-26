@@ -12,6 +12,7 @@ let filters = {
   book: "",
   categoryId: "",
   fieldId: "",
+  maxDifficulty: "",
   progress: "all",
   later: false,
   search: ""
@@ -325,6 +326,7 @@ function updateActiveFilterSummary() {
     const field = categoryGroups?.byId.get(filters.fieldId);
     if (category) parts.push(category[currentLang]);
     else if (field) parts.push(field[currentLang]);
+    if (filters.maxDifficulty) parts.push(difficultyLabel(filters.maxDifficulty));
     if (/^[0-3]$/.test(filters.progress)) parts.push(PROGRESS_LABELS[currentLang][Number(filters.progress)]);
     if (filters.later) parts.push(currentLang === "ja" ? "あとで試す" : "Try later");
     // Use the applied query, not uncommitted IME text in the input.
@@ -710,6 +712,7 @@ function setupStaticUI() {
   const bookSelect = document.getElementById("filter-book");
   const categorySelect = document.getElementById("filter-category");
   const progressSelect = document.getElementById("filter-progress");
+  const difficultySelect = document.getElementById("filter-difficulty");
   const searchInput = document.getElementById("filter-search-input");
 
   // 絞り込みを変えると、上にある本のバナーが出入りしたり、バナーの件数や「章へ移動」の行の数が変わったりして、
@@ -739,6 +742,18 @@ function setupStaticUI() {
       commitUrl({ cat: nextCategory, field: nextField }, "push", "category");
       filters.categoryId = nextCategory;
       filters.fieldId = nextField;
+      renderToolList(undefined, false);
+      announceListCount(0, true);
+    });
+  });
+
+  difficultySelect?.addEventListener("change", (e) => {
+    keepInPlace(difficultySelect, () => {
+      clearToolHashForFilter();
+      const next = /^[1-4]$/.test(e.target.value) ? e.target.value : "";
+      commitUrl({ maxDifficulty: next }, "push", "difficulty");
+      filters.maxDifficulty = next;
+      difficultySelect.value = next;
       renderToolList(undefined, false);
       announceListCount(0, true);
     });
@@ -1041,7 +1056,7 @@ function backToFilters() {
   filterDisclosureUsed = true;
   filtersExpanded = true;
   updateFilterVisibility();
-  const target = ["filter-book", "filter-category", "filter-progress", "filter-search-input", "filter-later"]
+  const target = ["filter-book", "filter-category", "filter-progress", "filter-difficulty", "filter-search-input", "filter-later"]
     .map((id) => document.getElementById(id)).find((el) => isShown(el) && !el.disabled);
   if (!target) return;
   // The document's scroll-padding keeps the region below a fixed header.
@@ -1192,7 +1207,7 @@ function setupHelpModal() {
 // 要素の中のフォーカスできる（かつ表示されている）要素を並び順で返す。
 function getFocusableElements(container) {
   const selector =
-    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
   return Array.from(container.querySelectorAll(selector)).filter(
     (el) => el.getClientRects().length > 0
   );
@@ -1270,7 +1285,7 @@ function setLoadState(state) {
   document.getElementById("catalog-error").hidden = state !== "error";
   document.getElementById("load-fallback").hidden = state !== "error";
   document.getElementById("list-summary").hidden = state !== "ready";
-  ["filter-book", "filter-category", "filter-progress", "filter-search-input", "filter-later"].forEach((id) => {
+  ["filter-book", "filter-category", "filter-progress", "filter-difficulty", "filter-search-input", "filter-later"].forEach((id) => {
     document.getElementById(id).disabled = state !== "ready";
   });
   document.getElementById("retry-data").disabled = state !== "error";
@@ -1325,6 +1340,7 @@ async function loadData() {
     filters.book = urlState.book;
     filters.categoryId = urlState.cat;
     filters.fieldId = urlState.field;
+    filters.maxDifficulty = urlState.maxDifficulty;
 
     // 検索欄：描く前に欄の値で絞り、欄の文字と一覧を食い違わせない。URL の ?q= は開いたときに欄へ入れてあり（setupStaticUI）、
     // ここでは欄を書き換えない（読み込み中に打った文字を消さない）。戻るボタンや Firefox の再読み込みで開き直すと、ブラウザーが
@@ -1341,7 +1357,7 @@ async function loadData() {
 
     // 読めた条件だけを、URL に正規の形で書き直す（大文字や前後の空白・並びをそろえる。履歴は増やさない）。
     // カテゴリーと分野は有効な一方だけを残す。本・タブの未知値は既存の通知/表示規則に委ねる。
-    const tidy = { q: searchInput ? searchInput.value : "", cat: filters.categoryId, field: filters.fieldId };
+    const tidy = { q: searchInput ? searchInput.value : "", cat: filters.categoryId, field: filters.fieldId, maxDifficulty: filters.maxDifficulty };
     if (urlState.book) tidy.book = filters.book;
     if (urlState.cat) tidy.cat = filters.categoryId;
     if (urlState.tab === "dashboard") tidy.tab = currentTab;
@@ -1649,10 +1665,15 @@ function switchTab(targetId) {
 
 // ---- フィルターの選択肢セットアップ ----
 
+function difficultyLabel(limit) {
+  return currentLang === "ja" ? `★${limit}まで` : `Up to ★${limit}`;
+}
+
 function setupFilterOptions() {
   const bookSelect = document.getElementById("filter-book");
   const categorySelect = document.getElementById("filter-category");
   const progressSelect = document.getElementById("filter-progress");
+  const difficultySelect = document.getElementById("filter-difficulty");
 
   if (bookSelect) {
     bookSelect.innerHTML = "";
@@ -1721,6 +1742,17 @@ function setupFilterOptions() {
     categorySelect.value = filters.categoryId || (filters.fieldId ? "field:" + filters.fieldId : "");
   }
 
+  if (difficultySelect) {
+    difficultySelect.innerHTML = "";
+    ["", "1", "2", "3", "4"].forEach((limit) => {
+      const option = document.createElement("option");
+      option.value = limit;
+      option.textContent = limit ? difficultyLabel(limit) : currentLang === "ja" ? "すべて" : "All";
+      difficultySelect.appendChild(option);
+    });
+    difficultySelect.value = filters.maxDifficulty;
+  }
+
   const laterFilter = document.getElementById("filter-later");
   if (laterFilter) laterFilter.checked = filters.later;
   if (progressSelect) {
@@ -1762,6 +1794,7 @@ function readUrlState() {
     book: haveBooks ? HB.resolveBookParam(window.location.search, books) : "",
     cat: "",
     field: "",
+    maxDifficulty: "",
     q: "",
     tab: "tools"
   };
@@ -1774,6 +1807,7 @@ function currentUrlState() {
     book: filters.book,
     cat: filters.categoryId,
     field: filters.fieldId,
+    maxDifficulty: filters.maxDifficulty,
     q: searchInput ? searchInput.value : "",
     tab: currentTab,
     tools: toolSet.ids.length ? toolSet.ids : null
@@ -1952,15 +1986,16 @@ function applyHistoryState(view, focusProgress = false) {
   filters.book = next.book;
   filters.categoryId = next.cat;
   filters.fieldId = next.field;
+  filters.maxDifficulty = next.maxDifficulty;
   if (view && ["all", "0", "1", "2", "3"].includes(view.progress)) filters.progress = view.progress;
   if (view && typeof view.later === "boolean") filters.later = view.later;
   if (searchInput && searchInput.value.trim() !== next.q) searchInput.value = next.q;
   setSearchQuery(next.q);
   applyToolLinks(hasSavedView(view));
-  // Canonicalize only these keys; unknown book values still drive their notice.
+  // Canonicalize the effective category/field/difficulty; unknown book values still drive their notice.
   if (HU) {
     try {
-      const url = HU.buildUrl(window.location.href, { cat: filters.categoryId, field: filters.fieldId });
+      const url = HU.buildUrl(window.location.href, { cat: filters.categoryId, field: filters.fieldId, maxDifficulty: filters.maxDifficulty });
       if (url !== window.location.href) window.history.replaceState(window.history.state, "", url);
     } catch (_) { /* Keep the restored state when history is unavailable. */ }
   }
@@ -2162,7 +2197,7 @@ function openStartEntry(slug) {
     return;
   }
   const hadBook = !!filters.book;
-  commitUrl({ book: "", cat: "", field: "", q: "", tools: null, hash: "" }, "push");
+  commitUrl({ book: "", cat: "", field: "", maxDifficulty: "", q: "", tools: null, hash: "" }, "push");
   leaveToolSet();
   clearOtherFilters();
   setBookFilter("", { history: false, cleared: hadBook });
@@ -2172,15 +2207,18 @@ function openStartEntry(slug) {
 function clearOtherFilters() {
   filters.categoryId = "";
   filters.fieldId = "";
+  filters.maxDifficulty = "";
   filters.progress = "all";
   filters.later = false;
   const later = document.getElementById("filter-later");
   if (later) later.checked = false;
   const c = document.getElementById("filter-category");
   const p = document.getElementById("filter-progress");
+  const d = document.getElementById("filter-difficulty");
   const s = document.getElementById("filter-search-input");
   if (c) c.value = "";
   if (p) p.value = "all";
+  if (d) d.value = "";
   if (s) s.value = "";
   setSearchQuery("");
 }
@@ -2212,7 +2250,7 @@ function applyToolLinks(preserveView) {
   if (preserveView && hash.kind === "known") {
     refreshBookTarget();
     const target = tools.find((tool) => tool.id === hash.id);
-    if (toolSet.ids.length ? toolSet.ids.includes(hash.id) : filterByBook(target) && filterByCategory(target) && filterByProgress(target) && filterByTryLater(target) && filterBySearch(target)) linkedToolId = hash.id;
+    if (toolSet.ids.length ? toolSet.ids.includes(hash.id) : filterByBook(target) && filterByCategory(target) && filterByDifficulty(target) && filterByProgress(target) && filterByTryLater(target) && filterBySearch(target)) linkedToolId = hash.id;
     return;
   }
   if (toolSet.ids.length) {
@@ -2244,6 +2282,7 @@ function applyToolLinks(preserveView) {
   if (!filterByBook(tool)) { filters.book = ""; linkNotices.push("book"); }
   let cleared = false;
   if (!filterByCategory(tool)) { filters.categoryId = ""; filters.fieldId = ""; cleared = true; }
+  if (!filterByDifficulty(tool)) { filters.maxDifficulty = ""; cleared = true; }
   if (!filterByProgress(tool)) { filters.progress = "all"; cleared = true; }
   if (!filterByTryLater(tool)) { filters.later = false; cleared = true; }
   if (!filterBySearch(tool)) {
@@ -2336,7 +2375,7 @@ function renderSetBanner() {
   clear.textContent = isJa ? "解除" : "Clear";
   clear.setAttribute("aria-label", isJa ? "セットを解除して、すべてのツールを表示" : "Clear the set and show all tools");
   clear.addEventListener("click", () => {
-    commitUrl({ tools: null, book: "", cat: "", q: "", hash: "" }, "push");
+    commitUrl({ tools: null, book: "", cat: "", field: "", maxDifficulty: "", q: "", hash: "" }, "push");
     leaveToolSet();
     filters.book = "";
     clearOtherFilters();
@@ -2483,6 +2522,7 @@ function renderToolList(retainedIds, announceBookNotice = true) {
     t.hub !== false &&
     filterByBook(t) &&
     filterByCategory(t) &&
+    filterByDifficulty(t) &&
     filterByProgress(t) &&
     filterByTryLater(t) &&
     filterBySearch(t);
@@ -2497,6 +2537,7 @@ function renderToolList(retainedIds, announceBookNotice = true) {
     filters.book,
     filters.categoryId,
     filters.fieldId,
+    filters.maxDifficulty,
     filters.progress,
     filters.later,
     filters.search,
@@ -2597,17 +2638,19 @@ function appendEmptyState(listEl, book) {
   clear.textContent = listText(book ? "clear_except_book" : "clear_all");
   clear.addEventListener("click", () => {
     cancelListStatus();
-    commitUrl({ cat: "", field: "", q: "", hash: "" }, "push");
+    commitUrl({ cat: "", field: "", maxDifficulty: "", q: "", hash: "" }, "push");
     linkedToolId = "";
     linkNotices = [];
     filters.categoryId = "";
     filters.fieldId = "";
+    filters.maxDifficulty = "";
     filters.progress = "all";
     filters.later = false;
     document.getElementById("filter-later").checked = false;
     setSearchQuery("");
     document.getElementById("filter-category").value = "";
     document.getElementById("filter-progress").value = "all";
+    document.getElementById("filter-difficulty").value = "";
     const search = document.getElementById("filter-search-input");
     search.value = "";
     renderToolList(undefined, false);
@@ -2852,6 +2895,11 @@ function filterByCategory(tool) {
   if (filters.categoryId) return ids.includes(filters.categoryId);
   const field = categoryGroups?.byId.get(filters.fieldId);
   return !field || field.category_ids.some((id) => ids.includes(id));
+}
+
+function filterByDifficulty(tool) {
+  if (!filters.maxDifficulty) return true;
+  return Number.isInteger(tool.difficulty) && tool.difficulty >= 1 && tool.difficulty <= Number(filters.maxDifficulty);
 }
 
 function filterByProgress(tool) {
