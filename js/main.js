@@ -24,6 +24,15 @@ let bookTargetSet = null;
 let filtersExpanded = true;
 let filterDisclosureUsed = false;
 const bookJumpStates = new Map();
+// Visit-local disclosure state is separate for repeated cards in different chapters.
+const expandedDescriptions = new Set();
+const visibleDescriptionToggles = new Set();
+const descriptionControls = new Map();
+let descriptionId = 0;
+const descriptionObserver = typeof ResizeObserver !== "undefined"
+  ? new ResizeObserver(measureToolDescriptions) : null;
+let resetProgressResult = "";
+let resetProgressGeneration = 0;
 
 // キーワード検索の純関数（js/search.js）。読み込めていなければ null とし、入力全体の部分一致で代える。
 const HS = typeof HLOSearch !== "undefined" ? HLOSearch : null;
@@ -1607,6 +1616,7 @@ function updateLanguageUI() {
   updateActiveFilterSummary();
   updateCatalogDate();
   updateLinkedTitle();
+  updateResetProgressStatus();
 }
 
 // ---- タブ切替 ----
@@ -2018,7 +2028,8 @@ function elementForFocusKey(key) {
     let other = null;
     for (const card of document.querySelectorAll("#tool-list .tool-card")) {
       if (card.dataset.slug !== slug) continue;
-      const el = Array.from(card.querySelectorAll("[data-part]")).find((x) => x.dataset.part === part);
+      let el = Array.from(card.querySelectorAll("[data-part]")).find((x) => x.dataset.part === part);
+      if (part === "description" && (!el || el.hidden)) el = card.querySelector(".tool-title");
       if (!el) continue;
       if ((card.dataset.group || "") === group) return el;
       if (!other) other = el;
@@ -2499,11 +2510,13 @@ function renderToolList(retainedIds, announceBookNotice = true) {
   outsideToolIds.clear();
   updateListCount();
 
+  if (descriptionObserver) descriptionObserver.disconnect();
+  descriptionControls.clear();
   listEl.innerHTML = "";
   // 章の重複掲載でも同じ id は最初のカードだけに付ける。
   const renderedIds = new Set();
-  const makeCard = (tool) => {
-    const card = createToolCard(tool, book);
+  const makeCard = (tool, group = "") => {
+    const card = createToolCard(tool, book, group);
     if (!renderedIds.has(tool.id)) { card.id = tool.id; renderedIds.add(tool.id); }
     return card;
   };
@@ -2545,7 +2558,7 @@ function renderToolList(retainedIds, announceBookNotice = true) {
       if (displayGroups.length >= 2) header.appendChild(createBackToSections());
       listEl.appendChild(header);
       g.items.forEach((tool) => {
-        const card = makeCard(tool);
+        const card = makeCard(tool, g.key);
         // 同じツールが複数の章に出るとき、作り直したあとに同じ章のカードへフォーカスを戻すため（focusKey）
         card.dataset.group = g.key;
         listEl.appendChild(card);
@@ -2924,7 +2937,7 @@ function appendExternalIcon(link) {
   link.appendChild(icon);
 }
 
-function createToolCard(tool, book) {
+function createToolCard(tool, book, group = "") {
   const card = document.createElement("article");
   card.className = "tool-card";
   // ツールの slug と、下のボタン・リンクの data-part は、一覧を作り直したあとに同じ部品へフォーカスを戻すための目印（focusKey）
@@ -2979,7 +2992,34 @@ function createToolCard(tool, book) {
 
   const desc = document.createElement("div");
   desc.className = "tool-description";
-  desc.textContent = getShortDescription(tool);
+  desc.textContent = currentLang === "ja" ? tool.description_ja || "" : tool.description_en || "";
+  let descriptionToggle = null;
+  if (descriptionObserver && desc.textContent) {
+    const key = JSON.stringify([book?.slug || "", group, tool.id]);
+    desc.id = `tool-description-${++descriptionId}`;
+    desc.classList.add("is-collapsible");
+    descriptionToggle = document.createElement("button");
+    descriptionToggle.type = "button";
+    descriptionToggle.className = "tool-description-toggle";
+    descriptionToggle.dataset.part = "description";
+    descriptionToggle.setAttribute("aria-controls", desc.id);
+    descriptionToggle.hidden = !visibleDescriptionToggles.has(key);
+    const control = { button: descriptionToggle, key, title: tool.title || "" };
+    descriptionControls.set(desc, control);
+    updateDescriptionToggle(desc, control);
+    descriptionToggle.addEventListener("click", () => {
+      if (expandedDescriptions.has(key)) expandedDescriptions.delete(key);
+      else expandedDescriptions.add(key);
+      updateDescriptionToggle(desc, control);
+      const rect = descriptionToggle.getBoundingClientRect();
+      const header = document.getElementById("site-header");
+      const top = window.getComputedStyle(header).position === "sticky" ? readingTop(header) : 0;
+      if (rect.top < top || rect.bottom > window.innerHeight) {
+        descriptionToggle.scrollIntoView({ block: "nearest", behavior: "instant" });
+      }
+    });
+    descriptionObserver.observe(desc);
+  }
 
   const meta = document.createElement("div");
   meta.className = "tool-meta";
@@ -3101,21 +3141,47 @@ function createToolCard(tool, book) {
   card.appendChild(header);
   card.appendChild(subtitle);
   card.appendChild(desc);
+  if (descriptionToggle) card.appendChild(descriptionToggle);
   card.appendChild(meta);
   card.appendChild(footer);
 
   return card;
 }
 
-function getShortDescription(tool) {
-  const full =
-    currentLang === "ja"
-      ? tool.description_ja || ""
-      : tool.description_en || "";
+function updateDescriptionToggle(desc, control) {
+  const expanded = expandedDescriptions.has(control.key);
+  desc.classList.toggle("is-expanded", expanded);
+  control.button.setAttribute("aria-expanded", String(expanded));
+  const label = currentLang === "ja" ? (expanded ? "閉じる" : "続きを読む") : (expanded ? "Read less" : "Read more");
+  control.button.textContent = label;
+  control.button.setAttribute("aria-label", currentLang === "ja"
+    ? `${label}（${control.title}の説明）` : `${label} (${control.title} description)`);
+}
 
-  const maxLen = 120;
-  if (full.length <= maxLen) return full;
-  return full.slice(0, maxLen) + "…";
+function measureToolDescriptions(entries) {
+  // Zero-sized entries belong to hidden tabs or content-visibility's deferred cards.
+  // Do not read their layout: the observer reports them again when they become visible.
+  const measurements = [];
+  for (const entry of entries) {
+    const desc = entry.target;
+    const control = descriptionControls.get(desc);
+    if (!control || !desc.isConnected || entry.contentRect.width <= 0 || entry.contentRect.height <= 0) continue;
+    const lineHeight = parseFloat(window.getComputedStyle(desc).lineHeight);
+    if (!Number.isFinite(lineHeight) || lineHeight <= 0) continue;
+    measurements.push({ desc, control, clipped: desc.scrollHeight > lineHeight * 3 + 1 });
+  }
+  // Batch geometry reads before changing controls. The same three-line limit also
+  // works while the description is expanded and when text/viewport sizes change.
+  for (const { desc, control, clipped } of measurements) {
+    if (clipped) visibleDescriptionToggles.add(control.key);
+    else {
+      visibleDescriptionToggles.delete(control.key);
+      expandedDescriptions.delete(control.key);
+      if (document.activeElement === control.button) desc.closest(".tool-card").querySelector(".tool-title").focus({ preventScroll: true });
+      updateDescriptionToggle(desc, control);
+    }
+    control.button.hidden = !clipped;
+  }
 }
 
 function getCategoryLabels(tool) {
@@ -3185,8 +3251,9 @@ function getProgress(slug) {
 }
 
 function setProgress(slug, level) {
-  progressStore.setItem(`progress_${slug}`, String(level));
+  const saved = progressStore.setItem(`progress_${slug}`, String(level));
   progressVersion++; // 次に一覧を描くときは作り直す（全部リセットしたあとに、古い進捗の表示を残さない）
+  return saved;
 }
 
 function updateStarterProgress() {
@@ -3926,7 +3993,19 @@ function setupDiscoveryUI() {
 
 // ---- 全体リセット ----
 
+function updateResetProgressStatus() {
+  const status = document.getElementById("reset-progress-status");
+  if (!status) return;
+  status.textContent = !resetProgressResult ? "" : resetProgressResult === "saved"
+    ? (currentLang === "ja" ? "すべての進捗を未着手にリセットしました。" : 'All progress was reset to "Not started".')
+    : (currentLang === "ja" ? "このページの進捗を未着手にリセットしました。保存できない記録があります。" : 'Progress was reset to "Not started" on this page. Some changes could not be saved.');
+}
+
 function handleResetAllProgress() {
+  const previousResult = resetProgressResult;
+  const generation = ++resetProgressGeneration;
+  resetProgressResult = "";
+  updateResetProgressStatus();
   const confirmTextJa =
     "本当にすべてのツールの進捗を「未着手」にリセットしますか？";
   const confirmTextEn =
@@ -3937,13 +4016,22 @@ function handleResetAllProgress() {
   );
   if (!ok) return;
 
+  let allSaved = true;
   tools
     .filter((t) => t.hub !== false)
     .forEach((tool) => {
-      setProgress(tool.slug, 0);
+      const saved = setProgress(tool.slug, 0);
+      allSaved = saved && allSaved;
     });
 
   updateStarterProgress();
   renderToolList();
   renderDashboard();
+  resetProgressResult = allSaved ? "saved" : "memory";
+  if (previousResult === resetProgressResult) {
+    // Give the polite region an empty state before announcing the same result again.
+    setTimeout(() => {
+      if (generation === resetProgressGeneration) updateResetProgressStatus();
+    }, 50);
+  } else updateResetProgressStatus();
 }

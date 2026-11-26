@@ -15,6 +15,55 @@ async function restore(page, text, size = Buffer.byteLength(text)) {
 }
 function writeProgress(page, tool, value) { page.evaluate(`setProgress(${JSON.stringify(tool.slug)},${value}); refreshProgressViews();`); }
 
+test("reset feedback is localized, repeats, clears on cancellation and preserves unrelated records", async () => {
+  let confirm = false, seq = 0;
+  const timers = new Map();
+  const clock = { setTimeout(fn, delay) { timers.set(++seq, { fn, delay }); return seq; }, clearTimeout(token) { timers.delete(token); } };
+  const history = JSON.stringify([first.id, second.id]);
+  const page = await runPage({ clock, confirmResult: () => confirm, search: "?tab=dashboard", storedValues: {
+    [key(first)]: "3", [`later_${first.id}`]: "1", hlo_recent_tools: history, hlo_start_genre: "crypto"
+  } });
+  const button = id(page, "reset-all-progress"), status = id(page, "reset-progress-status");
+  assert.equal(status.closest("section"), id(page, "dashboard-reset"));
+  assert.equal(status.getAttribute("role"), "status");
+  assert.equal(status.getAttribute("aria-live"), "polite");
+  button.focus(); button.click();
+  assert.equal(status.textContent, ""); assert.equal(level(page, first), 3);
+  confirm = true; button.click();
+  assert.equal(status.textContent, "すべての進捗を未着手にリセットしました。");
+  assert.equal(level(page, first), 0); assert.equal(page.document.activeElement, button);
+  assert.equal(page.values.get(`later_${first.id}`), "1");
+  assert.equal(page.values.get("hlo_recent_tools"), history);
+  assert.equal(page.values.get("hlo_start_genre"), "crypto");
+  id(page, "lang-en").click();
+  assert.equal(status.textContent, 'All progress was reset to "Not started".');
+  button.click(); assert.equal(status.textContent, "");
+  const repeat = [...timers.values()].filter((timer) => timer.delay === 50).at(-1);
+  assert.ok(repeat); repeat.fn();
+  assert.equal(status.textContent, 'All progress was reset to "Not started".');
+  button.click();
+  const stale = [...timers.values()].filter((timer) => timer.delay === 50).at(-1);
+  confirm = false; button.click(); stale.fn();
+  assert.equal(status.textContent, "", "Cancelled resets invalidate earlier pending announcements");
+});
+
+test("partial reset write failures retain effective zero progress without claiming durable success", async () => {
+  for (const language of ["ja", "en"]) {
+    const page = await runPage({ search: `?tab=dashboard&lang=${language}`, confirmResult: true,
+      storedValues: { [key(first)]: "3", [key(second)]: "2", [`later_${first.id}`]: "1" },
+      storageHooks: { write(k) { if (k === key(first)) throw Error("Storage full for one record"); } }
+    });
+    const button = id(page, "reset-all-progress"); button.focus(); button.click();
+    assert.equal(level(page, first), 0); assert.equal(level(page, second), 0);
+    assert.equal(page.values.get(key(first)), "3", "Failed durable write remains unchanged");
+    assert.equal(page.values.get(key(second)), "0", "One failure must not skip the remaining writes");
+    assert.equal(page.values.get(`later_${first.id}`), "1");
+    assert.equal(id(page, "storage-warning").hidden, false);
+    assert.match(id(page, "reset-progress-status").textContent, language === "ja" ? /このページ.*保存できない/ : /on this page.*could not be saved/);
+    assert.equal(page.document.activeElement, button);
+  }
+});
+
 const laterKey = (tool) => `later_${tool.id}`;
 const later = (page, tool) => page.document.querySelector(`.tool-later-toggle[data-tool-id="${tool.id}"]`);
 const savedOnly = (page, checked = true) => { const filter = id(page, "filter-later"); filter.checked = checked; filter.dispatch("change"); };
