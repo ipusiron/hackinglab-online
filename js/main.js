@@ -644,6 +644,7 @@ function setupStaticUI() {
   }
 
   setupFilterDisclosure();
+  setupDiscoveryUI();
   document.getElementById("back-to-filters")?.addEventListener("click", backToFilters);
 
   // 言語切替
@@ -3092,6 +3093,7 @@ function setTryLater(id, saved) {
 }
 
 function updateTryLaterCount() {
+  updateDiscoveryViews();
   const label = document.getElementById("filter-later-count");
   if (!label) return;
   label.hidden = loadState !== "ready";
@@ -3202,7 +3204,7 @@ function setupProgressSync() {
     try { if (e.storageArea && e.storageArea !== window.localStorage) return; } catch (_) { /* Invalidate clean cache even if access was revoked. */ }
     progressStore.invalidate(e.key);
     // key が null のときは、別のタブで保存した値がまとめて消された
-    if (e.key !== null && !/^(progress_|later_)/.test(String(e.key))) return;
+    if (e.key !== null && e.key !== RECENT_TOOLS_KEY && !/^(progress_|later_)/.test(String(e.key))) return;
     clearTimeout(progressSyncTimer);
     progressSyncTimer = setTimeout(refreshProgressViews, PROGRESS_SYNC_DELAY_MS);
   });
@@ -3667,6 +3669,180 @@ async function copyShareLink() {
       field.select();
     }
   }
+}
+
+// ---- Recently opened tools and a selection from Try later ----
+const RECENT_TOOLS_KEY = "hlo_recent_tools";
+let recentSignature = "";
+let recentStorageFailed = false;
+let laterShareIds = [];
+let laterShareSignature = "";
+let laterShareGeneration = 0;
+
+function publicToolsById() {
+  return new Map(getRecordTools().map((tool) => [tool.id, tool]));
+}
+
+function readRecentTools() {
+  const raw = progressStore.getItem(RECENT_TOOLS_KEY);
+  if (!raw || raw.length > 4096) return [];
+  try {
+    const ids = JSON.parse(raw), known = publicToolsById();
+    if (!Array.isArray(ids)) return [];
+    return [...new Set(ids.filter((id) => typeof id === "string" && known.has(id)))].slice(0, 5);
+  } catch (_) { return []; }
+}
+
+function rememberOpenedTool(event) {
+  if (loadState !== "ready" || event.defaultPrevented ||
+      (event.type === "auxclick" ? event.button !== 1 : event.button !== 0)) return;
+  const link = event.target.closest?.('a.start-demo, a[data-part="demo"], a[data-part="repo"]');
+  if (!link || !link.hasAttribute("href") || link.getAttribute("aria-disabled") === "true") return;
+  const id = link.dataset.toolId || link.closest(".tool-card")?.dataset.toolId;
+  if (!publicToolsById().has(id)) return;
+  const ids = [id, ...readRecentTools().filter((old) => old !== id)].slice(0, 5);
+  recentStorageFailed = !progressStore.setItem(RECENT_TOOLS_KEY, JSON.stringify(ids));
+  updateRecentTools();
+}
+
+function focusToolsTab() {
+  document.querySelector('.tab-button[data-tab-target="tab-tools"]')?.focus({ preventScroll: true });
+}
+
+function updateRecentTools() {
+  const panel = document.getElementById("recent-tools");
+  if (!panel) return;
+  const ids = loadState === "ready" ? readRecentTools() : [];
+  const focused = document.activeElement;
+  const hadFocus = panel.contains(focused);
+  panel.hidden = !ids.length;
+  if (panel.hidden && hadFocus) focusToolsTab();
+  const known = publicToolsById();
+  const signature = JSON.stringify(ids.map((id) => [id, known.get(id).title]));
+  if (signature !== recentSignature) {
+    recentSignature = signature;
+    const list = document.getElementById("recent-tools-list");
+    const focusedId = list.contains(focused) ? focused.dataset.toolId : "";
+    list.replaceChildren();
+    ids.forEach((id) => {
+      const item = document.createElement("li"), link = document.createElement("a");
+      link.href = `#${id}`;
+      link.dataset.toolId = id;
+      link.textContent = `${known.get(id).title} (Day${id.slice(3)})`;
+      item.appendChild(link); list.appendChild(item);
+    });
+    if (focusedId && !panel.hidden) {
+      const replacement = Array.from(list.querySelectorAll("a")).find((a) => a.dataset.toolId === focusedId);
+      (replacement || document.getElementById("recent-tools-summary")).focus({ preventScroll: true });
+    }
+  }
+  document.getElementById("recent-tools-note").textContent = recentStorageFailed
+    ? (currentLang === "ja" ? "履歴を保存できません。このページを開いている間は保持します。" : "History could not be saved. It is kept while this page stays open.")
+    : (currentLang === "ja" ? "このハブからデモや使い方を開いた直近5本です。このブラウザーに保存します。" : "The last five tools whose demo or usage you opened from this hub. Saved in this browser.");
+}
+
+function laterSelectionUrl() {
+  return HU && laterShareIds.length ? HU.buildUrl("https://hackinglab.online/", { tools: laterShareIds, lang: currentLang }) : "";
+}
+
+function updateLaterShare() {
+  const panel = document.getElementById("later-share");
+  if (!panel) return;
+  const focused = document.activeElement;
+  const visible = loadState === "ready" && filters.later && !toolSet.ids.length && !!HU;
+  if (!visible && panel.contains(focused)) focusToolsTab();
+  panel.hidden = !visible;
+  const candidates = [...publicToolsById().values()].filter((t) => getTryLater(t.id));
+  const ids = new Set(candidates.map((t) => t.id));
+  laterShareIds = laterShareIds.filter((id) => ids.has(id));
+  const list = document.getElementById("later-share-list");
+  // Keep surviving checkboxes in place during progress, import and cross-tab updates.
+  Array.from(list.children).forEach((row) => {
+    if (!ids.has(row.dataset.toolId)) {
+      if (row.contains(focused) && visible) document.getElementById("later-share-summary").focus({ preventScroll: true });
+      row.remove();
+    }
+  });
+  const rows = new Map(Array.from(list.children).map((row) => [row.dataset.toolId, row]));
+  candidates.forEach((tool) => {
+    let row = rows.get(tool.id);
+    if (!row) {
+      row = document.createElement("label"); row.dataset.toolId = tool.id;
+      const check = document.createElement("input"), text = document.createElement("span");
+      check.type = "checkbox"; check.dataset.toolId = tool.id;
+      check.addEventListener("change", () => {
+        const requested = check.checked;
+        // Read current saved state again: another tab may have removed a candidate.
+        updateLaterShare();
+        if (!getTryLater(tool.id)) return;
+        if (requested && !laterShareIds.includes(tool.id)) {
+          if (laterShareIds.length === 12) {
+            check.checked = false;
+            document.getElementById("later-share-status").textContent = currentLang === "ja" ? "共有できるのは12本までです。先に選択を1本外してください。" : "You can share up to 12 tools. Deselect one before adding another.";
+            return;
+          }
+          laterShareIds.push(tool.id);
+        } else if (!requested) laterShareIds = laterShareIds.filter((id) => id !== tool.id);
+        updateLaterShare();
+      });
+      row.appendChild(check); row.appendChild(text); list.appendChild(row);
+    }
+    row.querySelector("input").checked = laterShareIds.includes(tool.id);
+    const text = `${tool.title} (Day${tool.id.slice(3)})`;
+    if (row.querySelector("span").textContent !== text) row.querySelector("span").textContent = text;
+  });
+  const url = laterSelectionUrl();
+  const signature = JSON.stringify([visible, currentLang, laterShareIds]);
+  if (signature !== laterShareSignature) {
+    laterShareSignature = signature; laterShareGeneration++;
+    document.getElementById("later-share-status").textContent = "";
+  }
+  document.getElementById("later-share-count").textContent = currentLang === "ja"
+    ? `選択${laterShareIds.length} / 12本（保存${candidates.length}本）` : `${laterShareIds.length} / 12 selected (${candidates.length} saved)`;
+  document.getElementById("later-share-choices").hidden = !candidates.length;
+  const output = document.getElementById("later-share-output");
+  if (!url && visible && output.contains(document.activeElement)) document.getElementById("later-share-summary").focus({ preventScroll: true });
+  output.hidden = !url;
+  document.getElementById("later-share-copy").disabled = !url;
+  const field = document.getElementById("later-share-url");
+  if (field.value !== url) field.value = url;
+}
+
+function updateDiscoveryViews() {
+  updateRecentTools();
+  updateLaterShare();
+}
+
+async function copyLaterSelection() {
+  updateLaterShare();
+  const panel = document.getElementById("later-share"), url = laterSelectionUrl();
+  if (!url || panel.hidden || !panel.open || currentTab !== "tools") return;
+  const guard = { generation: ++laterShareGeneration, navigation: navigationVersion,
+    interaction: interactionVersion, focus: document.activeElement };
+  const status = document.getElementById("later-share-status");
+  status.textContent = "";
+  let copied = false;
+  try { await navigator.clipboard.writeText(url); copied = true; } catch (_) { /* Manual URL stays available. */ }
+  if (guard.generation !== laterShareGeneration || guard.navigation !== navigationVersion ||
+      guard.interaction !== interactionVersion || guard.focus !== document.activeElement ||
+      currentTab !== "tools" || loadState !== "ready" || panel.hidden || !panel.open || url !== laterSelectionUrl()) return;
+  status.textContent = currentLang === "ja"
+    ? (copied ? "URLをコピーしました。" : "コピーできませんでした。共有URLの欄から手動でコピーしてください。")
+    : (copied ? "URL copied." : "Copy failed. Copy the share URL from the field manually.");
+  if (!copied && document.activeElement === document.getElementById("later-share-copy")) {
+    const field = document.getElementById("later-share-url"); field.focus({ preventScroll: true }); field.select();
+  }
+}
+
+function setupDiscoveryUI() {
+  document.addEventListener("click", rememberOpenedTool);
+  document.addEventListener("auxclick", rememberOpenedTool);
+  document.getElementById("recent-tools-clear")?.addEventListener("click", () => {
+    recentStorageFailed = !progressStore.setItem(RECENT_TOOLS_KEY, "[]");
+    updateRecentTools();
+  });
+  document.getElementById("later-share-copy")?.addEventListener("click", copyLaterSelection);
+  document.getElementById("later-share")?.addEventListener("toggle", () => { laterShareGeneration++; });
 }
 
 // ---- 全体リセット ----
