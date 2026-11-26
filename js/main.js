@@ -900,6 +900,10 @@ function setupStartEntries(keepInPlace) {
         document.getElementById(`start-${name}-panel`).hidden = name !== panel;
         document.getElementById(`start-${name}-button`).setAttribute("aria-expanded", String(name === panel));
       });
+      ["first", "books", "all"].forEach((name) => {
+        document.getElementById(`start-${name}-button`).setAttribute("aria-pressed", String(name === panel));
+      });
+      if (panel === "all") openStartEntry("");
     });
   };
   ["first", "books"].forEach((name) => {
@@ -911,8 +915,7 @@ function setupStartEntries(keepInPlace) {
   const all = document.getElementById("start-all-button");
   all.addEventListener("click", () => {
     if (loadState !== "ready") return;
-    markStartSeen();
-    keepInPlace(all, () => openStartEntry(""));
+    choose("all", all);
     // The pushed entry needs the cleared, non-URL progress condition even if no scroll follows.
     saveViewInHistory();
   });

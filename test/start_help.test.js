@@ -78,6 +78,35 @@ test("SH2: panel choice keeps the current Start open, URL/history and focused co
   assert.equal(p.document.activeElement,first); assert.equal(p.context.location.href,href); assert.equal(p.context.history.length,length);
 });
 
+test("Start entry selection includes all tools, closes both guides and survives language changes", async () => {
+  const p=await runPage(), demos=links(p);
+  const selected = name => {
+    for (const item of ["first", "books", "all"]) {
+      const button=el(p,`start-${item}-button`);
+      assert.equal(button.getAttribute("aria-pressed"),String(item===name));
+      if(item!=="all") {
+        assert.equal(button.getAttribute("aria-expanded"),String(item===name));
+        assert.equal(el(p,`start-${item}-panel`).hidden,item!==name);
+      } else assert.equal(button.hasAttribute("aria-expanded"),false);
+    }
+  };
+  selected("first"); chooseGenre(p,"web");
+  const href=p.context.location.href, length=p.context.history.length;
+  for (const name of ["all", "all", "first", "books", "all", "books", "first"]) {
+    const button=el(p,`start-${name}-button`); button.focus();button.click();
+    selected(name);
+    assert.equal(p.document.activeElement,button);
+    assert.equal(el(p,"start-here").open,true);
+    assert.equal(p.context.location.href,href);assert.equal(p.context.history.length,length);
+    assert.equal(el(p,"start-genre").value,"web");assert.deepEqual(links(p),demos);
+    for(const language of ["en","ja"]) {
+      el(p,`lang-${language}`).click();selected(name);
+    }
+  }
+  assert.equal(p.values.get("hlo_start_genre"),"web");
+  assert.equal(p.values.get("hlo_start_here"),"closed");
+});
+
 test("SH3: every starter group has three public catalog links in order, in both languages and safe new tabs", async () => {
   const data=JSON.parse(read("data/tools.json"));
   data.tools.find(t=>t.id==="day003").demo_url="https://ipusiron.github.io/example/?mode=test#sample";
@@ -113,6 +142,8 @@ test("SH4: loading and required failure disable entries and remove demo navigati
   for (const b of buttons(pending)) assert.equal(b.disabled,true);
   for (const a of links(pending)) { assert.equal(a.hasAttribute("href"),false); assert.equal(a.dispatch("click").defaultPrevented,true); }
   el(pending,"start-all-button").dispatch("click"); assert.equal(pending.context.history.length,1);
+  assert.equal(el(pending,"start-first-button").getAttribute("aria-pressed"),"true");
+  assert.equal(el(pending,"start-all-button").getAttribute("aria-pressed"),"false");
   await pending.releaseData(); for (const b of buttons(pending)) assert.equal(b.disabled,false);
   assert.equal(el(pending,"start-genre").disabled,false);
   const p=await runPage({allowLoadFailure:true,fetchResponse(name,_,attempt) { if(name==="data/tools.json"&&attempt===1)return {ok:false,status:503}; }});
@@ -135,6 +166,8 @@ test("SH5: optional book failure cannot disable the first three or all-tools nav
     for(const [group,ids] of Object.entries(starterGroups)) { chooseGenre(p,group);assert.deepEqual(visibleDemos(p).map(a=>a.dataset.toolId),ids); }
     assert.equal(links(p).every(a=>a.hasAttribute("href")),true);
     el(p,"start-all-button").click(); assert.equal(el(p,"filter-search-input").value,"");
+    assert.equal(el(p,"start-all-button").getAttribute("aria-pressed"),"true");
+    assert.equal(el(p,"start-first-panel").hidden,true);assert.equal(el(p,"start-books-panel").hidden,true);
     assert.equal(el(p,"tool-list").querySelectorAll(".tool-card").length,tools.filter(t=>t.hub!==false).length);
   }
 });

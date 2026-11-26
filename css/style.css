@@ -1845,7 +1845,14 @@ body { padding-bottom: var(--storage-notice-h, 0px); }
 }
 .start-here-entries button { cursor: pointer; }
 .start-here-entries button:disabled, .start-demo[aria-disabled="true"] { opacity: 0.65; cursor: default; }
-.start-here-entries button[aria-expanded="true"] { background: var(--control-selected-bg); color: var(--control-selected-text); }
+.start-here-entries button[aria-pressed="true"] {
+  background: var(--control-selected-bg);
+  color: var(--control-selected-text);
+}
+.start-here-entries button[aria-pressed="true"] > span {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
 .start-genre-control {
   display: grid;
   gap: 0.35rem;

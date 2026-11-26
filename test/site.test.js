@@ -627,7 +627,7 @@ test("H28: Start panels use native controls and book links preserve modified cli
   const setup = fnBody("setupStartEntries");
   assert.match(setup, /e\.button !== 0 \|\| e\.ctrlKey \|\| e\.metaKey \|\| e\.shiftKey \|\| e\.altKey\) return;/);
   assert.match(setup, /keepInPlace\(link, \(\) => openStartEntry\(link\.dataset\.book\)\)/);
-  assert.match(setup, /keepInPlace\(all, \(\) => openStartEntry\(""\)\)/);
+  // Selection, focus and the all-tools history path are exercised by SH8 and the runtime selection test.
   const open = fnBody("openStartEntry");
   assert.match(open, /setBookFilter\(slug, \{ history: "push" \}\)/);
   assert.match(open, /commitUrl\(\{ book: "", cat: "", field: "", q: "", tools: null, hash: "" \}, "push"\);\s*leaveToolSet\(\);\s*clearOtherFilters\(\);/);
@@ -915,6 +915,6 @@ test("H37: 「はじめ方」の開閉は、利用者が開閉したらその形
   const click = card.slice(card.indexOf('progressSelect.addEventListener("change"'));
   assert.match(click.slice(0, click.indexOf("\n  });")), /setProgress\(tool\.slug, level\);\s*markStartSeen\(\);/, "進捗を付けても残していない");
   // 開いただけ・見ただけでは残さない（開いて見せた「はじめ方」が、読む前に次から閉じてしまわない）
-  assert.equal((blankComments(mainJs).match(/markStartSeen\(\)/g) || []).length, 8 + 1, "Genre, panel, all, demo and book entries plus existing book/dashboard/progress actions and declaration");
+  assert.equal((blankComments(mainJs).match(/markStartSeen\(\)/g) || []).length, 7 + 1, "Genre, shared panel/all, demo and book entries plus existing book/dashboard/progress actions and declaration");
   assert.equal((blankComments(mainJs).match(/setItem\(START_KEY/g) || []).length, 2, "開閉を覚えるのは、開閉の見出しを押したときと markStartSeen の2か所だけ");
 });
