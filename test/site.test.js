@@ -506,8 +506,8 @@ test("H25: 別のタブで進捗が変わったら（storage イベント）、�
   const i = setup.indexOf('addEventListener("storage"');
   assert.ok(i >= 0, "storage イベントを受けていない（別のタブの変更を知らないまま押すと、1段飛んだり、別のタブの記録を消したりする）");
   const handler = setup.slice(i, setup.indexOf("\n  });", i));
-  // 進捗・あとで試すのキーと、まとめて消されたとき（key が null）だけを見る
-  assert.ok(handler.includes('if (e.key !== null && !/^(progress_|later_)/.test(String(e.key))) return;'));
+  // 進捗・あとで試す・最近開いたツールと、全消去だけを同期する。
+  assert.ok(handler.includes('if (e.key !== null && e.key !== RECENT_TOOLS_KEY && !/^(progress_|later_)/.test(String(e.key))) return;'));
   // 全体のリセットで本数分届く知らせは、止まってから1回だけ描き直す（前の予約を取り消してから予約し直す）
   assert.match(handler, /clearTimeout\(progressSyncTimer\);\s*progressSyncTimer = setTimeout\(refreshProgressViews,/);
   assert.match(fnBody("setupStaticUI") + fnBody("setupHelpModal") + mainJs.match(/document\.addEventListener\("DOMContentLoaded"[\s\S]*?\n\}\);/)[0], /setupProgressSync\(\)/);
@@ -901,7 +901,7 @@ test("H37: 「はじめ方」の開閉は、利用者が開閉したらその形
     "利用者が開閉した形を覚えていない（次に来たときに、閉じたのに開く・開いたのに閉じる）"
   );
   // toggle は JS で開閉を合わせたときにも出るので、覚えるのに使わない
-  assert.doesNotMatch(blankComments(mainJs), /addEventListener\("toggle"/);
+  assert.doesNotMatch(blankComments(setup), /addEventListener\("toggle"/);
   // はじめて来た人が一覧を使い始めたら閉じた形を残す。利用者が開閉を選んだあと（覚えた形があるとき）は変えない
   assert.match(
     fnBody("markStartSeen"),
