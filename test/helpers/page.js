@@ -187,6 +187,7 @@ async function runPage({ search = "", storageFailure = "none", dataOverrides = {
     downloads.push({ filename: element.download, blob: objectUrls.get(element.href), href: element.href });
   };
   const scrolls = [];
+  const resizeObservers = [];
   const context = {
     document, location, URL: TestURL, URLSearchParams, AbortController, DOMException, TextEncoder, Blob,
     setTimeout: clock ? clock.setTimeout : setTimeout, clearTimeout: clock ? clock.clearTimeout : clearTimeout,
@@ -201,7 +202,12 @@ async function runPage({ search = "", storageFailure = "none", dataOverrides = {
     open() { throw new Error("Unexpected popup in integration test"); }, confirm: (message) => { confirmations.push(message); return typeof confirmResult === "function" ? confirmResult(message, values) : confirmResult; },
     navigator: { clipboard: { async writeText(value) { if (clipboard === "reject") throw new Error("Clipboard denied"); copied.push(value); } } },
     getComputedStyle: () => ({ position: "sticky" }),
-    ResizeObserver: class { observe() {} },
+    ResizeObserver: class {
+      constructor(callback) { this.callback = callback; this.targets = new Set(); resizeObservers.push(this); }
+      observe(target) { this.targets.add(target); }
+      disconnect() { this.targets.clear(); }
+      deliver(entries) { this.callback(entries); }
+    },
     requestAnimationFrame: (fn) => { frames.push(fn); return frames.length; },
     performance: { mark() {} },
     history: {
@@ -263,7 +269,7 @@ async function runPage({ search = "", storageFailure = "none", dataOverrides = {
   await flush();
   if (!deferData) checkLoaded();
   return {
-    document, context, messages, fetched, storageCalls: calls, values, copied, events, scrolls, entries, downloads, confirmations, revokedUrls,
+    document, context, messages, fetched, storageCalls: calls, values, copied, events, scrolls, entries, downloads, confirmations, revokedUrls, resizeObservers,
     resize(width) { context.innerWidth = width; emit("resize"); },
     flush, dispatch: emit, evaluate: (source) => vm.runInContext(source, context),
     async releaseData() { release(); await flush(); checkLoaded(); },

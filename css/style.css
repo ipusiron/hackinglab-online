@@ -895,16 +895,44 @@ html[lang="en"] #lang-en {
   line-height: 1.5;
 }
 
-/* --- 説明文（line-clamp対応）--- */
+/* --- 説明文。計測できない環境では全文を表示する。 --- */
 .tool-description {
   font-size: 0.85rem;
   color: var(--text-detail);
   line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.tool-description.is-collapsible:not(.is-expanded) {
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.tool-description-toggle {
+  align-self: flex-start;
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+  max-width: 100%;
+  padding: 0.35rem 0.15rem;
+  border: 0;
+  border-radius: 0.2rem;
+  background: transparent;
+  color: var(--link);
+  font: inherit;
+  font-size: 0.875rem;
+  text-align: start;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+
+.tool-description-toggle:focus {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
 }
 
 /* --- メタ情報（難易度・カテゴリ）--- */
@@ -1168,6 +1196,16 @@ html[lang="en"] #lang-en {
 #reset-all-progress:hover {
   background-color: var(--danger-hover-bg);
 }
+
+#reset-progress-status {
+  margin: 0.5rem 0 0;
+  color: var(--text-detail);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+#reset-progress-status:empty { margin: 0; }
 
 /* データが届くまで（main.js が disabled を外すまで）は押せない見た目にする。ホバーの見た目も出さない
    （ホバーの規則と同じ詳細度なので、その後ろに書く） */

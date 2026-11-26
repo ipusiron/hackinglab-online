@@ -11,6 +11,84 @@ const visible = allTools.filter((t) => t.hub !== false);
 const books = JSON.parse(read("data/books.json")).books;
 const bySlug = new Map(visible.map((t) => [t.slug, t]));
 
+// Synthetic geometry exercises observer/lifecycle decisions; real wrapping and
+// content-visibility notifications remain browser QA.
+function descriptionObserver(page) {
+  page.context.getComputedStyle = () => ({ position: "sticky", lineHeight: "20px" });
+  const observers = page.resizeObservers.filter((observer) => [...observer.targets].some((node) => node.classList.contains("tool-description")));
+  assert.equal(observers.length, 1, "All descriptions must share one observer");
+  return observers[0];
+}
+function measureDescription(observer, desc, height, visible = true) {
+  desc.scrollHeight = height;
+  observer.deliver([{ target: desc, contentRect: { width: visible ? 240 : 0, height: visible ? Math.min(height, 60) : 0 } }]);
+}
+
+test("description disclosure uses actual overflow, preserves literal full text and removes unnecessary controls on resize", async () => {
+  const data = JSON.parse(read("data/tools.json"));
+  const tool = data.tools[0];
+  tool.description_ja = '<img src=x onerror=alert(1)> これは120文字未満ですが狭い幅で折り返す説明です。';
+  const page = await runPage({ search: `?q=${tool.id}`, dataOverrides: { "data/tools.json": data } });
+  const card = page.document.querySelector(".tool-card");
+  const desc = card.querySelector(".tool-description"), button = card.querySelector(".tool-description-toggle");
+  const observer = descriptionObserver(page);
+  assert.equal(desc.textContent, tool.description_ja);
+  assert.equal(desc.querySelector("img"), null, "Catalog text must not become HTML");
+  assert.equal(button.hidden, true);
+  measureDescription(observer, desc, 80, false);
+  assert.equal(button.hidden, true, "Hidden/deferred cards wait for a real layout");
+  measureDescription(observer, desc, 80);
+  assert.equal(button.hidden, false);
+  assert.equal(button.getAttribute("aria-controls"), desc.id);
+  assert.equal(button.getAttribute("aria-expanded"), "false");
+  button.focus(); button.click();
+  assert.equal(button.getAttribute("aria-expanded"), "true");
+  assert.equal(desc.classList.contains("is-expanded"), true);
+  assert.equal(desc.textContent, tool.description_ja);
+  assert.equal(page.document.activeElement, button);
+  measureDescription(observer, desc, 60);
+  assert.equal(button.hidden, true, "Text fitting three lines needs no toggle, including after resize");
+  assert.equal(desc.classList.contains("is-expanded"), false);
+  assert.equal(page.document.activeElement, card.querySelector(".tool-title"), "Do not hide the focused control without a visible destination");
+  measureDescription(observer, desc, 80);
+  assert.equal(button.getAttribute("aria-expanded"), "false");
+  button.click(); button.click();
+  assert.equal(button.getAttribute("aria-expanded"), "false");
+});
+
+test("description chapter copies keep separate expansion, unique targets and focus across language rebuilds", async () => {
+  const book = books.find((item) => item.slug === "genai-crypto");
+  const id = Object.keys(book.refs).find((id) => new Set(book.refs[id].map((ref) => ref.ch)).size > 1);
+  const data = JSON.parse(read("data/tools.json"));
+  const tool = data.tools.find((item) => item.id === id);
+  tool.description_ja = "説明全文。".repeat(60);
+  tool.description_en = "Complete description. ".repeat(30);
+  const page = await runPage({ search: `?book=${book.slug}`, dataOverrides: { "data/tools.json": data } });
+  const observer = descriptionObserver(page);
+  const cards = page.document.querySelectorAll(`.tool-card[data-tool-id="${id}"]`);
+  assert.ok(cards.length > 1);
+  for (const card of cards) measureDescription(observer, card.querySelector(".tool-description"), 400);
+  const control = cards.at(-1).querySelector(".tool-description-toggle");
+  control.focus(); control.click();
+  assert.equal(cards[0].querySelector(".tool-description-toggle").getAttribute("aria-expanded"), "false");
+  page.document.getElementById("lang-en").click();
+  const rebuilt = page.document.querySelectorAll(`.tool-card[data-tool-id="${id}"]`);
+  assert.equal(descriptionObserver(page), observer, "Rebuilds reuse the one observer");
+  assert.ok([...observer.targets].every((desc) => desc.isConnected), "Removed card targets must be disconnected");
+  const focused = page.document.activeElement;
+  assert.equal(focused.dataset.part, "description");
+  assert.equal(focused.closest(".tool-card").dataset.group, cards.at(-1).dataset.group);
+  assert.equal(focused.textContent, "Read less");
+  assert.equal(focused.getAttribute("aria-expanded"), "true");
+  for (const card of rebuilt) assert.equal(card.querySelector(".tool-description").textContent, tool.description_en);
+  const targets = page.document.querySelectorAll(".tool-description-toggle").map((button) => button.getAttribute("aria-controls"));
+  assert.equal(new Set(targets).size, targets.length);
+  for (const target of targets) assert.ok(page.document.getElementById(target));
+  // A queued delivery for a detached card must not touch the rebuilt control.
+  measureDescription(observer, cards.at(-1).querySelector(".tool-description"), 20);
+  assert.equal(focused.getAttribute("aria-expanded"), "true");
+});
+
 function checkCards(document, language, book = null) {
   const list = document.getElementById("tool-list");
   const cards = list.querySelectorAll(".tool-card");
