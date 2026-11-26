@@ -937,6 +937,7 @@ function setupStartEntries(keepInPlace) {
 function updateStartEntries() {
   const ready = loadState === "ready";
   updateStartGenre();
+  updateStarterProgress();
   document.getElementById("start-first-button").disabled = !ready;
   document.getElementById("start-all-button").disabled = !ready;
   document.getElementById("start-books-button").disabled = !ready || !HB || !books.length;
@@ -3132,6 +3133,15 @@ function setProgress(slug, level) {
   progressVersion++; // 次に一覧を描くときは作り直す（全部リセットしたあとに、古い進捗の表示を残さない）
 }
 
+function updateStarterProgress() {
+  document.querySelectorAll(".start-progress").forEach((label) => {
+    const tool = loadState === "ready" && tools.find((item) => item.hub !== false && item.id === label.dataset.toolId);
+    label.hidden = !tool;
+    const text = tool ? `${currentLang === "ja" ? "進捗：" : "Progress: "}${PROGRESS_LABELS[currentLang][getProgress(tool.slug)]}` : "";
+    if (label.textContent !== text) label.textContent = text;
+  });
+}
+
 function updateProgressSelect(select, slug) {
   const level = getProgress(slug);
   // Keep options and the focused native control in place during local/cross-tab updates.
@@ -3142,6 +3152,7 @@ function updateProgressSelect(select, slug) {
 
 // 同じ slug の進捗選択欄をすべて更新する（章をまたいで同じツールが出る場合の同期）。
 function syncProgressControls(slug) {
+  updateStarterProgress();
   let sel;
   try {
     sel = `.tool-progress-select[data-slug="${CSS.escape(slug)}"]`;
@@ -3209,6 +3220,7 @@ function refreshProgressViews() {
   clearTimeout(progressSyncTimer);
   progressSyncTimer = 0;
   if (!tools.length) return; // データが届く前は描くものがない（届いたときに、保存された値で描く）
+  updateStarterProgress();
   // Synchronize every retained select, including cards whose render was cached.
   document.querySelectorAll(".tool-progress-select").forEach((b) => {
     if (b.dataset.slug) updateProgressSelect(b, b.dataset.slug);
@@ -3676,6 +3688,7 @@ function handleResetAllProgress() {
       setProgress(tool.slug, 0);
     });
 
+  updateStarterProgress();
   renderToolList();
   renderDashboard();
 }

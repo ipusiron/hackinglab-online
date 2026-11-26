@@ -26,6 +26,18 @@ function find(raw) {
   return tools.filter((t) => S.matches(entries.get(t.id), terms)).map((t) => t.id);
 }
 
+test("tool aliases find Japanese names without expanding to category peers", () => {
+  for (const [query, id] of [["不可視文字", "day023"], ["ゼロ幅文字 Unicode", "day023"], ["同形異字", "day023"], ["画像認証 CAPTCHA", "day075"], ["カプチャ", "day075"], ["ﾌｨﾝｶﾞｰﾌﾟﾘﾝﾄ", "day077"], ["ブラウザ指紋", "day077"]]) {
+    assert.ok(find(query).includes(id), query);
+  }
+  assert.deepEqual(find("不可視文字 Day23"), ["day023"]);
+  assert.deepEqual(find("不可視文字 Day75"), []);
+  const source=tools.find(t=>t.id==="day023");
+  const peer=S.buildEntry({...source,id:"day999",title:"Peer",subtitle_ja:"",description_ja:"",tags:[]},catIndex);
+  assert.equal(S.matches(peer,S.parseQuery("不可視文字")),false);
+  assert.equal(S.buildEntry({id:"constructor"},catIndex).text,"constructor");
+});
+
 // ---- Q: 合成データ ----
 
 test("Q1: normalize は全角と半角（英数字・空白・カタカナ）と大文字・小文字をそろえる", () => {

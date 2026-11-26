@@ -19,12 +19,40 @@ const visibleDemos = p => links(p).filter(a => a.closest(".start-first-tools").h
 const chooseGenre = (p, value) => { const select=el(p,"start-genre"); select.value=value; select.dispatch("change"); };
 const buttons = p => ["first", "books", "all"].map(name => el(p, `start-${name}-button`));
 const state = p => el(p, "main-content").dataset.loadState;
+const starterProgress = p => p.document.querySelectorAll(".start-progress");
 const chooseBook = (p, link, fields = {}) => el(p, "start-book-links").dispatch("click", { target: link, ...fields });
 function clock() {
   let now=0, seq=0; const tasks=new Map();
   return { setTimeout(fn, ms=0) { const id=++seq; tasks.set(id,{at:now+ms,fn}); return id; }, clearTimeout(id) { tasks.delete(id); },
     async advance(ms,p) { const end=now+ms; await p.flush(); for (;;) { const next=[...tasks].filter(([,v])=>v.at<=end).sort((a,b)=>a[1].at-b[1].at||a[0]-b[0])[0]; if(!next)break; now=next[1].at; tasks.delete(next[0]); next[1].fn(); await p.flush(); } now=end; await p.flush(); } };
 }
+
+test("starter progress mirrors every stage and duplicate without replacing links or focus", async () => {
+  const tool=tools.find(t=>t.id==="day003"),p=await runPage({search:"?q=day003"});
+  const demos=links(p),labels=starterProgress(p);
+  assert.equal(labels.length,15);
+  assert.ok(labels.every(n=>!n.hidden && n.textContent==="進捗：未着手"));
+  const select=el(p,"tool-list").querySelector('[data-part="progress"]');select.focus();
+  for(const [level,text] of [[1,"学習中"],[2,"一周完了"],[3,"定着済み"],[0,"未着手"]]) {
+    chooseProgress(select,level);
+    assert.ok(labels.filter(n=>n.dataset.toolId===tool.id).every(n=>n.textContent===`進捗：${text}`));
+    assert.equal(p.document.activeElement,select);assert.deepEqual(links(p),demos);
+  }
+  p.values.set(`progress_${tool.slug}`,"2");p.dispatch("storage",{key:`progress_${tool.slug}`});p.dispatch("pageshow",{persisted:true});
+  assert.ok(labels.filter(n=>n.dataset.toolId===tool.id).every(n=>n.textContent==="進捗：一周完了"));
+  el(p,"lang-en").click();assert.ok(labels.filter(n=>n.dataset.toolId===tool.id).every(n=>n.textContent==="Progress: First pass"));
+});
+
+test("starter progress hides during loading and preserves effective failed writes through refresh and reset", async () => {
+  const pending=await runPage({deferData:true});assert.ok(starterProgress(pending).every(n=>n.hidden));
+  await pending.releaseData();assert.ok(starterProgress(pending).every(n=>!n.hidden));
+  const p=await runPage({search:"?q=day003",storageFailure:"write",confirmResult:true});
+  chooseProgress(el(p,"tool-list").querySelector('[data-part="progress"]'),3);
+  p.dispatch("storage",{key:null});p.dispatch("pageshow",{persisted:true});
+  assert.ok(starterProgress(p).filter(n=>n.dataset.toolId==="day003").every(n=>n.textContent==="進捗：定着済み"));
+  p.evaluate("handleResetAllProgress()");assert.ok(starterProgress(p).every(n=>n.textContent==="進捗：未着手"));
+  p.evaluate('setLoadState("error")');assert.ok(starterProgress(p).every(n=>n.hidden));
+});
 
 test("SH1: initial and saved Start decisions stay independent of the visit-local first panel", async () => {
   for (const [width, search, saved, open] of [[1280,"",null,true],[320,"",null,false],[1280,"?book=genai-crypto",null,false],[1280,"?tools=3,8",null,false],[320,"","open",true],[1280,"","closed",false]]) {

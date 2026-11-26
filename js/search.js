@@ -12,6 +12,14 @@
 (function (root) {
   "use strict";
 
+  // Tool-specific vocabulary, kept separate from category aliases. IDs are
+  // stable catalog references; aliases never expand to every tool in a category.
+  var TOOL_ALIASES = Object.freeze({
+    day023: ["不可視文字", "ゼロ幅文字", "ホモグリフ", "同形異字"],
+    day075: ["画像認証", "文字認証", "キャプチャ認証", "カプチャ"],
+    day077: ["フィンガープリント", "フィンガープリンティング", "ブラウザ指紋", "ブラウザフィンガープリント"]
+  });
+
   // 全角の英数字・空白と半角のカタカナを NFKC でそろえ、小文字にする。
   function normalize(s) {
     var t = String(s == null ? "" : s);
@@ -59,6 +67,8 @@
   function buildEntry(tool, catIndex) {
     var t = tool || {};
     var parts = [t.id, t.title, t.subtitle_ja, t.subtitle_en, t.description_ja, t.description_en];
+    var toolId = normalize(t.id);
+    if (Object.prototype.hasOwnProperty.call(TOOL_ALIASES, toolId)) parts = parts.concat(TOOL_ALIASES[toolId]);
     var i;
     if (Array.isArray(t.tags)) parts = parts.concat(t.tags);
     var ids = Array.isArray(t.category_ids) ? t.category_ids : [];

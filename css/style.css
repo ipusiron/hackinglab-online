@@ -1874,6 +1874,13 @@ body { padding-bottom: var(--storage-notice-h, 0px); }
 .start-first-tools li { margin-block: 1rem; }
 .start-first-tools h3 { margin: 0 0 0.35rem; font-size: 1rem; }
 .start-first-tools p { margin-bottom: 0.5rem; }
+.start-first-tools .start-progress {
+  margin: 0.25rem 0 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
 #start-book-links { display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 0; list-style: none; }
 #start-book-links li { min-width: 0; max-width: 100%; }
 #start-books-panel[hidden], #start-first-panel[hidden] { display: none; }
