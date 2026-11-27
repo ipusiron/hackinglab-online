@@ -53,6 +53,75 @@ test("mismatching-text wording finds the Unicode inspector without broadening to
   assert.deepEqual(find("文字が一致しない Day75"), []);
 });
 
+test("everyday purpose vocabulary finds only the tools with the described function in Japanese and English", () => {
+  const cases = [
+    ["day007", ["写真 位置情報 削除", "photo location remove", "geotag metadata removal"]],
+    ["day033", ["コピー 文字 書き換え", "コピペ 貼り付け", "copy clipboard", "clipboard hijacking"]],
+    ["day039", ["URL 追跡 除去", "追跡情報 削除", "URL tracking removal"]],
+    ["day040", ["拡張子 中身 確認", "ファイル形式 確認", "file type extension check"]],
+    ["day087", ["鍵 貸し借り", "鍵 返却", "key lending", "key borrowing"]]
+  ];
+  for (const [id, queries] of cases) {
+    for (const query of queries) assert.deepEqual(find(query), [id], query);
+  }
+  assert.deepEqual(find("写真 位置情報 削除 Day13"), []);
+  assert.deepEqual(find("COPY　CLIPBOARD　Ｄａｙ　３３"), ["day033"]);
+  // Extra terms still narrow by AND; the aliases do not select a tool by themselves.
+  assert.deepEqual(find("鍵 貸し借り 未登録の検索語"), []);
+  assert.equal(S.matches(S.buildEntry({ id: "day999" }, catIndex), S.parseQuery("geotag")), false);
+});
+
+test("reviewed supplemental wording routes extension mismatches and password evaluation without promising safety or breach checks", () => {
+  // These phrases were disclosed after the first holdout run; this is a
+  // regression for the supplement, not evidence of unseen-query performance.
+  for (const query of ["ファイル 拡張子 食い違い", "拡張子 食い違う"]) {
+    assert.deepEqual(find(query), ["day040"], query);
+  }
+  assert.deepEqual(find("パスワードの安全性を評価"), ["day001"]);
+  assert.deepEqual(find("パスワードの安全性を評価 Day89"), []);
+  for (const query of ["パスワード 安全性 保証", "パスワードの安全性を保証", "パスワード 漏えい 検査"]) {
+    assert.ok(!find(query).includes("day001"), query);
+  }
+});
+
+test("known limitation sentences do not advertise CAPTCHA measurement or keyboard-based strength assessment in either language", () => {
+  const captcha = tools.find((tool) => tool.id === "day075");
+  const keyboard = tools.find((tool) => tool.id === "day089");
+  // A regenerated description change needs a fresh review, rather than silently
+  // retaining an exclusion written for a different capability statement.
+  assert.ok(captcha.description_ja.includes("人やOCRの読み取り成功率は測定しません。"));
+  assert.ok(captcha.description_en.includes("Does not measure human or OCR reading success."));
+  assert.ok(keyboard.description_ja.includes("パスワードの強度や人物の特定には使えません。"));
+  assert.ok(keyboard.description_en.includes("Not a password strength or identity assessment."));
+  for (const query of ["CAPTCHA 読み取り成功率 測定", "CAPTCHA measure reading success"]) {
+    assert.deepEqual(find(query), [], query);
+  }
+  for (const query of ["パスワード 強度", "password strength"]) {
+    assert.ok(find(query).includes("day001"), query);
+    assert.ok(!find(query).includes("day089"), query);
+  }
+  for (const query of ["CAPTCHA 画素", "CAPTCHA pixel statistics"]) assert.ok(find(query).includes("day075"), query);
+  for (const query of ["キーボード 反復", "keyboard repetition"]) assert.ok(find(query).includes("day089"), query);
+  // Valid shared-category words and token-strength wording remain searchable.
+  assert.ok(find("トークン 強度").includes("day048"));
+  assert.ok(find("token strength").includes("day048"));
+});
+
+test("description exclusions are exact, tool-specific and do not remove title, tag or category vocabulary", () => {
+  const limitation = "Does not measure human or OCR reading success.";
+  const query = S.parseQuery("measure reading success");
+  const peer = S.buildEntry({ id: "day999", description_en: limitation }, catIndex);
+  assert.equal(S.matches(peer, query), true);
+  const changed = S.buildEntry({ id: "day075", description_en: "Measures human reading success." }, catIndex);
+  assert.equal(S.matches(changed, query), true);
+  const title = S.buildEntry({ id: "day075", title: limitation }, catIndex);
+  assert.equal(S.matches(title, query), true);
+  const unrelated = S.buildEntry({ id: "day075", description_en: "Does not decrypt passwords." }, catIndex);
+  assert.equal(S.matches(unrelated, S.parseQuery("decrypt")), true);
+  const tag = S.buildEntry({ id: "day089", tags: ["strength"] }, catIndex);
+  assert.equal(S.matches(tag, S.parseQuery("strength")), true);
+});
+
 // ---- Q: 合成データ ----
 
 test("Q1: normalize は全角と半角（英数字・空白・カタカナ）と大文字・小文字をそろえる", () => {
