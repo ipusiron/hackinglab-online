@@ -60,10 +60,10 @@ jobs:
         run: node --test --test-name-pattern='CT4:' test/catalog.test.js
       - name: Prepare public files
         run: |
-          test -z "$(find index.html list.html 404.html CNAME css js data favicon -type l -print -quit)"
+          test -z "$(find index.html list.html discover.html 404.html CNAME css js data favicon assets -type l -print -quit)"
           mkdir _site
-          cp index.html list.html 404.html CNAME _site/
-          cp -R css js data favicon _site/
+          cp index.html list.html discover.html 404.html CNAME _site/
+          cp -R css js data favicon assets _site/
           test -z "$(find _site -type l -print -quit)"
       - uses: actions/configure-pages@v5
         with:

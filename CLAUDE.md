@@ -13,6 +13,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
+### Discovery page and social assets
+
+- `discover.html` is a small bilingual introduction to three existing tools, not a replacement for their GitHub Pages demos or canonical URLs. Keep the homepage entry within the existing Start here text; do not add a home section or button row.
+- Its screenshots in `assets/discover/` show actual public tool operations. Refresh the reproduction instructions when the tool UI changes. The silent MP4 has native controls, no autoplay and `preload="none"`; its operation is also described in text. Do not claim OCR/human success rates or CAPTCHA security from pixel features.
+- `css/discover.css` and `js/discover.js` are independent of the catalog renderer. Reuse `js/lang.js` for initial language selection. Text and direct links must remain readable without JavaScript; failed clipboard writes must leave selectable text. No analytics, uploads or new durable record keys.
+- Both public pages use PNG social cards from `assets/social/`. The authoring source is `scripts/social-cards.html`; `python scripts/render_social_cards.py` optionally renders it with an already installed Playwright/Chromium. It is not a Pages build dependency. Keep the cards at 1200 by 630 and visually inspect them after rendering.
+- The deployment allowlist includes `discover.html` and `assets/`. `test/discover.test.js` checks the local resource graph, deployed media, PNG dimensions and opt-in media policy. Browser QA separately covers language/history, clipboard, reduced motion, keyboard and responsive layout.
+
 Hacking Lab Online is a bilingual (Japanese/English) self-learning platform that aggregates security education tools created by IPUSIRON through the "Security Tools with Generative AI" project (100 and 200). It's a static web application hosted on GitHub Pages.
 
 ## Architecture

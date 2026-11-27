@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ja">
+<meta charset="utf-8">
+<title>Hacking Lab Online — social card source</title>
+<style>
+* { box-sizing: border-box; }
+body { margin: 0; background: #e5e7eb; color: #111827; font-family: "Yu Gothic", "Meiryo", sans-serif; }
+.card { width: 1200px; height: 630px; background: #f7f9fe; padding: 36px 48px 30px; position: relative; overflow: hidden; }
+.card + .card { margin-top: 24px; }
+.identity { display: flex; align-items: center; gap: 16px; font-size: 26px; font-weight: 700; }
+.identity img { width: 48px; height: 48px; }
+.kicker { margin-left: auto; font-size: 18px; color: #334155; font-weight: 500; }
+h1 { font-size: 53px; line-height: 1.3; letter-spacing: -1px; margin: 23px 0 10px; font-weight: 700; }
+.subtitle { margin: 0 0 23px; font-size: 25px; color: #334155; }
+.previews { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.preview { background: white; border: 1px solid #cbd5e1; border-radius: 16px; overflow: hidden; }
+.preview img { display: block; width: 100%; height: 180px; object-fit: cover; object-position: top; background: #fff; }
+.preview p { margin: 0; border-top: 1px solid #e2e8f0; padding: 13px 14px; font-size: 22px; font-weight: 700; }
+.number { color: #2563eb; font-size: 18px; margin-right: 9px; }
+.foot { display: flex; justify-content: space-between; align-items: center; margin-top: 22px; }
+.url { font-size: 28px; font-weight: 700; color: #1d4ed8; }
+.note { font-size: 20px; color: #334155; }
+.discover h1 { margin-top: 20px; font-size: 48px; }
+.discover .subtitle { font-size: 25px; margin-bottom: 24px; }
+</style>
+<body>
+<section class="card" id="home-card">
+  <div class="identity"><img src="../favicon/HLO_glitch_hex.png" alt=""><span>ハッキング・ラボ・オンライン</span><span class="kicker">IPUSIRON</span></div>
+  <h1>手を動かして、仕組みを知る。</h1>
+  <p class="subtitle">暗号・Web・物理的セキュリティ・身近な仕組み</p>
+  <div class="previews">
+    <div class="preview"><img src="../assets/discover/weirdstring.png" alt="不可視文字の検出画面"><p><span class="number">01</span>見えない文字を発見</p></div>
+    <div class="preview"><img src="../assets/discover/captcha.png" alt="CAPTCHA風の文字加工画面"><p><span class="number">02</span>文字の見え方を比較</p></div>
+    <div class="preview"><img src="../assets/discover/vision.png" alt="視覚の仕組みを試す画面"><p><span class="number">03</span>目の仕組みを体験</p></div>
+  </div>
+  <div class="foot"><span class="url">hackinglab.online</span><span class="note">登録不要 · 自分のペースで独学</span></div>
+</section>
+<section class="card discover" id="discover-card">
+  <div class="identity"><img src="../favicon/HLO_glitch_hex.png" alt=""><span>ハッキング・ラボ・オンライン</span><span class="kicker">3つの体験</span></div>
+  <h1>見えているのに、気づかない。</h1>
+  <p class="subtitle">見えない文字・CAPTCHA風の加工・目の錯覚を試す</p>
+  <div class="previews">
+    <div class="preview"><img src="../assets/discover/weirdstring.png" alt="不可視文字の検出画面"><p><span class="number">01</span>本当に同じ文字？</p></div>
+    <div class="preview"><img src="../assets/discover/captcha.png" alt="CAPTCHA風の文字加工画面"><p><span class="number">02</span>どこまで読める？</p></div>
+    <div class="preview"><img src="../assets/discover/vision.png" alt="視覚の仕組みを試す画面"><p><span class="number">03</span>なぜ見え方が変わる？</p></div>
+  </div>
+  <div class="foot"><span class="url">hackinglab.online/discover.html</span><span class="note">画像と動画から、実際のツールへ</span></div>
+</section>
+</body>
+</html>
