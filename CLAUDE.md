@@ -2,6 +2,13 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+### Recording an experiment and resuming learning
+
+- Each discovery experiment links to its one-tool collection and Day anchor. The link opens the card; only an explicit change to its Progress control records learning. Keep language, native navigation and the existing three-tool collection route.
+- Keep the resume list inside the dashboard's overall summary, in an initially closed native disclosure. It lists every public tool whose progress is 1, in catalog order, independently of current filters or a selected set. Do not add a home section, storage key, automatic progress update or claim that demo input is restored.
+- Use the existing validated demo/README links, progress navigation and recent-history handling. Preserve disclosure state and keyboard focus during language changes, storage synchronization, imports, resets and history restoration. If a focused row disappears, move focus to a visible summary or dashboard tab.
+- The next-tool suggestion stays in the discovery page's existing ending. CamoForge illustrates making patterns and comparing them over an environment image; it does not measure camouflage effectiveness. Keep a route to browse other tools.
+
 ### Difficulty filter and guide
 
 - Keep difficulty within the existing filter area: one native select, `#filter-difficulty`, paired with progress through the responsive `.filter-pair`. Do not add a new home section or button row. The ordinary narrow layout shares one row; enlarged text stacks the pair when needed. Preserve the common label size and 1rem form text. Book/category/pair/search remain the four wide-screen slots, including a usable optional-books-failure layout.

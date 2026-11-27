@@ -1292,6 +1292,7 @@ function setLoadState(state) {
   if (state !== "ready") ["share-on-x", "share-copy-link", "reset-all-progress"].forEach((id) => { document.getElementById(id).disabled = true; });
   updateRecordsUI();
   updateStartEntries();
+  updateDashboardResume();
   updateTryLaterCount();
   updateActiveFilterSummary();
 }
@@ -3434,8 +3435,98 @@ function refreshProgressViews() {
 
 // ---- ダッシュボード描画 ----
 
+function updateDashboardResume() {
+  const panel = document.getElementById("dashboard-resume");
+  const list = document.getElementById("dashboard-resume-list");
+  const summary = document.getElementById("dashboard-resume-summary");
+  if (!panel || !list || !summary) return;
+  const candidates = loadState === "ready" ? tools.filter((tool) => tool.hub !== false && getProgress(tool.slug) === 1) : [];
+  const focused = document.activeElement;
+  const hadFocus = panel.contains(focused);
+  const focusedTop = hadFocus && isShown(focused) ? focused.getBoundingClientRect().top : null;
+  const isJa = currentLang === "ja";
+  const text = isJa ? `学習中のツールから再開（${candidates.length}本）` : `Resume tools in progress (${candidates.length})`;
+  if (summary.textContent !== text) summary.textContent = text;
+  panel.hidden = !candidates.length;
+  const ids = new Set(candidates.map((tool) => tool.id));
+  Array.from(list.children).forEach((row) => { if (!ids.has(row.dataset.toolId)) row.remove(); });
+  const rows = new Map(Array.from(list.children).map((row) => [row.dataset.toolId, row]));
+  candidates.forEach((tool) => {
+    let row = rows.get(tool.id);
+    if (!row) {
+      row = document.createElement("li");
+      row.id = `resume-tool-${tool.id}`;
+      row.dataset.toolId = tool.id;
+      const title = document.createElement("span");
+      title.className = "resume-tool-title";
+      const actions = document.createElement("div");
+      actions.className = "resume-tool-actions";
+      const open = document.createElement("a");
+      open.id = `resume-open-${tool.id}`;
+      open.dataset.toolId = tool.id;
+      open.target = "_blank";
+      open.rel = "noopener";
+      const record = document.createElement("a");
+      record.id = `resume-record-${tool.id}`;
+      record.dataset.toolId = tool.id;
+      record.href = `#${tool.id}`;
+      record.addEventListener("click", (event) => {
+        if (loadState !== "ready" || !record.hasAttribute("href")) { event.preventDefault(); return; }
+        if (event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || !HU) return;
+        event.preventDefault();
+        record.focus({ preventScroll: true });
+        openStarterProgress(record);
+      });
+      actions.appendChild(open); actions.appendChild(record);
+      row.appendChild(title); row.appendChild(actions);
+      rows.set(tool.id, row);
+    }
+    const title = row.querySelector(".resume-tool-title");
+    const name = `${tool.title} (Day${tool.id.slice(3)})`;
+    if (title.textContent !== name) title.textContent = name;
+    const open = row.querySelector(`#resume-open-${tool.id}`);
+    const demoHref = tool.demo_url && HU ? HU.demoLink(tool.demo_url, currentLang) : "";
+    const readme = HU ? HU.readmeTarget(tool.repo_url, currentLang, tool.readme_usage) : { href: "", lang: currentLang };
+    const href = demoHref || readme.href;
+    if (href) {
+      open.href = href;
+      open.removeAttribute("aria-disabled");
+      open.removeAttribute("tabindex");
+    } else {
+      open.removeAttribute("href");
+      open.setAttribute("aria-disabled", "true");
+      open.setAttribute("tabindex", "-1");
+    }
+    open.dataset.part = demoHref ? "demo" : "repo";
+    if (demoHref || !href) open.removeAttribute("hreflang");
+    else open.setAttribute("hreflang", readme.lang);
+    const openText = !href ? (isJa ? "リンクを利用できません" : "Link unavailable") : demoHref ? (isJa ? "デモを開く" : "Open demo") : (isJa ? "使い方を開く" : "Open usage");
+    if (open.textContent !== openText) open.textContent = openText;
+    if (href && !open.querySelector(".external-link-icon")) appendExternalIcon(open);
+    open.setAttribute("aria-label", href
+      ? (isJa ? `${openText}（${tool.title}、新しいタブで開く）` : `${openText} (${tool.title}, opens in a new tab)`)
+      : (isJa ? `${openText}（${tool.title}）` : `${openText} (${tool.title})`));
+    const record = row.querySelector(`#resume-record-${tool.id}`);
+    const recordText = isJa ? "記録を開く" : "Open progress";
+    if (record.textContent !== recordText) record.textContent = recordText;
+    record.setAttribute("aria-label", isJa ? `記録を開く（${tool.title}の進捗欄へ移動）` : `Open progress (Go to progress for ${tool.title})`);
+  });
+  // Reorder only when membership changed. Existing rows and native links survive redraws.
+  if (Array.from(list.children).map((row) => row.dataset.toolId).join(",") !== candidates.map((tool) => tool.id).join(",")) {
+    candidates.forEach((tool) => list.appendChild(rows.get(tool.id)));
+  }
+  if (hadFocus) {
+    const target = panel.hidden ? document.querySelector('.tab-button[aria-selected="true"]') : (isShown(focused) ? focused : summary);
+    if (isShown(target)) {
+      if (document.activeElement !== target) target.focus({ preventScroll: true });
+      if (target === focused && focusedTop !== null) scrollByInstant(target.getBoundingClientRect().top - focusedTop);
+    }
+  }
+}
+
 function renderDashboard() {
   if (loadState !== "ready") return;
+  updateDashboardResume();
   refreshShareUI();
   const total = tools.filter((t) => t.hub !== false).length;
 

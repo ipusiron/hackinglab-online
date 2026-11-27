@@ -13,6 +13,7 @@ test("DC1: discovery assets, downloads and local links exist in the public deplo
   const deploy = read(".github/workflows/deploy-pages.yml");
   const publicFiles = new Set(["index.html", "list.html", "discover.html", "404.html", "CNAME"]);
   const publicDirs = new Set(["css", "js", "data", "favicon", "assets"]);
+  const publicIds = new Set(JSON.parse(read("data/tools.json")).tools.filter(tool => tool.hub !== false).map(tool => tool.id));
   for (const [, value] of html.matchAll(/\b(?:href|src|poster)="([^"]+)"/g)) {
     const url = new URL(decode(value), origin);
     if (url.origin !== new URL(origin).origin) continue;
@@ -20,6 +21,11 @@ test("DC1: discovery assets, downloads and local links exist in the public deplo
     assert.ok(publicFiles.has(file) || publicDirs.has(file.split("/")[0]), `Not in deployment: ${file}`);
     assert.ok(fs.existsSync(path.join(ROOT, file)), `Missing local resource: ${file}`);
     if (file === "discover.html" && url.hash) assert.ok(html.includes(`id="${url.hash.slice(1)}"`), `Missing section: ${url.hash}`);
+    if (file === "index.html" && url.searchParams.has("tools")) {
+      const ids = url.searchParams.get("tools").split(",");
+      for (const id of ids) assert.ok(publicIds.has(id), `Unknown collection tool: ${id}`);
+      if (url.hash) assert.ok(ids.includes(url.hash.slice(1)), `Focused tool is outside its collection: ${url.hash}`);
+    }
   }
   assert.match(deploy, /cp index\.html list\.html discover\.html 404\.html CNAME _site\//);
   assert.match(deploy, /cp -R css js data favicon assets _site\//);
