@@ -15,7 +15,8 @@
   // Tool-specific vocabulary, kept separate from category aliases. IDs are
   // stable catalog references; aliases never expand to every tool in a category.
   var TOOL_ALIASES = Object.freeze({
-    day023: ["不可視文字", "ゼロ幅文字", "ホモグリフ", "同形異字"],
+    day001: ["パスワードの強さ"],
+    day023: ["不可視文字", "ゼロ幅文字", "ホモグリフ", "同形異字", "文字が一致しない", "文字列が一致しない"],
     day075: ["画像認証", "文字認証", "キャプチャ認証", "カプチャ"],
     day077: ["フィンガープリント", "フィンガープリンティング", "ブラウザ指紋", "ブラウザフィンガープリント"]
   });
