@@ -45,8 +45,31 @@ test("BV2: narrow book arrival collapses once; resize, language, deliberate expa
   assert.equal(el(p, "tool-filters").hidden, false); assert.equal(p.document.activeElement, el(p, "filter-search-input"));
   for (const query of ["", "?book=", "?book=ALL", "?book=&book=genai-crypto"]) {
     const ordinary = await runPage({ search: query, width: 320 });
-    assert.equal(el(ordinary, "tool-filters").hidden, false, query);
+    assert.equal(el(ordinary, "tool-filters").hidden, true, query);
   }
+});
+
+test("BV19: plain mobile arrivals show tools first, while explicit searches, edits and history retain usable filters", async () => {
+  const p = await runPage({ width: 320 });
+  assert.equal(el(p, "tool-filters").hidden, true);
+  const before = p.context.location.href, length = p.context.history.length;
+  el(p, "filter-toggle").focus(); el(p, "filter-toggle").click();
+  assert.equal(el(p, "tool-filters").hidden, false);
+  assert.equal(p.document.activeElement, el(p, "filter-toggle"));
+  assert.equal(p.context.location.href, before); assert.equal(p.context.history.length, length);
+  el(p, "filter-category").focus(); change(p, "filter-category", "classic-crypto");
+  el(p, "lang-en").click(); assert.equal(el(p, "tool-filters").hidden, false);
+  await p.back(); assert.equal(el(p, "tool-filters").hidden, false);
+  await p.forward(); assert.equal(el(p, "tool-filters").hidden, false);
+  for (const query of ["?q=day023", "?cat=classic-crypto", "?field=crypto", "?maxDifficulty=2"]) {
+    const explicit = await runPage({ search: query, width: 320 });
+    assert.equal(el(explicit, "tool-filters").hidden, false, query);
+  }
+  const wide = await runPage({ width: 1280 });
+  assert.equal(el(wide, "tool-filters").hidden, false);
+  el(wide, "filter-search-input").focus(); wide.resize(320);
+  assert.equal(el(wide, "tool-filters").hidden, false);
+  assert.equal(wide.document.activeElement, el(wide, "filter-search-input"));
 });
 
 test("BV3: filter reveal precedes clear, empty-result, retry and saved-history focus, with unavailable-book fallback", async () => {

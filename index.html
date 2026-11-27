@@ -151,14 +151,15 @@
         aria-labelledby="tab-tools-label"
       >
         <!-- はじめ方（Start here）：比較しない独学の入口 -->
+        <p class="start-discover"><a class="label-ja" href="./discover.html?lang=ja">見えない文字を探す体験から始める →</a><a class="label-en" href="./discover.html?lang=en">Start by finding an invisible character →</a></p>
         <details id="start-here" open>
           <summary>
             <span class="label-ja">はじめ方</span><span class="label-en">Start here</span>
-            <span class="start-closed-hint"><span class="label-ja">基本の手順と、最初に試す3本</span><span class="label-en">The basic steps, plus 3 tools to try first</span></span>
+            <span class="start-closed-hint"><span class="label-ja">ジャンル・書籍から選ぶ</span><span class="label-en">Choose a topic or book</span></span>
           </summary>
           <div class="start-here-body">
-            <p class="start-here-lead"><span class="label-ja">生成AIで作ったセキュリティツールで、手を動かしながら独学できるサイトです。ツールを作ったのは、著書40冊超・執筆25年以上の著者です。本のサポートページのリンクから来ると、その本に関係するツールだけが出ます。</span><span class="label-en">This site lets you teach yourself security hands-on with tools built using generative AI. The tools are made by an author with 40+ books and 25+ years of writing. If you come from a link on a book&#x27;s support page, only the tools related to that book are shown.</span></p>
-            <p class="start-basic"><span class="label-ja">基本の手順：①カードの「デモ」で試す→②「進捗」で段階を選ぶ→③「学習ダッシュボード」で見返す。<a href="./discover.html?lang=ja">画像と動画で体験例を見る</a></span><span class="label-en">Basic steps: 1. Try a tool with “Demo” → 2. Choose its stage in “Progress” → 3. Review your progress on the “Dashboard” tab. <a href="./discover.html?lang=en">See examples in pictures and video</a></span></p>
+            <p class="start-here-lead"><span class="label-ja">暗号やWeb、金庫の仕組みを、ツールを動かしながら確かめられます。</span><span class="label-en">Explore how ciphers, websites and safe locks work by trying the tools.</span></p>
+            <p class="start-basic"><span class="label-ja">カードの「デモ」で試す →「進捗」で記録 →「学習ダッシュボード」で見返す。</span><span class="label-en">Try a “Demo” → record your “Progress” → review it on the “Dashboard”.</span></p>
             <div class="start-here-entries">
               <button id="start-first-button" type="button" aria-controls="start-first-panel" aria-expanded="true" aria-pressed="true" disabled><span class="label-ja">3本から始める</span><span class="label-en">Start with 3 tools</span></button>
               <button id="start-books-button" type="button" aria-controls="start-books-panel" aria-expanded="false" aria-pressed="false" disabled><span class="label-ja">書籍から探す</span><span class="label-en">Browse by book</span></button>
@@ -317,7 +318,7 @@
 
         <!-- フィルターバー -->
         <button id="filter-toggle" type="button" aria-controls="tool-filters" aria-expanded="false" disabled hidden>
-          <span class="label-ja">絞り込みの条件</span><span class="label-en">Filters</span>
+          <span class="label-ja">検索・絞り込み</span><span class="label-en">Search &amp; filters</span>
         </button>
         <div id="tool-filters" role="search" aria-label="絞り込みの条件" data-aria-label-ja="絞り込みの条件" data-aria-label-en="Filters">
           <!-- 書籍・プロジェクトフィルター（最初から場所を取る。books.json か一覧のデータを読めなかったときは JS が隠す） -->

@@ -22,7 +22,7 @@
 - 🔗 `#day045`でツール1本のカードへ移動
 - 🧩 `?tools=day003,day001,day045`で、選んだ順のツールを最大12本まで共有
 - 📄 [JavaScriptなしで読めるツール一覧](https://hackinglab.online/list.html)で、全ツールと書籍ごとの一覧を日英併記
-- 🎬 [画像と動画で体験例を見る](https://hackinglab.online/discover.html)：不可視文字・CAPTCHA風の文字加工・視覚の仕組みを、実画面と短い手順から試せる日英の紹介ページ
+- 🎬 [画像と動画で体験例を見る](https://hackinglab.online/discover.html)：不可視文字・CAPTCHA風の文字加工・視覚の仕組みを、実画面と短い手順から試せる日英の紹介ページ。各体験の振り返りと次に試すことを案内し、ホームでは「はじめ方」を閉じても入口を表示
 - 📚 学習状況をlocalStorageを使って記録  
 - 📊 ダッシュボードで全体進捗＋カテゴリ別・書籍別進捗を可視化  
 - 🔗 X（旧Twitter）で進捗を共有し、同じ範囲のリンクをコピー

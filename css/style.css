@@ -512,6 +512,19 @@ html[lang="en"] #lang-en {
  * はじめ方（Start here）
  * ================================ */
 
+.start-discover {
+  margin: 0 0 0.4rem;
+  overflow-wrap: anywhere;
+}
+.start-discover a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  max-width: 100%;
+  color: var(--link);
+  text-underline-offset: 0.2em;
+}
+
 #start-here {
   margin-bottom: 0.75rem;
   padding: 0.6rem 0.9rem;
@@ -1863,6 +1876,8 @@ body { padding-bottom: var(--storage-notice-h, 0px); }
 @media (max-width: 767.98px) {
   html[data-book-arrival="true"]:not(.js-ready) #tool-filters { display: none; }
   html[data-book-arrival="true"]:not(.js-ready) #filter-toggle { display: block !important; }
+  html[data-filter-start="closed"]:not(.js-ready) #tool-filters { display: none; }
+  html[data-filter-start="closed"]:not(.js-ready) #filter-toggle { display: block !important; }
 }
 
 /* The summary hint follows the same pre-paint decision as the Start body. */
@@ -1936,6 +1951,14 @@ body { padding-bottom: var(--storage-notice-h, 0px); }
 .start-first-tools li { margin-block: 1rem; }
 .start-first-tools h3 { margin: 0 0 0.35rem; font-size: 1rem; }
 .start-first-tools p { margin-bottom: 0.5rem; }
+@media (min-width: 60rem) {
+  .start-first-tools {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
+    gap: 1.5rem;
+  }
+  .start-first-tools li { min-width: 0; margin-block: 0.5rem; }
+}
 .start-first-tools .start-progress {
   display: inline-flex;
   align-items: center;

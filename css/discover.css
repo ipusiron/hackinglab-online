@@ -77,6 +77,11 @@ button[aria-pressed="true"] { color: var(--selected-text); background: var(--sel
 code { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 0.95em; background: var(--muted-bg); border-radius: 0.2rem; padding: 0.1rem 0.25rem; }
 .experiment-explanation { color: var(--text-secondary); }
 .experiment-links { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 1rem; }
+.experiment-check { border-top: 1px solid var(--border); padding-top: 0.5rem; }
+.experiment-check summary { min-height: 44px; padding: 0.6rem 0.25rem; cursor: pointer; color: var(--heading); border-radius: 0.2rem; overflow-wrap: anywhere; }
+.experiment-check p { padding: 0.5rem 0.25rem; }
+.experiment-followup { display: grid; justify-items: start; gap: 0.25rem; }
+.experiment-followup p { color: var(--text-secondary); }
 .discover-next { display: grid; gap: 1rem; padding: 0.5rem 0; }
 .share-materials { border-top: 1px solid var(--border); padding-top: 0.75rem; }
 .share-materials summary { min-height: 44px; padding: 0.65rem 0.25rem; cursor: pointer; color: var(--heading); font-weight: 650; border-radius: 0.2rem; }
