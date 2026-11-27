@@ -15,10 +15,30 @@
   // Tool-specific vocabulary, kept separate from category aliases. IDs are
   // stable catalog references; aliases never expand to every tool in a category.
   var TOOL_ALIASES = Object.freeze({
-    day001: ["パスワードの強さ"],
+    // Route safety-evaluation wording to strength scoring, not a safety guarantee.
+    day001: ["パスワードの強さ", "パスワードの安全性を評価"],
+    day007: ["写真", "撮影場所", "GPS情報", "位置情報を消す", "photo", "geotag", "metadata removal"],
     day023: ["不可視文字", "ゼロ幅文字", "ホモグリフ", "同形異字", "文字が一致しない", "文字列が一致しない"],
+    day033: ["コピー", "貼り付け", "書き換え", "コピペ", "copy", "clipboard rewriting", "clipboard hijacking"],
+    day039: ["追跡情報", "追跡パラメーター", "削除", "tracking removal", "clean link"],
+    day040: ["ファイルの中身", "拡張子の確認", "ファイル形式", "不一致", "食い違い", "食い違う", "file type", "file contents", "extension check"],
     day075: ["画像認証", "文字認証", "キャプチャ認証", "カプチャ"],
-    day077: ["フィンガープリント", "フィンガープリンティング", "ブラウザ指紋", "ブラウザフィンガープリント"]
+    day077: ["フィンガープリント", "フィンガープリンティング", "ブラウザ指紋", "ブラウザフィンガープリント"],
+    day087: ["鍵の貸し借り", "鍵の貸出", "鍵の返却", "貸出台帳", "key lending", "key borrowing", "key checkout"]
+  });
+
+  // These exact catalog sentences name unsupported uses. Exclude them only
+  // from the named tool's search description, never from displayed metadata.
+  // This is not general negation parsing; changed descriptions remain searchable.
+  var DESCRIPTION_EXCLUSIONS = Object.freeze({
+    day075: {
+      description_ja: "人やOCRの読み取り成功率は測定しません。",
+      description_en: "Does not measure human or OCR reading success."
+    },
+    day089: {
+      description_ja: "パスワードの強度や人物の特定には使えません。",
+      description_en: "Not a password strength or identity assessment."
+    }
   });
 
   // 全角の英数字・空白と半角のカタカナを NFKC でそろえ、小文字にする。
@@ -62,13 +82,21 @@
     return map;
   }
 
+  function searchDescription(tool, toolId, field) {
+    var text = tool[field];
+    var excluded = Object.prototype.hasOwnProperty.call(DESCRIPTION_EXCLUSIONS, toolId)
+      ? DESCRIPTION_EXCLUSIONS[toolId][field] : "";
+    return excluded && typeof text === "string" ? text.split(excluded).join("\n") : text;
+  }
+
   // 1本のツールの検索用の項目（正規化した id と、探す対象をつないだ文字列）。
   // カテゴリーは category_ids から引いた categories.json の日英の名前と、表記ゆれ用の別名（aliases_ja・aliases_en。
   // 「デジタルフォレンジック」「クラシカル暗号」など）を入れる。README にだけ書かれていてカードに出ない名前は入れない。
   function buildEntry(tool, catIndex) {
     var t = tool || {};
-    var parts = [t.id, t.title, t.subtitle_ja, t.subtitle_en, t.description_ja, t.description_en];
     var toolId = normalize(t.id);
+    var parts = [t.id, t.title, t.subtitle_ja, t.subtitle_en,
+      searchDescription(t, toolId, "description_ja"), searchDescription(t, toolId, "description_en")];
     if (Object.prototype.hasOwnProperty.call(TOOL_ALIASES, toolId)) parts = parts.concat(TOOL_ALIASES[toolId]);
     var i;
     if (Array.isArray(t.tags)) parts = parts.concat(t.tags);
