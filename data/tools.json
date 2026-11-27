@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-11-26T23:13:21Z",
+  "generated_at": "2026-11-27T08:39:11Z",
   "tools": [
     {
       "id": "day001",
@@ -5649,6 +5649,54 @@
         }
       },
       "added": "2026-11-17"
+    },
+    {
+      "id": "day129",
+      "slug": "alfa-bravo-desk",
+      "title": "Alfa Bravo Desk",
+      "subtitle_ja": "聞き違えない綴りの伝え方を、読み上げて確かめる通話表ツール",
+      "subtitle_en": "Spell it out with the NATO phonetic alphabet, find it in text, and hear it",
+      "description_ja": "英字や数字を声で聞き違えずに伝えるための通話表（NATOフォネティックコード）を、伝える・文章から見つける・覚えるの3つの場面で使うツール。文字列を1文字ずつ通話表の単語に置き換えてブラウザーの声で読み上げ、文章や区切りのない英字の並びに紛れた通話表の単語を英字に戻す。26文字と10の数字のカードと、表の由来や決まりの座学もある。入力した文字は外部へ送らない。日英対応。",
+      "description_en": "A tool for the NATO phonetic alphabet (the ICAO spelling alphabet), the code words used to pass letters and digits by voice without mishearing, in three situations: spelling out, finding in text and learning. It turns text into code words and reads them aloud in the browser's voice, turns code words hidden in a text or in an unbroken run of letters back into letters, and shows cards for the 26 letters and 10 digits with background notes. Nothing you type is sent anywhere. Japanese and English UI.",
+      "category_ja": [
+        "通信技術",
+        "符号化",
+        "学習支援"
+      ],
+      "category_en": [
+        "Communication Technologies",
+        "Encoding",
+        "Learning Support"
+      ],
+      "tags": [
+        "nato-phonetic-alphabet",
+        "spelling-alphabet",
+        "icao",
+        "radiotelephony",
+        "text-to-speech",
+        "web-speech-api",
+        "education"
+      ],
+      "category_ids": [
+        "communication-tech",
+        "encoding",
+        "machine-learning"
+      ],
+      "difficulty": 1,
+      "repo_url": "https://github.com/ipusiron/alfa-bravo-desk",
+      "demo_url": "https://ipusiron.github.io/alfa-bravo-desk/",
+      "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
+      "added": "2026-11-27"
     }
   ]
 }
