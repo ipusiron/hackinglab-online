@@ -94,6 +94,21 @@
     } catch (_) { return false; }
   }
 
+  // On narrow screens, a plain arrival starts with the tools in view. Explicit
+  // searches, sets and Day links keep their existing arrival behavior.
+  function collapseFilters(search, hash) {
+    if (isBookArrival(search, hash)) return true;
+    try {
+      var params = new URLSearchParams(search || "");
+      if (params.has("tools")) return false;
+      if (["q", "cat", "field", "maxDifficulty", "tab"].some(function (key) {
+        return String(params.get(key) || "").trim() !== "";
+      })) return false;
+      var fragment = decodeURIComponent(String(hash || "").replace(/^#/, ""));
+      return !/^day/i.test(fragment);
+    } catch (_) { return false; }
+  }
+
   var api = {
     KEY: KEY,
     START_KEY: START_KEY,
@@ -103,6 +118,7 @@
     normalizeStart: normalizeStart,
     hasBookParam: hasBookParam,
     isBookArrival: isBookArrival,
+    collapseFilters: collapseFilters,
     resolveStart: resolveStart,
     readSaved: readSaved
   };
@@ -122,6 +138,7 @@
   }
   try {
     if (isBookArrival(root.location.search, root.location.hash)) root.document.documentElement.setAttribute("data-book-arrival", "true");
+    if (collapseFilters(root.location.search, root.location.hash)) root.document.documentElement.setAttribute("data-filter-start", "closed");
     var start = resolveStart(root.location.search, readSaved(getStorage, START_KEY));
     if (start) root.document.documentElement.setAttribute("data-start", start);
   } catch (e) {

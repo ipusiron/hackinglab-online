@@ -1020,8 +1020,8 @@ function updateStartEntries() {
 
 // Disclosure preference belongs to this visit, independently of a set hiding all filters.
 function setupFilterDisclosure() {
-  const meaningful = typeof HLOLang !== "undefined" && HLOLang.isBookArrival(location.search, location.hash);
-  filtersExpanded = !meaningful;
+  const collapse = typeof HLOLang !== "undefined" && HLOLang.collapseFilters(location.search, location.hash);
+  filtersExpanded = !collapse;
   document.getElementById("filter-toggle").disabled = false;
   document.getElementById("filter-toggle")?.addEventListener("click", () => {
     filterDisclosureUsed = true;
@@ -1366,7 +1366,9 @@ async function loadData() {
     const retryHrefUnchanged = focusGuard.href === window.location.href;
     commitUrl(tidy);
     if (!filterDisclosureUsed && (toolSet.present || linkedToolId || linkNotices.includes("unknown") ||
-        (typeof HLOLang !== "undefined" && !HLOLang.hasBookParam(location.search)))) filtersExpanded = true;
+        (typeof HLOLang !== "undefined" && !HLOLang.collapseFilters(location.search, location.hash)) ||
+        (filters.search && !(typeof HLOLang !== "undefined" && HLOLang.isBookArrival(location.search, location.hash))) ||
+        filters.progress !== "all" || filters.later)) filtersExpanded = true;
     updateFilterVisibility();
     urlStateReady = true;
 
@@ -1992,6 +1994,8 @@ function applyHistoryState(view, focusProgress = false) {
   if (searchInput && searchInput.value.trim() !== next.q) searchInput.value = next.q;
   setSearchQuery(next.q);
   applyToolLinks(hasSavedView(view));
+  if (!filterDisclosureUsed && (filters.search || filters.categoryId || filters.fieldId ||
+      filters.maxDifficulty || filters.progress !== "all" || filters.later)) filtersExpanded = true;
   // Canonicalize the effective category/field/difficulty; unknown book values still drive their notice.
   if (HU) {
     try {

@@ -13,6 +13,17 @@ const { test } = require("node:test");
 const L = require("../js/lang.js");
 const SRC = fs.readFileSync(path.join(__dirname, "..", "js", "lang.js"), "utf8");
 
+test("LG8: pre-paint filter collapse preserves explicit arrivals and existing book/set precedence", () => {
+  for (const search of ["", "?lang=en", "?utm_source=example", "?book=ALL"]) assert.equal(L.collapseFilters(search, ""), true, search);
+  for (const search of ["?q=test", "?cat=classic-crypto", "?field=web", "?maxDifficulty=2", "?tools=", "?tab=dashboard"]) assert.equal(L.collapseFilters(search, ""), false, search);
+  assert.equal(L.collapseFilters("?book=genai-crypto&q=test", ""), true);
+  assert.equal(L.collapseFilters("?book=genai-crypto&tools=day023", ""), false);
+  assert.equal(L.collapseFilters("", "#%64ay023"), false);
+  assert.equal(L.collapseFilters("", "#%invalid"), false);
+  assert.equal(runInPage("?lang=en", () => null).document.documentElement.getAttribute("data-filter-start"), "closed");
+  assert.equal(runInPage("?q=test", () => null).document.documentElement.getAttribute("data-filter-start"), null);
+});
+
 test("LG1: 決める順は ?lang=（ja か en）→ 保存した言語 → 日本語。ブラウザーの言語は使わない", () => {
   assert.equal(L.resolveLang("?lang=en", null), "en");
   assert.equal(L.resolveLang("?lang=ja", "en"), "ja");
