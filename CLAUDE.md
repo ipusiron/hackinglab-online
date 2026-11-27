@@ -285,7 +285,7 @@ Show the storage warning once per page, preserve its dismissed state, and use th
 
 ## Search aliases and starter progress
 
-Keep tool-specific vocabulary in `TOOL_ALIASES` in `js/search.js`, keyed by stable public Day IDs. Do not add these words to category aliases or generated metadata. Preserve NFKC, AND terms and exact Day matching. Starter progress links display the existing effective progress and navigate to the card's progress select without changing its value. Synchronize all 15 labels on load/language, local changes, cross-tab/import/pageshow refresh and reset, without replacing starter links or moving focus. Hide labels while required data is unavailable. Opening a demo never advances progress.
+Keep tool-specific vocabulary in `TOOL_ALIASES` in `js/search.js`, keyed by stable public Day IDs. Do not add these words to category aliases or generated metadata. Everyday phrases must describe the tool's actual purpose: password-strength wording belongs to Day001, while mismatching-text wording belongs to Day023. A keyword appearing in a limitation or a shared category does not justify adding its synonym to that tool; Day089 explicitly does not assess password strength. Preserve NFKC, AND terms and exact Day matching. Starter progress links display the existing effective progress and navigate to the card's progress select without changing its value. Synchronize all 15 labels on load/language, local changes, cross-tab/import/pageshow refresh and reset, without replacing starter links or moving focus. Hide labels while required data is unavailable. Opening a demo never advances progress.
 
 ## Recent tools and saved selections
 

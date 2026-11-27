@@ -38,6 +38,21 @@ test("tool aliases find Japanese names without expanding to category peers", () 
   assert.equal(S.buildEntry({id:"constructor"},catIndex).text,"constructor");
 });
 
+test("everyday password wording finds the strength checker, not token estimates or keyboard observations", () => {
+  for (const query of ["パスワード 強さ", "パスワードの強さ"]) {
+    assert.deepEqual(find(query), ["day001"], query);
+  }
+  assert.deepEqual(find("パスワード 強さ Day48"), []);
+  assert.deepEqual(find("パスワード 強さ Day89"), []);
+});
+
+test("mismatching-text wording finds the Unicode inspector without broadening to other web tools", () => {
+  for (const query of ["文字が一致しない", "文字列が一致しない", "文字 一致しない"]) {
+    assert.deepEqual(find(query), ["day023"], query);
+  }
+  assert.deepEqual(find("文字が一致しない Day75"), []);
+});
+
 // ---- Q: 合成データ ----
 
 test("Q1: normalize は全角と半角（英数字・空白・カタカナ）と大文字・小文字をそろえる", () => {
@@ -114,7 +129,7 @@ test("Q4: buildEntry は id・題名・副題・説明・タグと、categories.
   const e2 = S.buildEntry({ id: "day051", category_ids: ["odd"] }, S.categoryIndex([{ id: "odd", ja: "名前", en: "Name", aliases_ja: "別名" }]));
   assert.ok(!e2.text.includes("別名"));
   // 欠けた項目があっても例外を出さない
-  assert.deepEqual(S.buildEntry({ id: "day001" }, idx), { id: "day001", text: "day001" });
+  assert.deepEqual(S.buildEntry({ id: "day999" }, idx), { id: "day999", text: "day999" });
   assert.deepEqual(S.buildEntry(null, idx), { id: "", text: "" });
 });
 
