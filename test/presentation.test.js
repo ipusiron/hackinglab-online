@@ -75,15 +75,17 @@ test("P5: card accessible names preserve literal tool text without inserting mar
   assert.equal(p.document.querySelector('.start-demo[data-tool-id="day003"]').getAttribute("aria-label"),`Open demo (${tool.title}, new tab)`);
 });
 
-test("P6: static discovery metadata has one Japanese description, the existing local image and the root canonical", async () => {
+test("P6: static discovery metadata has one Japanese description, a large local image and the root canonical", async () => {
   const p=await runPage(),doc=p.document;
   const meta=(attr,key)=>{const found=doc.querySelectorAll(`meta[${attr}="${key}"]`);assert.equal(found.length,1);return found[0].getAttribute("content");};
   const description="『ハッキング・ラボのつくりかた』の著者IPUSIRONが生成AIで作ったセキュリティツール100本超を、カテゴリや本から探して、手を動かしながら独学できるサイトです。ツールの多くはブラウザーだけで動きます。登録は要らず、進捗は使っているブラウザーにだけ残ります。";
   assert.equal(meta("name","description"),description);assert.equal(meta("property","og:description"),description);
   assert.equal(meta("property","og:title"),baseTitles.ja);assert.equal(meta("property","og:site_name"),"ハッキング・ラボ・オンライン（Hacking Lab Online）");
   assert.equal(meta("property","og:url"),"https://hackinglab.online/");assert.equal(doc.querySelector('link[rel="canonical"]').href,"https://hackinglab.online/");
-  assert.equal(meta("property","og:image"),"https://hackinglab.online/favicon/HLO_glitch_hex.png");
-  assert.equal(meta("property","og:image:alt"),"ハッキング・ラボ・オンラインのロゴ");assert.equal(meta("name","twitter:card"),"summary");
+  assert.equal(meta("property","og:image"),"https://hackinglab.online/assets/social/hackinglab-online.png");
+  assert.equal(meta("property","og:image:width"),"1200");assert.equal(meta("property","og:image:height"),"630");
+  assert.equal(meta("property","og:image:alt"),"ハッキング・ラボ・オンライン：手を動かして仕組みを知る、IPUSIRONのセキュリティツール");assert.equal(meta("name","twitter:card"),"summary_large_image");
+  assert.equal(meta("name","twitter:image"),meta("property","og:image"));
   el(p,"lang-en").click();assert.equal(meta("property","og:title"),baseTitles.ja);
 });
 

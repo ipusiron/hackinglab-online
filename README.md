@@ -22,6 +22,7 @@
 - 🔗 `#day045`でツール1本のカードへ移動
 - 🧩 `?tools=day003,day001,day045`で、選んだ順のツールを最大12本まで共有
 - 📄 [JavaScriptなしで読めるツール一覧](https://hackinglab.online/list.html)で、全ツールと書籍ごとの一覧を日英併記
+- 🎬 [画像と動画で体験例を見る](https://hackinglab.online/discover.html)：不可視文字・CAPTCHA風の文字加工・視覚の仕組みを、実画面と短い手順から試せる日英の紹介ページ
 - 📚 学習状況をlocalStorageを使って記録  
 - 📊 ダッシュボードで全体進捗＋カテゴリ別・書籍別進捗を可視化  
 - 🔗 X（旧Twitter）で進捗を共有し、同じ範囲のリンクをコピー
@@ -79,13 +80,16 @@ Pagesの公開元（Settings → Pages → Source）はGitHub Actionsです。
 ```text
 /
 ├ index.html                # メインHTML（ヘッダー・タブ・モーダル）
+├ discover.html             # 画像・動画と短い手順で3本を体験する日英の紹介ページ
 ├ 404.html                  # JavaScriptなしで読める日英の案内と入口
 ├ list.html                 # JavaScript不要の一覧（自動生成・手動編集禁止）
 ├ css/
 │   ├ style.css             # 全体スタイル（モバイルファースト）
-│   └ list.css              # 静的一覧のスタイル
+│   ├ list.css              # 静的一覧のスタイル
+│   └ discover.css          # 体験紹介ページのスタイル
 ├ js/
 │   ├ main.js               # フロントロジック（一覧・進捗管理・ダッシュボード）
+│   ├ discover.js           # 体験紹介の言語・履歴・紹介文コピー
 │   ├ lang.js               # 表示の言語（?lang=・保存した言語・日本語の順）と「はじめ方」の開閉（?book=・?tools= なら閉じる・覚えた開閉・画面の幅の順）を描く前に決める（head で defer なしに読む）
 │   ├ books.js              # 書籍フィルターの純関数（DOM非依存・テスト対象）
 │   ├ search.js             # キーワード検索の純関数（DOM非依存・テスト対象）
@@ -101,6 +105,9 @@ Pagesの公開元（Settings → Pages → Source）はGitHub Actionsです。
 │   ├ books.json            # 書籍・プロジェクト定義（手動管理）
 │   ├ added.json            # IDごとの初掲載日（自動管理・既存日付を保持）
 │   └ tools.json            # 自動生成ファイル（手動編集禁止）
+├ assets/
+│   ├ discover/             # 公開ツールの実画面と無音の操作動画
+│   └ social/               # 1200×630の紹介画像
 ├ repos.txt                 # ツールリポジトリ一覧（1行1URL）
 ├ package.json              # テスト設定（依存なし・node --test）
 ├ test/
@@ -121,9 +128,12 @@ Pagesの公開元（Settings → Pages → Source）はGitHub Actionsです。
 │   ├ test_readme_usage.py  # Markdown見出しの抽出と安全な先頭への切替え
 │   ├ test_usage_pipeline.py # 日英READMEの取得失敗と前回値の保全
 │   ├ usage_links.test.js   # 言語別リンク、任意メタデータ、カードと静的一覧
+│   ├ discover.test.js      # 紹介ページの公開資産・画像寸法・動画とCSP
 │   └ lang.test.js          # lang.js の検査（言語と「はじめ方」の開閉を決める順・保存できない環境）
 ├ scripts/
 │   ├ build_pages.js        # tools.json・books.jsonから静的一覧を生成
+│   ├ social-cards.html     # 紹介画像の制作元（公開ページには含めない）
+│   ├ render_social_cards.py # 導入済みPlaywrightで紹介画像を書き出す任意の制作処理
 │   ├ category_groups.py    # カテゴリ対応と分野データの厳格な検証
 │   ├ init_added.py         # 初掲載日をmainのGit履歴から一度だけ復元
 │   ├ readme_usage.py       # READMEの使い方見出しとリンク断片の抽出
@@ -476,6 +486,12 @@ $ npm test
 ```
 
 ---
+
+### 体験紹介と素材の更新
+
+`discover.html`は、公開中のWeirdString Inspector、CAPTCHA Art Generator、Vision Trap Atlasを実際に操作した画面と手順を掲載しています。素材は2026年11月27日に日本語UIから収録しました。動画は約30秒・無音で、再生を押したときだけ読み込みます。画像・動画・短い紹介文は、ページ末尾の「この体験を紹介する」から利用できます。
+
+ツールの操作が変わった場合は、手順と`assets/discover/`の素材を一緒に更新してください。紹介画像を更新する場合は、導入済みのPlaywrightとChromiumがある環境で`python scripts/render_social_cards.py`を実行し、`assets/social/`のPNG2枚を目視確認します。この制作処理は通常のテスト・Pagesビルドには含めません。
 
 ### カタログ生成の確認
 
