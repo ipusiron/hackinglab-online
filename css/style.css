@@ -1995,8 +1995,8 @@ body { padding-bottom: var(--storage-notice-h, 0px); }
 #share-scope-note, #share-copy-status { overflow-wrap: anywhere; line-height: 1.6; }
 #share-copy-url { display: block; width: 100%; min-width: 0; min-height: 2.75rem; margin-top: .5rem; padding: .5rem; font: inherit; scroll-margin-block: .5rem; color: var(--control-text); background: var(--control-bg); border: 1px solid var(--field-border); border-radius: .5rem; }
 
-/* Decorative symbols are limited to the two external card links. */
-.tool-button .external-link-icon { width: .9em; height: .9em; flex: 0 0 auto; margin-inline-start: .2em; vertical-align: -.1em; }
+/* Decorative symbols identify links that open another tab. */
+.tool-button .external-link-icon, .resume-tool-actions .external-link-icon { width: .9em; height: .9em; flex: 0 0 auto; margin-inline-start: .2em; vertical-align: -.1em; }
 
 .discovery-panel { margin: 0.75rem 0; padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; overflow-wrap: anywhere; }
 .discovery-panel summary { min-height: 2.75rem; padding: 0.5rem 0; cursor: pointer; }
@@ -2004,6 +2004,12 @@ body { padding-bottom: var(--storage-notice-h, 0px); }
 .discovery-panel button { min-height: 2.75rem; max-width: 100%; padding: 0.5rem 0.75rem; font: inherit; overflow-wrap: anywhere; }
 #recent-tools-list { padding-inline-start: 1.5rem; }
 #recent-tools-list a { display: block; min-height: 2.75rem; padding: 0.5rem 0; }
+#dashboard-resume-list { display: grid; gap: 0.75rem; margin: 0.75rem 0 0; padding: 0; list-style: none; }
+#dashboard-resume-list li { min-width: 0; padding-top: 0.5rem; border-top: 1px solid var(--border); }
+.resume-tool-title { display: block; overflow-wrap: anywhere; font-weight: 600; }
+.resume-tool-actions { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; }
+.resume-tool-actions a { display: inline-flex; align-items: center; min-height: 2.75rem; max-width: 100%; padding: 0.5rem 0; color: var(--link); overflow-wrap: anywhere; }
+.resume-tool-actions a[aria-disabled="true"] { color: var(--text-muted); text-decoration: none; }
 #later-share-choices { min-width: 0; margin: 0.5rem 0; }
 #later-share-list label { display: flex; align-items: center; gap: 0.5rem; min-height: 2.75rem; padding: 0.5rem 0; cursor: pointer; }
 #later-share-list input { flex: 0 0 auto; width: 1.25rem; height: 1.25rem; }
