@@ -330,14 +330,14 @@ test("BV18: explicit progress changes announce count/zero results ahead of unkno
     const result = status.textContent;
     p.evaluate("renderToolList(); refreshProgressViews()"); await time.advance(1000, p);
     assert.equal(status.textContent, result); assert.equal(writes.length, 1);
-    change(p, "filter-progress", "all"); assert.equal(status.textContent, "Showing all 128 tools.");
+    change(p, "filter-progress", "all"); assert.equal(status.textContent, `Showing all ${tools.length} tools.`);
     const first = cards(p)[0].querySelector(".tool-progress-select"); chooseProgress(first, 1);
     p.dispatch("pageshow", { persisted: true }); await time.advance(1000, p);
-    assert.equal(status.textContent, "Showing all 128 tools.");
+    assert.equal(status.textContent, `Showing all ${tools.length} tools.`);
     const importedText = JSON.stringify({ app: "hackinglab-online", schema_version: 1, saved_at: "2026-11-20T00:00:00.000Z", progress: { day003: 2 } });
     el(p, "records-file").files = [{ size: Buffer.byteLength(importedText), text: async () => importedText }];
     const imported = p.evaluate("handleRecordsImport()"); await p.flush(); await time.advance(0, p); await imported;
-    assert.equal(status.textContent, "Showing all 128 tools.", "Import must not revive the old book notice");
+    assert.equal(status.textContent, `Showing all ${tools.length} tools.`, "Import must not revive the old book notice");
     p.context.history.pushState({ y: 0, progress: "all" }, "", "?book=missing&lang=en");
     p.dispatch("popstate", { state: { y: 0, progress: "all" } });
     assert.match(status.textContent, unavailable ? /Couldn't load the book list/ : /Book not found/);
