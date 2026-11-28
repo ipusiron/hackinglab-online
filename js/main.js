@@ -1298,6 +1298,7 @@ function setLoadState(state) {
   updateRecordsUI();
   updateStartEntries();
   updateDashboardResume();
+  updateDashboardStart();
   updateTryLaterCount();
   updateActiveFilterSummary();
 }
@@ -3465,6 +3466,23 @@ function refreshProgressViews() {
 
 // ---- ダッシュボード描画 ----
 
+function updateDashboardStart() {
+  const panel = document.getElementById("dashboard-start");
+  const link = document.getElementById("dashboard-start-link");
+  if (!panel || !link) return;
+  const publicTools = loadState === "ready" ? tools.filter((tool) => tool.hub !== false) : [];
+  const visible = publicTools.length > 0 && publicTools.every((tool) => getProgress(tool.slug) === 0);
+  const hadFocus = panel.contains(document.activeElement);
+  link.setAttribute("href", `./discover.html?lang=${currentLang === "en" ? "en" : "ja"}#day023`);
+  panel.hidden = !visible;
+  // A cross-tab record or import can remove this action while it owns focus.
+  if (!visible && hadFocus) {
+    const resume = document.getElementById("dashboard-resume-summary");
+    const target = isShown(resume) ? resume : document.querySelector('.tab-button[aria-selected="true"]');
+    if (isShown(target)) target.focus({ preventScroll: true });
+  }
+}
+
 function updateDashboardResume() {
   const panel = document.getElementById("dashboard-resume");
   const list = document.getElementById("dashboard-resume-list");
@@ -3557,6 +3575,7 @@ function updateDashboardResume() {
 function renderDashboard() {
   if (loadState !== "ready") return;
   updateDashboardResume();
+  updateDashboardStart();
   refreshShareUI();
   const total = tools.filter((t) => t.hub !== false).length;
 

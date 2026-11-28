@@ -27,6 +27,15 @@
     day087: ["鍵の貸し借り", "鍵の貸出", "鍵の返却", "貸出台帳", "key lending", "key borrowing", "key checkout"]
   });
 
+  // New purpose phrases require every phrase term in the query. This keeps
+  // "comparison" from combining on its own with the Forensics category's
+  // "Image Analysis" alias. Existing catalog and alias words remain searchable.
+  // The inspector's A/B comparison checks whether text strings match.
+  var TOOL_PHRASES = Object.freeze({
+    day023: ["文字列比較", "文字列 比較", "文字列を比較", "文字の比較", "Unicode 比較",
+      "text comparison", "string comparison", "compare two strings", "compare strings", "WeirdString comparison"]
+  });
+
   // These exact catalog sentences name unsupported uses. Exclude them only
   // from the named tool's search description, never from displayed metadata.
   // This is not general negation parsing; changed descriptions remain searchable.
@@ -113,7 +122,11 @@
       if (parts[i] != null && parts[i] !== "") kept.push(String(parts[i]));
     }
     // 項目の境目は改行にする。検索語は空白を含まないので、2つの項目をまたいで当たることはない
-    return { id: normalize(t.id), text: normalize(kept.join("\n")) };
+    var entry = { id: normalize(t.id), text: normalize(kept.join("\n")) };
+    if (Object.prototype.hasOwnProperty.call(TOOL_PHRASES, toolId)) {
+      entry.phrases = TOOL_PHRASES[toolId].map(parseQuery);
+    }
+    return entry;
   }
 
   // entry（buildEntry の結果）が、terms（parseQuery の結果）の語をすべて含むか（語がなければ true）。
@@ -122,11 +135,19 @@
   function matches(entry, terms) {
     if (!terms || !terms.length) return true;
     if (!entry) return false;
+    var text = entry.text;
+    var phrases = entry.phrases || [];
+    for (var p = 0; p < phrases.length; p++) {
+      var phrase = phrases[p];
+      if (phrase.every(function (term) { return terms.indexOf(term) !== -1; })) {
+        text += "\n" + phrase.join("\n");
+      }
+    }
     for (var i = 0; i < terms.length; i++) {
       var day = dayTerm(terms[i]);
       if (day) {
         if (entry.id !== day) return false;
-      } else if (entry.text.indexOf(terms[i]) === -1) {
+      } else if (text.indexOf(terms[i]) === -1) {
         return false;
       }
     }

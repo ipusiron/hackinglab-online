@@ -168,3 +168,114 @@ test("DR7: rejected README destinations never fall back to raw repository URLs; 
   assert.equal(p.document.activeElement, control(p, unavailable));
   assert.deepEqual(records(p), before);
 });
+
+test("DS1: start guidance requires at least one public tool and no public progress, independent of saved tools and filters", async () => {
+  const data = catalog(), hidden = data.tools.at(-1); hidden.hub = false;
+  for (const search of ["?tab=dashboard&q=no-match&maxDifficulty=1", "?tab=dashboard&book=genai-crypto", "?tools=day003"]) {
+    const p = await runPage({ search, dataOverrides: { "data/tools.json": data }, storedValues: {
+      [key(hidden)]: "3", later_day003: "1", later_day050: "1"
+    } });
+    assert.equal(el(p, "dashboard-start").hidden, false);
+    assert.equal(el(p, "dashboard-start").closest("section").id, "dashboard-overall");
+    assert.equal(el(p, "dashboard-resume").hidden, true);
+    for (const level of [1, 2, 3]) {
+      p.values.set(key(data.tools[0]), String(level)); p.dispatch("pageshow", { persisted: true });
+      assert.equal(el(p, "dashboard-start").hidden, true, `public stage ${level} suppresses the initial invitation`);
+      assert.equal(el(p, "dashboard-resume").hidden, level !== 1);
+    }
+    p.values.delete(key(data.tools[0])); p.dispatch("storage", { key: null }); p.dispatch("pageshow", { persisted: true });
+    assert.equal(el(p, "dashboard-start").hidden, false);
+  }
+  for (const toolList of [[], data.tools.map((tool) => ({ ...tool, hub: false }))]) {
+    const p = await runPage({ dataOverrides: { "data/tools.json": { ...data, tools: toolList } }, allowLoadFailure: true });
+    assert.equal(el(p, "dashboard-start").hidden, true, "an empty public catalog is not a first-learning state");
+  }
+});
+
+test("DS2: required loading and errors hide start guidance and rescue its focus; ready recovery restores it", async () => {
+  const p = await runPage({ search: "?tab=dashboard", deferData: true });
+  assert.equal(el(p, "dashboard-start").hidden, true);
+  await p.releaseData();
+  assert.equal(el(p, "dashboard-start").hidden, false);
+  for (const state of ["loading", "error"]) {
+    el(p, "dashboard-start-link").focus(); p.evaluate(`setLoadState("${state}")`);
+    assert.equal(el(p, "dashboard-start").hidden, true);
+    assert.equal(p.document.activeElement, el(p, "tab-dashboard-label"));
+    p.evaluate('setLoadState("ready")');
+    assert.equal(el(p, "dashboard-start").hidden, false);
+  }
+  const failed = await runPage({ search: "?tab=dashboard", dataFailures: { "data/tools.json": 500 }, allowLoadFailure: true });
+  assert.equal(el(failed, "dashboard-start").hidden, true);
+});
+
+test("DS3: the normal discovery link keeps explicit language and anchor without intercepting navigation or writing progress", async () => {
+  const p = await runPage({ search: "?tab=dashboard", storedValues: { later_day003: "1" } });
+  const link = el(p, "dashboard-start-link"), before = records(p);
+  assert.equal(link.href, "https://hackinglab.online/discover.html?lang=ja#day023");
+  link.focus(); el(p, "lang-en").click();
+  assert.equal(el(p, "dashboard-start-link"), link);
+  assert.equal(p.document.activeElement, link);
+  assert.equal(link.href, "https://hackinglab.online/discover.html?lang=en#day023");
+  const writes = p.storageCalls.write;
+  for (const modifier of [{}, { ctrlKey: true }, { metaKey: true }, { shiftKey: true }, { button: 1 }]) {
+    assert.equal(link.dispatch("click", modifier).defaultPrevented, false);
+  }
+  assert.deepEqual(records(p), before); assert.equal(p.storageCalls.write, writes);
+  assert.equal(link.hasAttribute("target"), false);
+  assert.ok(read("discover.html").includes('id="day023"'));
+});
+
+test("DS4: cross-tab progress and pageshow update guidance, rescue only its removed focus, and keep resume closed", async () => {
+  const p = await runPage({ search: "?tab=dashboard" });
+  const panel = el(p, "dashboard-start"), link = el(p, "dashboard-start-link"), first = tools[0];
+  link.focus(); p.values.set(key(first), "1"); p.dispatch("storage", { key: key(first) });
+  await new Promise((resolve) => setTimeout(resolve, 120)); await p.flush();
+  assert.equal(panel.hidden, true);
+  assert.equal(p.document.activeElement, el(p, "dashboard-resume-summary"));
+  assert.equal(el(p, "dashboard-resume").open, false);
+  p.values.delete(key(first)); p.dispatch("pageshow", { persisted: true });
+  assert.equal(panel.hidden, false);
+  link.focus(); p.values.set(key(first), "2"); p.dispatch("pageshow", { persisted: true });
+  assert.equal(panel.hidden, true); assert.equal(p.document.activeElement, el(p, "tab-dashboard-label"));
+  p.values.delete(key(first)); p.dispatch("pageshow", { persisted: true });
+  el(p, "records-export").focus(); p.values.set(key(first), "3"); p.dispatch("pageshow", { persisted: true });
+  assert.equal(panel.hidden, true); assert.equal(p.document.activeElement, el(p, "records-export"));
+});
+
+test("DS5: explicit imports and resets synchronize the initial invitation, including memory-only progress", async () => {
+  const p = await runPage({ search: "?tab=dashboard", confirmResult: true });
+  const value = JSON.stringify({ app: "hackinglab-online", schema_version: 2, saved_at: "2026-11-28T00:00:00.000Z", progress: { day003: 1 }, try_later: ["day050"] });
+  el(p, "dashboard-start-link").focus();
+  el(p, "records-file").files = [{ size: Buffer.byteLength(value), text: async () => value }];
+  await p.evaluate("handleRecordsImport()"); await p.flush();
+  assert.equal(el(p, "dashboard-start").hidden, true);
+  assert.equal(p.document.activeElement, el(p, "dashboard-resume-summary"));
+  assert.equal(el(p, "dashboard-resume").open, false);
+  el(p, "reset-all-progress").focus(); el(p, "reset-all-progress").click(); await p.flush();
+  assert.equal(el(p, "dashboard-start").hidden, false);
+  assert.equal(p.values.get("later_day050"), "1");
+  assert.equal(p.document.activeElement, el(p, "reset-all-progress"));
+  const failed = await runPage({ search: "?tab=dashboard", storageFailure: "write" });
+  chooseProgress(control(failed, tools[0]), 1);
+  assert.equal(el(failed, "dashboard-start").hidden, true);
+  assert.equal(failed.values.has(key(tools[0])), false);
+});
+
+test("DS6: returning through tab history preserves the current language and reflects progress changed since the visit", async () => {
+  const p = await runPage({ search: "?tab=dashboard", confirmResult: true });
+  const link = el(p, "dashboard-start-link"); link.focus();
+  el(p, "tab-tools-label").click(); await p.flush();
+  chooseProgress(control(p, tools[0]), 1);
+  el(p, "lang-en").click();
+  await p.back();
+  assert.equal(el(p, "tab-dashboard").hidden, false);
+  assert.equal(el(p, "dashboard-start").hidden, true);
+  assert.equal(link.href, "https://hackinglab.online/discover.html?lang=en#day023");
+  assert.equal(p.document.activeElement, el(p, "tab-dashboard-label"));
+  await p.forward();
+  chooseProgress(control(p, tools[0]), 0);
+  await p.back();
+  assert.equal(el(p, "dashboard-start").hidden, false);
+  assert.equal(link.href, "https://hackinglab.online/discover.html?lang=en#day023");
+  assert.equal(p.document.activeElement, link);
+});
