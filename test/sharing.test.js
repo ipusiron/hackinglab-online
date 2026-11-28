@@ -53,8 +53,9 @@ test("SI3 zero selected related scope retains URL/note; related singleton uses t
   assert.equal(el(p, "share-scope-note").hidden, false);
   change(p, "filter-book", "ango-gijutsu-no-subete");
   p.evaluate(`setProgress(${JSON.stringify(tool("day123").slug)},3);refreshProgressViews()`);
-  assert.match(share(p).sentence, /1 of the 1 tool related to/);
-  el(p,"lang-ja").click(); assert.match(share(p).sentence, /関連ツール1本のうち1本/);
+  const angoTotal = totalFor("ango-gijutsu-no-subete");
+  assert.ok(share(p).sentence.includes(`1 of the ${angoTotal} ${angoTotal === 1 ? "tool" : "tools"} related to`));
+  el(p,"lang-ja").click(); assert.ok(share(p).sentence.includes(`関連ツール${angoTotal}本のうち1本`));
 });
 test("SI4 unknown book, optional books failure, sets and incompatible Day resolve share scope without raw input", async () => {
   for (const options of [
