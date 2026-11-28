@@ -89,7 +89,9 @@ test("CG3 seven optgroups expose unique field unions, hide unused categories and
   const visualization = select.querySelectorAll("option").find((o) => o.value === "visualization");
   assert.equal(visualization.parentNode, select);
   change(p, "filter-category", "visualization");
-  assert.deepEqual(shown(p), ["day128"]);
+  const visualizationIds = tools.filter((t) => t.category_ids.includes("visualization")).map((t) => t.id);
+  assert.ok(visualizationIds.includes("day128"));
+  assert.deepEqual(shown(p), visualizationIds);
   assert.equal(el(p, "category-guidance").hidden, true);
   for (const c of definitions.filter((c) => !tools.some((t) => t.category_ids.includes(c.id)))) assert.equal(select.querySelectorAll("option").some((o) => o.value === c.id), false);
 });
