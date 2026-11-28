@@ -34,7 +34,11 @@ SLUG_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]*\Z")
 
 
 class CatalogError(Exception):
-    """A failure that must leave the catalog unchanged."""
+    """A catalog failure requiring a non-zero result."""
+
+
+class CatalogRecoveryError(CatalogError):
+    """Rollback failed; the named recovery copies must be kept."""
 
 
 class UnauthorizedError(CatalogError):
@@ -350,20 +354,71 @@ def json_text(data) -> str:
 
 
 def write_files(contents: dict[Path, str]) -> None:
-    # Stage every output before replacing any destination. Network and validation
-    # failures never reach this function. Both data files are committed together.
-    temporary = []
+    """Restore old contents after a caught replacement failure where possible.
+
+    This is not a cross-file atomic commit or protection against process/power
+    loss. Recovery copies survive if rollback fails, so manual repair can use
+    the original bytes rather than reconstructing first-listed dates.
+    """
+    temporary, entries, replaced = [], [], []
+    preserve = set()
+
+    def stage(target: Path, data: bytes, purpose: str) -> Path:
+        with tempfile.NamedTemporaryFile(mode="wb", dir=target.parent,
+                                         prefix="." + target.name + "." + purpose + "-", delete=False) as stream:
+            staged = Path(stream.name)
+            temporary.append(staged)
+            stream.write(data)
+        return staged
+
     try:
+        # Nothing is replaced until every new output and original copy is ready.
         for path, content in contents.items():
-            with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", newline="\n", dir=path.parent,
-                                             prefix="." + path.name + ".", delete=False) as stream:
-                temporary.append((Path(stream.name), path))
-                stream.write(content)
-        for source, target in temporary:
-            os.replace(source, target)
+            try:
+                original = path.read_bytes()
+            except FileNotFoundError:
+                original = None
+            backup = stage(path, original, "recovery") if original is not None else None
+            entries.append((stage(path, content.encode("utf-8"), "new"), path, backup))
+        try:
+            for source, target, backup in entries:
+                os.replace(source, target)
+                replaced.append((target, backup))
+        except BaseException as write_error:
+            # Keep originals unless the entire rollback completes. This also
+            # avoids deleting them if restoration is interrupted unexpectedly.
+            preserve = {backup for _, _, backup in entries if backup is not None}
+            failures = []
+            for target, backup in reversed(replaced):
+                try:
+                    if backup is None:
+                        target.unlink(missing_ok=True)
+                    else:
+                        # Do not consume the only original copy during rollback.
+                        restore = stage(target, backup.read_bytes(), "restore")
+                        os.replace(restore, target)
+                except OSError as error:
+                    failures.append(f"{target}: {error}")
+            if failures:
+                recovery = "; ".join(f"{target} <- {backup}" if backup is not None
+                                     else f"remove {target} (previously absent)"
+                                     for _, target, backup in entries)
+                raise CatalogRecoveryError(
+                    f"Catalog write failed ({write_error}); rollback failed: {'; '.join(failures)}. "
+                    f"Recovery copies kept; restore the previous set before retrying: {recovery}"
+                ) from write_error
+            preserve.clear()
+            raise
     finally:
-        for source, _ in temporary:
-            source.unlink(missing_ok=True)
+        for source in temporary:
+            if source in preserve:
+                continue
+            try:
+                source.unlink(missing_ok=True)
+            except OSError as error:
+                # Cleanup must not hide the original error or discard recovery
+                # copies. A leftover path is reported instead of silently lost.
+                print(f"WARNING: could not remove temporary file {source}: {error}", file=sys.stderr)
 
 
 def regenerate(root: Path, *, timeout: float = 20, check_demos: bool = False,

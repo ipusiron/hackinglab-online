@@ -501,7 +501,7 @@ test("H24: PC幅の一覧は auto-fill で列を作り（結果が1件でもカ�
 
 // ---- 進捗の記録 ----
 
-test("H25: 別のタブで進捗が変わったら（storage イベント）、進捗・あとで試すとダッシュボードを同期し、空の保存リストだけ再評価する", () => {
+test("H25: 別のタブで進捗が変わったら（storage イベント）、記録とダッシュボードを同期し、空の進捗・保存リストを再評価する", () => {
   const setup = fnBody("setupProgressSync");
   const i = setup.indexOf('addEventListener("storage"');
   assert.ok(i >= 0, "storage イベントを受けていない（別のタブの変更を知らないまま押すと、1段飛んだり、別のタブの記録を消したりする）");
@@ -514,7 +514,7 @@ test("H25: 別のタブで進捗が変わったら（storage イベント）、�
   const refresh = fnBody("refreshProgressViews");
   assert.match(refresh, /querySelectorAll\("\.tool-progress-select"\)[\s\S]*updateProgressSelect\(/, "進捗ボタンを描き直していない");
   assert.match(refresh, /renderDashboard\(\)/, "ダッシュボードを描き直していない");
-  assert.match(refresh, /if \(filters\.later && !toolSet\.ids\.length && !shownToolIds\.size\) \{[\s\S]*renderToolList\(/, "空の保存リストだけを再評価する");
+  assert.match(refresh, /if \(\(filters\.later \|\| filters\.progress !== "all"\) && !toolSet\.ids\.length && !shownToolIds\.size\) \{[\s\S]*renderToolList\(/, "空の進捗・保存リストを再評価し、表示済みカードは保持する");
   assert.match(refresh, /querySelectorAll\("\.tool-later-toggle"\)[\s\S]*updateTryLaterButton\(/);
   // ダッシュボードの本の行は作り直すので、作り直す前にフォーカスしている部品の目印を取り、作り直したあとに同じ行へ戻す（H32）
   assert.match(

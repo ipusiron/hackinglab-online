@@ -37,6 +37,7 @@
     var p = doc.createElement("p"); p.textContent = value; if (className) p.className = className; parent.appendChild(p); return p;
   }
   function readLanguage() { return root.HLOLang.resolveLang(root.location.search, root.HLOLang.readSaved(function () { return root.localStorage; })); }
+  function languageHistory() { return Object.assign({}, root.history.state, { hloPrintLang: lang }); }
   function render() {
     doc.documentElement.lang = lang;
     doc.title = text("ツールセットの配布資料｜ハッキング・ラボ・オンライン", "Tool set handout | Hacking Lab Online");
@@ -49,7 +50,7 @@
     if (state === "ready") {
       // Browser-generated print headers must not reproduce unrelated incoming query strings.
       var clean = new URL(root.location.href); clean.search = new URL(url).search; clean.hash = "";
-      try { root.history.replaceState(null, "", clean.href); } catch (_) { /* Restricted history. */ }
+      try { root.history.replaceState(languageHistory(), "", clean.href); } catch (_) { /* Restricted history. */ }
     }
     // A relative same-origin return link also works for local previews. Only public IDs and language are retained.
     var back = new URL("./", root.location.href); back.search = new URL(url).search; back.searchParams.set("lang", lang);
@@ -113,12 +114,20 @@
       var next = button.dataset.lang; if (next === lang) return; lang = next;
       try { root.localStorage.setItem("hlo_lang", lang); } catch (_) { /* Language still switches. */ }
       var url = new URL(root.location.href); url.searchParams.set("lang", lang);
-      try { history.pushState(null, "", url); } catch (_) { /* Restricted history. */ }
+      try { root.history.pushState(languageHistory(), "", url); } catch (_) { /* Restricted history. */ }
       render();
     });
   });
-  root.addEventListener("popstate", function () { selectionSearch = root.location.search; lang = readLanguage(); render(); });
+  root.addEventListener("popstate", function (event) {
+    selectionSearch = root.location.search;
+    var previous = event.state && event.state.hloPrintLang;
+    lang = previous === "ja" || previous === "en" ? previous : readLanguage();
+    render();
+  });
   retry.addEventListener("click", load);
   printButton.addEventListener("click", function () { if (state === "ready" && selected.length) root.print(); });
+  // Remember this entry's resolved language before loading, without saving a
+  // preference. Back must restore it even if a language button changes storage.
+  try { root.history.replaceState(languageHistory(), ""); } catch (_) { /* Restricted history. */ }
   load();
 })(typeof globalThis !== "undefined" ? globalThis : this);

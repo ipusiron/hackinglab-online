@@ -1,5 +1,6 @@
 """Catalog generation failure and history tests; every HTTP request is mocked."""
 import contextlib
+import ctypes
 import datetime as dt
 import io
 import json
@@ -110,6 +111,86 @@ class RegenerationTests(unittest.TestCase):
     def append_repo(self, repo):
         with (self.root / "repos.txt").open("a", encoding="utf-8") as stream:
             stream.write("https://github.com/example/" + repo + "\n")
+
+    def test_replace_failure_restores_original_pair_and_retry_succeeds(self):
+        new = tool("day002", "two", added=None)
+        for failed_call in (1, 2):
+            with self.subTest(failed_replace=failed_call):
+                self.install([tool()])
+                self.append_repo("two")
+                before = self.outputs()
+                real_replace = catalog.os.replace
+                count = 0
+                def replace(source, target):
+                    nonlocal count
+                    count += 1
+                    if count == failed_call:
+                        raise PermissionError("injected replacement failure")
+                    return real_replace(source, target)
+                with mock.patch.object(catalog.os, "replace", side_effect=replace), self.assertRaises(PermissionError):
+                    self.regenerate(self.serve([tool(), new]))
+                self.assertEqual(self.outputs(), before)
+                self.assertEqual(list((self.root / "data").glob(".*")), [])
+                self.regenerate(self.serve([tool(), new]))
+                self.assertEqual([entry["id"] for entry in self.data()["tools"]], ["day001", "day002"])
+                self.assertEqual(self.data("added")["day002"], NOW.astimezone(catalog.JST).date().isoformat())
+
+    def test_rollback_failure_preserves_original_copies_and_reports_recovery(self):
+        new = tool("day002", "two", added=None)
+        self.append_repo("two")
+        before = self.outputs()
+        real_replace = catalog.os.replace
+        count = 0
+        def replace(source, target):
+            nonlocal count
+            count += 1
+            if count >= 2:
+                raise PermissionError("injected write and rollback failure")
+            return real_replace(source, target)
+        with mock.patch.object(catalog.os, "replace", side_effect=replace), self.assertRaises(catalog.CatalogRecoveryError) as caught:
+            self.regenerate(self.serve([tool(), new]))
+        self.assertNotEqual(self.outputs(), before)
+        recovered = {}
+        for relative, original in before.items():
+            target = self.root / relative
+            backups = list(target.parent.glob("." + target.name + ".recovery-*"))
+            self.assertEqual(len(backups), 1)
+            backup = backups[0]
+            self.assertEqual(backup.read_bytes(), original)
+            self.assertIn(str(target), str(caught.exception))
+            self.assertIn(str(backup), str(caught.exception))
+            recovered[target] = backup
+        # The reported materials really restore the complete previous state.
+        for target, backup in recovered.items():
+            target.write_bytes(backup.read_bytes())
+        self.assertEqual(self.outputs(), before)
+        self.regenerate(self.serve([tool(), new]))
+        self.assertEqual(len(self.data()["tools"]), 2)
+
+    @unittest.skipUnless(sys.platform == "win32", "Windows file sharing lock")
+    def test_windows_added_file_lock_rolls_back_and_unlock_allows_regeneration(self):
+        new = tool("day002", "two", added=None)
+        self.append_repo("two")
+        before = self.outputs()
+        kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel.CreateFileW.argtypes = [ctypes.c_wchar_p, ctypes.c_uint32, ctypes.c_uint32, ctypes.c_void_p,
+                                      ctypes.c_uint32, ctypes.c_uint32, ctypes.c_void_p]
+        kernel.CreateFileW.restype = ctypes.c_void_p
+        kernel.CloseHandle.argtypes = [ctypes.c_void_p]
+        # Permit reading/writing, but deny delete/replace on added.json only.
+        handle = kernel.CreateFileW(str(self.root / "data/added.json"), 0x80000000, 3, None, 3, 0x80, None)
+        if handle == ctypes.c_void_p(-1).value:
+            raise ctypes.WinError(ctypes.get_last_error())
+        try:
+            with self.assertRaises(PermissionError):
+                self.regenerate(self.serve([tool(), new]))
+            self.assertEqual(self.outputs(), before)
+            self.assertEqual(list((self.root / "data").glob(".*")), [])
+        finally:
+            kernel.CloseHandle(handle)
+        self.regenerate(self.serve([tool(), new]))
+        self.assertEqual(len(self.data()["tools"]), 2)
+        self.assertEqual(self.data("added")["day002"], NOW.astimezone(catalog.JST).date().isoformat())
 
     def test_same_content_keeps_bytes_and_generation_timestamp(self):
         before = self.outputs()

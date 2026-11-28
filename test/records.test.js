@@ -112,11 +112,22 @@ test("RC12: unreadable durable progress uses memory only, without creating extra
   }
 });
 
-test("RC13: all 64 effective, durable and file stage combinations respect both latest values", () => {
+test("RC13: all 64 stage combinations allow equal durable restores but never lower either latest value", () => {
   for (let saved = 0; saved <= 3; saved++) for (let effective = 0; effective <= 3; effective++) for (let durable = 0; durable <= 3; durable++) {
     const result = R.recheckImport(map([["day001", saved]]), map([["day001", effective]]), map([["day001", { ok: true, value: durable }]]));
-    assert.equal(result.count, saved > effective && saved > durable ? 1 : 0);
+    assert.equal(result.count, saved > effective && saved >= durable ? 1 : 0);
   }
+});
+
+test("RC19: planning distinguishes effective progress from durable protection across all 64 stages", () => {
+  for (let saved = 0; saved <= 3; saved++) for (let effective = 0; effective <= 3; effective++) for (let durable = 0; durable <= 3; durable++) {
+    const plan = R.planImport(map([["day001", saved]]), map([["day001", effective]]), map([["day001", { ok: true, value: durable }]]));
+    assert.deepEqual([...plan.candidates], saved > effective && saved >= durable ? [["day001", saved]] : []);
+    assert.equal(plan.localAheadCount, Math.max(effective, durable) > saved ? 1 : 0);
+  }
+  const unavailable = R.planImport(map([["day001", 2]]), map([["day001", 0]]), map([["day001", { ok: false, value: 3 }]]));
+  assert.deepEqual([...unavailable.candidates], [["day001", 2]]);
+  assert.equal(unavailable.localAheadCount, 0);
 });
 
 test("RC14: v2 exports bookmarked-only tools, sorts IDs and counts the union once", () => {
