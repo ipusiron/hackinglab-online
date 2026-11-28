@@ -571,3 +571,94 @@ test("SR22: delayed partial read failure stays memory-only while busy and post-c
   assert.equal(page.document.activeElement, id(page, "tab-tools-label"));
   assert.equal(id(page, "records-import").disabled, false);
 });
+
+test("SR23: restoring equal durable progress clears a failed lower write, including its dirty override", async () => {
+  for (const saved of [1, 2, 3]) {
+    let blocked = true;
+    const page = await runPage({ confirmResult: true, storedValues: { [key(first)]: String(saved) },
+      storageHooks: { write(k) { if (blocked && k === key(first)) throw Error("quota"); } } });
+    writeProgress(page, first, 0);
+    assert.equal(level(page, first), 0); assert.equal(page.values.get(key(first)), String(saved));
+    blocked = false;
+    await restore(page, file({ [first.id]: saved }));
+    assert.equal(page.confirmations.length, 1);
+    assert.equal(level(page, first), saved); assert.equal(page.values.get(key(first)), String(saved));
+    assert.equal(id(page, "records-status").textContent, "1本の記録をファイルから戻しました。");
+    page.values.set(key(first), "0"); page.dispatch("pageshow", { persisted: true });
+    assert.equal(level(page, first), 0, "Successful restore must clear dirty state so later durable changes become visible");
+  }
+});
+
+test("SR24: dirty lower progress never causes import to overwrite higher durable progress before or during confirmation", async () => {
+  for (const phase of ["before", "during"]) {
+    let blocked = true;
+    const page = await runPage({ storedValues: { [key(first)]: phase === "before" ? "3" : "2" },
+      storageHooks: { write(k) { if (blocked && k === key(first)) throw Error("quota"); } },
+      confirmResult: (_, disk) => { disk.set(key(first), "3"); return true; } });
+    writeProgress(page, first, 0); blocked = false;
+    const writes = page.storageCalls.write;
+    await restore(page, file({ [first.id]: 2 }));
+    assert.equal(page.confirmations.length, phase === "before" ? 0 : 1);
+    assert.equal(page.storageCalls.write, writes); assert.equal(page.values.get(key(first)), "3");
+    assert.equal(level(page, first), 0, "Skipping an older file must preserve the effective user choice too");
+  }
+});
+
+test("SR25: failed or unreadable durable storage still allows an explicit dirty progress restore in memory", async () => {
+  for (const failure of ["write", "read"]) {
+    let rejectRead = false;
+    const page = await runPage({ storedValues: { [key(first)]: "2" }, confirmResult: () => { rejectRead = failure === "read"; return true; },
+      storageHooks: {
+        write(k) { if (k === key(first)) throw Error("quota"); },
+        read(k) { if (rejectRead && k === key(first)) throw Error("revoked"); }
+      } });
+    writeProgress(page, first, 0);
+    const writes = page.storageCalls.write;
+    await restore(page, file({ [first.id]: 2 }));
+    assert.equal(page.confirmations.length, 1); assert.equal(level(page, first), 2);
+    assert.equal(page.values.get(key(first)), "2"); assert.equal(id(page, "storage-warning").hidden, false);
+    assert.equal(page.storageCalls.write, writes + (failure === "write" ? 1 : 0));
+  }
+});
+
+test("SR26: restoring from dashboard repopulates an empty progress result without changing its filters or focus", async () => {
+  for (const language of ["ja", "en"]) {
+    const page = await runPage({ search: `?q=${first.id}&lang=${language}`, confirmResult: true });
+    const filter = id(page, "filter-progress"); filter.value = "1"; filter.dispatch("change");
+    assert.equal(page.document.querySelectorAll(".tool-card").length, 0);
+    id(page, "tab-dashboard-label").click(); id(page, "records-import").focus();
+    await restore(page, file({ [first.id]: 1 }));
+    assert.equal(page.document.activeElement, id(page, "records-import"));
+    id(page, "tab-tools-label").click();
+    assert.deepEqual(page.document.querySelectorAll(".tool-card").map(card => card.dataset.toolId), [first.id]);
+    assert.equal(filter.value, "1"); assert.equal(id(page, "filter-search-input").value, first.id);
+  }
+});
+
+test("SR27: synchronized empty progress results recover for every level and rescue lost empty-button focus", async () => {
+  for (const wanted of [0, 1, 2, 3]) {
+    const page = await runPage({ search: `?q=${first.id}`, storedValues: { [key(first)]: String(wanted === 0 ? 1 : 0) } });
+    const filter = id(page, "filter-progress"); filter.value = String(wanted); filter.dispatch("change");
+    id(page, "clear-filters").focus();
+    page.values.set(key(first), String(wanted)); page.dispatch("storage", { key: key(first) });
+    page.evaluate("refreshProgressViews()");
+    assert.deepEqual(page.document.querySelectorAll(".tool-card").map(card => card.dataset.toolId), [first.id]);
+    assert.equal(page.document.activeElement, filter);
+    assert.equal(filter.value, String(wanted));
+  }
+});
+
+test("SR28: empty progress refresh preserves other constraints and retains controls once cards exist", async () => {
+  const page = await runPage({ search: `?q=${first.id}`, confirmResult: true });
+  const filter = id(page, "filter-progress"); filter.value = "1"; filter.dispatch("change");
+  const emptyButton = id(page, "clear-filters"); emptyButton.focus();
+  await restore(page, file({ [second.id]: 1 }));
+  assert.equal(page.document.querySelectorAll(".tool-card").length, 0);
+  assert.equal(page.document.activeElement, id(page, "clear-filters"));
+  await restore(page, file({ [first.id]: 1 }));
+  const cards = page.document.querySelectorAll(".tool-card"), select = cards[0].querySelector('[data-part="progress"]');
+  select.focus(); page.values.set(key(first), "2"); page.dispatch("pageshow", { persisted: true });
+  assert.deepEqual(page.document.querySelectorAll(".tool-card"), cards);
+  assert.equal(page.document.activeElement, select); assert.equal(select.value, "2");
+  assert.equal(cards[0].querySelector(".tool-outside-label").hidden, false);
+});

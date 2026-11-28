@@ -66,7 +66,7 @@ function page({ search = "?tools=day003&lang=en", fetches = [() => response()], 
     return languageButtons;
   };
   const events = new Map(), timers = new Map(), requests = [], storageCalls = [], values = new Map(Object.entries(stored));
-  const entries = ["https://hackinglab.online/print.html" + search]; let position = 0, timerId = 0, now = 0, printed = 0;
+  const entries = ["https://hackinglab.online/print.html" + search], states = [null]; let position = 0, timerId = 0, now = 0, printed = 0;
   const context = vm.createContext({ document, URL, URLSearchParams, AbortController, console,
     location: new URL(entries[0]),
     setTimeout(fn, delay) { const id = ++timerId; timers.set(id, { fn, at: now + delay }); return id; },
@@ -90,11 +90,20 @@ function page({ search = "?tools=day003&lang=en", fetches = [() => response()], 
   const go = delta => {
     const next = position + delta; if (next < 0 || next >= entries.length) return;
     position = next; context.location = new URL(entries[position]);
-    for (const listener of events.get("popstate") || []) listener({ type: "popstate" });
+    for (const listener of events.get("popstate") || []) listener({ type: "popstate", state: structuredClone(states[position]) });
   };
   context.history = {
-    pushState(_state, _title, url) { const next = new URL(url, context.location.href).href; entries.splice(++position); entries.push(next); context.location = new URL(next); },
-    replaceState(_state, _title, url) { entries[position] = new URL(url, context.location.href).href; context.location = new URL(entries[position]); },
+    get state() { return states[position]; },
+    pushState(state, _title, url) {
+      const next = url === undefined ? context.location.href : new URL(url, context.location.href).href;
+      entries.splice(++position); states.splice(position);
+      entries.push(next); states.push(structuredClone(state)); context.location = new URL(next);
+    },
+    replaceState(state, _title, url) {
+      states[position] = structuredClone(state);
+      if (url !== undefined) entries[position] = new URL(url, context.location.href).href;
+      context.location = new URL(entries[position]);
+    },
     back() { go(-1); }, forward() { go(1); }
   };
   for (const file of ["js/lang.js", "js/url.js", "js/preparation.js", "js/print.js"]) vm.runInContext(read(file), context, { filename: file });
@@ -188,6 +197,36 @@ test("explicit language and Back/Forward work when saving the language is unavai
   p.context.history.forward(); await flush();
   assert.equal(p.document.documentElement.lang, "en"); assert.equal(p.requests.length, 1);
   assert.equal(p.entries.some(entry => entry.includes("private")), false);
+});
+
+test("Back restores the initial resolved language during catalog loading in both directions", async t => {
+  for (const initial of ["ja", "en"]) await t.test(initial, async () => {
+    let release;
+    const p = page({ search: "?tools=day003,day999&q=private#private-fragment", stored: initial === "en" ? { hlo_lang: "en" } : {}, fetches: [() => new Promise(resolve => { release = resolve; })] });
+    await flush();
+    assert.equal(p.document.documentElement.lang, initial);
+    assert.equal(p.storageCalls.some(([action]) => action === "set"), false, "Opening a handout must not save a language preference");
+    const next = initial === "ja" ? "en" : "ja";
+    p.language(next).click();
+    assert.equal(p.values.get("hlo_lang"), next);
+    p.context.history.back();
+    assert.equal(p.el("handout-list").getAttribute("aria-busy"), "true");
+    assert.equal(p.document.documentElement.lang, initial, "Back restores the displayed language, not the subsequently changed preference");
+    release(response()); await flush();
+    assert.equal(p.document.documentElement.lang, initial);
+    assert.equal(p.context.location.searchParams.get("lang"), initial);
+    assert.deepEqual(p.ids(), ["day003"]);
+    assert.match(p.el("handout-status").textContent, /Unavailable tools were omitted|見つからないツールは省きました/);
+    assert.equal(p.context.location.searchParams.has("q"), false);
+    assert.equal(p.context.location.hash, "");
+    assert.equal(p.context.location.searchParams.get("tools"), "day003");
+    assert.equal(p.values.get("hlo_lang"), next, "History navigation does not rewrite the saved preference");
+    p.context.history.forward(); await flush();
+    assert.equal(p.document.documentElement.lang, next);
+    assert.equal(p.context.location.searchParams.get("lang"), next);
+    assert.deepEqual(p.ids(), ["day003"]);
+    assert.equal(p.requests.length, 1);
+  });
 });
 
 test("catalog markup remains text and unsafe destinations never become links", async () => {

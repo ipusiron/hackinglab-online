@@ -588,8 +588,7 @@ async function handleRecordsImport() {
     const parsed = RECORDS.parseRecords(await file.text(), new Set(getRecordTools().map((tool) => tool.id)));
     if (!parsed.ok) { setRecordsResult(parsed.reason === "new-version" ? "import_new_version" : "import_invalid"); return; }
     const first = recordProgressMaps();
-    const current = new Map([...first.effective].map(([id, value]) => [id, Math.max(value, first.durable.get(id)?.ok ? first.durable.get(id).value : 0)]));
-    const plan = RECORDS.planImport(parsed.progress, current);
+    const plan = RECORDS.planImport(parsed.progress, first.effective, first.durable);
     const firstLater = recordTryLaterMaps();
     const laterCandidates = RECORDS.planTryLaterImport(parsed.tryLater, firstLater.effective);
     const candidateIds = new Set([...plan.candidates.keys(), ...laterCandidates]);
@@ -3446,15 +3445,15 @@ function refreshProgressViews() {
   });
   updateOutsideCards();
   progressVersion++;
-  // An empty saved list has no card controls to preserve. Re-evaluate it when
-  // another tab or an import adds records; never leave a stale "nothing saved".
-  if (filters.later && !toolSet.ids.length && !shownToolIds.size) {
+  // An empty progress/saved list has no card controls to preserve. Re-evaluate
+  // it after synchronization or import without rebuilding retained cards.
+  if ((filters.later || filters.progress !== "all") && !toolSet.ids.length && !shownToolIds.size) {
     const clearFocused = document.activeElement?.id === "clear-filters" && currentTab === "tools";
     renderToolList(undefined, false);
     if (clearFocused) {
       const clear = document.getElementById("clear-filters");
       if (clear) clear.focus({ preventScroll: true });
-      else focusFilter("filter-later", { preventScroll: true });
+      else focusFilter(filters.later ? "filter-later" : "filter-progress", { preventScroll: true });
     }
   }
   // 作り直す前にフォーカスしている部品と目印を覚え、作り直したあとに同じ部品へ戻す（スクロールはしない）

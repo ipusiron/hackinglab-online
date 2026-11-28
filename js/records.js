@@ -69,14 +69,18 @@
   }
 
   // Compare before asking once for confirmation. Missing file IDs mean no change.
-  function planImport(fileProgress, currentById) {
+  // Keep effective progress separate: an equal durable value may still need to
+  // replace a lower memory-only value left behind by a failed write.
+  function planImport(fileProgress, currentById, durableById = new Map()) {
     const candidates = new Map();
     let localAheadCount = 0;
     for (const id of new Set([...fileProgress.keys(), ...currentById.keys()])) {
       const level = levelAt(fileProgress, id);
       const current = levelAt(currentById, id);
-      if (level > current) candidates.set(id, level);
-      else if (current > level) localAheadCount++;
+      const durable = durableById.get(id);
+      const protectedLevel = durable?.ok === true && validLevel(durable.value) ? durable.value : 0;
+      if (level > current && level >= protectedLevel) candidates.set(id, level);
+      else if (Math.max(current, protectedLevel) > level) localAheadCount++;
     }
     return { candidates, localAheadCount };
   }
@@ -90,7 +94,9 @@
       if (level <= levelAt(effectiveById, id)) continue;
       const durable = durableById.get(id);
       const known = Boolean(durable && durable.ok === true && validLevel(durable.value));
-      if (known && level <= durable.value) continue;
+      // Rewriting an equal durable value clears a dirty lower value. A higher
+      // durable value is still protected, including changes made in another tab.
+      if (known && level < durable.value) continue;
       updates.push({ id, level, persist: known });
     }
     return { updates, count: updates.length };

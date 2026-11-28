@@ -1,5 +1,13 @@
 # CLAUDE.md
 
+### Recovery and history regression boundaries
+
+- An explicit progress-file restore may clear a lower memory-only value when the file equals the freshly read durable value. Preserve a higher durable value and keep unreadable durable state memory-only. Candidate confirmation and the post-confirmation recheck must both honor these rules.
+- Re-evaluate an empty progress-filtered list after record import or cross-tab synchronization, as for an empty Try later list. Preserve existing nonempty cards and their controls during these updates.
+- Catalog output replacement keeps original byte copies until all replacements succeed. On a caught replacement failure, restore replaced destinations; if rollback also fails, retain and report the recovery copies. This does not promise atomic multi-file writes across process termination or power loss.
+- Keep the handout entry's initially resolved language in history before catalog loading. Back/Forward must not consult a preference changed by later language-button clicks when that entry has a recorded language. History traversal does not write language preferences.
+- The help dialog moves Tab focus explicitly. Its focused controls and reading region need a visible outline even when a browser does not match `:focus-visible` after pointer input. Preserve inset region outlines and forced-colors visibility.
+
 ### Preparation, updates, reporting and printable selections
 
 - `js/preparation.js` holds reviewed bilingual prerequisites for ten public tools. Keep the catalog description unchanged and show preparation with the same description disclosure. Its ARIA controls reference both regions. Short descriptions still need this control when preparation exists. Preserve chapter-specific expansion and language/focus restoration. Missing preparation is not evidence that a tool has no prerequisites. Do not invent completion times or tested-device claims.
