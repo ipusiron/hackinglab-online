@@ -165,6 +165,7 @@
 .modal-content:focus,
 .modal-content :focus,
 #clear-filters:focus,
+.filter-guide-button:focus,
 .help-difficulty summary:focus,
 #help-report summary:focus,
 #help-report > a:focus {
@@ -480,6 +481,33 @@ html[lang="en"] #lang-en {
   min-width: 0;
 }
 .filter-group { min-width: 0; }
+
+/* Match the adjacent guide's label band without moving the paired selects. */
+.filter-pair > .filter-group > label {
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
+}
+.filter-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+.filter-guide-button {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0.25rem;
+  border: 0;
+  border-radius: 0.25rem;
+  background: transparent;
+  color: var(--link);
+  font: inherit;
+  font-size: 0.875rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
 
 #tool-filters select,
 #tool-filters input[type="search"] {
@@ -1225,6 +1253,14 @@ html[lang="en"] #lang-en {
 #share-on-x:hover,
 #share-copy-link:hover {
   filter: brightness(1.05);
+}
+
+.share-copy-note {
+  margin: 0.5rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--text-detail);
+  overflow-wrap: anywhere;
 }
 
 #reset-all-progress {

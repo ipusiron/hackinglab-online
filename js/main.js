@@ -1155,10 +1155,9 @@ function setupHelpModal() {
     if (helpModal.hidden) return;
     helpModal.hidden = true;
     document.documentElement.classList.remove("help-open", "keep-gutter");
-    const target =
-      returnFocusTo && document.contains(returnFocusTo) ? returnFocusTo : helpButton;
+    const target = isShown(returnFocusTo) && !returnFocusTo.disabled ? returnFocusTo : helpButton;
     returnFocusTo = null;
-    // 戻す先は固定ヘッダーの ? なので、スクロールさせない（scroll-padding-top があると Chromium がページを動かす）
+    // Restore the opener without moving the page; it may be inside the filters.
     target?.focus({ preventScroll: true });
   };
 
@@ -1169,6 +1168,16 @@ function setupHelpModal() {
     const heading = document.getElementById("help-storage");
     heading?.focus({ preventScroll: true });
     heading?.scrollIntoView({ block: "start", behavior: "auto" });
+  });
+  document.getElementById("filter-difficulty-help")?.addEventListener("click", (e) => {
+    // Pointer activation may leave focus elsewhere; always return to this opener.
+    e.currentTarget.focus({ preventScroll: true });
+    openHelp();
+    const guide = document.getElementById("help-difficulty");
+    if (guide) guide.open = true;
+    const summary = document.getElementById("help-difficulty-summary");
+    summary?.focus({ preventScroll: true });
+    summary?.scrollIntoView({ block: "start", behavior: "instant" });
   });
   helpClose?.addEventListener("click", closeHelp);
 
@@ -3925,6 +3934,19 @@ function clearShareFeedback(rescueFocus) {
 function refreshShareUI() {
   const data = shareData();
   if (!data) return;
+  const book = currentBook();
+  const label = !book ? ["サイト", "site"]
+    : book.kind === "series" ? ["プロジェクト", "project"] : ["書籍", "book"];
+  const buttonLabels = [`${label[0]}のリンクをコピー`, `Copy ${label[1]} link`];
+  ["ja", "en"].forEach((lang, index) => {
+    const node = document.getElementById(`share-copy-label-${lang}`);
+    if (node.textContent !== buttonLabels[index]) node.textContent = buttonLabels[index];
+  });
+  const field = document.getElementById("share-copy-url");
+  const names = [`コピーする${label[0]}のリンク`, `${label[1][0].toUpperCase() + label[1].slice(1)} link to copy`];
+  field.setAttribute("data-aria-label-ja", names[0]);
+  field.setAttribute("data-aria-label-en", names[1]);
+  field.setAttribute("aria-label", names[currentLang === "ja" ? 0 : 1]);
   const key = currentLang + ":" + data.url + ":" + data.scopeNote;
   if (key !== shareScopeKey) {
     clearShareFeedback(true);

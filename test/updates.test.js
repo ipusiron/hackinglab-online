@@ -42,7 +42,7 @@ test("updates: public listing dates and bilingual curated release records remain
       assert.ok(html.includes(item[`description_${lang}`]));
     }
   }
-  assert.equal(validateUpdates(updates)[0].id, "search-and-first-experiment");
+  assert.equal(validateUpdates(updates)[0].id, "difficulty-guide-copy-target");
 });
 
 test("updates: malformed records and unsafe destinations fail before generation", () => {

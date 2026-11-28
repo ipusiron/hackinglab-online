@@ -2,6 +2,18 @@
   "schema_version": 1,
   "updates": [
     {
+      "id": "difficulty-guide-copy-target",
+      "published_on": "2026-11-28",
+      "title_ja": "難易度の説明とコピーするリンクを分かりやすく",
+      "title_en": "A closer difficulty guide and clearer copy labels",
+      "description_ja": "難易度欄の「目安」から説明を開けます。ダッシュボードでは、コピーするリンクがサイト・書籍・プロジェクトのどれかを表示し、進捗を含まないことを明記しました。",
+      "description_en": "Open the difficulty explanation with Guide beside the filter. Dashboard copy labels identify the site, book or project link, with a note that copied links do not include progress.",
+      "href": "./index.html?tab=dashboard",
+      "link_ja": "ダッシュボードを見る",
+      "link_en": "View the dashboard",
+      "source_ref": "current-release"
+    },
+    {
       "id": "search-and-first-experiment",
       "published_on": "2026-11-28",
       "title_ja": "検索と最初の体験への入口を改善",
@@ -11,7 +23,7 @@
       "href": "./index.html?tab=dashboard",
       "link_ja": "ダッシュボードを見る",
       "link_en": "View the dashboard",
-      "source_ref": "current-release"
+      "source_url": "https://github.com/ipusiron/hackinglab-online/pull/71"
     },
     {
       "id": "preparation-sharing-help",

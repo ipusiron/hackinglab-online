@@ -368,10 +368,17 @@
               </select>
             </div>
             <div class="filter-group">
-              <label for="filter-difficulty">
-                <span class="label-ja">難易度</span>
-                <span class="label-en">Difficulty</span>
-              </label>
+              <div class="filter-label-row">
+                <label for="filter-difficulty">
+                  <span class="label-ja">難易度</span>
+                  <span class="label-en">Difficulty</span>
+                </label>
+                <button id="filter-difficulty-help" class="filter-guide-button" type="button"
+                  aria-haspopup="dialog" aria-controls="help-dialog"
+                  data-aria-label-ja="難易度の目安を開く" data-aria-label-en="Open difficulty guide">
+                  <span class="label-ja">目安</span><span class="label-en">Guide</span>
+                </button>
+              </div>
               <select id="filter-difficulty" disabled>
                 <!-- JSで「すべて / ★1まで / ★2まで / ★3まで / ★4まで」を生成 -->
               </select>
@@ -483,14 +490,15 @@
                 <span class="label-ja">Xで進捗を共有</span>
                 <span class="label-en">Share progress on X</span>
               </button>
-              <button type="button" id="share-copy-link" disabled>
-                <span class="label-ja">リンクをコピー</span>
-                <span class="label-en">Copy link</span>
+              <button type="button" id="share-copy-link" aria-describedby="share-copy-note" disabled>
+                <span id="share-copy-label-ja" class="label-ja">サイトのリンクをコピー</span>
+                <span id="share-copy-label-en" class="label-en">Copy site link</span>
               </button>
             </div>
+            <p id="share-copy-note" class="share-copy-note"><span class="label-ja">コピーするリンクに進捗は含まれません。</span><span class="label-en">Copied links do not include your progress.</span></p>
             <p id="share-copy-status" role="status" aria-atomic="true" hidden></p>
-            <input id="share-copy-url" type="text" readonly hidden
-              data-aria-label-ja="リンクをコピー" data-aria-label-en="Copy link">
+            <input id="share-copy-url" type="text" readonly hidden aria-describedby="share-copy-note"
+              data-aria-label-ja="コピーするサイトのリンク" data-aria-label-en="Site link to copy">
           </div>
         </section>
 
