@@ -2940,16 +2940,20 @@ function filterByTryLater(tool) {
   return !filters.later || getTryLater(tool.id);
 }
 
+function getSearchEntry(tool) {
+  if (!searchEntries) {
+    const catIndex = HS.categoryIndex(categories);
+    searchEntries = new Map(tools.map((t) => [t, HS.buildEntry(t, catIndex)]));
+  }
+  return searchEntries.get(tool);
+}
+
 function filterBySearch(tool) {
   if (!filters.search) return true;
 
   // 全角と半角・大文字と小文字をそろえ、空白で区切った語をすべて含むツールを出す（js/search.js）
   if (HS) {
-    if (!searchEntries) {
-      const catIndex = HS.categoryIndex(categories);
-      searchEntries = new Map(tools.map((t) => [t, HS.buildEntry(t, catIndex)]));
-    }
-    return HS.matches(searchEntries.get(tool), searchTerms);
+    return HS.matches(getSearchEntry(tool), searchTerms);
   }
 
   // js/search.js を読めないときは、これまでどおり入力全体を部分一致で探す（前後の空白は setSearchQuery で除く）
@@ -3231,6 +3235,13 @@ function createToolCard(tool, book, group = "") {
 
   card.appendChild(header);
   card.appendChild(subtitle);
+  if (filters.search && !toolSet.ids.length && HS && typeof HS.usesCategory === "function"
+      && HS.usesCategory(getSearchEntry(tool), searchTerms)) {
+    const matchNote = document.createElement("p");
+    matchNote.className = "tool-search-match";
+    matchNote.textContent = currentLang === "ja" ? "カテゴリ名を含めて一致" : "Matched using a category name";
+    card.appendChild(matchNote);
+  }
   card.appendChild(desc);
   if (preparation) card.appendChild(preparation);
   if (descriptionToggle) card.appendChild(descriptionToggle);

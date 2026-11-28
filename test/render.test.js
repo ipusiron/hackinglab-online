@@ -11,6 +11,53 @@ const visible = allTools.filter((t) => t.hub !== false);
 const books = JSON.parse(read("data/books.json")).books;
 const bySlug = new Map(visible.map((t) => [t.slug, t]));
 
+test("search match explanations appear only on category-assisted cards and follow language and clear", async () => {
+  const p = await runPage({ search: "?q=" + encodeURIComponent("画像 違い") });
+  const cards = () => p.document.querySelectorAll(".tool-card");
+  const notes = () => p.document.querySelectorAll(".tool-search-match");
+  assert.deepEqual(cards().map((card) => card.dataset.toolId), ["day021", "day040"]);
+  assert.equal(notes().length, 1);
+  assert.equal(notes()[0].closest(".tool-card").dataset.toolId, "day040");
+  assert.equal(notes()[0].textContent, "カテゴリ名を含めて一致");
+  assert.equal(notes()[0].tagName, "P");
+  assert.equal(notes()[0].hasAttribute("tabindex"), false);
+  assert.equal(notes()[0].hasAttribute("aria-live"), false);
+  const fetched = [...p.fetched];
+  const progress = () => [...p.values].filter(([key]) => key.startsWith("progress_"));
+  const before = progress();
+  p.document.getElementById("lang-en").click(); await p.flush();
+  assert.equal(notes().length, 1);
+  assert.equal(notes()[0].textContent, "Matched using a category name");
+  assert.deepEqual(cards().map((card) => card.dataset.toolId), ["day021", "day040"]);
+  const input = p.document.getElementById("filter-search-input");
+  input.focus(); input.value = ""; input.dispatch("input"); await p.flush();
+  assert.equal(notes().length, 0);
+  assert.equal(cards().length, visible.length);
+  assert.equal(p.document.activeElement, input);
+  assert.deepEqual(p.fetched, fetched);
+  assert.deepEqual(progress(), before);
+});
+
+test("search explanations rebuild when the same result changes reason and on history restoration", async () => {
+  const p = await runPage({ search: "?q=" + encodeURIComponent("画像 Day40") });
+  const ids = () => p.document.querySelectorAll(".tool-card").map((card) => card.dataset.toolId);
+  const notes = () => p.document.querySelectorAll(".tool-search-match");
+  assert.deepEqual(ids(), ["day040"]); assert.equal(notes().length, 1);
+  const category = p.document.getElementById("filter-category");
+  category.value = "forensics"; category.dispatch("change"); await p.flush();
+  const input = p.document.getElementById("filter-search-input");
+  input.value = "file Day40"; input.dispatch("input"); await p.flush();
+  assert.deepEqual(ids(), ["day040"]); assert.equal(notes().length, 0);
+  await p.back();
+  assert.equal(input.value, "画像 Day40");
+  assert.deepEqual(ids(), ["day040"]); assert.equal(notes().length, 1);
+  await p.forward();
+  assert.equal(input.value, "file Day40");
+  assert.deepEqual(ids(), ["day040"]); assert.equal(notes().length, 0);
+  input.value = "画像 absent-term-xyz"; input.dispatch("input"); await p.flush();
+  assert.deepEqual(ids(), []); assert.equal(notes().length, 0);
+});
+
 // Synthetic geometry exercises observer/lifecycle decisions; real wrapping and
 // content-visibility notifications remain browser QA.
 function descriptionObserver(page) {

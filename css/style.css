@@ -951,6 +951,15 @@ html[lang="en"] #lang-en {
   line-height: 1.5;
 }
 
+.tool-search-match {
+  margin: 0;
+  min-width: 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
 /* --- 説明文。計測できない環境では全文を表示する。 --- */
 .tool-description {
   font-size: 0.85rem;
