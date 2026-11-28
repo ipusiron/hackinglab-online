@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-11-27T08:39:11Z",
+  "generated_at": "2026-11-28T07:32:23Z",
   "tools": [
     {
       "id": "day001",
@@ -5697,6 +5697,59 @@
         }
       },
       "added": "2026-11-27"
+    },
+    {
+      "id": "day130",
+      "slug": "sixteen-gate-lattice",
+      "title": "Sixteen Gate Lattice",
+      "subtitle_ja": "2つの条件から作れる16の論理演算を、厳しさの順に1枚の図で見る",
+      "subtitle_en": "See all 16 two-input logic operations on one diagram, from loosest to strictest",
+      "description_ja": "2つの条件AとBから作れる16の論理演算を、真になる場合の数で5段に並べた1枚の図（ハッセ図）で見るツール。演算を選ぶと緩い演算と厳しい演算に色が付き、選んだ状態はリンクで共有できる。ルールの書き換えが緩くしたか厳しくしたかを判定し、座学のカード23枚で証明・暗号・回路・通信・論理南京錠・生物・医学とのつながりを読める。計算はページの中だけで行う。日英対応。",
+      "description_en": "A tool that places the 16 logic operations you can build from two conditions A and B on one diagram (a Hasse diagram) in five rows by how many cases make them true. Select an operation to color the looser and stricter ones, and share the selection as a link. It tells whether a rewritten rule became looser or stricter, and its 23 reference cards connect the operations to proofs, cryptography, circuits, communication, logical padlocks, biology and medicine. Everything is calculated in the page. Japanese and English UI.",
+      "category_ja": [
+        "コンピューターサイエンス",
+        "現代暗号",
+        "可視化",
+        "物理的セキュリティ"
+      ],
+      "category_en": [
+        "Computer Science",
+        "Modern Cryptography",
+        "Visualization",
+        "Physical Security"
+      ],
+      "tags": [
+        "boolean-logic",
+        "logic-gates",
+        "hasse-diagram",
+        "truth-table",
+        "implication",
+        "contrapositive",
+        "provable-security",
+        "reduction",
+        "education"
+      ],
+      "category_ids": [
+        "computer-science",
+        "modern-crypto",
+        "visualization",
+        "physical-security"
+      ],
+      "difficulty": 2,
+      "repo_url": "https://github.com/ipusiron/sixteen-gate-lattice",
+      "demo_url": "https://ipusiron.github.io/sixteen-gate-lattice/",
+      "hub": true,
+      "readme_usage": {
+        "ja": {
+          "status": "heading",
+          "fragment": "-使い方"
+        },
+        "en": {
+          "status": "heading",
+          "fragment": "-how-to-use"
+        }
+      },
+      "added": "2026-11-28"
     }
   ]
 }
