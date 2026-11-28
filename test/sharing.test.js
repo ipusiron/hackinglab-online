@@ -47,15 +47,17 @@ test("SI2 selected book counts52 unique despite duplicate cards and filters; pro
   }
 });
 test("SI3 zero selected related scope retains URL/note; related singleton uses tool singular", async () => {
-  const p = await runPage({ search: "?book=cyber-ninja&tab=dashboard&lang=en", storedValues: saved });
+  // The singular case needs a related book with one tool; narrow the real book to day123 so adding tools to it keeps this check.
+  const allBooks = JSON.parse(read("data/books.json")), solo = allBooks.books.find(b => b.slug === "ango-gijutsu-no-subete");
+  solo.ids = ["day123"]; solo.refs = { day123: solo.refs.day123 }; solo.chapters = solo.chapters.filter(c => solo.refs.day123.some(r => r.ch === c.key));
+  const p = await runPage({ search: "?book=cyber-ninja&tab=dashboard&lang=en", storedValues: saved, dataOverrides: { "data/books.json": allBooks } });
   assert.equal(share(p).sentence, "Learning security hands-on with the tools at Hacking Lab Online 🔬");
   assert.equal(share(p).url.searchParams.get("book"), "cyber-ninja");
   assert.equal(el(p, "share-scope-note").hidden, false);
   change(p, "filter-book", "ango-gijutsu-no-subete");
   p.evaluate(`setProgress(${JSON.stringify(tool("day123").slug)},3);refreshProgressViews()`);
-  const angoTotal = totalFor("ango-gijutsu-no-subete");
-  assert.ok(share(p).sentence.includes(`1 of the ${angoTotal} ${angoTotal === 1 ? "tool" : "tools"} related to`));
-  el(p,"lang-ja").click(); assert.ok(share(p).sentence.includes(`関連ツール${angoTotal}本のうち1本`));
+  assert.match(share(p).sentence, /1 of the 1 tool related to/);
+  el(p,"lang-ja").click(); assert.match(share(p).sentence, /関連ツール1本のうち1本/);
 });
 test("SI4 unknown book, optional books failure, sets and incompatible Day resolve share scope without raw input", async () => {
   for (const options of [
