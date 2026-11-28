@@ -1208,9 +1208,15 @@ function setupHelpModal() {
 function getFocusableElements(container) {
   const selector =
     'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
-  return Array.from(container.querySelectorAll(selector)).filter(
-    (el) => el.getClientRects().length > 0
-  );
+  return Array.from(container.querySelectorAll(selector)).filter((el) => {
+    if (!el.getClientRects().length) return false;
+    // Some engines retain layout boxes inside closed details. Only the summary
+    // can receive keyboard focus while that disclosure is closed.
+    for (let parent = el.parentElement; parent && parent !== container; parent = parent.parentElement) {
+      if (parent.tagName === "DETAILS" && !parent.open && !parent.querySelector("summary")?.contains(el)) return false;
+    }
+    return true;
+  });
 }
 
 // タブのキーボード操作で次に選ぶ位置（js/tabs.js）。読み込めていなければ同じ規則で計算する。
@@ -1602,6 +1608,8 @@ function renderAll(retainedIds) {
 
 function updateLanguageUI() {
   const isJa = currentLang === "ja";
+  const updatesLink = document.getElementById("updates-link");
+  if (updatesLink) updatesLink.setAttribute("href", "./updates.html?lang=" + currentLang);
 
   // ページの言語。.label-ja / .label-en の出し分けも、この lang を見て CSS で行う
   document.documentElement.lang = isJa ? "ja" : "en";
@@ -2395,6 +2403,12 @@ function renderSetBanner() {
   copy.addEventListener("click", copySetLink);
   actions.appendChild(clear);
   actions.appendChild(copy);
+  const print = document.createElement("a");
+  print.className = "selection-print-link";
+  print.id = "set-banner-print";
+  print.href = selectionPrintUrl(toolSet.ids);
+  print.textContent = isJa ? "配布・印刷用に開く" : "Open handout for printing";
+  actions.appendChild(print);
   banner.appendChild(actions);
   const details = document.createElement("details");
   details.className = "set-banner-details";
@@ -3046,18 +3060,33 @@ function createToolCard(tool, book, group = "") {
   const desc = document.createElement("div");
   desc.className = "tool-description";
   desc.textContent = currentLang === "ja" ? tool.description_ja || "" : tool.description_en || "";
+  const preparationInfo = globalThis.HLOPreparation?.get(tool.id, currentLang);
+  let preparation = null;
+  if (preparationInfo) {
+    preparation = document.createElement("div");
+    preparation.className = "tool-preparation";
+    for (const [label, value] of [[currentLang === "ja" ? "必要な環境" : "Environment", preparationInfo.environment], [currentLang === "ja" ? "試す前の準備" : "Before you start", preparationInfo.prepare]]) {
+      const line = document.createElement("p");
+      const heading = document.createElement("strong");
+      heading.textContent = label + (currentLang === "ja" ? "：" : ": ");
+      line.appendChild(heading);
+      line.appendChild(document.createTextNode(value));
+      preparation.appendChild(line);
+    }
+  }
   let descriptionToggle = null;
   if (descriptionObserver && desc.textContent) {
     const key = JSON.stringify([book?.slug || "", group, tool.id]);
     desc.id = `tool-description-${++descriptionId}`;
+    if (preparation) preparation.id = desc.id + "-preparation";
     desc.classList.add("is-collapsible");
     descriptionToggle = document.createElement("button");
     descriptionToggle.type = "button";
     descriptionToggle.className = "tool-description-toggle";
     descriptionToggle.dataset.part = "description";
-    descriptionToggle.setAttribute("aria-controls", desc.id);
-    descriptionToggle.hidden = !visibleDescriptionToggles.has(key);
-    const control = { button: descriptionToggle, key, title: tool.title || "" };
+    descriptionToggle.setAttribute("aria-controls", desc.id + (preparation ? " " + preparation.id : ""));
+    descriptionToggle.hidden = !preparation && !visibleDescriptionToggles.has(key);
+    const control = { button: descriptionToggle, key, title: tool.title || "", preparation };
     descriptionControls.set(desc, control);
     updateDescriptionToggle(desc, control);
     descriptionToggle.addEventListener("click", () => {
@@ -3194,6 +3223,7 @@ function createToolCard(tool, book, group = "") {
   card.appendChild(header);
   card.appendChild(subtitle);
   card.appendChild(desc);
+  if (preparation) card.appendChild(preparation);
   if (descriptionToggle) card.appendChild(descriptionToggle);
   card.appendChild(meta);
   card.appendChild(footer);
@@ -3204,8 +3234,9 @@ function createToolCard(tool, book, group = "") {
 function updateDescriptionToggle(desc, control) {
   const expanded = expandedDescriptions.has(control.key);
   desc.classList.toggle("is-expanded", expanded);
+  if (control.preparation) control.preparation.hidden = !expanded;
   control.button.setAttribute("aria-expanded", String(expanded));
-  const label = currentLang === "ja" ? (expanded ? "閉じる" : "続きを読む") : (expanded ? "Read less" : "Read more");
+  const label = currentLang === "ja" ? (expanded ? "閉じる" : control.preparation ? "説明・準備を見る" : "続きを読む") : (expanded ? "Read less" : control.preparation ? "Description & preparation" : "Read more");
   control.button.textContent = label;
   control.button.setAttribute("aria-label", currentLang === "ja"
     ? `${label}（${control.title}の説明）` : `${label} (${control.title} description)`);
@@ -3221,7 +3252,7 @@ function measureToolDescriptions(entries) {
     if (!control || !desc.isConnected || entry.contentRect.width <= 0 || entry.contentRect.height <= 0) continue;
     const lineHeight = parseFloat(window.getComputedStyle(desc).lineHeight);
     if (!Number.isFinite(lineHeight) || lineHeight <= 0) continue;
-    measurements.push({ desc, control, clipped: desc.scrollHeight > lineHeight * 3 + 1 });
+    measurements.push({ desc, control, clipped: Boolean(control.preparation) || desc.scrollHeight > lineHeight * 3 + 1 });
   }
   // Batch geometry reads before changing controls. The same three-line limit also
   // works while the description is expanded and when text/viewport sizes change.
@@ -4014,6 +4045,14 @@ function updateRecentTools() {
     : (currentLang === "ja" ? "このハブからデモや使い方を開いた直近5本です。このブラウザーに保存します。" : "The last five tools whose demo or usage you opened from this hub. Saved in this browser.");
 }
 
+function selectionPrintUrl(ids) {
+  const params = new URLSearchParams();
+  params.set("tools", ids.join(","));
+  // Explicit JA also overrides a previously saved EN preference on the handout.
+  params.set("lang", currentLang);
+  return "./print.html?" + params.toString();
+}
+
 function laterSelectionUrl() {
   return HU && laterShareIds.length ? HU.buildUrl("https://hackinglab.online/", { tools: laterShareIds, lang: currentLang }) : "";
 }
@@ -4095,6 +4134,11 @@ function updateLaterShare() {
   document.getElementById("later-share-copy").disabled = !url;
   const field = document.getElementById("later-share-url");
   if (field.value !== url) field.value = url;
+  const print = document.getElementById("later-share-print");
+  if (print) {
+    if (url) print.setAttribute("href", selectionPrintUrl(laterShareIds));
+    else print.removeAttribute("href");
+  }
 }
 
 function updateDiscoveryViews() {

@@ -1,0 +1,31 @@
+.handout-main { max-width: 54rem; margin: 0 auto; padding: 1rem; }
+.handout-main h1 { font-size: 1.6rem; overflow-wrap: anywhere; }
+.handout-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.handout-controls a, .handout-controls button, #handout-retry { display: inline-flex; align-items: center; justify-content: center; min-width: 2.75rem; min-height: 2.75rem; padding: 0.4rem 0.65rem; font: inherit; }
+.handout-controls button, #handout-retry { border: 1px solid var(--field-border); border-radius: 0.4rem; color: var(--control-text); background: var(--control-bg); }
+.handout-controls button[aria-pressed="true"] { background: var(--control-selected-bg); color: var(--control-selected-text); }
+.handout-controls button:disabled { opacity: 0.55; }
+#handout-list { padding-inline-start: 1.6rem; }
+.handout-tool { padding: 0.75rem; margin-block: 1rem; border: 1px solid var(--field-border); border-radius: 0.4rem; background: var(--surface-bg); overflow-wrap: anywhere; }
+.handout-tool h2 { margin: 0 0 0.5rem; font-size: 1.15rem; }
+.handout-tool p { margin: 0.5rem 0; }
+.handout-tool-links { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; }
+.handout-tool-links a { display: inline-flex; align-items: center; justify-content: center; min-width: 2.75rem; min-height: 2.75rem; }
+.handout-url { font-size: 0.875rem; overflow-wrap: anywhere; }
+.handout-notes { margin-top: 1rem; }
+.handout-note-line { height: 1.7rem; border-bottom: 1px solid var(--field-border); }
+#handout-source { overflow-wrap: anywhere; font-size: 0.875rem; }
+@media print {
+  @page { size: auto; margin: 14mm; }
+  :root { color-scheme: light; }
+  .handout-page { background: white; color: black; font-size: 10pt; }
+  .handout-main { max-width: none; padding: 0; }
+  .handout-controls, .handout-screen-note, #handout-status:empty { display: none !important; }
+  .handout-main h1 { font-size: 16pt; }
+  .handout-tool { break-inside: avoid; page-break-inside: avoid; background: white; border-color: #777; margin-block: 8mm; padding: 4mm; }
+  .handout-tool h2 { font-size: 12pt; }
+  .handout-page a, .handout-page a:visited { color: black; }
+  .handout-tool-links { display: none; }
+  .handout-url, #handout-source { font-size: 9pt; }
+  .handout-note-line { border-color: #777; height: 7mm; }
+}

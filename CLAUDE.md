@@ -1,5 +1,12 @@
 # CLAUDE.md
 
+### Preparation, updates, reporting and printable selections
+
+- `js/preparation.js` holds reviewed bilingual prerequisites for ten public tools. Keep the catalog description unchanged and show preparation with the same description disclosure. Its ARIA controls reference both regions. Short descriptions still need this control when preparation exists. Preserve chapter-specific expansion and language/focus restoration. Missing preparation is not evidence that a tool has no prerequisites. Do not invent completion times or tested-device claims.
+- `updates.html` is generated with the static list by `scripts/build_pages.js`. `data/updates.json` holds dated, user-facing site changes; recent additions use the valid `added` field, descending by date and ascending by Day for ties. Never present generated_at or first-added dates as a tool's last functional update. Keep generation checks and deployment/regeneration paths in sync. Homepage entry stays in the footer.
+- Report help is an initially closed disclosure inside the existing stuck section. Link only to the hub's fixed public issue form; do not automatically send clipboard, search, progress, device data or tool inputs. Explain the GitHub account and public-posting requirements. The actual issue submission is a user action, never part of browser QA.
+- `print.html` accepts only the public ordered tool selection and language through its generated entry links. Use existing ID parsing, unique public IDs and the twelve-tool cap. Display omitted/limited selections explicitly. Render catalog text as text, use validated HTTPS destinations, and never import progress, saved-list or history records. No automatic print dialog; enable the explicit action only after valid data has loaded. Keep a timeout, retry on ordinary failure and no retry after HTTP401. Test print media and PDF page breaks separately from screen layout. OS print dialogs and physical printers require separate verification.
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ### Recording an experiment and resuming learning

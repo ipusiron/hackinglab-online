@@ -11,7 +11,7 @@ test("DC1: discovery assets, downloads and local links exist in the public deplo
   const html = read("discover.html");
   const origin = "https://hackinglab.online/discover.html";
   const deploy = read(".github/workflows/deploy-pages.yml");
-  const publicFiles = new Set(["index.html", "list.html", "discover.html", "404.html", "CNAME"]);
+  const publicFiles = new Set(["index.html", "list.html", "discover.html", "updates.html", "print.html", "404.html", "CNAME"]);
   const publicDirs = new Set(["css", "js", "data", "favicon", "assets"]);
   const publicIds = new Set(JSON.parse(read("data/tools.json")).tools.filter(tool => tool.hub !== false).map(tool => tool.id));
   for (const [, value] of html.matchAll(/\b(?:href|src|poster)="([^"]+)"/g)) {
@@ -27,9 +27,9 @@ test("DC1: discovery assets, downloads and local links exist in the public deplo
       if (url.hash) assert.ok(ids.includes(url.hash.slice(1)), `Focused tool is outside its collection: ${url.hash}`);
     }
   }
-  assert.match(deploy, /cp index\.html list\.html discover\.html 404\.html CNAME _site\//);
+  assert.match(deploy, /cp index\.html list\.html discover\.html updates\.html print\.html 404\.html CNAME _site\//);
   assert.match(deploy, /cp -R css js data favicon assets _site\//);
-  assert.match(deploy, /find index\.html list\.html discover\.html 404\.html CNAME css js data favicon assets -type l/);
+  assert.match(deploy, /find index\.html list\.html discover\.html updates\.html print\.html 404\.html CNAME css js data favicon assets -type l/);
 });
 
 test("DC2: public social previews are real 1200 by 630 PNG files", () => {

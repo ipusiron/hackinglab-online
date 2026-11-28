@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "updates": [
+    {
+      "id": "preparation-sharing-help",
+      "published_on": "2026-11-28",
+      "title_ja": "準備を確認して、選んだツールを配布",
+      "title_en": "Check what you need and share your selected tools",
+      "description_ja": "10本のツールで必要な環境と準備を確認できるようになりました。共有セットは印刷用に表示でき、困ったときの報告方法もヘルプにまとめました。",
+      "description_en": "Check the environment and preparation for 10 tools. Shared sets now have a print view, and help explains how to report a problem.",
+      "href": "./index.html?tools=day003,day007",
+      "link_ja": "準備を確認できる2本を見る",
+      "link_en": "View two tools with preparation notes",
+      "source_ref": "current-release"
+    },
+    {
+      "id": "everyday-search",
+      "published_on": "2026-11-28",
+      "title_ja": "やりたいことから探しやすく",
+      "title_en": "Find tools by what you want to do",
+      "description_ja": "「写真の位置情報を消す」「URLの追跡を消す」など、一部の日常的な言い方でも対応するツールが見つかるようになりました。",
+      "description_en": "Selected everyday phrases, such as removing location data from photos or tracking from URLs, now help you find relevant tools.",
+      "href": "./index.html",
+      "link_ja": "ツールを探す",
+      "link_en": "Find a tool",
+      "source_url": "https://github.com/ipusiron/hackinglab-online/pull/68"
+    },
+    {
+      "id": "learning-resume",
+      "published_on": "2026-11-27",
+      "title_ja": "試した後の記録と再開を近くに",
+      "title_en": "Keep track of what you try and return to it",
+      "description_ja": "体験紹介の各実験から進捗を記録できるカードへ移動できます。ダッシュボードには「学習中」のツールを開き直す一覧を追加しました。ツール内の入力や設定を復元する機能ではありません。",
+      "description_en": "Each featured experiment links to its progress card. The dashboard also lists tools marked In progress so you can open them again. Inputs and settings inside a tool are not restored.",
+      "href": "./index.html?tab=dashboard",
+      "link_ja": "ダッシュボードを見る",
+      "link_en": "View the dashboard",
+      "source_url": "https://github.com/ipusiron/hackinglab-online/pull/65"
+    },
+    {
+      "id": "discovery-experiments",
+      "published_on": "2026-11-27",
+      "title_ja": "見た目と中身の違いを試す、3つの実験",
+      "title_en": "Three experiments with what you see and what is there",
+      "description_ja": "見えない文字、CAPTCHA風の文字加工、目立ち方の違いを、画像・動画と短い手順で紹介するページを公開しました。",
+      "description_en": "A new page introduces invisible characters, CAPTCHA-style text effects, and visual prominence through short steps, images, and a video.",
+      "href": "./discover.html",
+      "link_ja": "体験紹介を読む",
+      "link_en": "Explore the experiments",
+      "source_url": "https://github.com/ipusiron/hackinglab-online/pull/62"
+    },
+    {
+      "id": "difficulty-filter",
+      "published_on": "2026-11-27",
+      "title_ja": "難度の上限でツールを絞り込み",
+      "title_en": "Filter tools by a difficulty limit",
+      "description_ja": "難度の上限を選ぶと、それ以下の難度のツールを表示できます。難度の目安と選び方も確認できます。",
+      "description_en": "Choose a difficulty limit to show tools at that level or below. Help explains what the levels mean and how to use them.",
+      "href": "./index.html?maxDifficulty=2",
+      "link_ja": "難度2までのツールを見る",
+      "link_en": "View tools up to difficulty 2",
+      "source_url": "https://github.com/ipusiron/hackinglab-online/pull/61"
+    }
+  ]
+}
