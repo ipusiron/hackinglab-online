@@ -116,7 +116,12 @@ test("BV5: jump is closed at every width; back links open and focus it without c
     assert.match(p.context.location.hash, /^#book-group-/);
     search(p, "day003"); assert.equal(p.document.querySelector(".book-jump").open, true);
   }
-  const single = await runPage({ search: "?book=ango-gijutsu-no-subete" });
+  // A book with one location shows no jump list. Build it from a real book so adding tools to that book keeps this check.
+  const solo = structuredClone(books.find((b) => b.slug === "ango-gijutsu-no-subete"));
+  const soloId = solo.ids[0], soloRef = solo.refs[soloId][0];
+  solo.ids = [soloId]; solo.refs = { [soloId]: [soloRef] }; solo.chapters = solo.chapters.filter((c) => c.key === soloRef.ch);
+  const soloBooks = { ...data, books: books.map((b) => b.slug === solo.slug ? solo : b) };
+  const single = await runPage({ search: "?book=ango-gijutsu-no-subete", dataOverrides: { "data/books.json": soloBooks } });
   assert.equal(single.document.querySelector(".book-jump"), null); assert.equal(single.document.querySelector(".book-back-to-sections"), null);
 });
 

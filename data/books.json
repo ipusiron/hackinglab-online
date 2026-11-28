@@ -1477,9 +1477,15 @@
       "pages_note_ja": "ページ番号は紙版（翔泳社、2017年8月）のものです。",
       "pages_note_en": "Page numbers refer to the print edition (Shoeisha, August 2017).",
       "ids": [
-        "day123"
+        "day123",
+        "day130"
       ],
       "chapters": [
+        {
+          "key": "ch04",
+          "label_ja": "第4章",
+          "label_en": "Ch. 4"
+        },
         {
           "key": "sec09-2",
           "label_ja": "9.2節　秘密分散共有法",
@@ -1492,6 +1498,14 @@
             "ch": "sec09-2",
             "pages": [
               "652-661"
+            ]
+          }
+        ],
+        "day130": [
+          {
+            "ch": "ch04",
+            "pages": [
+              "302-303"
             ]
           }
         ]

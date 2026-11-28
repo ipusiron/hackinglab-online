@@ -47,7 +47,10 @@ test("SI2 selected book counts52 unique despite duplicate cards and filters; pro
   }
 });
 test("SI3 zero selected related scope retains URL/note; related singleton uses tool singular", async () => {
-  const p = await runPage({ search: "?book=cyber-ninja&tab=dashboard&lang=en", storedValues: saved });
+  // The singular case needs a related book with one tool; narrow the real book to day123 so adding tools to it keeps this check.
+  const allBooks = JSON.parse(read("data/books.json")), solo = allBooks.books.find(b => b.slug === "ango-gijutsu-no-subete");
+  solo.ids = ["day123"]; solo.refs = { day123: solo.refs.day123 }; solo.chapters = solo.chapters.filter(c => solo.refs.day123.some(r => r.ch === c.key));
+  const p = await runPage({ search: "?book=cyber-ninja&tab=dashboard&lang=en", storedValues: saved, dataOverrides: { "data/books.json": allBooks } });
   assert.equal(share(p).sentence, "Learning security hands-on with the tools at Hacking Lab Online 🔬");
   assert.equal(share(p).url.searchParams.get("book"), "cyber-ninja");
   assert.equal(el(p, "share-scope-note").hidden, false);
