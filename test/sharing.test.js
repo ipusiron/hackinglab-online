@@ -68,6 +68,8 @@ test("SI4 unknown book, optional books failure, sets and incompatible Day resolv
     assert.equal(value.sentence,"I've worked through 4 tools at Hacking Lab Online (2 mastered) 🔬");
     assert.equal(value.url.href,"https://hackinglab.online/?lang=en");
     assert.equal(el(p,"share-scope-note").hidden,true);
+    assert.equal(el(p,"share-copy-label-en").textContent,"Copy site link");
+    assert.equal(el(p,"share-copy-url").getAttribute("aria-label"),"Site link to copy");
     assert.doesNotMatch(value.text,/script|secret/);
   }
 });
@@ -196,4 +198,29 @@ test("SI15 returning to the manual field reveals once without changing selection
       field.focus();await p.flush();assert.equal((p.document.scrollCalls||[]).filter(x=>x.element===field).length,before+1);
     }
   }
+});
+
+test("SI16 destination labels follow resolved scope, language and history while manual copying preserves the canonical URL", async () => {
+  const p = await runPage({search:"?tab=dashboard&lang=en&q=private&maxDifficulty=1",clipboard:"reject",storedValues:saved});
+  const check = async (kind, slug, lang) => {
+    const names = {site:"サイト",book:"書籍",project:"プロジェクト"};
+    assert.equal(el(p,"share-copy-label-en").textContent,`Copy ${kind} link`);
+    assert.equal(el(p,"share-copy-label-ja").textContent,`${names[kind]}のリンクをコピー`);
+    await copy(p);
+    const field = el(p,"share-copy-url");
+    assert.equal(field.getAttribute("aria-label"),lang==="ja"?`コピーする${names[kind]}のリンク`:`${kind[0].toUpperCase()+kind.slice(1)} link to copy`);
+    const expected = new URL("https://hackinglab.online/");
+    if(slug)expected.searchParams.set("book",slug);if(lang==="en")expected.searchParams.set("lang","en");
+    assert.equal(field.value,expected.href);assert.equal(field.hidden,false);
+    assert.equal(field.getAttribute("aria-describedby"),"share-copy-note");
+    assert.equal(el(p,"share-copy-link").getAttribute("aria-describedby"),"share-copy-note");
+  };
+  await check("site",null,"en");
+  change(p,"filter-book","genai-crypto");await check("book","genai-crypto","en");
+  el(p,"lang-ja").click();await check("book","genai-crypto","ja");
+  // Separate deliberate choices; rapid changes of one select share one history entry.
+  await new Promise(resolve => setTimeout(resolve, 1100));
+  change(p,"filter-book","security-tools-100");await check("project","security-tools-100","ja");
+  await p.back();await check("book","genai-crypto","ja");
+  await p.forward();await check("project","security-tools-100","ja");
 });

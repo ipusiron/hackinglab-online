@@ -301,6 +301,7 @@ test("SH14: every modal Tab moves explicitly, even when native Tab would skip li
   }
   p.document.dispatch("keydown",{key:"Escape"});assert.equal(p.document.activeElement,opener);assert.equal(el(p,"help-modal").hidden,true);
   assert.equal(p.document.dispatch("keydown",{key:"Tab"}).defaultPrevented,false);
+  el(p,"storage-warning").hidden=false;
   el(p,"storage-warning-help").click();assert.equal(p.document.activeElement,el(p,"help-storage"));
   tab();assert.equal(p.document.activeElement,close);close.click();assert.equal(p.document.activeElement,el(p,"storage-warning-help"));
 });
@@ -771,5 +772,41 @@ test("SH37: saved-view release correction yields to newer wheel, keyboard and hi
     assert.equal(p.document.querySelectorAll(".cv-hold").length,0);assert.deepEqual(recordValues(p),records);
     if(action!=="wheel")assert.equal(p.document.activeElement,el(p,"filter-search-input"));
     if(action==="navigation")assert.equal(new URL(p.context.location.href).searchParams.get("navigation"),"newer");
+  }
+});
+
+test("SH38: difficulty guide opens at the explanation and each close path returns to its actual opener without changing learning state", async () => {
+  for (const lang of ["ja", "en"]) {
+    const p = await runPage({ search: `?q=day003&maxDifficulty=2&lang=${lang}` });
+    const opener = el(p, "filter-difficulty-help"), guide = el(p, "help-difficulty");
+    const before = p.context.location.href, length = p.context.history.length, records = recordValues(p);
+    assert.equal(guide.open, false);
+    for (const close of ["escape", "button", "backdrop"]) {
+      // Model browsers where clicking a button leaves the previous control focused.
+      el(p, "filter-difficulty").focus();opener.click();
+      assert.equal(el(p, "help-modal").hidden, false);assert.equal(guide.open, true);
+      assert.equal(p.document.activeElement, el(p, "help-difficulty-summary"));
+      p.document.dispatch("keydown", { key: "Tab" });
+      assert.ok(el(p, "help-dialog").contains(p.document.activeElement));
+      if (close === "escape") p.document.dispatch("keydown", { key: "Escape" });
+      else el(p, close === "button" ? "help-close" : "help-modal").click();
+      assert.equal(el(p, "help-modal").hidden, true);assert.equal(p.document.activeElement, opener);
+      assert.equal(p.context.location.href, before);assert.equal(p.context.history.length, length);
+      assert.deepEqual(recordValues(p), records);assert.equal(el(p, "filter-difficulty").value, "2");
+    }
+    el(p, "help-button").focus();el(p, "help-button").click();
+    assert.equal(p.document.activeElement, el(p, "help-body"));assert.equal(el(p, "help-body").scrollTop, 0);
+  }
+});
+
+test("SH39: closing the guide rescues focus when its filter opener becomes unavailable", async () => {
+  for (const unavailable of ["hidden", "disabled", "removed"]) {
+    const p = await runPage(), opener = el(p, "filter-difficulty-help");
+    opener.click();
+    if (unavailable === "hidden") el(p, "tool-filters").hidden = true;
+    else if (unavailable === "disabled") opener.disabled = true;
+    else opener.remove();
+    p.document.dispatch("keydown", { key: "Escape" });
+    assert.equal(p.document.activeElement, el(p, "help-button"), unavailable);
   }
 });
