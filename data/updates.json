@@ -2,6 +2,18 @@
   "schema_version": 1,
   "updates": [
     {
+      "id": "search-reason-self-check",
+      "published_on": "2026-11-28",
+      "title_ja": "検索結果の補足と文字列比較の確認問題",
+      "title_en": "Search match notes and a text-comparison self-check",
+      "description_ja": "カテゴリ名を含めて一致した検索結果に、その旨を表示します。体験紹介では、文字数が同じでも並びが違う文字列を比べ、結果の理由を確かめる問題へ更新しました。",
+      "description_en": "Search results now note when category text was needed for a match. The experiment page asks you to compare equal-length strings in a different order and explain the result.",
+      "href": "./discover.html",
+      "link_ja": "確認問題を見る",
+      "link_en": "Read the self-check",
+      "source_ref": "current-release"
+    },
+    {
       "id": "difficulty-guide-copy-target",
       "published_on": "2026-11-28",
       "title_ja": "難易度の説明とコピーするリンクを分かりやすく",
@@ -11,7 +23,7 @@
       "href": "./index.html?tab=dashboard",
       "link_ja": "ダッシュボードを見る",
       "link_en": "View the dashboard",
-      "source_ref": "current-release"
+      "source_url": "https://github.com/ipusiron/hackinglab-online/pull/72"
     },
     {
       "id": "search-and-first-experiment",

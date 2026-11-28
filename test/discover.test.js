@@ -71,3 +71,29 @@ test("DC3: discovery remains a local, readable page with opt-in media", () => {
     assert.ok(html.includes(tool.title), `No readable title for ${id}`);
   }
 });
+
+test("DC4: self-checks are optional bilingual disclosures with onward progress links available without scripts", () => {
+  const html = read("discover.html");
+  const experiments = [...html.matchAll(/<article\b[^>]*aria-labelledby="(day\d{3})"[^>]*>([\s\S]*?)<\/article>/g)];
+  assert.deepEqual(experiments.map(([, id]) => id), ["day023", "day075", "day128"]);
+  for (const [, id, article] of experiments) {
+    const checks = [...article.matchAll(/<details\b([^>]*class="experiment-check"[^>]*)>([\s\S]*?)<\/details>/g)];
+    assert.equal(checks.length, 1, `Keep one optional self-check for ${id}`);
+    const [, attrs, content] = checks[0];
+    assert.match(attrs, new RegExp(`id="check-${id}"`));
+    assert.doesNotMatch(attrs, /\bopen(?:\s|=|$)/);
+    const summary = content.match(/^\s*<summary>([\s\S]*?)<\/summary>/);
+    assert.ok(summary, `Native summary missing for ${id}`);
+    const explanation = content.slice(summary[0].length);
+    for (const lang of ["ja", "en"]) {
+      const text = new RegExp(`<span class="label-${lang}" lang="${lang}">([\\s\\S]*?)<\\/span>`);
+      for (const part of [summary[1], explanation]) {
+        const match = part.match(text);
+        assert.ok(match && match[1].replace(/<[^>]*>/g, "").trim(), `Static ${lang} content missing for ${id}`);
+      }
+    }
+    assert.doesNotMatch(content, /<(?:input|textarea|button)\b/i, "Reading a self-check requires no answer submission");
+    const followup = article.slice(article.indexOf(checks[0][0]) + checks[0][0].length);
+    assert.match(followup, new RegExp(`id="record-${id}"[^>]*href="\\./index\\.html\\?tools=${id}#${id}"`));
+  }
+});

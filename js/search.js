@@ -109,6 +109,7 @@
     if (Object.prototype.hasOwnProperty.call(TOOL_ALIASES, toolId)) parts = parts.concat(TOOL_ALIASES[toolId]);
     var i;
     if (Array.isArray(t.tags)) parts = parts.concat(t.tags);
+    var coreLength = parts.length;
     var ids = Array.isArray(t.category_ids) ? t.category_ids : [];
     for (i = 0; i < ids.length; i++) {
       var c = catIndex ? catIndex[ids[i]] : null;
@@ -117,12 +118,19 @@
       if (Array.isArray(c.aliases_ja)) parts = parts.concat(c.aliases_ja);
       if (Array.isArray(c.aliases_en)) parts = parts.concat(c.aliases_en);
     }
-    var kept = [];
+    var kept = [], core = [];
     for (i = 0; i < parts.length; i++) {
-      if (parts[i] != null && parts[i] !== "") kept.push(String(parts[i]));
+      if (parts[i] != null && parts[i] !== "") {
+        var value = String(parts[i]);
+        kept.push(value);
+        if (i < coreLength) core.push(value);
+      }
     }
     // 項目の境目は改行にする。検索語は空白を含まないので、2つの項目をまたいで当たることはない
     var entry = { id: normalize(t.id), text: normalize(kept.join("\n")) };
+    // Keep the full search text unchanged. Only entries with category wording
+    // need the optional intrinsic text used to explain a match.
+    if (kept.length > core.length) entry.coreText = normalize(core.join("\n"));
     if (Object.prototype.hasOwnProperty.call(TOOL_PHRASES, toolId)) {
       entry.phrases = TOOL_PHRASES[toolId].map(parseQuery);
     }
@@ -154,13 +162,24 @@
     return true;
   }
 
+  // Explain an existing match; this never changes which entries match. Reuse
+  // matches so exact Day terms and activated purpose phrases stay identical.
+  // Older entries without coreText cannot identify the source of their words.
+  function usesCategory(entry, terms) {
+    if (!terms || !terms.length || !entry || typeof entry.coreText !== "string") return false;
+    return matches(entry, terms) && !matches({
+      id: entry.id, text: entry.coreText, phrases: entry.phrases
+    }, terms);
+  }
+
   var api = {
     normalize: normalize,
     dayTerm: dayTerm,
     parseQuery: parseQuery,
     categoryIndex: categoryIndex,
     buildEntry: buildEntry,
-    matches: matches
+    matches: matches,
+    usesCategory: usesCategory
   };
 
   if (typeof module !== "undefined" && module.exports) module.exports = api;

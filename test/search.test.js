@@ -26,6 +26,54 @@ function find(raw) {
   return tools.filter((t) => S.matches(entries.get(t.id), terms)).map((t) => t.id);
 }
 
+test("category explanations distinguish a category-assisted match from intrinsic tool wording", () => {
+  for (const [query, id, expected] of [
+    ["画像", "day040", true],
+    ["画像 違い", "day040", true],
+    ["画像 違い", "day021", false],
+    ["パスワード 強度", "day048", true],
+    ["パスワード 強度", "day001", false],
+    // The token tool already has both English words in its own tags/text.
+    ["password strength", "day048", false],
+    ["拡張子 中身 確認", "day040", false],
+    ["画像 Day40", "day040", true],
+    ["画像 Day21", "day040", false],
+    ["画像 absent-term-xyz", "day040", false],
+    ["", "day040", false],
+    ["Day40", "day040", false]
+  ]) {
+    const entry = entries.get(id), terms = S.parseQuery(query);
+    const before = JSON.stringify(entry), matched = S.matches(entry, terms);
+    assert.equal(S.usesCategory(entry, terms), expected, `${query}: ${id}`);
+    assert.equal(S.matches(entry, terms), matched, "Explaining must not change matching");
+    assert.equal(JSON.stringify(entry), before, "Explaining must not change the entry");
+  }
+});
+
+test("category explanations keep complete purpose phrases and exact Day matching", () => {
+  const inspector = entries.get("day023");
+  for (const query of ["text comparison", "compare strings Day23", "文字列を比較", "文字列 比較 Day23"]) {
+    assert.equal(S.matches(inspector, S.parseQuery(query)), true, query);
+    assert.equal(S.usesCategory(inspector, S.parseQuery(query)), false, query);
+  }
+  assert.equal(S.usesCategory(inspector, S.parseQuery("Web Security text comparison")), true);
+  assert.equal(S.usesCategory(inspector, S.parseQuery("Web Security text comparison Day75")), false);
+  assert.equal(S.usesCategory(inspector, S.parseQuery("image comparison")), false);
+});
+
+test("category explanations preserve old entries and omit metadata without category text", () => {
+  assert.equal(S.usesCategory({ id: "day999", text: "image comparison" }, ["image"]), false);
+  assert.equal(S.usesCategory(null, ["image"]), false);
+  const idx = S.categoryIndex([{ id: "empty", ja: null, en: "", aliases_ja: [null, ""] }]);
+  for (const category_ids of [[], ["unknown"], ["empty"]]) {
+    assert.deepEqual(S.buildEntry({ id: "day999", category_ids }, idx), { id: "day999", text: "day999" });
+  }
+  const withTag = S.buildEntry({ id: "day999", title: null, tags: ["image"], category_ids: ["images"] },
+    S.categoryIndex([{ id: "images", en: "Image Analysis" }]));
+  assert.equal(S.usesCategory(withTag, ["image"]), false, "A tool tag is an intrinsic match");
+  assert.equal(S.usesCategory(withTag, ["analysis"]), true);
+});
+
 test("tool aliases find Japanese names without expanding to category peers", () => {
   for (const [query, id] of [["不可視文字", "day023"], ["ゼロ幅文字 Unicode", "day023"], ["同形異字", "day023"], ["画像認証 CAPTCHA", "day075"], ["カプチャ", "day075"], ["ﾌｨﾝｶﾞｰﾌﾟﾘﾝﾄ", "day077"], ["ブラウザ指紋", "day077"]]) {
     assert.ok(find(query).includes(id), query);
