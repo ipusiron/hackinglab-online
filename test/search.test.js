@@ -53,6 +53,60 @@ test("mismatching-text wording finds the Unicode inspector without broadening to
   assert.deepEqual(find("文字が一致しない Day75"), []);
 });
 
+test("text-comparison purpose queries reach the Unicode inspector in both languages", () => {
+  // The public experiment opens the tool's A/B comparison and checks an exact
+  // mismatch. Test that purpose and natural variants, not the alias strings.
+  for (const query of [
+    "compare two strings", "compare strings", "string comparison", "text comparison",
+    "文字列比較", "文字列 比較", "文字列を比較", "文字の比較", "Unicode 比較"
+  ]) {
+    assert.ok(find(query).includes("day023"), query);
+  }
+  assert.deepEqual(find("ＣＯＭＰＡＲＥ　two strings Ｄａｙ　２３"), ["day023"]);
+});
+
+test("text-comparison vocabulary does not imply image, audio, PDF or password comparison", () => {
+  for (const query of [
+    "image comparison", "compare images", "audio comparison", "PDF comparison",
+    "password comparison", "画像 比較", "音声 比較", "パスワード 比較"
+  ]) {
+    assert.ok(!find(query).includes("day023"), query);
+  }
+});
+
+test("comparison queries keep ordinary AND, category, title and exact Day matching", () => {
+  assert.deepEqual(find("WeirdString comparison"), ["day023"]);
+  assert.ok(find("Web Security text comparison").includes("day023"));
+  assert.deepEqual(find("文字列 比較 フォレンジック Day23"), ["day023"]);
+  assert.deepEqual(find("文字列を比較 Day23"), ["day023"]);
+  assert.deepEqual(find("文字列を比較 Day75"), []);
+  assert.deepEqual(find("文字列を比較 未登録の検索語"), []);
+  assert.deepEqual(find("compare two strings Day23 absent-term-xyz"), []);
+  assert.deepEqual(find("compare two strings Day75"), []);
+  // HashViz contains these words in its valid description. Adding a suitable
+  // result must not remove that existing AND match to fit this purpose query.
+  assert.deepEqual(find("compare two strings Day56"), ["day056"]);
+});
+
+test("purpose phrases activate only as a complete query and do not suppress ordinary catalog words", () => {
+  const inspector = S.buildEntry({ id: "day023", description_en: "Unicode text strings" }, catIndex);
+  for (const query of ["comparison", "compare", "two", "image comparison", "text comparison absent-term-xyz"]) {
+    assert.equal(S.matches(inspector, S.parseQuery(query)), false, query);
+  }
+  for (const query of ["comparison text", "comparison text text", "compare strings Day23"]) {
+    assert.equal(S.matches(inspector, S.parseQuery(query)), true, query);
+  }
+  assert.equal(S.matches(inspector, S.parseQuery("compare strings Day56")), false);
+  // A real title/description/tag/category match is still valid, even if a
+  // purpose phrase would not activate for the same query.
+  const ordinary = S.buildEntry({ id: "day023", description_en: "image comparison" }, catIndex);
+  assert.equal(S.matches(ordinary, S.parseQuery("image comparison")), true);
+  const peer = S.buildEntry({ id: "day999", description_en: "Unicode text strings" }, catIndex);
+  assert.equal(S.matches(peer, S.parseQuery("text comparison")), false);
+  // Entry objects without optional phrases keep the existing matching API.
+  assert.equal(S.matches({ id: "day999", text: "text comparison" }, S.parseQuery("text comparison")), true);
+});
+
 test("everyday purpose vocabulary finds only the tools with the described function in Japanese and English", () => {
   const cases = [
     ["day007", ["写真 位置情報 削除", "photo location remove", "geotag metadata removal"]],

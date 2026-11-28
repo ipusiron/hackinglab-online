@@ -322,6 +322,19 @@
           <span class="label-ja">検索・絞り込み</span><span class="label-en">Search &amp; filters</span>
         </button>
         <div id="tool-filters" role="search" aria-label="絞り込みの条件" data-aria-label-ja="絞り込みの条件" data-aria-label-en="Filters">
+          <!-- 検索ボックス -->
+          <div class="filter-group filter-search">
+            <label for="filter-search-input">
+              <span class="label-ja">検索</span>
+              <span class="label-en">Search</span>
+            </label>
+            <!-- 案内文（placeholder）は main.js が今の言語で入れる -->
+            <input
+              type="search"
+              id="filter-search-input"
+              disabled
+            />
+          </div>
           <!-- 書籍・プロジェクトフィルター（最初から場所を取る。books.json か一覧のデータを読めなかったときは JS が隠す） -->
           <div class="filter-group" id="filter-book-group">
             <label for="filter-book">
@@ -365,19 +378,6 @@
             </div>
           </div>
 
-          <!-- 検索ボックス -->
-          <div class="filter-group filter-search">
-            <label for="filter-search-input">
-              <span class="label-ja">検索</span>
-              <span class="label-en">Search</span>
-            </label>
-            <!-- 案内文（placeholder）は main.js が今の言語で入れる -->
-            <input
-              type="search"
-              id="filter-search-input"
-              disabled
-            />
-          </div>
           <label class="filter-later-choice" for="filter-later">
             <input id="filter-later" type="checkbox" disabled />
             <span><span class="label-ja">「あとで試す」だけ表示</span><span class="label-en">Show only tools saved in Try later</span> <span id="filter-later-count" class="filter-later-count" hidden></span></span>
@@ -457,6 +457,11 @@
               <li id="overall-n2"></li>
               <li id="overall-n3"></li>
             </ul>
+          </div>
+
+          <div id="dashboard-start" class="dashboard-start" hidden>
+            <p><span class="label-ja">まだ進捗の記録はありません。ツールを試したら、カードの「進捗」で記録できます。</span><span class="label-en">No progress recorded yet. After trying a tool, record it with “Progress” on its card.</span></p>
+            <a id="dashboard-start-link" href="./discover.html?lang=ja#day023"><span class="label-ja">見えない文字の体験から始める</span><span class="label-en">Start with invisible characters</span><span aria-hidden="true"> →</span></a>
           </div>
 
           <details id="dashboard-resume" class="discovery-panel" hidden>
