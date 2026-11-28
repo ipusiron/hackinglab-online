@@ -2,7 +2,7 @@
   "name": "hackinglab-online",
   "private": true,
   "scripts": {
-    "test": "node --test test/books.test.js test/site.test.js test/scroll_focus.test.js test/robust.test.js test/search.test.js test/url.test.js test/lang.test.js test/catalog.test.js test/render.test.js test/static_list.test.js test/navigation.test.js test/loading_filters.test.js test/records.test.js test/storage_records.test.js test/book_view.test.js test/start_help.test.js test/presentation.test.js test/category_groups.test.js test/share.test.js test/sharing.test.js test/usage_links.test.js test/discovery.test.js test/difficulty.test.js test/discover.test.js test/dashboard-resume.test.js",
+    "test": "node --test test/books.test.js test/site.test.js test/scroll_focus.test.js test/robust.test.js test/search.test.js test/url.test.js test/lang.test.js test/catalog.test.js test/render.test.js test/static_list.test.js test/navigation.test.js test/loading_filters.test.js test/records.test.js test/storage_records.test.js test/book_view.test.js test/start_help.test.js test/presentation.test.js test/category_groups.test.js test/share.test.js test/sharing.test.js test/usage_links.test.js test/discovery.test.js test/difficulty.test.js test/discover.test.js test/dashboard-resume.test.js test/preparation.test.js test/practical.test.js test/updates.test.js test/print_runtime.test.js",
     "test:generator": "python -m unittest discover -s test -p test_*.py -v",
     "build:pages": "node scripts/build_pages.js"
   },

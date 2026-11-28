@@ -1,0 +1,37 @@
+name: 問題の報告 / Report a problem
+description: サイトや掲載ツールで困ったことを知らせる / Report a problem with the hub or a listed tool.
+title: "[Problem] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        日本語・英語のどちらでも書けます。投稿は公開されます。パスワード、個人情報、機密のファイルやURLを含めないでください。
+        You can write in Japanese or English. Reports are public. Do not include passwords, personal information, or confidential files or URLs.
+  - type: input
+    id: target
+    attributes:
+      label: 対象 / Affected page or tool
+      description: サイトの画面名、またはツール名・Day番号 / Hub page name, or tool name and Day number
+      placeholder: "例 / e.g. ツール一覧 / Tool list, Day003"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 操作の手順 / Steps to reproduce
+      description: どこを開き、何を押したかを順に書いてください。 / Describe what you opened and selected, in order.
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: 期待した結果と実際の結果 / Expected and actual results
+      description: エラーが出た場合は、個人情報を除いて文面を添えてください。 / Include error text if any, with personal information removed.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: 端末・ブラウザー / Device and browser
+      description: 分かる範囲で構いません。 / Include what you know.
+      placeholder: "例 / e.g. Windows / Firefox, iPhone / Safari"

@@ -163,7 +163,9 @@
 /* 履歴で空結果へ戻ったときの操作位置も、ブラウザーの入力方式判定によらず示す。 */
 :focus-visible,
 #clear-filters:focus,
-.help-difficulty summary:focus {
+.help-difficulty summary:focus,
+#help-report summary:focus,
+#help-report > a:focus {
   outline: 3px solid var(--focus);
   outline-offset: 3px;
 }
@@ -927,6 +929,13 @@ html[lang="en"] #lang-en {
   overflow-wrap: anywhere;
 }
 
+.tool-preparation { margin-top: 0.75rem; font-size: 0.875rem; line-height: 1.6; }
+.tool-preparation p { margin: 0.35rem 0; }
+.selection-print-link { display: inline-flex; align-items: center; min-height: 2.75rem; padding: 0.4rem 0.65rem; overflow-wrap: anywhere; }
+#updates-link { display: inline-flex; align-items: center; min-height: 2.75rem; margin-inline-start: 0.5rem; }
+#help-report summary, #help-report > a { min-height: 2.75rem; padding-block: 0.6rem; }
+#help-report > a { display: inline-flex; align-items: center; }
+
 .tool-description.is-collapsible:not(.is-expanded) {
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -1560,7 +1569,9 @@ html.help-open.keep-gutter {
 @media (forced-colors: active) {
   :focus-visible,
   #clear-filters:focus,
-  .help-difficulty summary:focus {
+  .help-difficulty summary:focus,
+  #help-report summary:focus,
+  #help-report > a:focus {
     outline-color: Highlight;
   }
 

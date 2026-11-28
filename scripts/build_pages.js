@@ -4,6 +4,7 @@
 // Generate the no-JavaScript page from the same catalog and book helpers as the hub.
 const fs = require("node:fs");
 const path = require("node:path");
+const { buildUpdatesPage } = require("./updates_page.js");
 const HB = require("../js/books.js");
 const HU = require("../js/url.js");
 const ROOT = path.resolve(__dirname, "..");
@@ -126,16 +127,19 @@ function main(args) {
   if (args.some(a => a !== "--check")) throw new Error("Usage: node scripts/build_pages.js [--check]");
   const toolsData = JSON.parse(fs.readFileSync(path.join(ROOT, "data/tools.json"), "utf8"));
   const booksData = JSON.parse(fs.readFileSync(path.join(ROOT, "data/books.json"), "utf8"));
-  const output = buildPage(toolsData, booksData);
-  const destination = path.join(ROOT, "list.html");
-  const previous = fs.existsSync(destination) ? fs.readFileSync(destination, "utf8") : null;
-  if (args.includes("--check")) {
-    if (previous !== output) throw new Error("list.html is stale. Run npm run build:pages.");
-    console.log("list.html matches the source data.");
-  } else if (previous !== output) {
-    fs.writeFileSync(destination, output, "utf8");
-    console.log("Generated list.html.");
-  } else console.log("list.html is unchanged.");
+  const updatesData = JSON.parse(fs.readFileSync(path.join(ROOT, "data/updates.json"), "utf8"));
+  const outputs = [["list.html", buildPage(toolsData, booksData)], ["updates.html", buildUpdatesPage(toolsData, updatesData)]];
+  for (const [name, output] of outputs) {
+    const destination = path.join(ROOT, name);
+    const previous = fs.existsSync(destination) ? fs.readFileSync(destination, "utf8") : null;
+    if (args.includes("--check")) {
+      if (previous !== output) throw new Error(`${name} is stale. Run npm run build:pages.`);
+      console.log(`${name} matches the source data.`);
+    } else if (previous !== output) {
+      fs.writeFileSync(destination, output, "utf8");
+      console.log(`Generated ${name}.`);
+    } else console.log(`${name} is unchanged.`);
+  }
 }
 
 module.exports = { COPY, escapeHtml, safeUrl, buildPage };

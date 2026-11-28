@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <title>ツールセットの配布資料｜ハッキング・ラボ・オンライン</title>
+  <link rel="icon" href="./favicon/HLO.ico">
+  <link rel="stylesheet" href="./css/style.css">
+  <link rel="stylesheet" href="./css/print.css">
+  <script src="./js/url.js" defer></script>
+  <script src="./js/preparation.js" defer></script>
+  <script src="./js/print.js" defer></script>
+  <script src="./js/lang.js"></script>
+</head>
+<body class="handout-page">
+  <main class="handout-main">
+    <nav class="handout-controls" aria-label="表示と印刷 / Display and print">
+      <a id="handout-back" href="./"><span class="label-ja">ツール一覧へ戻る</span><span class="label-en">Back to tools</span></a>
+      <button type="button" data-lang="ja" aria-pressed="true">JA</button>
+      <button type="button" data-lang="en" aria-pressed="false">EN</button>
+      <button id="handout-print" type="button" disabled><span class="label-ja">印刷・PDF保存</span><span class="label-en">Print / Save as PDF</span></button>
+    </nav>
+    <h1><span class="label-ja">ツールセットの配布資料</span><span class="label-en">Tool set handout</span></h1>
+    <p><span class="label-ja">ハッキング・ラボ・オンライン</span><span class="label-en">Hacking Lab Online</span></p>
+    <p class="handout-screen-note"><span class="label-ja">選んだ順に、説明・リンク・書き込み欄をまとめています。進捗や保存リストは含みません。印刷画面でPDF保存も選べます。</span><span class="label-en">Tools appear in the selected order, with descriptions, links and space for notes. Progress and your saved list are not included. Your print dialog can also save a PDF.</span></p>
+    <p id="handout-status" role="status" aria-live="polite" tabindex="-1"></p>
+    <button id="handout-retry" class="handout-controls" type="button" hidden><span class="label-ja">読み込みをやり直す</span><span class="label-en">Try loading again</span></button>
+    <p id="handout-source" hidden></p>
+    <ol id="handout-list" aria-busy="true"></ol>
+    <noscript><p>配布資料の作成にはJavaScriptが必要です。<a href="./list.html">文字のツール一覧</a>も利用できます。 / JavaScript is required to create this handout. A <a href="./list.html">static tool list</a> is also available.</p></noscript>
+  </main>
+</body>
+</html>

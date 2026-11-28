@@ -83,7 +83,7 @@ test("description chapter copies keep separate expansion, unique targets and foc
   for (const card of rebuilt) assert.equal(card.querySelector(".tool-description").textContent, tool.description_en);
   const targets = page.document.querySelectorAll(".tool-description-toggle").map((button) => button.getAttribute("aria-controls"));
   assert.equal(new Set(targets).size, targets.length);
-  for (const target of targets) assert.ok(page.document.getElementById(target));
+  for (const target of targets) for (const id of target.split(/\s+/)) assert.ok(page.document.getElementById(id));
   // A queued delivery for a detached card must not touch the rebuilt control.
   measureDescription(observer, cards.at(-1).querySelector(".tool-description"), 20);
   assert.equal(focused.getAttribute("aria-expanded"), "true");
